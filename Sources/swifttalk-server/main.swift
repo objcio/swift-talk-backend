@@ -1,8 +1,22 @@
 import Foundation
 import NIO
 import NIOHTTP1
+import PostgreSQL
 
 // Inspired/parts copied from http://www.alwaysrightinstitute.com/microexpress-nio/
+
+let env = ProcessInfo.processInfo.environment
+
+let postgreSQL = try PostgreSQL.Database(
+    hostname: env["RDS_HOSTNAME"] ?? "localhost",
+    database: env["RDS_DB_NAME"] ?? "objcio_video_backend",
+    user: env["RDS_DB_USERNAME"] ?? "chris",
+    password: env["RDS_DB_PASSWORD"] ?? ""
+)
+let conn = try postgreSQL.makeConnection()
+
+let version = try conn.execute("SELECT version()")
+print(version)
 
 final class HelloHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPServerRequestPart
@@ -18,6 +32,9 @@ final class HelloHandler: ChannelInboundHandler {
             let responseStr: String
             if header.uri == "/env" {
                 responseStr = "\(ProcessInfo.processInfo.environment)"
+            } else if header.uri == "/version" {
+                let v = try? conn.execute("SELECT version()")
+                responseStr = v.map { "\($0)" } ?? "no version"
             } else {
                 responseStr = "Hello, world + \(header)"
             }
