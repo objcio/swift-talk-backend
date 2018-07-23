@@ -14,7 +14,13 @@ final class HelloHandler: ChannelInboundHandler {
             let head = HTTPResponseHead(version: header.version, status: .ok)
             let part = HTTPServerResponsePart.head(head)
             _ = ctx.channel.write(part)
-            let responseStr = "Hello, world + \(header)"
+            
+            let responseStr: String
+            if header.uri == "/env" {
+                responseStr = "\(ProcessInfo.processInfo.environment)"
+            } else {
+                responseStr = "Hello, world + \(header)"
+            }
             var buffer = ctx.channel.allocator.buffer(capacity: responseStr.utf8.count)
             buffer.write(string: responseStr)
             let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
@@ -29,8 +35,8 @@ final class HelloHandler: ChannelInboundHandler {
 }
 
 struct MyServer {
-    let group = MultiThreadedEventLoopGroup(numThreads: System.coreCount)
-    
+    let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+
     func listen(port: Int = 8765) throws {
         let reuseAddr = ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET),
                                               SO_REUSEADDR)
