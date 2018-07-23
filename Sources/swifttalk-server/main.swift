@@ -14,7 +14,7 @@ final class HelloHandler: ChannelInboundHandler {
             let head = HTTPResponseHead(version: header.version, status: .ok)
             let part = HTTPServerResponsePart.head(head)
             _ = ctx.channel.write(part)
-            let responseStr = "Hello, world"
+            let responseStr = "Hello, world + \(header)"
             var buffer = ctx.channel.allocator.buffer(capacity: responseStr.utf8.count)
             buffer.write(string: responseStr)
             let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
