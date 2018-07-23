@@ -7,12 +7,12 @@ import PostgreSQL
 
 let env = ProcessInfo.processInfo.environment
 
-let postgreSQL = try PostgreSQL.Database(
-    hostname: env["RDS_HOSTNAME"] ?? "localhost",
-    database: env["RDS_DB_NAME"] ?? "objcio_video_backend",
-    user: env["RDS_DB_USERNAME"] ?? "chris",
-    password: env["RDS_DB_PASSWORD"] ?? ""
-)
+let postgreSQL = try PostgreSQL.Database(connInfo: ConnInfo.params([
+    "host": env["RDS_HOSTNAME"] ?? "localhost",
+    "dbname": env["RDS_DB_NAME"] ?? "postgres",
+    "user": env["RDS_DB_USERNAME"] ?? "chris",
+    "password": env["RDS_DB_PASSWORD"] ?? ""
+]))
 let conn = try postgreSQL.makeConnection()
 
 let version = try conn.execute("SELECT version()")
