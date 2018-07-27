@@ -7,15 +7,16 @@ import PostgreSQL
 
 let env = ProcessInfo.processInfo.environment
 
-let postgreSQL = try PostgreSQL.Database(connInfo: ConnInfo.params([
+let postgreSQL = try? PostgreSQL.Database(connInfo: ConnInfo.params([
     "host": env["RDS_HOSTNAME"] ?? "localhost",
     "dbname": env["RDS_DB_NAME"] ?? "postgres",
     "user": env["RDS_DB_USERNAME"] ?? "chris",
     "password": env["RDS_DB_PASSWORD"] ?? ""
 ]))
-let conn = try postgreSQL.makeConnection()
 
-let version = try conn.execute("SELECT version()")
+let conn: Connection? = postgreSQL.flatMap { try? $0.makeConnection() }
+
+let version = try? conn?.execute("SELECT version()")
 print(version)
 
 final class HelloHandler: ChannelInboundHandler {
@@ -33,7 +34,7 @@ final class HelloHandler: ChannelInboundHandler {
             if header.uri == "/env" {
                 responseStr = "\(ProcessInfo.processInfo.environment)"
             } else if header.uri == "/version" {
-                let v = try? conn.execute("SELECT version()")
+                let v = try? conn?.execute("SELECT version()")
                 responseStr = v.map { "\($0)" } ?? "no version"
             } else {
                 responseStr = "Hello, world + \(header)"
