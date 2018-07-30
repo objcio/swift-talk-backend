@@ -1,0 +1,13 @@
+$icons: () !default;
+
+.icon-thumbnail-play {
+  background-image: svg-data-uri('<svg xmlns="http://www.w3.org/2000/svg" width="34" height="36" viewBox="0 0 34 36"><path fill="#FFF" fill-rule="evenodd" d="M6.727 34.89c-.954.554-1.727.12-1.727-1V2.046C5 .94 5.746.53 6.674 1.136l25.652 16.77c.925.604.898 1.546-.053 2.1L6.727 34.89z"/></svg>');
+  background-size: em(34) em(36);
+  background-repeat: no-repeat;
+}
+
+.icon-thumbnail-lock {
+  background-image: svg-data-uri('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 37" width="30" height="37"><path fill="#FFF" fill-rule="evenodd" d="M26 17v-6c0-6.166-4.925-11-11-11C8.937 0 4 4.828 4 11v6H.998a.995.995 0 0 0-.998.992v18.016c0 .537.447.992.998.992h28.004c.55 0 .998-.444.998-.992V17.992c0-.537-.447-.992-.998-.992H26zm-4 0v-4.333C22 7.807 18.866 4 15 4c-3.858 0-7 3.804-7 8.667V17h14z"/></svg>');
+  background-size: em(30) em(37);
+  background-repeat: no-repeat;
+}

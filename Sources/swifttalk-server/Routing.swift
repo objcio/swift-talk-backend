@@ -23,6 +23,15 @@ public struct SingleRoute<A> {
     let description: [RouteDescription]
 }
 
+extension Array where Element == RouteDescription {
+    var pretty: String {
+        return "/" + map { switch $0 {
+        case .constant(let s): return s
+        case .parameter(let p): return ":\(p)"
+        }}.joined(separator: "/")
+    }
+}
+
 extension SingleRoute {
     func runParse(_ r: Request) -> A? {
         var copy = r

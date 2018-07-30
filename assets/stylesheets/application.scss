@@ -1,0 +1,42 @@
+@import 'fonts';
+@import 'objcss/objcss';
+@import 'vendor/fontawesome/scss/fontawesome';
+@import 'icons';
+@import 'codehilite';
+@import 'objcio-videojs';
+
+.dropzone > span {
+  text-align: center;
+}
+
+/* disable the captions button for video.js */
+.vjs-captions-button.vjs-menu-button.vjs-menu-button-popup.vjs-control.vjs-button {
+    display: none;
+}
+
+.js-transcript-cue {
+  line-height: 1;
+  display: inline-block;
+  font-size: modular(-2);
+  font-weight: bold;
+
+  display: inline-block;
+
+  margin-right: 1em;
+  margin-right: calc(100% - 3em);
+}
+
+.js-transcript {
+  @include bp-from(l) {
+    $spacing: 1em;
+    padding-left:  $spacing;
+    padding-right: $spacing;
+    margin-left:   (-$spacing);
+    margin-right:  (-$spacing);
+  }
+}
+
+.admin th {
+    width: 200px;
+    text-align: left;
+}

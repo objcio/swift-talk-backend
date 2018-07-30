@@ -27,6 +27,7 @@ enum Route {
     case env
     case episodes
     case version
+    case sitemap
     case episode(String)
 }
 
@@ -40,6 +41,7 @@ let routes: Routes<Route> = [
     .c("env", .env),
     .c("version", .version),
     .c("episodes", .episodes),
+    .c("sitemap", .sitemap),
     episode
 ]
 
@@ -48,6 +50,10 @@ func parse<A>(_ request: Request, route: Routes<A>) -> A? {
         if let p = r.runParse(request) { return p }
     }
     return nil
+}
+
+func sitemap<A>(_ routes: Routes<A>) -> String {
+    return routes.map { $0.description.pretty }.joined(separator: "\n")
 }
 
 extension HTTPMethod {
@@ -88,6 +94,8 @@ final class HelloHandler: ChannelInboundHandler {
                     responseStr = "All episodes"
                 case .home:
                     responseStr = "home"
+                case .sitemap:
+                    responseStr = sitemap(routes)
                 }
             } else {
                 responseStr = "not found"

@@ -1,0 +1,74 @@
+$text-font-family: $type-sans;
+$big-play-button--width:  1.5em;
+$big-play-button--height: 1.5em;
+$big-play-button--transparency: 0;
+
+@import 'videojs-font/css/videojs-icons.css';
+@import 'video.js/src/css/vjs';
+@import 'videojs-seek-buttons/src/plugin.scss';
+
+$vjs-font-size: 0.6667em;
+$vjs-control-bar-height: 40px;
+$vjs-control-icon-font-size: 1.75em;
+
+
+.js-video-badge {
+  transform: translateX(-50%) translateY(-50%) rotate(-45deg);
+}
+
+.video-js {
+  font-size: $vjs-font-size;
+  font-weight: bold;
+}
+
+.video-js .vjs-control-bar {
+  background-color: bgcolor('night-blue');
+  background-color: rgba(bgcolor('night-blue'), 0.85);
+  backdrop-filter: blur(5px);
+  opacity: 1!important;
+  transition: visibility 200ms, transform 200ms !important;
+}
+
+// Video has started playing
+.vjs-has-started .vjs-control-bar {
+  transform: translateY(0);
+}
+
+// Video has started playing AND user is inactive
+.vjs-has-started.vjs-user-inactive.vjs-playing .vjs-control-bar {
+  transform: translateY(100%);
+
+}
+
+.video-js .vjs-big-play-button {
+  font-size: 6em;
+  border-radius: $big-play-button--width / 2;
+  border: none;
+  background-color: color('blue') !important;
+  transition: transform 100ms ease-out !important;
+}
+
+.video-js:hover .vjs-big-play-button,
+.video-js .vjs-big-play-button:focus {
+  transform: scale(1.1);
+}
+
+.video-js .vjs-control:focus:before,
+.video-js .vjs-control:hover:before,
+.video-js .vjs-control:focus {
+  text-shadow: none;
+  color: color('orange');
+}
+
+.vjs-playback-rate {
+  .vjs-playback-rate-value {
+    font-size: 1em;
+    line-height: 3em;
+    vertical-align: baseline;
+  }
+  .vjs-menu {
+    li {
+      font-size: 1em;
+    }
+  }
+}
