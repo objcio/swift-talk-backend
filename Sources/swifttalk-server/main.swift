@@ -9,15 +9,56 @@ let env = ProcessInfo.processInfo.environment
 
 let postgreSQL = try? PostgreSQL.Database(connInfo: ConnInfo.params([
     "host": env["RDS_HOSTNAME"] ?? "localhost",
-    "dbname": env["RDS_DB_NAME"] ?? "postgres",
+    "dbname": env["RDS_DB_NAME"] ?? "swifttalk",
     "user": env["RDS_DB_USERNAME"] ?? "chris",
     "password": env["RDS_DB_PASSWORD"] ?? ""
 ]))
 
-let conn: Connection? = postgreSQL.flatMap { try? $0.makeConnection() }
+func withConnection<A>(_ x: (Connection?) -> A) -> A {
+    let conn: Connection? = postgreSQL.flatMap { try? $0.makeConnection() }
+    let result = x(conn)
+    try? conn?.close()
+    return result
+}
 
-let version = try? conn?.execute("SELECT version()")
-print(version)
+
+enum Route {
+    case home
+    case env
+    case episodes
+    case version
+    case episode(String)
+}
+
+let episode: SingleRoute<Route> = (.c("episodes") / .string()).transform({ Route.episode($0)}, { r in
+    guard case let .episode(num) = r else { fatalError() }
+    return num
+})
+
+let routes: Routes<Route> = [
+    SingleRoute(.home),
+    .c("env", .env),
+    .c("version", .version),
+    .c("episodes", .episodes),
+    episode
+]
+
+func parse<A>(_ request: Request, route: Routes<A>) -> A? {
+    for r in route {
+        if let p = r.runParse(request) { return p }
+    }
+    return nil
+}
+
+extension HTTPMethod {
+    init(_ value: NIOHTTP1.HTTPMethod) {
+        switch value {
+        case .GET: self = .get
+        case .POST: self = .post
+        default: fatalError() // todo
+        }
+    }
+}
 
 final class HelloHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPServerRequestPart
@@ -30,15 +71,29 @@ final class HelloHandler: ChannelInboundHandler {
             let part = HTTPServerResponsePart.head(head)
             _ = ctx.channel.write(part)
             
+            let r = Request(path: header.uri.split(separator: "/").map(String.init), query: [:], method: .init(header.method), body: nil)
             let responseStr: String
-            if header.uri == "/env" {
-                responseStr = "\(ProcessInfo.processInfo.environment)"
-            } else if header.uri == "/version" {
-                let v = try? conn?.execute("SELECT version()")
-                responseStr = v.map { "\($0)" } ?? "no version"
+            if let route = parse(r, route: routes) {
+                switch route {
+                case .env:
+                    responseStr = "\(ProcessInfo.processInfo.environment)"
+                case .version:
+                    responseStr = withConnection { conn in
+                        let v = try? conn?.execute("SELECT version()") ?? nil
+                        return v.map { "\($0)" } ?? "no version"
+                    }
+                case .episode(let s):
+                    responseStr = "Episode \(s)"
+                case .episodes:
+                    responseStr = "All episodes"
+                case .home:
+                    responseStr = "home"
+                }
             } else {
-                responseStr = "Hello, world + \(header)"
+                responseStr = "not found"
             }
+            
+
             var buffer = ctx.channel.allocator.buffer(capacity: responseStr.utf8.count)
             buffer.write(string: responseStr)
             let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
