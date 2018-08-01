@@ -21,7 +21,6 @@ func withConnection<A>(_ x: (Connection?) -> A) -> A {
     return result
 }
 
-
 enum Route {
     case home
     case env
@@ -37,8 +36,12 @@ let episode: Endpoint<Route> = (.c("episodes") / .string()).transform(Route.epis
     return num
 })
 
+extension Endpoint where A == Route {
+    static let home: Endpoint<Route> = Endpoint(Route.home)
+}
+
 let routes: Routes<Route> = [
-    Endpoint(.home),
+    .home,
     .c("env", .env),
     .c("version", .version),
     .c("episodes", .episodes),
@@ -57,19 +60,14 @@ func parse<A>(_ request: Request, route: Routes<A>) -> A? {
     return nil
 }
 
-protocol Interpreter {
-    static func write(_ string: String, status: HTTPResponseStatus) -> Self
-    static func writeFile(path: String) -> Self
-}
-
-extension Interpreter {
-    static func write(_ string: String) -> Self {
-        return .write(string, status: .ok)
-    }
-}
-
 func inWhitelist(_ path: [String]) -> Bool {
     return path == ["assets", "stylesheets", "application.css"]
+}
+
+extension Node {
+    func link(to: Endpoint<Route>, children: [Node]) {
+        return Node.a(title: children, href: to.print)
+    }
 }
 
 extension Route {
@@ -113,119 +111,14 @@ extension HTTPMethod {
     }
 }
 
-struct NIOInterpreter: Interpreter {
-    struct Deps {
-        let header: HTTPRequestHead
-        let ctx: ChannelHandlerContext
-        let fileIO: NonBlockingFileIO
-        let handler: HelloHandler
-        let baseURL: URL
-    }
-    let run: (Deps) -> ()
-    
-    static func writeFile(path: String) -> NIOInterpreter {
-        return NIOInterpreter { deps in
-            // todo we should check the path for things like ".."
-            let fullPath = deps.baseURL.appendingPathComponent(path)
-            let fileHandleAndRegion = deps.fileIO.openFile(path: fullPath.path, eventLoop: deps.ctx.eventLoop)
-            print(fullPath)
-            fileHandleAndRegion.whenFailure { _ in
-                write("Error", status: .badRequest).run(deps)
-            }
-            fileHandleAndRegion.whenSuccess { (file, region) in
-                var response = HTTPResponseHead(version: deps.header.version, status: .ok)
-                response.headers.add(name: "Content-Length", value: "\(region.endIndex)")
-                response.headers.add(name: "Content-Type", value: "text/plain; charset=utf-8")
-                deps.ctx.write(deps.handler.wrapOutboundOut(.head(response)), promise: nil)
-                deps.ctx.writeAndFlush(deps.handler.wrapOutboundOut(.body(.fileRegion(region)))).then {
-                    let p: EventLoopPromise<Void> = deps.ctx.eventLoop.newPromise()
-                    deps.ctx.writeAndFlush(deps.handler.wrapOutboundOut(.end(nil)), promise: p)
-
-                    return p.futureResult
-                    }.thenIfError { (_: Error) in
-                        deps.ctx.close()
-                    }.whenComplete {
-                        _ = try? file.close()
-                }
-            }
-        }
-    }
-    static func write(_ string: String, status: HTTPResponseStatus = .ok) -> NIOInterpreter {
-        return NIOInterpreter { env in
-            let head = HTTPResponseHead(version: env.header.version, status: status)
-            let part = HTTPServerResponsePart.head(head)
-            _ = env.ctx.channel.write(part)
-            var buffer = env.ctx.channel.allocator.buffer(capacity: string.utf8.count)
-            buffer.write(string: string)
-            let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
-            _ = env.ctx.channel.write(bodyPart)
-            _ = env.ctx.channel.writeAndFlush(HTTPServerResponsePart.end(nil)).then {
-                env.ctx.channel.close()
-            }
-        }
-    }
-}
-
-final class HelloHandler: ChannelInboundHandler {
-    typealias InboundIn = HTTPServerRequestPart
-    typealias OutboundOut = HTTPServerResponsePart
-
-    
-    let fileIO: NonBlockingFileIO
-    init(_ fileIO: NonBlockingFileIO) {
-        self.fileIO = fileIO
-    }
-    
-    func channelRead(ctx: ChannelHandlerContext, data: NIOAny) {
-        let reqPart = unwrapInboundIn(data)
-        switch reqPart {
-        case .head(let header):
-            let r = Request(path: header.uri.split(separator: "/").map(String.init), query: [:], method: .init(header.method), body: nil)
-            let env = NIOInterpreter.Deps(header: header, ctx: ctx, fileIO: fileIO, handler: self, baseURL: URL(fileURLWithPath: FileManager.default.currentDirectoryPath))
-            if let route = parse(r, route: routes) {
-                let i: NIOInterpreter = route.interpret()
-                i.run(env)
-            } else {
-                print("Not found: \(header.uri)")
-                NIOInterpreter.write("Not found: \(header.uri)").run(env)
-            }
-        case .body, .end:
-            break
-        }
-    }
-}
-
-let threadPool = BlockingIOThreadPool(numberOfThreads: 6)
-threadPool.start()
-let fileIO = NonBlockingFileIO(threadPool: threadPool)
-
-
-struct MyServer {
-    let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-
-    func listen(port: Int = 8765) throws {
-        let reuseAddr = ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET),
-                                              SO_REUSEADDR)
-        let bootstrap = ServerBootstrap(group: group)
-            .serverChannelOption(ChannelOptions.backlog, value: 256)
-            .serverChannelOption(reuseAddr, value: 1)
-            .childChannelInitializer { channel in
-                channel.pipeline.configureHTTPServerPipeline(withErrorHandling: true).then {
-                    channel.pipeline.add(handler: HelloHandler(fileIO))
-                }
-            }
-            .childChannelOption(ChannelOptions.socket(
-                IPPROTO_TCP, TCP_NODELAY), value: 1)
-            .childChannelOption(reuseAddr, value: 1)
-            .childChannelOption(ChannelOptions.maxMessagesPerRead,
-                                value: 1)
-        print("Going to start listening on port \(port)")
-        let channel = try bootstrap.bind(host: "0.0.0.0", port: port).wait()
-        try channel.closeFuture.wait()
-    }
-}
-
+let episodes: [Episode] = {
+    // for this (and the rest of the app) to work we need a correct working directory (root of the app)
+    let d = try! Data(contentsOf: URL(fileURLWithPath: "data/episodes.json"))
+    let e = try! JSONDecoder().decode([Episode].self, from: d)
+    return e
+}()
 print("Hello")
-let s = MyServer()
+
+let s = MyServer(parse: { parse($0, route: routes) }, interpret: { $0.interpret() })
 print("World")
 try s.listen()
