@@ -33,7 +33,9 @@ extension El {
         let atts: String = attributes.isEmpty ? "" : " " + attributes.map { (k,v) in
             "\(k)=\"\(v)\"" // todo escape
             }.joined(separator: " ")
-        if block {
+        if children.isEmpty {
+            return "<\(name)\(atts) />"
+        } else if block {
             return "<\(name)\(atts)>\n" + children.map { $0.render }.joined(separator: "\n") + "\n</\(name)>"
         } else {
             return "<\(name)\(atts)>" + children.map { $0.render }.joined(separator: "") + "</\(name)>"
@@ -99,11 +101,15 @@ extension Node {
     static func title(_ text: ToElements) -> Node {
         return .node(El(name: "title", block: false, children: text.elements))
     }
-    
-    static func h3(_ title: ToElements) -> Node {
-        return .node(El(name: "h3", block: false, children: title.elements))
+
+    static func span(_ text: ToElements) -> Node {
+        return .node(El(name: "span", block: false, children: text.elements))
     }
-    
+
+    static func h1(_ title: ToElements, attributes: [String:String] = [:]) -> Node {
+        return .node(El(name: "h3", block: false, attributes: attributes, children: title.elements))
+    }
+
     static func div(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         return .node(El(name: "div", attributes: attributes, children: children))
     }
@@ -111,6 +117,14 @@ extension Node {
     static func div(class c: String, _ children: [Node] = []) -> Node {
         let attributes = ["class": c]
         return .node(El(name: "div", attributes: attributes, children: children))
+    }
+    
+    static func nav(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "nav", block: false, attributes: attributes, children: children))
+    }
+    
+    static func ul(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "ul", block: false, attributes: attributes, children: children))
     }
     
     static func stylesheet(media: String = "all", href: String) -> Node {

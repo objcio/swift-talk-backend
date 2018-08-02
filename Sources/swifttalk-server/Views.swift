@@ -8,10 +8,22 @@
 import Foundation
 
 struct LayoutConfig {
-    var pageTitle: String = "objc.io"
+    var pageTitle: String
     var contents: Node
-    var theme: String = "default"
+    var theme: String
+    
+    init(pageTitle: String = "objc.io", contents: Node, theme: String = "default") {
+        self.pageTitle = pageTitle
+        self.contents = contents
+        self.theme = theme
+    }
 }
+
+let navigationItems: [(MyRoute, String)] = [
+    (.home, "Swift Talk"), // todo
+    (.books, "Books"),
+    (.issues, "Issues")
+]
 
 extension LayoutConfig {
     var layout: Node {
@@ -22,15 +34,23 @@ extension LayoutConfig {
                 .meta(attributes: ["name": "viewport", "content": "'width=device-width, initial-scale=1, user-scalable=no'"]),
                 .title(pageTitle),
                 // todo rss+atom links
-                .stylesheet(href: "/static/assets/stylesheets/application.css"),
+                .stylesheet(href: "/assets/stylesheets/application.css"),
                 // todo google analytics
                 ]),
             .body(attributes: ["theme": "theme-" + theme], [ // todo theming classes?
                 .header(attributes: ["class": "bgcolor-white"], [
                     .div(class: "height-3 flex scroller js-scroller js-scroller-container", [
                         .div(class: "container-h flex-grow flex", [
-                            // todo link to header
-                            
+                            .link(to: .home,
+                                Node.h1("objc.io") // todo class
+                            , attributes: ["class": "flex-none outline-none mr++ flex"]),
+        					.nav(attributes: ["class": "flex flex-grow"], [
+                                .ul(attributes: ["class": "flex flex-auto"], navigationItems.map { l in
+                                    .link(to: l.0, Node.span(l.1), attributes: [
+                                        "class": "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration"
+                                    ])
+                                })
+                            ])
                         ])
                     ])
                 ])

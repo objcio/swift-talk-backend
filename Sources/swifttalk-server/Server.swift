@@ -30,23 +30,29 @@ struct NIOInterpreter: Interpreter {
         let ctx: ChannelHandlerContext
         let fileIO: NonBlockingFileIO
         let handler: RouteHandler
-        let baseURL: URL
+        let manager: FileManager
+        let resourcePaths: [URL]
     }
     let run: (Deps) -> ()
     
     static func writeFile(path: String) -> NIOInterpreter {
         return NIOInterpreter { deps in
             // todo we should check the path for things like ".."
-            let fullPath = deps.baseURL.appendingPathComponent(path)
+            let fullPath = deps.resourcePaths.lazy.map { $0.appendingPathComponent(path) }.filter { deps.manager.fileExists(atPath: $0.path) }.first ?? URL(fileURLWithPath: "")
+            
             let fileHandleAndRegion = deps.fileIO.openFile(path: fullPath.path, eventLoop: deps.ctx.eventLoop)
-            print(fullPath)
             fileHandleAndRegion.whenFailure { _ in
                 write("Error", status: .badRequest).run(deps)
             }
             fileHandleAndRegion.whenSuccess { (file, region) in
                 var response = HTTPResponseHead(version: deps.header.version, status: .ok)
                 response.headers.add(name: "Content-Length", value: "\(region.endIndex)")
-                response.headers.add(name: "Content-Type", value: "text/plain; charset=utf-8")
+                let contentType: String
+                switch (path as NSString).pathExtension {
+                case "css": contentType = "text/css; charset=utf-8"
+                default: contentType = "text/plain; charset=utf-8"
+                }
+                response.headers.add(name: "Content-Type", value: contentType)
                 deps.ctx.write(deps.handler.wrapOutboundOut(.head(response)), promise: nil)
                 deps.ctx.writeAndFlush(deps.handler.wrapOutboundOut(.body(.fileRegion(region)))).then {
                     let p: EventLoopPromise<Void> = deps.ctx.eventLoop.newPromise()
@@ -81,11 +87,13 @@ final class RouteHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPServerRequestPart
     typealias OutboundOut = HTTPServerResponsePart
     let handle: (Request) -> NIOInterpreter?
+    let paths: [URL]
     
     let fileIO: NonBlockingFileIO
-    init(_ fileIO: NonBlockingFileIO, handle: @escaping (Request) -> NIOInterpreter?) {
+    init(_ fileIO: NonBlockingFileIO, resourcePaths: [URL], handle: @escaping (Request) -> NIOInterpreter?) {
         self.fileIO = fileIO
         self.handle = handle
+        self.paths = resourcePaths
     }
     
     func channelRead(ctx: ChannelHandlerContext, data: NIOAny) {
@@ -93,7 +101,7 @@ final class RouteHandler: ChannelInboundHandler {
         switch reqPart {
         case .head(let header):
             let r = Request(path: header.uri.split(separator: "/").map(String.init), query: [:], method: .init(header.method), body: nil)
-            let env = NIOInterpreter.Deps(header: header, ctx: ctx, fileIO: fileIO, handler: self, baseURL: URL(fileURLWithPath: FileManager.default.currentDirectoryPath))
+            let env = NIOInterpreter.Deps(header: header, ctx: ctx, fileIO: fileIO, handler: self, manager: FileManager.default, resourcePaths: paths)
             if let i = handle(r) {
                 i.run(env)
             } else {
@@ -116,9 +124,11 @@ struct MyServer {
     }()
     let fileIO: NonBlockingFileIO
     let handle: (Request) -> NIOInterpreter?
-    init<A>(parse: @escaping (Request) -> A?, interpret: @escaping (A) -> NIOInterpreter) {
+    let paths: [URL]
+    init<A>(parse: @escaping (Request) -> A?, interpret: @escaping (A) -> NIOInterpreter, resourcePaths: [URL]) {
         fileIO = NonBlockingFileIO(threadPool: threadPool)
         handle = { parse($0).map(interpret) }
+        paths = resourcePaths
     }
     
     let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
@@ -131,7 +141,7 @@ struct MyServer {
             .serverChannelOption(reuseAddr, value: 1)
             .childChannelInitializer { channel in
                 channel.pipeline.configureHTTPServerPipeline(withErrorHandling: true).then { _ in
-                    channel.pipeline.add(handler: RouteHandler(self.fileIO, handle: self.handle))
+                    channel.pipeline.add(handler: RouteHandler(self.fileIO, resourcePaths: self.paths, handle: self.handle))
                 }
             }
             .childChannelOption(ChannelOptions.socket(

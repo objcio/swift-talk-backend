@@ -3,32 +3,32 @@
 @import url(https://fonts.googleapis.com/css?family=Material+Icons);
 @font-face {
   font-family: 'AkkuratMono';
-  src: asset-url("akk-mono.eot");
-  src: asset-url("akk-mono.eot?#iefix") format("embedded-opentype"), asset-url("akk-mono.woff") format("woff"), asset-url("akk-mono.ttf") format("truetype"), asset-url("akk-mono.svg#AkkuratStdMono") format("svg");
+  src: url("/assets/fonts/akk-mono.eot");
+  src: url("/assets/fonts/akk-mono.eot?#iefix") format("embedded-opentype"), url("/assets/fonts/akk-mono.woff") format("woff"), url("/assets/fonts/akk-mono.ttf") format("truetype"), url("/assets/fonts/akk-mono.svg#AkkuratStdMono") format("svg");
   font-weight: normal;
   font-style: normal; }
 @font-face {
   font-family: 'AkkuratTT';
-  src: asset-url("akk-regular.eot");
-  src: asset-url("akk-regular.eot?#iefix") format("embedded-opentype"), asset-url("akk-regular.woff") format("woff"), asset-url("akk-regular.ttf") format("truetype"), asset-url("akk-regular.svg#AkkuratRegular") format("svg");
+  src: url("/assets/fonts/akk-regular.eot");
+  src: url("/assets/fonts/akk-regular.eot?#iefix") format("embedded-opentype"), url("/assets/fonts/akk-regular.woff") format("woff"), url("/assets/fonts/akk-regular.ttf") format("truetype"), url("/assets/fonts/akk-regular.svg#AkkuratRegular") format("svg");
   font-weight: normal;
   font-style: normal; }
 @font-face {
   font-family: 'AkkuratTT';
-  src: asset-url("akk-bold-c.eot");
-  src: asset-url("akk-bold-c.eot?#iefix") format("embedded-opentype"), asset-url("akk-bold-c.woff") format("woff"), asset-url("akk-bold-c.ttf") format("truetype"), asset-url("akk-bold-c.svg#LLAkkuratWeb-Bold") format("svg");
+  src: url("/assets/fonts/akk-bold-c.eot");
+  src: url("/assets/fonts/akk-bold-c.eot?#iefix") format("embedded-opentype"), url("/assets/fonts/akk-bold-c.woff") format("woff"), url("/assets/fonts/akk-bold-c.ttf") format("truetype"), url("/assets/fonts/akk-bold-c.svg#LLAkkuratWeb-Bold") format("svg");
   font-weight: bold;
   font-style: normal; }
 @font-face {
   font-family: 'AkkuratTT';
-  src: asset-url("akk-bolditalic-c.eot");
-  src: asset-url("akk-bolditalic-c.eot?#iefix") format("embedded-opentype"), asset-url("akk-bolditalic-c.woff") format("woff"), asset-url("akk-bolditalic-c.ttf") format("truetype"), asset-url("akk-bolditalic-c.svg#LLAkkuratWeb-Bolditalic") format("svg");
+  src: url("/assets/fonts/akk-bolditalic-c.eot");
+  src: url("/assets/fonts/akk-bolditalic-c.eot?#iefix") format("embedded-opentype"), url("/assets/fonts/akk-bolditalic-c.woff") format("woff"), url("/assets/fonts/akk-bolditalic-c.ttf") format("truetype"), url("/assets/fonts/akk-bolditalic-c.svg#LLAkkuratWeb-Bolditalic") format("svg");
   font-weight: bold;
   font-style: italic; }
 @font-face {
   font-family: 'AkkuratTT';
-  src: asset-url("akk-italic-c.eot");
-  src: asset-url("akk-italic-c.eot?#iefix") format("embedded-opentype"), asset-url("akk-italic-c.woff") format("woff"), asset-url("akk-italic-c.ttf") format("truetype"), asset-url("akk-italic-c.svg#LLAkkuratWeb-Italic") format("svg");
+  src: url("/assets/fonts/akk-italic-c.eot");
+  src: url("/assets/fonts/akk-italic-c.eot?#iefix") format("embedded-opentype"), url("/assets/fonts/akk-italic-c.woff") format("woff"), url("/assets/fonts/akk-italic-c.ttf") format("truetype"), url("/assets/fonts/akk-italic-c.svg#LLAkkuratWeb-Italic") format("svg");
   font-weight: normal;
   font-style: italic; }
 /**

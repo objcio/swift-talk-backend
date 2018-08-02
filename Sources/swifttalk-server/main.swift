@@ -21,8 +21,10 @@ func withConnection<A>(_ x: (Connection?) -> A) -> A {
     return result
 }
 
-enum Route {
+enum MyRoute {
     case home
+    case books
+    case issues
     case env
     case episodes
     case version
@@ -31,48 +33,51 @@ enum Route {
     case staticFile(path: [String])
 }
 
-let episode: Endpoint<Route> = (.c("episodes") / .string()).transform(Route.episode, { r in
-    guard case let .episode(num) = r else { fatalError() }
+let episode: Route<MyRoute> = (Route<()>.c("episodes") / .string()).transform(MyRoute.episode, { r in
+    guard case let .episode(num) = r else { return nil }
     return num
 })
 
-extension Endpoint where A == Route {
-    static let home: Endpoint<Route> = Endpoint(Route.home)
+extension Array where Element == Route<MyRoute> {
+    func choice() -> Route<MyRoute> {
+        assert(!isEmpty)
+        return dropFirst().reduce(self[0], { $0.or($1) })
+    }
 }
 
-let routes: Routes<Route> = [
-    .home,
+
+let routes: Route<MyRoute> = [
+    Route(.home),
     .c("env", .env),
     .c("version", .version),
+    .c("books", .books), // todo absolute url
+    .c("issues", .issues), // todo absolute url
     .c("episodes", .episodes),
     .c("sitemap", .sitemap),
-    (.c("static") / .path()).transform({ Route.staticFile(path:$0) }, { r in
-        guard case let .staticFile(path) = r else { fatalError() }
+    (.c("assets") / .path()).transform({ MyRoute.staticFile(path:$0) }, { r in
+        guard case let .staticFile(path) = r else { return nil }
         return path
     }),
     episode
-]
-
-func parse<A>(_ request: Request, route: Routes<A>) -> A? {
-    for r in route {
-        if let p = r.runParse(request) { return p }
-    }
-    return nil
-}
+].choice()
 
 func inWhitelist(_ path: [String]) -> Bool {
-    return path == ["assets", "stylesheets", "application.css"]
+    return !path.contains("..")
 }
 
 extension Node {
-    func link(to: Endpoint<Route>, children: [Node]) {
-        return Node.a(title: children, href: to.print)
+    static func link(to: MyRoute, _ children: ToElements, attributes: [String:String] = [:]) -> Node {
+        return Node.a(attributes: attributes, children, href: routes.print(to)!.prettyPath)
     }
 }
 
-extension Route {
+
+let fm = FileManager.default
+
+extension MyRoute {
     func interpret<I: Interpreter>() -> I {
         switch self {
+        case .books, .issues: fatalError()
         case .env:
             return .write("\(ProcessInfo.processInfo.environment)")
         case .version:
@@ -85,7 +90,7 @@ extension Route {
         case .episodes:
             return .write("All episodes")
         case .home:
-            return .write("home")
+            return I.write(LayoutConfig(contents: "Home").layout, status: .ok)
         case .sitemap:
             return .write(siteMap(routes))
         case let .staticFile(path: p):
@@ -97,8 +102,8 @@ extension Route {
     }
 }
 
-func siteMap<A>(_ routes: Routes<A>) -> String {
-    return routes.map { $0.description.pretty }.joined(separator: "\n")
+func siteMap<A>(_ routes: Route<A>) -> String {
+    return routes.description.pretty
 }
 
 extension HTTPMethod {
@@ -112,13 +117,15 @@ extension HTTPMethod {
 }
 
 let episodes: [Episode] = {
-    // for this (and the rest of the app) to work we need a correct working directory (root of the app)
+    // for this (and the rest of the app) to work we need to launch with a correct working directory (root of the app)
     let d = try! Data(contentsOf: URL(fileURLWithPath: "data/episodes.json"))
     let e = try! JSONDecoder().decode([Episode].self, from: d)
     return e
 }()
 print("Hello")
-
-let s = MyServer(parse: { parse($0, route: routes) }, interpret: { $0.interpret() })
+print(siteMap(routes))
+let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+let resourcePaths = [currentDir.appendingPathComponent("assets"), currentDir.appendingPathComponent("node_modules")]
+let s = MyServer(parse: { routes.runParse($0) }, interpret: { $0.interpret() }, resourcePaths: resourcePaths)
 print("World")
 try s.listen()

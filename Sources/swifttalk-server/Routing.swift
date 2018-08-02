@@ -10,31 +10,40 @@ struct Request {
     var query: [String:String]
     var method: HTTPMethod
     var body: Data?
-}
-
-enum RouteDescription {
-    case constant(String)
-    case parameter(String)
-    case any
-}
-
-public struct Endpoint<A> {
-    let parse: (inout Request) -> A?
-    let print: (A) -> Request
-    let description: [RouteDescription]
-}
-
-extension Array where Element == RouteDescription {
-    var pretty: String {
-        return "/" + map { switch $0 {
-        case .constant(let s): return s
-        case .parameter(let p): return ":\(p)"
-        case .any: return "*"
-        }}.joined(separator: "/")
+    var prettyPath: String {
+        return "/" + path.joined(separator: "/")
     }
 }
 
-extension Endpoint {
+indirect enum RouteDescription {
+    case constant(String)
+    case parameter(String)
+    case joined(RouteDescription, RouteDescription)
+    case choice(RouteDescription, RouteDescription)
+    case empty
+    case any
+}
+
+public struct Route<A> {
+    let parse: (inout Request) -> A?
+    let print: (A) -> Request?
+    let description: RouteDescription
+}
+
+extension RouteDescription {
+    var pretty: String {
+        switch self {
+        case .constant(let s): return s
+        case .parameter(let p): return ":\(p)"
+        case .any: return "*"
+        case .empty: return ""
+        case let .joined(lhs, rhs): return lhs.pretty + "/" + rhs.pretty
+        case let .choice(lhs, rhs): return "choice(\(lhs.pretty), \(rhs.pretty))"
+	}
+    }
+}
+
+extension Route {
     func runParse(_ r: Request) -> A? {
         var copy = r
         let result = parse(&copy)
@@ -43,58 +52,59 @@ extension Endpoint {
     }
 }
 
-extension Endpoint {
+extension Route {
     init(_ value: A) {
-        self.init(parse: { _ in value }, print: { _ in Request(path: [], query: [:], method: .get, body: nil)}, description: [])
+        self.init(parse: { _ in value }, print: { _ in Request(path: [], query: [:], method: .get, body: nil)}, description: .empty)
     }
     
     /// Constant string
-    static func c(_ string: String, _ value: A) -> Endpoint {
-        return Endpoint<()>.c(string) / Endpoint(value)
+    static func c(_ string: String, _ value: A) -> Route {
+        return Route<()>.c(string) / Route(value)
     }
 }
 
-extension Endpoint where A == () {
+extension Route where A == () {
     /// Constant string
-    static func c(_ string: String) -> Endpoint {
-        return Endpoint(parse: { req in
+    static func c(_ string: String) -> Route {
+        return Route(parse: { req in
             guard req.path.first == string else { return nil }
             req.path.removeFirst()
             return ()
         }, print: { _ in
             return Request(path: [string], query: [:], method: .get, body: nil)
-        }, description: [.constant(string)])
+        }, description: .constant(string))
     }
 }
 
-extension Endpoint where A == Int {
-    static func int() -> Endpoint<Int> {
-        return Endpoint<String>.string().transform(Int.init, { "\($0)"}, { _ in [.parameter("int")] })
+extension Route where A == Int {
+    static func int() -> Route<Int> {
+        return Route<String>.string().transform(Int.init, { "\($0)"}, { _ in .parameter("int") })
     }
 }
 
-extension Endpoint where A == [String] {
-    static func path() -> Endpoint<[String]> {
-        return Endpoint<[String]>(parse: { req in
+extension Route where A == [String] {
+    // eats up the entire path of a route
+    static func path() -> Route<[String]> {
+        return Route<[String]>(parse: { req in
             let result = req.path
             req.path.removeAll()
             return result
         }, print: { p in
             return Request(path: p, query: [:], method: .get, body: nil)
-        }, description: [.any])
+        }, description: .any)
     }
 }
 
-extension Endpoint where A == String {
-    static func string() -> Endpoint<String> {
+extension Route where A == String {
+    static func string() -> Route<String> {
         // todo escape
-        return Endpoint<String>(parse: { req in
+        return Route<String>(parse: { req in
             guard let f = req.path.first else { return nil }
             req.path.removeFirst()
             return f
         }, print: { (str: String) in
             return Request(path: [str], query: [:], method: .get, body: nil)
-        }, description: [.parameter("string")])
+        }, description: .parameter("string"))
     }
 }
 
@@ -108,33 +118,45 @@ extension Optional {
     }
 }
 
+extension Route {
+    func or(_ other: Route) -> Route {
+        return Route(parse: { req in
+            let state = req
+            if let x = self.parse(&req), req.path.isEmpty { return x }
+            req = state
+            return other.parse(&req)
+        }, print: { value in
+            self.print(value) ?? other.print(value)
+        }, description: .choice(description, other.description))
+    }
+}
 func +(lhs: Request, rhs: Request) -> Request {
     let body = lhs.body.xor(rhs.body)
     let query = lhs.query.merging(rhs.query, uniquingKeysWith: { _,_ in fatalError("Duplicate key") })
     return Request(path: lhs.path + rhs.path, query: query, method: lhs.method, body: body)
 }
 
-extension Endpoint {
-    func transform<B>(_ to: @escaping (A) -> B?, _ from: @escaping (B) -> A, _ f: (([RouteDescription]) -> [RouteDescription]) = { $0 }) -> Endpoint<B> {
-        return Endpoint<B>(parse: { req in
-            self.parse(&req).flatMap(to)
+extension Route {
+    func transform<B>(_ to: @escaping (A) -> B?, _ from: @escaping (B) -> A?, _ f: ((RouteDescription) -> RouteDescription) = { $0 }) -> Route<B> {
+        return Route<B>(parse: { (req: inout Request) -> B? in
+            let result = self.parse(&req)
+            return result.flatMap(to)
         }, print: { value in
-            self.print(from(value))
+            from(value).flatMap(self.print)
         }, description: f(description))
     }
 }
 // append two routes
-func /<A,B>(lhs: Endpoint<A>, rhs: Endpoint<B>) -> Endpoint<(A,B)> {
-    return Endpoint(parse: { req in
+func /<A,B>(lhs: Route<A>, rhs: Route<B>) -> Route<(A,B)> {
+    return Route(parse: { req in
         guard let f = lhs.parse(&req), let x = rhs.parse(&req) else { return nil }
         return (f, x)
     }, print: { value in
-        lhs.print(value.0) + rhs.print(value.1)
-    }, description: lhs.description + rhs.description)
+        guard let x = lhs.print(value.0), let y = rhs.print(value.1) else { return nil }
+        return x + y
+    }, description: .joined(lhs.description, rhs.description))
 }
 
-func /<A>(lhs: Endpoint<()>, rhs: Endpoint<A>) -> Endpoint<A> {
+func /<A>(lhs: Route<()>, rhs: Route<A>) -> Route<A> {
     return (lhs / rhs).transform({ x, y in y }, { ((), $0) })
 }
-
-typealias Routes<A> = [Endpoint<A>]

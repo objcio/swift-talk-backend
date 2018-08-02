@@ -1,3 +1,7 @@
+@function asset-url($url){
+  @return url('/assets/fonts/' + $url);
+}
+
 @import 'fonts';
 @import 'objcss/objcss';
 @import 'vendor/fontawesome/scss/fontawesome';
