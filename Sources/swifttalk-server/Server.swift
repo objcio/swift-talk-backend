@@ -38,7 +38,7 @@ struct NIOInterpreter: Interpreter {
     static func writeFile(path: String) -> NIOInterpreter {
         return NIOInterpreter { deps in
             // todo we should check the path for things like ".."
-            let fullPath = deps.resourcePaths.lazy.map { $0.appendingPathComponent(path) }.filter { deps.manager.fileExists(atPath: $0.path) }.first ?? URL(fileURLWithPath: "")
+            let fullPath = deps.resourcePaths.resolve(path) ?? URL(fileURLWithPath: "")
             
             let fileHandleAndRegion = deps.fileIO.openFile(path: fullPath.path, eventLoop: deps.ctx.eventLoop)
             fileHandleAndRegion.whenFailure { _ in

@@ -65,14 +65,29 @@ func inWhitelist(_ path: [String]) -> Bool {
     return !path.contains("..")
 }
 
+let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+let resourcePaths = [currentDir.appendingPathComponent("assets"), currentDir.appendingPathComponent("node_modules")]
+
+let fm = FileManager.default
+extension Array where Element == URL {
+    func resolve(_ path: String) -> URL? {
+        return lazy.map { $0.appendingPathComponent(path) }.filter { fm.fileExists(atPath: $0.path) }.first
+    }
+}
+
 extension Node {
     static func link(to: MyRoute, _ children: ToElements, attributes: [String:String] = [:]) -> Node {
         return Node.a(attributes: attributes, children, href: routes.print(to)!.prettyPath)
     }
+    
+    static func inlineSvg(path: String, attributes: [String:String] = [:]) -> Node {
+        let name = resourcePaths.resolve(path)!
+        let contents = try! String(contentsOf: name).replacingOccurrences(of: "<svg", with: "<svg " + attributes.asAttributes) // todo proper xml parsing?
+        return .raw(contents)
+    }
 }
 
 
-let fm = FileManager.default
 
 extension MyRoute {
     func interpret<I: Interpreter>() -> I {
@@ -124,8 +139,6 @@ let episodes: [Episode] = {
 }()
 print("Hello")
 print(siteMap(routes))
-let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-let resourcePaths = [currentDir.appendingPathComponent("assets"), currentDir.appendingPathComponent("node_modules")]
 let s = MyServer(parse: { routes.runParse($0) }, interpret: { $0.interpret() }, resourcePaths: resourcePaths)
 print("World")
 try s.listen()

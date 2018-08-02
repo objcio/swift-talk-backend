@@ -25,6 +25,20 @@ let navigationItems: [(MyRoute, String)] = [
     (.issues, "Issues")
 ]
 
+let test = """
+<nav class="flex-none self-center border-left border-1 border-color-gray-85 flex ml+">
+<ul class="flex items-stretch">
+<li class="flex ml+">
+<a class="flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration" href="/users/auth/github">Log in</a>
+</li>
+
+<li class="flex items-center ml+">
+<a class="button button--tight button--themed fz-nav" href="/subscribe">Subscribe</a>
+</li>
+</ul>
+</nav>
+"""
+
 extension LayoutConfig {
     var layout: Node {
         return .html(attributes: ["lang": "en"], [
@@ -37,23 +51,30 @@ extension LayoutConfig {
                 .stylesheet(href: "/assets/stylesheets/application.css"),
                 // todo google analytics
                 ]),
-            .body(attributes: ["theme": "theme-" + theme], [ // todo theming classes?
+            .body(attributes: ["class": "theme-" + theme], [ // todo theming classes?
                 .header(attributes: ["class": "bgcolor-white"], [
                     .div(class: "height-3 flex scroller js-scroller js-scroller-container", [
                         .div(class: "container-h flex-grow flex", [
-                            .link(to: .home,
-                                Node.h1("objc.io") // todo class
+                            .link(to: .home, [
+        						.inlineSvg(path: "images/logo.svg", attributes: ["class": "block logo logo--themed height-auto"]), // todo scaling parameter?
+        						.h1("objc.io", attributes: ["class":"visuallyhidden"]) // todo class
+        					] as [Node]
                             , attributes: ["class": "flex-none outline-none mr++ flex"]),
         					.nav(attributes: ["class": "flex flex-grow"], [
                                 .ul(attributes: ["class": "flex flex-auto"], navigationItems.map { l in
-                                    .link(to: l.0, Node.span(l.1), attributes: [
-                                        "class": "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration"
+                                    .li(attributes: ["class": "flex mr+"], [
+                                        .link(to: l.0, Node.span(l.1), attributes: [
+                                            "class": "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration"
+                                        ])
                                     ])
-                                })
-                            ])
+                                }) // todo: search
+                            ]),
+                            .raw(test)
                         ])
                     ])
-                ])
+                ]),
+                .main(contents.elements) // todo sidenav
+                // todo footer
             ])
         ])
     }

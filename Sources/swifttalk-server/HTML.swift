@@ -12,6 +12,7 @@ import Foundation
 enum Node {
     case node(El)
     case text(String)
+    case raw(String)
 }
 
 struct El {
@@ -28,11 +29,18 @@ struct El {
     }
 }
 
-extension El {
-    var render: String {
-        let atts: String = attributes.isEmpty ? "" : " " + attributes.map { (k,v) in
+extension Dictionary where Key == String, Value == String {
+    var asAttributes: String {
+        return isEmpty ? "" : " " + map { (k,v) in
             "\(k)=\"\(v)\"" // todo escape
             }.joined(separator: " ")
+
+    }
+}
+
+extension El {
+    var render: String {
+        let atts: String = attributes.asAttributes
         if children.isEmpty {
             return "<\(name)\(atts) />"
         } else if block {
@@ -46,6 +54,7 @@ extension Node {
     var render: String {
         switch self {
         case .text(let s): return s // todo escape
+        case .raw(let s): return s
         case .node(let n): return n.render
         }
     }
@@ -125,6 +134,14 @@ extension Node {
     
     static func ul(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         return .node(El(name: "ul", block: false, attributes: attributes, children: children))
+    }
+    
+    static func li(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "ul", block: false, attributes: attributes, children: children))
+    }
+    
+    static func main(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "main", block: false, attributes: attributes, children: children))
     }
     
     static func stylesheet(media: String = "all", href: String) -> Node {
