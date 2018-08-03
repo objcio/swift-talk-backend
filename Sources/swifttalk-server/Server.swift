@@ -51,7 +51,8 @@ struct NIOInterpreter: Interpreter {
                 var response = HTTPResponseHead(version: deps.header.version, status: .ok)
                 response.headers.add(name: "Content-Length", value: "\(region.endIndex)")
                 let contentType: String
-                switch (path as NSString).pathExtension {
+                // (path as NSString) doesn't work on Linux... so using the initializer below.
+                switch NSString(string: path).pathExtension {
                 case "css": contentType = "text/css; charset=utf-8"
                 default: contentType = "text/plain; charset=utf-8"
                 }
