@@ -21,7 +21,7 @@ func withConnection<A>(_ x: (Connection?) -> A) -> A {
     return result
 }
 
-enum MyRoute {
+enum MyRoute: Equatable {
     case home
     case books
     case issues
@@ -92,7 +92,8 @@ extension Node {
 extension MyRoute {
     func interpret<I: Interpreter>() -> I {
         switch self {
-        case .books, .issues: fatalError()
+        case .books, .issues:
+            return .notFound()
         case .env:
             return .write("\(ProcessInfo.processInfo.environment)")
         case .version:

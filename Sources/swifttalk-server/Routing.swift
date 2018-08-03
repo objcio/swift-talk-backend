@@ -52,9 +52,12 @@ extension Route {
     }
 }
 
-extension Route {
+extension Route where A: Equatable {
     init(_ value: A) {
-        self.init(parse: { _ in value }, print: { _ in Request(path: [], query: [:], method: .get, body: nil)}, description: .empty)
+        self.init(parse: { _ in value }, print: { x in
+            guard value == x else { return nil }
+            return Request(path: [], query: [:], method: .get, body: nil)
+        }, description: .empty)
     }
     
     /// Constant string

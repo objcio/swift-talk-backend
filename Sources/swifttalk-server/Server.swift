@@ -15,6 +15,9 @@ protocol Interpreter {
 }
 
 extension Interpreter {
+    static func notFound(_ string: String = "Not found") -> Self {
+        return .write(string, status: .notFound)
+    }
     static func write(_ string: String) -> Self {
         return .write(string, status: .ok)
     }
