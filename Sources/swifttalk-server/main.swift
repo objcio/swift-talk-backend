@@ -106,7 +106,8 @@ extension MyRoute {
         case .episodes:
             return .write("All episodes")
         case .home:
-            return I.write(LayoutConfig(contents: "Home").layout, status: .ok)
+            let contents = pageHeader(HeaderContent.other(header: "Swift Talk", blurb: "A weekly video series on Swift programming."))
+            return I.write(LayoutConfig(contents: contents).layout, status: .ok)
         case .sitemap:
             return .write(siteMap(routes))
         case let .staticFile(path: p):
