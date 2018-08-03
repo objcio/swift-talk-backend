@@ -9,10 +9,10 @@ import Foundation
 
 struct LayoutConfig {
     var pageTitle: String
-    var contents: Node
+    var contents: [Node]
     var theme: String
     
-    init(pageTitle: String = "objc.io", contents: Node, theme: String = "default") {
+    init(pageTitle: String = "objc.io", contents: [Node], theme: String = "default") {
         self.pageTitle = pageTitle
         self.contents = contents
         self.theme = theme
@@ -62,6 +62,77 @@ func pageHeader(_ content: HeaderContent) -> Node {
     ])
 }
 
+
+extension Episode {
+    struct ViewOptions {
+        var featured: Bool = false
+        var largeIcon: Bool = false
+        var watched: Bool = false
+        var canWatch: Bool = false
+        
+        init(featured: Bool = false, watched: Bool = false, canWatch: Bool = false) {
+            self.featured = featured
+            self.largeIcon = featured
+            self.watched = watched
+            self.canWatch = canWatch
+        }
+    }
+    func render(_ options: ViewOptions) -> Node {
+        assert(options.featured) // todo
+        assert(!options.watched)
+        assert(!options.canWatch)
+        let iconFile = "icon-lock.svg"
+        let classes = "flex flex-column width-full" + // normal
+//            " max-width-6 m+|max-width-none m+|flex-row" + // wide
+            " min-height-full hover-scale transition-all transition-transform" // featured
+        let pictureClasses = "flex-none"
+        
+        let pictureLinkClasses = "block ratio radius-3 overflow-hidden" +
+        " ratio--2/1 radius-5 no-radius-bottom" // featured
+        // "ratio--22/10 hover-scale transition-all transition-transform" !featured
+        
+        let largeIconClasses = "absolute position-stretch flex justify-center items-center color-white" + (options.canWatch ? " hover-scale-1.25x transition-all transition-transform" : "")
+
+        let smallIcon: [Node] = options.largeIcon ? [] : [.inlineSvg(path: iconFile, attributes: ["class": "svg-fill-current"])]
+        let largeIconSVGClass = "svg-fill-current " + (options.largeIcon ? "icon-46" : "icon-26")
+        let largeIcon: [Node] = options.largeIcon ? [.div(class: largeIconClasses, [.inlineSvg(path: iconFile, attributes: ["class": largeIconSVGClass])])] : []
+        return .article(attributes: ["class": classes], [
+            Node.div(class: pictureClasses, [
+                .link(to: .episode(slug), [
+        			Node.div(attributes: ["class": "ratio__container bg-center bg-cover", "style": "background-image: url('\(poster_url!)')"]),
+        			Node.div(attributes: ["class": "absolute position-stretch opacity-60 blend-darken gradient-episode-black"]),
+                    Node.div(class: "absolute position-stretch flex flex-column", [
+                        Node.div(class: "mt-auto width-full flex items-center lh-100 ms-1 pa- color-white",
+                            smallIcon + [Node.span(attributes: ["class": "ml-auto bold text-shadow-20"], "\(media_duration!)")] // todo format text
+                        )
+                    ])
+        		] + largeIcon, attributes: ["class": pictureLinkClasses])
+            ]),
+            Node.raw(episodeDetail)
+        ])
+    }
+}
+
+// todo
+let episodeDetail = """
+<div class="flex-auto flex flex-column flex-auto justify-center pa bgcolor-pale-gray radius-5 no-radius-top">
+
+        <header>
+              <a class="inline-block no-decoration color-blue hover-underline mb--" href="/collections/tooling">Tooling</a>
+
+          <h3><a class="block lh-110 no-decoration bold color-black hover-underline ms2" href="/episodes/S01E111-ios-remote-debugger-receiving-data">iOS Remote Debugger: Receiving Data</a></h3>
+        </header>
+
+          <p class="lh-135 color-gray-40 mv-- text-wrapper">We implement a JSON over TCP decoder to enable the debug client to receive data from the Mac&nbsp;app.</p>
+
+        <p class="color-gray-65">
+          Episode 111
+          <span class="ph---">·</span>
+          Jul 27
+</p>
+</div>
+"""
+
 extension LayoutConfig {
     var layout: Node {
         return .html(attributes: ["lang": "en"], [
@@ -79,7 +150,7 @@ extension LayoutConfig {
                     .div(class: "height-3 flex scroller js-scroller js-scroller-container", [
                         .div(class: "container-h flex-grow flex", [
                             .link(to: .home, [
-        						.inlineSvg(path: "images/logo.svg", attributes: ["class": "block logo logo--themed height-auto"]), // todo scaling parameter?
+        						.inlineSvg(path: "logo.svg", attributes: ["class": "block logo logo--themed height-auto"]), // todo scaling parameter?
         						.h1("objc.io", attributes: ["class":"visuallyhidden"]) // todo class
         					] as [Node]
                             , attributes: ["class": "flex-none outline-none mr++ flex"]),
@@ -125,6 +196,20 @@ struct Episode: Codable {
     var title: String
     var updated_at: Int
     var url: URL?
+}
+
+extension Int {
+    fileprivate var padded: String {
+        return self < 10 ? "0" + "\(self)" : "\(self)"
+    }
+}
+
+extension Episode {
+    var slug: Slug<Episode> {
+        let allowed = CharacterSet.alphanumerics
+        let slugTitle = title.components(separatedBy: allowed.inverted).joined(separator: "-").lowercased() // todo check logic
+        return Slug("S\(season.padded)E\(number.padded)-\(slugTitle)")
+    }
 }
 
 let footer = """

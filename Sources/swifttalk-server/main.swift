@@ -29,13 +29,18 @@ enum MyRoute: Equatable {
     case episodes
     case version
     case sitemap
-    case episode(String)
+    case episode(Slug<Episode>)
     case staticFile(path: [String])
 }
 
-let episode: Route<MyRoute> = (Route<()>.c("episodes") / .string()).transform(MyRoute.episode, { r in
+struct Slug<A>: Equatable {
+    let name: String
+    init(_ name: String) { self.name = name }
+}
+
+let episode: Route<MyRoute> = (Route<()>.c("episodes") / .string()).transform({ MyRoute.episode(Slug($0)) }, { r in
     guard case let .episode(num) = r else { return nil }
-    return num
+    return num.name
 })
 
 extension Array where Element == Route<MyRoute> {
@@ -81,12 +86,19 @@ extension Node {
     }
     
     static func inlineSvg(path: String, attributes: [String:String] = [:]) -> Node {
-        let name = resourcePaths.resolve(path)!
+        let name = resourcePaths.resolve("images/" + path)!
         let contents = try! String(contentsOf: name).replacingOccurrences(of: "<svg", with: "<svg " + attributes.asAttributes) // todo proper xml parsing?
         return .raw(contents)
     }
 }
 
+
+let allEpisodes: [Episode] = {
+    // for this (and the rest of the app) to work we need to launch with a correct working directory (root of the app)
+    let d = try! Data(contentsOf: URL(fileURLWithPath: "data/episodes.json"))
+    let e = try! JSONDecoder().decode([Episode].self, from: d)
+    return e
+}()
 
 
 extension MyRoute {
@@ -106,8 +118,24 @@ extension MyRoute {
         case .episodes:
             return .write("All episodes")
         case .home:
-            let contents = pageHeader(HeaderContent.other(header: "Swift Talk", blurb: "A weekly video series on Swift programming."))
-            return .write(LayoutConfig(contents: contents).layout, status: .ok)
+            let header = pageHeader(HeaderContent.other(header: "Swift Talk", blurb: "A weekly video series on Swift programming."))
+            let body: Node = .section(attributes: ["class": "container"], [
+                Node.header(attributes: ["class": "mb+"], [
+            		.h2("Recent Episodes", attributes: ["class": "inline-block bold color-black"]),
+            		.link(to: .episodes, "See All", attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-under"])
+                ]),
+            .div(class: "m-cols flex flex-wrap", [
+                .div(class: "mb++ p-col width-full l+|width-1/2", [
+                    allEpisodes.last!.render(Episode.ViewOptions(featured: true))
+                ]),
+                .div(class: "p-col width-full l+|width-1/2", [
+            		.div(class: "s+|cols s+|cols--2n", [
+                        "TODO"
+            		])
+                ])
+                ])
+            ])
+            return .write(LayoutConfig(contents: [header, body]).layout, status: .ok)
         case .sitemap:
             return .write(siteMap(routes))
         case let .staticFile(path: p):
@@ -133,12 +161,6 @@ extension HTTPMethod {
     }
 }
 
-let episodes: [Episode] = {
-    // for this (and the rest of the app) to work we need to launch with a correct working directory (root of the app)
-    let d = try! Data(contentsOf: URL(fileURLWithPath: "data/episodes.json"))
-    let e = try! JSONDecoder().decode([Episode].self, from: d)
-    return e
-}()
 print("Hello")
 print(siteMap(routes))
 let s = MyServer(parse: { routes.runParse($0) }, interpret: { $0.interpret() }, resourcePaths: resourcePaths)
