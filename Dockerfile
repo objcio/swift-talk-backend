@@ -35,6 +35,8 @@ COPY Sources ./Sources
 RUN swift package update
 RUN swift build --product swifttalk-server --configuration release
 
+COPY data ./data
+
 EXPOSE 8765
 
 CMD [".build/release/swifttalk-server"]
