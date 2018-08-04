@@ -69,6 +69,8 @@ extension Episode {
         var largeIcon: Bool = false
         var watched: Bool = false
         var canWatch: Bool = false
+        var wide: Bool = false
+        var collection: Bool = true
         
         init(featured: Bool = false, watched: Bool = false, canWatch: Bool = false) {
             self.featured = featured
@@ -96,6 +98,26 @@ extension Episode {
         let smallIcon: [Node] = options.largeIcon ? [] : [.inlineSvg(path: iconFile, attributes: ["class": "svg-fill-current"])]
         let largeIconSVGClass = "svg-fill-current " + (options.largeIcon ? "icon-46" : "icon-26")
         let largeIcon: [Node] = options.largeIcon ? [.div(class: largeIconClasses, [.inlineSvg(path: iconFile, attributes: ["class": largeIconSVGClass])])] : []
+        
+        let contentClasses = "flex-auto flex flex-column" +
+          (options.wide ? " m+|width-2/3" : " flex-auto justify-center") +
+          (!options.featured && !options.wide ? " pt-" : "") +
+          (options.featured ? " pa bgcolor-pale-gray radius-5 no-radius-top" : "")
+        
+        let coll: [Node]
+        if options.collection, let c = collection {
+            coll = [Node.link(to: MyRoute.collection(c), "TODO", attributes: [
+                "class": "inline-block no-decoration color-blue hover-underline mb--" + (options.featured ? " ms-1" : "")
+            ])]
+        } else { coll = [] }
+        
+        let synopsisClasses = "lh-135 color-gray-40 mv-- text-wrapper" + (
+        !options.featured && !options.wide ? " ms-1 hyphens" : "")
+        
+        let titleClasses = "block lh-110 no-decoration bold color-black hover-underline" + (options.wide ? " ms1" : (options.featured ? " ms2" : ""))
+        
+        let footerClasses = "color-gray-65" + (!options.wide && !options.featured ? "mt-- ms-1" : "")
+        
         return .article(attributes: ["class": classes], [
             Node.div(class: pictureClasses, [
                 .link(to: .episode(slug), [
@@ -108,30 +130,23 @@ extension Episode {
                     ])
         		] + largeIcon, attributes: ["class": pictureLinkClasses])
             ]),
-            Node.raw(episodeDetail)
+            Node.div(class: contentClasses, [
+                .header(coll + [
+                    Node.h3(Node.link(to: .episode(slug), title, attributes: ["class": titleClasses]))
+                ]),
+                .p(attributes: ["class": synopsisClasses], [.text(synopsis)]), // todo widow thing
+                .p(attributes: ["class": footerClasses
+                    ], [
+                        .text("Episode \(number)"),
+                        Node.span(attributes: ["class": "ph---"], "&middot;"),
+                        .text("\(released_at)") // todo
+                    ])
+            ]),
+//            Node.raw(episodeDetail)
+
         ])
     }
 }
-
-// todo
-let episodeDetail = """
-<div class="flex-auto flex flex-column flex-auto justify-center pa bgcolor-pale-gray radius-5 no-radius-top">
-
-        <header>
-              <a class="inline-block no-decoration color-blue hover-underline mb--" href="/collections/tooling">Tooling</a>
-
-          <h3><a class="block lh-110 no-decoration bold color-black hover-underline ms2" href="/episodes/S01E111-ios-remote-debugger-receiving-data">iOS Remote Debugger: Receiving Data</a></h3>
-        </header>
-
-          <p class="lh-135 color-gray-40 mv-- text-wrapper">We implement a JSON over TCP decoder to enable the debug client to receive data from the Mac&nbsp;app.</p>
-
-        <p class="color-gray-65">
-          Episode 111
-          <span class="ph---">·</span>
-          Jul 27
-</p>
-</div>
-"""
 
 extension LayoutConfig {
     var layout: Node {

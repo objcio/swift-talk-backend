@@ -29,6 +29,8 @@ enum MyRoute: Equatable {
     case episodes
     case version
     case sitemap
+    case collections
+    case collection(String)
     case episode(Slug<Episode>)
     case staticFile(path: [String])
 }
@@ -41,6 +43,11 @@ struct Slug<A>: Equatable {
 let episode: Route<MyRoute> = (Route<()>.c("episodes") / .string()).transform({ MyRoute.episode(Slug($0)) }, { r in
     guard case let .episode(num) = r else { return nil }
     return num.name
+})
+
+let collection: Route<MyRoute> = (Route<()>.c("collections") / .string()).transform({ MyRoute.collection($0) }, { r in
+    guard case let .collection(name) = r else { return nil }
+    return name
 })
 
 extension Array where Element == Route<MyRoute> {
@@ -63,7 +70,9 @@ let routes: Route<MyRoute> = [
         guard case let .staticFile(path) = r else { return nil }
         return path
     }),
-    episode
+    .c("collections", .collections),
+    episode,
+    collection
 ].choice()
 
 func inWhitelist(_ path: [String]) -> Bool {
@@ -106,6 +115,10 @@ extension MyRoute {
         switch self {
         case .books, .issues:
             return .notFound()
+        case .collections:
+            return .write("TODO")
+        case .collection(let name):
+            return .write("TODO collection")
         case .env:
             return .write("\(ProcessInfo.processInfo.environment)")
         case .version:
@@ -126,7 +139,7 @@ extension MyRoute {
                 ]),
             .div(class: "m-cols flex flex-wrap", [
                 .div(class: "mb++ p-col width-full l+|width-1/2", [
-                    allEpisodes.last!.render(Episode.ViewOptions(featured: true))
+                    allEpisodes.first!.render(Episode.ViewOptions(featured: true))
                 ]),
                 .div(class: "p-col width-full l+|width-1/2", [
             		.div(class: "s+|cols s+|cols--2n", [
