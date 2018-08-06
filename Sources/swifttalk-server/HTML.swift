@@ -143,6 +143,15 @@ extension Node {
         return .node(El(name: "div", attributes: attributes, children: children))
     }
     
+    static func video(attributes: [String:String] = [:], _ source: URL, sourceType: String) -> Node {
+        return .node(El(name: "video", attributes: attributes, children: [
+            .node(El(name: "source", attributes: [
+                "src": source.absoluteString,
+                "type": sourceType
+            ]))
+        ]))
+    }
+    
     static func nav(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         return .node(El(name: "nav", attributes: attributes, children: children))
     }

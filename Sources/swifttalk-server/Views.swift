@@ -210,24 +210,65 @@ extension Episode {
 }
 
 extension Episode {
-    func toc(playable: Bool) -> Node {
-        assert(!playable) // todo
+    struct Media {
+        var url: URL
+        var type: String
+        var sample: Bool
+    }
+    fileprivate func player(media: Media, playPosition: Int?) -> Node {
+        var attrs = [
+            "class":       "stretch js-video video-js vjs-big-play-centered vjs-default-skin",
+            "id":          "episode-video",
+            "controls":    "true",
+            "preload":     "auto",
+            "playsinline": "true"
+        ]
+        if media.sample {
+            attrs["data-sample"] = "true"
+        } else if let startTime = playPosition {
+            attrs["start_time"] = "\(startTime)"
+        }
+        return .div(class: "ratio ratio--16/9", [
+            .div(class: "ratio__container", [
+                .figure(attributes: ["class":"stretch relative"], [
+                    Node.video(attributes: attrs, media.url, sourceType: media.type)
+                ])
+            ])
+        ])
+    }
+    
+    fileprivate func toc(canWatch: Bool) -> Node {
+        let wrapperClasses = "flex color-inherit pv"
+        
+        func item(_ entry: (TimeInterval, title: String)) -> Node {
+            guard canWatch else {
+                return Node.span(attributes: ["class": wrapperClasses], entry.title)
+            }
+            
+            return Node.a(attributes: ["class": wrapperClasses + " items-baseline no-decoration hover-cascade js-episode-seek"], [
+                Node.span(attributes: ["class": "hover-cascade__underline"], entry.title),
+                Node.span(attributes: ["class": "ml-auto color-orange pl-"], entry.0.timeString),
+            ], href: "?t=\(Int(entry.0))")
+        }
+        
+        let items = [(6, title: "Introduction")] + tableOfContents
+
         return .div(class: "l+|absolute l+|position-stretch stretch width-full flex flex-column", [
             Node.h3([
-                .span(attributes: ["class": "smallcaps"], playable ? "In this episode" : "In the full episode"),
+                .span(attributes: ["class": "smallcaps"], canWatch ? "In this episode" : "In the full episode"),
                 .span(attributes: ["class": "ml-auto ms-1 bold"], media_duration!.timeString)
             ], attributes: ["class": "color-blue border-top border-2 pt mb+ flex-none flex items-baseline"]),
             Node.div(class: "flex-auto overflow-auto border-color-lighten-10 border-1 border-top", [
-                Node.ol(attributes: ["class": "lh-125 ms-1 color-white"], toc.map { entry in
+                Node.ol(attributes: ["class": "lh-125 ms-1 color-white"], items.map { entry in
                     Node.li(attributes: ["class": "border-bottom border-1 border-color-lighten-10"], [
-                        Node.span(attributes: ["class": "flex color-inherit pv"], entry.1)
+                        item(entry)
                     ])
                 })
             ])
         ])
     }
     
-    func show(watched: Bool = false, playable: Bool = false) -> Node {
+    func show(watched: Bool = false, canWatch: Bool = true) -> Node {
         // todo meta-data
         assert(guests == nil || guests?.count == 0) // todo
         let guests_: [Node] = []
@@ -243,10 +284,10 @@ extension Episode {
                     ] + guests_ ),
                     Node.div(class: "l+|flex", [
                         .div(class: "flex-110 order-2", [
-                            // todo video player
+                            player(media: Media(url: media_url!, type: "application/x-mpegURL", sample: true), playPosition: nil) // todo
                         ]),
                         .div(class: "min-width-5 relative order-1 mt++ l+|mt0 l+|mr++ l+|mb++", [
-                            toc(playable: playable)
+                            toc(canWatch: canWatch)
                         ])
                     ])
                 ])
