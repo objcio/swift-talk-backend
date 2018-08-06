@@ -130,7 +130,10 @@ extension MyRoute {
         case .collections:
             return .write("TODO")
         case .collection(let name):
-            return .write("TODO collection")
+            guard let c = Collection.all.first(where: { $0.slug == name }) else {
+                return I.notFound("No such collection")
+            }
+            return .write("TODO collection: \(c)")
         case .env:
             return .write("\(ProcessInfo.processInfo.environment)")
         case .version:
@@ -144,7 +147,7 @@ extension MyRoute {
             return .write("All episodes")
         case .home:
             let header = pageHeader(HeaderContent.other(header: "Swift Talk", blurb: "A weekly video series on Swift programming."))
-            let body: Node = .section(attributes: ["class": "container"], [
+            let recentEpisodes: Node = .section(attributes: ["class": "container"], [
                 Node.header(attributes: ["class": "mb+"], [
             		.h2("Recent Episodes", attributes: ["class": "inline-block bold color-black"]),
             		.link(to: .episodes, "See All", attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-under"])
@@ -162,7 +165,19 @@ extension MyRoute {
                 ])
                 ])
             ])
-            return .write(LayoutConfig(contents: [header, body]).layout, status: .ok)
+            let collections: Node = .section(attributes: ["class": "container"], [
+                .header(attributes: ["class": "mb+"], [
+            		.h2("Collections", attributes: ["class": "inline-block bold lh-100 mb---"]),
+            		.link(to: .collections, "Show Contents", attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-underline"]),
+                    .p(attributes: ["class": "lh-125 color-gray-60"], [
+                        .text("Browse all Swift Talk episodes by topic.")
+                    ])
+                ]),
+                .ul(attributes: ["class": "cols s+|cols--2n l+|cols--3n"], Collection.all.map { coll in
+                    Node.li(attributes: ["class": "col width-full s+|width-1/2 l+|width-1/3 mb++"], coll.render())
+                })
+            ])
+            return .write(LayoutConfig(contents: [header, recentEpisodes, collections]).layout, status: .ok)
         case .sitemap:
             return .write(siteMap(routes))
         case let .staticFile(path: p):

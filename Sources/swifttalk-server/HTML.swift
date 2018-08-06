@@ -126,6 +126,13 @@ extension Node {
     static func h3(_ title: ToElements, attributes: [String:String] = [:]) -> Node {
         return .node(El(name: "h3", block: false, attributes: attributes, children: title.elements))
     }
+    
+    static func img(src: String, alt: String = "", attributes: [String:String] = [:]) -> Node {
+        var a = attributes
+        a["src"] = src
+        a["alt"] = alt
+        return .node(El(name: "img", block: false, attributes: a, children: []))
+    }
 
     static func div(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         return .node(El(name: "div", attributes: attributes, children: children))
@@ -159,6 +166,10 @@ extension Node {
     static func article(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         return .node(El(name: "article", attributes: attributes, children: children))
     }
+    
+    static func figure(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "figure", attributes: attributes, children: children))
+    }    
     
     static func stylesheet(media: String = "all", href: String) -> Node {
         let attributes = [

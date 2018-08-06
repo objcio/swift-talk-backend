@@ -45,4 +45,12 @@ struct Collection: Codable, Equatable {
     var artwork: String // todo this is a weird kind of URL we get from JSON
     var description: String
     var title: String
+    var episodes_count: Int // todo compute
+    var total_duration: TimeInterval // todo compute
+}
+
+extension Collection {
+    var new: Bool {
+        return false // todo
+    }
 }

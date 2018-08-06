@@ -67,6 +67,14 @@ extension TimeInterval {
         let m = Int((self/60).rounded())
         return "\(m) min"
     }
+    
+    var hoursAndMinutes: String {
+        let hours = floor(self/(60*60))
+        if hours > 0 {
+            let m = Int(((self - (hours*60*60))/60).rounded())
+            return "\(Int(hours))h\(m)min"
+        } else { return minutes }
+    }
 }
 
 extension DateFormatter {
@@ -185,6 +193,46 @@ extension Episode {
     }
 }
 
+extension Int {
+    func pluralize(_ text: String) -> String {
+        assert(text == "Episode") // todo
+        if self == 1 {
+            return "1 " + text
+        } else {
+            return "\(self) \(text)s"
+        }
+    }
+}
+
+extension Collection {
+    struct ViewOptions {
+        var episodes: Bool = false
+        var whiteBackground: Bool = false
+    }
+    func render(_ options: ViewOptions = ViewOptions()) -> [Node] {
+        let figureStyle = "background-color: " + (options.whiteBackground ? "#FCFDFC" : "#F2F4F2")
+        return [
+            Node.article([
+                .link(to: .collection(slug), [
+                    .figure(attributes: ["class": "mb-", "style": figureStyle], [
+                        .img(src: artwork, attributes: ["class": "block width-full height-auto"])
+                    ]),
+                ]),
+                .div(class: "flex items-center pt--", [
+                    Node.h3(Node.link(to: .collection(slug), title, attributes: ["class": "inline-block lh-110 no-decoration bold color-black hover-under"]))
+                ] + (new ? [
+                    .span(attributes: ["class": "flex-none label smallcaps color-white bgcolor-blue nowrap ml-"], "New")
+                ] : [])),
+                .p(attributes: ["class": "ms-1 color-gray-55 lh-125 mt--"], [
+                    .text(episodes_count.pluralize("Episode")),
+                    .span(attributes: ["class": "ph---"], Node.raw("&middot;")),
+                    .text(total_duration.hoursAndMinutes)
+                ] as [Node])
+            ])
+        ]
+    }
+}
+
 extension LayoutConfig {
     var layout: Node {
         return .html(attributes: ["lang": "en"], [
@@ -242,7 +290,7 @@ extension Collection {
 extension String {
     var asSlug: String {
         let allowed = CharacterSet.alphanumerics
-        return components(separatedBy: allowed.inverted).joined(separator: "-").lowercased() // todo check logic
+        return components(separatedBy: allowed.inverted).filter { !$0.isEmpty }.joined(separator: "-").lowercased() // todo check logic
     }
 }
 
