@@ -209,13 +209,24 @@ extension Episode {
 
 }
 
+
+let previewBadge = """
+<div class="js-video-badge bgcolor-orange color-white bold absolute position-nw width-4">
+  <div class="ratio ratio--1/1">
+    <div class="ratio__container flex flex-column justify-end items-center">
+      <p class="smallcaps mb">Preview</p>
+    </div>
+  </div>
+</div>
+"""
+
 extension Episode {
     struct Media {
         var url: URL
         var type: String
         var sample: Bool
     }
-    fileprivate func player(media: Media, playPosition: Int?) -> Node {
+    fileprivate func player(media: Media, canWatch: Bool, playPosition: Int?) -> Node {
         var attrs = [
             "class":       "stretch js-video video-js vjs-big-play-centered vjs-default-skin",
             "id":          "episode-video",
@@ -232,7 +243,7 @@ extension Episode {
             .div(class: "ratio__container", [
                 .figure(attributes: ["class":"stretch relative"], [
                     Node.video(attributes: attrs, media.url, sourceType: media.type)
-                ])
+        		] + (canWatch ? [] : [Node.raw(previewBadge)]))
             ])
         ])
     }
@@ -268,23 +279,23 @@ extension Episode {
         ])
     }
     
-    func show(watched: Bool = false, canWatch: Bool = true) -> Node {
+    func show(watched: Bool = false, canWatch: Bool = false) -> Node {
         // todo meta-data
         assert(guests == nil || guests?.count == 0) // todo
         let guests_: [Node] = []
-        let main: Node = Node.div(class: "js-episode", [
-            Node.div(class: "bgcolor-night-blue pattern-shade-darker", [
-                Node.div(class: "container l+|pb0 l+|n-mb++", [
-                    Node.header(attributes: ["class": "mb++ pb"], [
-                        Node.p(attributes: ["class": "color-orange ms1"], [
-                            Node.link(to: .home, "Swift Talk", attributes: ["class": "color-inherit no-decoration bold hover-border-bottom"]),
-                            Node.text("#" + number.padded)
+        let main: Node = .div(class: "js-episode", [
+            .div(class: "bgcolor-night-blue pattern-shade-darker", [
+                .div(class: "container l+|pb0 l+|n-mb++", [
+                    .header(attributes: ["class": "mb++ pb"], [
+                        .p(attributes: ["class": "color-orange ms1"], [
+                            .link(to: .home, "Swift Talk", attributes: ["class": "color-inherit no-decoration bold hover-border-bottom"]),
+                            .text("#" + number.padded)
                         ]),
-                        Node.h2(fullTitle, attributes: ["class": "ms5 color-white bold mt-- lh-110"])
+                        .h2(fullTitle, attributes: ["class": "ms5 color-white bold mt-- lh-110"])
                     ] + guests_ ),
-                    Node.div(class: "l+|flex", [
+                    .div(class: "l+|flex", [
                         .div(class: "flex-110 order-2", [
-                            player(media: Media(url: media_url!, type: "application/x-mpegURL", sample: true), playPosition: nil) // todo
+                            player(media: Media(url: media_url!, type: "application/x-mpegURL", sample: true), canWatch: canWatch, playPosition: nil) // todo
                         ]),
                         .div(class: "min-width-5 relative order-1 mt++ l+|mt0 l+|mr++ l+|mb++", [
                             toc(canWatch: canWatch)
