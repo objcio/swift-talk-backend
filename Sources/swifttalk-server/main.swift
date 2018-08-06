@@ -30,6 +30,7 @@ enum MyRoute: Equatable {
     case version
     case sitemap
     case imprint
+    case subscribe
     case collections
     case collection(Slug<Collection>)
     case episode(Slug<Episode>)
@@ -54,6 +55,7 @@ let routes: Route<MyRoute> = [
     .c("issues", .issues), // todo absolute url
     .c("episodes", .episodes),
     .c("sitemap", .sitemap),
+    .c("subscribe", .subscribe),
     .c("imprint", .imprint),
     (.c("assets") / .path()).transform({ MyRoute.staticFile(path:$0) }, { r in
         guard case let .staticFile(path) = r else { return nil }
@@ -78,6 +80,8 @@ extension Array where Element == URL {
     }
 }
 
+import CommonMark
+
 extension Node {
     static func link(to: MyRoute, _ children: ToElements, attributes: [String:String] = [:]) -> Node {
         return Node.a(attributes: attributes, children, href: routes.print(to)!.prettyPath)
@@ -88,31 +92,58 @@ extension Node {
         let contents = try! String(contentsOf: name).replacingOccurrences(of: "<svg", with: "<svg " + attributes.asAttributes) // todo proper xml parsing?
         return .raw(contents)
     }
+    
+    static func markdown(_ string: String) -> Node {
+        return Node.raw(CommonMark.Node(markdown: string)!.html)
+    }
 }
 
-import CommonMark
+extension Scanner {
+    var remainder: String {
+        return NSString(string: string).substring(from: scanLocation)
+    }
+}
 
 extension String {
-    func scanTimePrefix() -> (minutes: Int, seconds: Int)? {
+    func scanTimePrefix() -> (minutes: Int, seconds: Int, remainder: String)? {
         let s = Scanner(string: self)
         var minutes: Int = 0
         var seconds: Int = 0
         if s.scanInt(&minutes), s.scanString(":", into: nil), s.scanInt(&seconds) {
-            return (minutes, seconds)
+            return (minutes, seconds, s.remainder)
         } else {
             return nil
         }
     }
 }
 
+func absoluteURL(_ route: MyRoute) -> URL? {
+    guard let p = routes.print(route)?.prettyPath else { return nil }
+    return URL(string: "https://www.objc.io" + p)
+}
+
 extension Episode {
-    var transcript: String? {
+    var rawTranscript: String? {
         let path = URL(fileURLWithPath: "data/episode-transcripts/episode\(number).md")
         return try? String(contentsOf: path)
     }
+    
+    var transcript: CommonMark.Node? {
+        guard let t = rawTranscript, let nodes = CommonMark.Node(markdown: t) else { return nil }
+        return CommonMark.Node(blocks: nodes.elements.deepApply({ (inl: Inline) -> [Inline] in
+            guard case let .text(t) = inl else { return [inl] }
+            if let (m,s,remainder) = t.scanTimePrefix() {
+                let totalSeconds = m*60 + s
+                let pretty = "\(m.padded):\(s.padded)"
+                return [Inline.link(children: [.text(text: pretty)], title: "", url: "#\(totalSeconds)"), .text(text: remainder)]
+            } else {
+                return [inl]
+            }
+        }))
+    }
 
     var tableOfContents: [((TimeInterval), title: String)] {
-        guard let t = transcript, let els = CommonMark.Node(markdown: t)?.elements else { return [] }
+        guard let t = rawTranscript, let els = CommonMark.Node(markdown: t)?.elements else { return [] }
         
         var result: [(TimeInterval, title: String)] = []
         var currentTitle: String?
@@ -125,7 +156,7 @@ extension Episode {
                 })
                 currentTitle = strs.joined(separator: " ")
             case let .paragraph(text: c) where currentTitle != nil:
-                if case let .text(t)? = c.first, let (minutes, seconds) = t.scanTimePrefix() {
+                if case let .text(t)? = c.first, let (minutes, seconds, _) = t.scanTimePrefix() {
                     result.append((TimeInterval(minutes*60 + seconds), title: currentTitle!))
                     currentTitle = nil
                 }
@@ -162,7 +193,7 @@ extension MyRoute {
         switch self {
         case .books, .issues:
             return .notFound()
-        case .collections, .imprint:
+        case .collections, .imprint, .subscribe:
             return .write("TODO")
         case .collection(let name):
             guard let c = Collection.all.first(where: { $0.slug == name }) else {

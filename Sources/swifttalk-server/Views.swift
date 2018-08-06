@@ -11,11 +11,15 @@ struct LayoutConfig {
     var pageTitle: String
     var contents: [Node]
     var theme: String
+    var footerContent: [Node]
+    var structuredData: StructuredData?
     
-    init(pageTitle: String = "objc.io", contents: [Node], theme: String = "default") {
+    init(pageTitle: String = "objc.io", contents: [Node], theme: String = "default", footerContent: [Node] = [], structuredData: StructuredData? = nil) {
         self.pageTitle = pageTitle
         self.contents = contents
         self.theme = theme
+        self.footerContent = footerContent
+        self.structuredData = structuredData
     }
 }
 
@@ -279,7 +283,7 @@ extension Episode {
         ])
     }
     
-    func show(watched: Bool = false, canWatch: Bool = false) -> Node {
+    func show(watched: Bool = false, canWatch: Bool = true, premiumUser: Bool = false) -> Node {
         // todo meta-data
         assert(guests == nil || guests?.count == 0) // todo
         let guests_: [Node] = []
@@ -302,9 +306,157 @@ extension Episode {
                         ])
                     ])
                 ])
+            ]),
+            .div(class: "bgcolor-white l+|pt++", [
+                .div(class: "container", canWatch ? [
+                    .raw(subscriptionPitch),
+                    .div(class: "l+|flex l-|stack+++ m-cols", [
+                    .div(class: "p-col l+|flex-auto l+|width-2/3 xl+|width-7/10 flex flex-column", [
+                        Node.div(class: "text-wrapper", [
+                            Node.div(class: "lh-140 color-blue-darkest ms1 bold mb+", [
+                                .markdown(synopsis),
+                                // todo episode.updates
+                            ])
+                        ]),
+                        .div(class: "flex-auto relative min-height-5", [
+                            .div(attributes: ["class": "js-transcript js-expandable z-0", "data-expandable-collapsed": "absolute position-stretch position-nw overflow-hidden", "id": "transcript"], [
+                                Node.raw(expandTranscript),
+                                Node.div(class: "c-text c-text--fit-code z-0 js-has-codeblocks", [
+                                    .raw(transcript?.html ?? "No transcript yet.")
+                                    ])
+                                ])
+                            ])
+                        ])
+                    ])
+            	] : [
+                    .div(class: "bgcolor-pale-blue border border-1 border-color-subtle-blue radius-5 ph pv++ flex flex-column justify-center items-center text-center min-height-6", [
+                        Node.inlineSvg(path: "icon-blocked.svg"),
+                        .div(class: "mv", [
+                            .h3("This episode is exclusive to Subscribers", attributes: ["class":"ms1 bold color-blue-darkest"]),
+        					.p(attributes: ["class": "mt- lh-135 color-blue-darkest opacity-60 max-width-8"], "Become a subscriber to watch future and all \(Episode.subscriberOnly) current subscriber-only episodes, plus access to episode video downloads, and \(teamDiscount)% discount for your team members.")
+                            
+                        ]),
+                        Node.link(to: .subscribe, "Become a subscriber", attributes: ["class": "button button--themed"])
+                    ])
+                ])
             ])
         ])
-        return LayoutConfig(contents: [main]).layout
+        
+        let data = StructuredData(title: title, description: synopsis, url: absoluteURL(.episode(slug)), image: poster_url, type: .video(duration: media_duration.map(Int.init), releaseDate: releasedAt))
+        return LayoutConfig(contents: [main], footerContent: [Node.raw(transcriptLinks)], structuredData: data).layout
+    }
+}
+
+extension DateFormatter {
+    static let iso8601: DateFormatter = {
+        let dateFormatter = DateFormatter()
+        let enUSPosixLocale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.locale = enUSPosixLocale
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
+        return dateFormatter
+    }()
+}
+
+
+struct StructuredData {
+    let twitterCard: String = "summary_large_image"
+    let twitterSite: String = "@objcio"
+    let title: String
+    let description: String
+    let url: URL?
+    let image: URL?
+    let type: ItemType
+    
+    enum ItemType {
+        case video(duration: Int?, releaseDate: Date?)
+        case other
+    }
+    
+    init(title: String, description: String, url: URL?, image: URL?, type: ItemType = .other) {
+        self.title = title
+        self.description = description
+        self.url = url
+        self.image = image
+        self.type = type
+    }
+    
+    var ogType: String {
+        switch type {
+        case .other: return ""
+        case .video(duration: _, releaseDate: _): return "video.episode"
+        }
+    }
+    var nodes: [Node] {
+        var twitter: [String:String] = ["card": twitterCard, "site": twitterSite, "title": title, "description": description]
+        var og: [String:String] = ["og:type": ogType, "og:title": title, "og:description": description]
+        if let u = url {
+            og["og:url"] = u.absoluteString
+        }
+        if let i = image {
+            twitter["image"] = i.absoluteString
+            og["og:image"] = i.absoluteString
+        }
+        if case let .video(duration?, date?) = type {
+            og["video:release_date"] = DateFormatter.iso8601.string(from: date)
+            og["video:duration"] = "\(duration)"
+        }
+        return twitter.map { (k,v) in
+            Node.meta(attributes: ["name": "twitter:" + k, "content": v])
+        } + og.map { (k,v) in
+            Node.meta(attributes: ["property": k, "content": v])
+        }
+    }
+}
+
+
+let transcriptLinks = """
+<script>
+  $(function () {
+    $('.js-transcript').find("a[href^='#']").each(function () {
+      if (/^\\d+$/.test(this.hash.slice(1)) && /^\\d{1,2}(:\\d{2}){1,2}$/.test(this.innerHTML)) {
+        var time = parseInt(this.hash.slice(1));
+        $(this)
+          .data('time', time)
+          .attr('href', '?t='+time)
+          .addClass('js-episode-seek js-transcript-cue');
+      }
+    });
+
+    // Auto-expand transcript if #transcript hash is passed
+    if (window.location.hash.match(/^#?transcript$/)) {
+      $('#transcript').find('.js-expandable-trigger').trigger('click');
+    }
+
+  });
+</script>
+"""
+
+let expandTranscript = """
+  <div class="no-js-hide absolute height-4 gradient-fade-to-white position-stretch-h position-s ph z-1" data-expandable-expanded="hide">
+    <div class="absolute position-s width-full text-wrapper text-center">
+      <button type="button" class="js-expandable-trigger smallcaps button radius-full ph+++">Continue reading…</button>
+    </div>
+  </div>
+"""
+
+let subscriptionPitch: String = """
+    <div class="bgcolor-pale-blue border border-1 border-color-subtle-blue color-blue-darkest pa+ radius-5 mb++">
+    <div class="max-width-8 center text-center">
+    <h3 class="mb-- bold lh-125">This episode is freely available thanks to the support of our subscribers</h3>
+    <p class="lh-135">
+    <span class="opacity-60">Subscribers get exclusive access to new and all previous subscriber-only episodes, video downloads, and 30% discount for team members.</span>
+<a href="\(routes.print(.subscribe)!.prettyPath)" class="color-blue no-decoration hover-cascade">
+    <span class="hover-cascade__border-bottom">Become a Subscriber</span> <span class="bold">&rarr;</span>
+</a>
+    </p>
+    </div>
+    </div>
+
+"""
+
+extension Episode {
+    static var subscriberOnly: Int {
+        return all.lazy.filter { $0.subscription_only }.count
     }
 }
 
@@ -350,6 +502,7 @@ extension Collection {
 
 extension LayoutConfig {
     var layout: Node {
+        let structured: [Node] = structuredData.map { $0.nodes } ?? []
         return .html(attributes: ["lang": "en"], [
             .head([
                 .meta(attributes: ["charset": "utf-8"]),
@@ -359,7 +512,7 @@ extension LayoutConfig {
                 // todo rss+atom links
                 .stylesheet(href: "/assets/stylesheets/application.css"),
                 // todo google analytics
-                ]),
+                ] + structured),
             .body(attributes: ["class": "theme-" + theme], [ // todo theming classes?
                 .header(attributes: ["class": "bgcolor-white"], [
                     .div(class: "height-3 flex scroller js-scroller js-scroller-container", [
@@ -383,15 +536,15 @@ extension LayoutConfig {
                     ])
                 ]),
                 .main(contents.elements), // todo sidenav
-                .raw(footer)
-            ])
+                .raw(footer),
+            ] + footerContent)
         ])
     }
 
 }
 
 extension Int {
-    fileprivate var padded: String {
+    var padded: String {
         return self < 10 ? "0" + "\(self)" : "\(self)"
     }
 }

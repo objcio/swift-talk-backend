@@ -88,15 +88,15 @@ extension Node {
     }
     
     static func meta(attributes: [String:String] = [:]) -> Node {
-        return .node(El(name: "meta", attributes: attributes, children: []))
+        return .node(El(name: "meta", block: false, attributes: attributes, children: []))
     }
     
     static func body(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         return .node(El(name: "body", attributes: attributes, children: children))
     }
     
-    static func p(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(El(name: "p", attributes: attributes, children: children))
+    static func p(attributes: [String:String] = [:], _ children: ToElements = []) -> Node {
+        return .node(El(name: "p", attributes: attributes, children: children.elements))
     }
     
     static func head(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {

@@ -7,6 +7,8 @@
 
 import Foundation
 
+let teamDiscount = 30
+
 struct Slug<A>: Codable, Equatable, RawRepresentable {
     let rawValue: String
 }
