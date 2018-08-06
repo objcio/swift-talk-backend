@@ -30,24 +30,23 @@ enum MyRoute: Equatable {
     case version
     case sitemap
     case collections
-    case collection(String)
+    case collection(Slug<Collection>)
     case episode(Slug<Episode>)
     case staticFile(path: [String])
 }
 
-struct Slug<A>: Equatable {
-    let name: String
-    init(_ name: String) { self.name = name }
+struct Slug<A>: Codable, Equatable, RawRepresentable {
+    let rawValue: String
 }
 
-let episode: Route<MyRoute> = (Route<()>.c("episodes") / .string()).transform({ MyRoute.episode(Slug($0)) }, { r in
+let episode: Route<MyRoute> = (Route<()>.c("episodes") / .string()).transform({ MyRoute.episode(Slug(rawValue: $0)) }, { r in
     guard case let .episode(num) = r else { return nil }
-    return num.name
+    return num.rawValue
 })
 
-let collection: Route<MyRoute> = (Route<()>.c("collections") / .string()).transform({ MyRoute.collection($0) }, { r in
+let collection: Route<MyRoute> = (Route<()>.c("collections") / .string()).transform({ MyRoute.collection(Slug(rawValue: $0)) }, { r in
     guard case let .collection(name) = r else { return nil }
-    return name
+    return name.rawValue
 })
 
 extension Array where Element == Route<MyRoute> {
@@ -102,12 +101,25 @@ extension Node {
 }
 
 
-let allEpisodes: [Episode] = {
-    // for this (and the rest of the app) to work we need to launch with a correct working directory (root of the app)
-    let d = try! Data(contentsOf: URL(fileURLWithPath: "data/episodes.json"))
-    let e = try! JSONDecoder().decode([Episode].self, from: d)
-    return e
-}()
+extension Episode {
+    static let all: [Episode] = {
+        // for this (and the rest of the app) to work we need to launch with a correct working directory (root of the app)
+        let d = try! Data(contentsOf: URL(fileURLWithPath: "data/episodes.json"))
+        let e = try! JSONDecoder().decode([Episode].self, from: d)
+        return e
+
+    }()
+}
+
+extension Collection {
+    static let all: [Collection] = {
+        // for this (and the rest of the app) to work we need to launch with a correct working directory (root of the app)
+        let d = try! Data(contentsOf: URL(fileURLWithPath: "data/collections.json"))
+        let e = try! JSONDecoder().decode([Collection].self, from: d)
+        return e
+        
+    }()
+}
 
 
 extension MyRoute {
@@ -139,11 +151,11 @@ extension MyRoute {
                 ]),
             .div(class: "m-cols flex flex-wrap", [
                 .div(class: "mb++ p-col width-full l+|width-1/2", [
-                    allEpisodes.first!.render(Episode.ViewOptions(featured: true))
+                    Episode.all.first!.render(Episode.ViewOptions(featured: true))
                 ]),
                 .div(class: "p-col width-full l+|width-1/2", [
             		.div(class: "s+|cols s+|cols--2n",
-                         allEpisodes[1..<5].map { ep in
+                         Episode.all[1..<5].map { ep in
                             .div(class: "mb++ s+|col s+|width-1/2", [ep.render(Episode.ViewOptions())])
                         }
             		)

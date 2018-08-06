@@ -62,6 +62,39 @@ func pageHeader(_ content: HeaderContent) -> Node {
     ])
 }
 
+extension TimeInterval {
+    var minutes: String {
+        let m = Int((self/60).rounded())
+        return "\(m) min"
+    }
+}
+
+extension DateFormatter {
+    static let withYear: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US")
+        f.dateFormat = "MMM dd yyyy"
+        return f
+    }()
+    
+    static let withoutYear: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US")
+        f.dateFormat = "MMM dd"
+        return f
+    }()
+}
+
+extension Date {
+    fileprivate var pretty: String {
+        let cal = NSCalendar.current
+        if cal.component(.year, from: Date()) == cal.component(.year, from: self) {
+            return DateFormatter.withoutYear.string(from: self)
+        } else {
+        	return DateFormatter.withYear.string(from: self)
+        }
+    }
+}
 
 extension Episode {
     struct ViewOptions {
@@ -107,8 +140,8 @@ extension Episode {
           (options.featured ? " pa bgcolor-pale-gray radius-5 no-radius-top" : "")
         
         let coll: [Node]
-        if options.collection, let c = collection {
-            coll = [Node.link(to: MyRoute.collection(c), "Todo", attributes: [
+        if options.collection, let id = collection, let collection = Collection.all.first(where: { $0.id == id }) {
+            coll = [Node.link(to: MyRoute.collection(collection.slug), collection.title, attributes: [
                 "class": "inline-block no-decoration color-blue hover-underline mb--" + (options.featured ? "" : " ms-1")
             ])]
         } else { coll = [] }
@@ -129,7 +162,7 @@ extension Episode {
         			Node.div(attributes: ["class": "absolute position-stretch opacity-60 blend-darken gradient-episode-black"]),
                     Node.div(class: "absolute position-stretch flex flex-column", [
                         Node.div(class: "mt-auto width-full flex items-center lh-100 ms-1 pa- color-white",
-                            smallIcon + [Node.span(attributes: ["class": "ml-auto bold text-shadow-20"], "\(media_duration!)")] // todo format text
+                            smallIcon + [Node.span(attributes: ["class": "ml-auto bold text-shadow-20"], "\(media_duration!.minutes)")] // todo format text
                         )
                     ])
         		] + largeIcon, attributes: ["class": pictureLinkClasses])
@@ -143,7 +176,7 @@ extension Episode {
                     ], [
                         .text("Episode \(number)"),
                         Node.span(attributes: ["class": "ph---"], "&middot;"),
-                        .text("\(released_at)") // todo
+                        .text("\(releasedAt?.pretty ?? "Not yet released")") // todo
                     ])
             ]),
 //            Node.raw(episodeDetail)
@@ -194,40 +227,28 @@ extension LayoutConfig {
 
 }
 
-struct Episode: Codable {
-    var collection: String?
-    var created_at: Int
-    var furthest_watched: Double?
-    var id: String
-    var media_duration: Double?
-    var media_url: URL?
-    var name: String?
-    var number: Int
-    var play_position: Double?
-    var poster_url: URL?
-    var released_at: Int?
-    var sample: Bool
-    var sample_duration: Double?
-    var season: Int
-    var small_poster_url: URL?
-    var subscription_only: Bool
-    var synopsis: String
-    var title: String
-    var updated_at: Int
-    var url: URL?
-}
-
 extension Int {
     fileprivate var padded: String {
         return self < 10 ? "0" + "\(self)" : "\(self)"
     }
 }
 
+extension Collection {
+    var slug: Slug<Collection> {
+        return Slug(rawValue: title.asSlug)
+    }
+}
+
+extension String {
+    var asSlug: String {
+        let allowed = CharacterSet.alphanumerics
+        return components(separatedBy: allowed.inverted).joined(separator: "-").lowercased() // todo check logic
+    }
+}
+
 extension Episode {
     var slug: Slug<Episode> {
-        let allowed = CharacterSet.alphanumerics
-        let slugTitle = title.components(separatedBy: allowed.inverted).joined(separator: "-").lowercased() // todo check logic
-        return Slug("S\(season.padded)E\(number.padded)-\(slugTitle)")
+        return Slug(rawValue: "S\(season.padded)E\(number.padded)-\(title.asSlug)")
     }
 }
 
