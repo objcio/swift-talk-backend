@@ -8,7 +8,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio.git",
                  from: "1.5.0"),
 		.package(url: "https://github.com/vapor-community/postgresql.git", .exact("2.1.2")),
-        .package(url: "https://github.com/chriseidhof/commonmark-swift", .exact("0.28.1"))
+        .package(url: "https://github.com/chriseidhof/commonmark-swift", .branch("master"))
     ],
     targets: [
         .target(

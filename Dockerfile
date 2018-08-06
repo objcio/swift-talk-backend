@@ -8,7 +8,7 @@ WORKDIR /app
 # cmark
 RUN apt-get -y install cmake
 RUN git clone https://github.com/commonmark/cmark
-RUN make -C cmark INSTALL_PREFIX=/usr
+RUN make -C cmark INSTALL_PREFIX=/usr/local
 RUN make -C cmark install
 
 # javascript deps

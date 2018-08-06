@@ -83,7 +83,7 @@ extension Array where Element == URL {
 import CommonMark
 
 extension Node {
-    static func link(to: MyRoute, _ children: ToElements, attributes: [String:String] = [:]) -> Node {
+    static func link(to: MyRoute, _ children: [Node], attributes: [String:String] = [:]) -> Node {
         return Node.a(attributes: attributes, children, href: routes.print(to)!.prettyPath)
     }
     

@@ -95,7 +95,7 @@ extension Node {
         return .node(El(name: "body", attributes: attributes, children: children))
     }
     
-    static func p(attributes: [String:String] = [:], _ children: ToElements = []) -> Node {
+    static func p(attributes: [String:String] = [:], _ children: [Node]) -> Node {
         return .node(El(name: "p", attributes: attributes, children: children.elements))
     }
     
@@ -107,23 +107,23 @@ extension Node {
         return .node(El(name: "header", attributes: attributes, children: children))
     }
     
-    static func title(_ text: ToElements) -> Node {
+    static func title(_ text: String) -> Node {
         return .node(El(name: "title", block: false, children: text.elements))
     }
 
-    static func span(attributes: [String:String] = [:], _ text: ToElements) -> Node {
+    static func span(attributes: [String:String] = [:], _ text: [Node]) -> Node {
         return .node(El(name: "span", block: false, attributes: attributes, children: text.elements))
     }
 
-    static func h1(_ title: ToElements, attributes: [String:String] = [:]) -> Node {
+    static func h1(_ title: [Node], attributes: [String:String] = [:]) -> Node {
         return .node(El(name: "h1", block: false, attributes: attributes, children: title.elements))
     }
     
-    static func h2(_ title: ToElements, attributes: [String:String] = [:]) -> Node {
+    static func h2(_ title: [Node], attributes: [String:String] = [:]) -> Node {
         return .node(El(name: "h2", block: false, attributes: attributes, children: title.elements))
     }
     
-    static func h3(_ title: ToElements, attributes: [String:String] = [:]) -> Node {
+    static func h3(_ title: [Node], attributes: [String:String] = [:]) -> Node {
         return .node(El(name: "h3", block: false, attributes: attributes, children: title.elements))
     }
     
@@ -193,7 +193,7 @@ extension Node {
         return .node(El(name: "link", attributes: attributes, children: []))
     }
     
-    static func a(attributes: [String:String] = [:], _ title: ToElements, href: String) -> Node {
+    static func a(attributes: [String:String] = [:], _ title: [Node], href: String) -> Node {
         assert(attributes["href"] == nil)
         var att = attributes
         att["href"] = href

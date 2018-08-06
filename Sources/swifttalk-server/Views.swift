@@ -51,9 +51,9 @@ enum HeaderContent {
         switch self {
         case let .node(n): return [n]
         case let .other(header: text, blurb: blurb): return [
-        	.h1(text, attributes: ["class": "color-white bold ms4"]), // todo add pb class where blurb = nil
+        	.h1([.text(text)], attributes: ["class": "color-white bold ms4"]), // todo add pb class where blurb = nil
             .div(class: "mt--", [
-            .p(attributes: ["class": "ms2 color-darken-50 lh-110 mw7"], [.text(blurb)])
+            .p(attributes: ["class": "ms2 color-darken-50 lh-110 mw7"], [Node.text(blurb)])
             ])
         ]
         }
@@ -168,7 +168,7 @@ extension Episode {
         
         let coll: [Node]
         if options.collection, let id = collection, let collection = Collection.all.first(where: { $0.id == id }) {
-            coll = [Node.link(to: MyRoute.collection(collection.slug), collection.title, attributes: [
+            coll = [Node.link(to: MyRoute.collection(collection.slug), [.text(collection.title)], attributes: [
                 "class": "inline-block no-decoration color-blue hover-underline mb--" + (options.featured ? "" : " ms-1")
             ])]
         } else { coll = [] }
@@ -182,31 +182,30 @@ extension Episode {
         
         let synopsisNode: [Node] = options.synopsis ? [.p(attributes: ["class": synopsisClasses], [.text(synopsis)])] : [] // todo widow thing
         
-        return .article(attributes: ["class": classes], [
+        return Node.article(attributes: ["class": classes], [
             Node.div(class: pictureClasses, [
                 .link(to: .episode(slug), [
         			Node.div(attributes: ["class": "ratio__container bg-center bg-cover", "style": "background-image: url('\(poster_url!)')"]),
         			Node.div(attributes: ["class": "absolute position-stretch opacity-60 blend-darken gradient-episode-black"]),
                     Node.div(class: "absolute position-stretch flex flex-column", [
                         Node.div(class: "mt-auto width-full flex items-center lh-100 ms-1 pa- color-white",
-                            smallIcon + [Node.span(attributes: ["class": "ml-auto bold text-shadow-20"], "\(media_duration!.minutes)")] // todo format text
+                            smallIcon + [Node.span(attributes: ["class": "ml-auto bold text-shadow-20"], [.text("\(media_duration!.minutes)")])] // todo format text
                         )
                     ])
         		] + largeIcon, attributes: ["class": pictureLinkClasses])
             ]),
             Node.div(class: contentClasses, [
-                .header(coll + [
-                    Node.h3(Node.link(to: .episode(slug), title, attributes: ["class": titleClasses]))
-                ]),
+                Node.header(coll + ([
+                    Node.h3([Node.link(to: .episode(slug), [Node.text(title)], attributes: ["class": titleClasses])])
+                ] as [Node])),
                 ] + synopsisNode + [
                 .p(attributes: ["class": footerClasses
                     ], [
-                        .text("Episode \(number)"),
-                        Node.span(attributes: ["class": "ph---"], "&middot;"),
-                        .text("\(releasedAt?.pretty ?? "Not yet released")") // todo
+                        Node.text("Episode \(number)"),
+                        Node.span(attributes: ["class": "ph---"], [.raw("&middot;")]),
+                        Node.text("\(releasedAt?.pretty ?? "Not yet released")") // todo
                     ])
             ]),
-//            Node.raw(episodeDetail)
 
         ])
     }
@@ -257,12 +256,12 @@ extension Episode {
         
         func item(_ entry: (TimeInterval, title: String)) -> Node {
             guard canWatch else {
-                return Node.span(attributes: ["class": wrapperClasses], entry.title)
+                return Node.span(attributes: ["class": wrapperClasses], [.text(entry.title)])
             }
             
             return Node.a(attributes: ["class": wrapperClasses + " items-baseline no-decoration hover-cascade js-episode-seek"], [
-                Node.span(attributes: ["class": "hover-cascade__underline"], entry.title),
-                Node.span(attributes: ["class": "ml-auto color-orange pl-"], entry.0.timeString),
+                Node.span(attributes: ["class": "hover-cascade__underline"], [.text(entry.title)]),
+                Node.span(attributes: ["class": "ml-auto color-orange pl-"], [.text(entry.0.timeString)]),
             ], href: "?t=\(Int(entry.0))")
         }
         
@@ -270,8 +269,8 @@ extension Episode {
 
         return .div(class: "l+|absolute l+|position-stretch stretch width-full flex flex-column", [
             Node.h3([
-                .span(attributes: ["class": "smallcaps"], canWatch ? "In this episode" : "In the full episode"),
-                .span(attributes: ["class": "ml-auto ms-1 bold"], media_duration!.timeString)
+                .span(attributes: ["class": "smallcaps"], [.text(canWatch ? "In this episode" : "In the full episode")]),
+                .span(attributes: ["class": "ml-auto ms-1 bold"], [.text(media_duration!.timeString)])
             ], attributes: ["class": "color-blue border-top border-2 pt mb+ flex-none flex items-baseline"]),
             Node.div(class: "flex-auto overflow-auto border-color-lighten-10 border-1 border-top", [
                 Node.ol(attributes: ["class": "lh-125 ms-1 color-white"], items.map { entry in
@@ -287,15 +286,15 @@ extension Episode {
         // todo meta-data
         assert(guests == nil || guests?.count == 0) // todo
         let guests_: [Node] = []
-        let main: Node = .div(class: "js-episode", [
+        let main: Node = Node.div(class: "js-episode", [
             .div(class: "bgcolor-night-blue pattern-shade-darker", [
                 .div(class: "container l+|pb0 l+|n-mb++", [
                     .header(attributes: ["class": "mb++ pb"], [
                         .p(attributes: ["class": "color-orange ms1"], [
-                            .link(to: .home, "Swift Talk", attributes: ["class": "color-inherit no-decoration bold hover-border-bottom"]),
+                            .link(to: .home, [.text("Swift Talk")], attributes: ["class": "color-inherit no-decoration bold hover-border-bottom"]),
                             .text("#" + number.padded)
                         ]),
-                        .h2(fullTitle, attributes: ["class": "ms5 color-white bold mt-- lh-110"])
+                        .h2([.text(fullTitle)], attributes: ["class": "ms5 color-white bold mt-- lh-110"])
                     ] + guests_ ),
                     .div(class: "l+|flex", [
                         .div(class: "flex-110 order-2", [
@@ -332,11 +331,11 @@ extension Episode {
                     .div(class: "bgcolor-pale-blue border border-1 border-color-subtle-blue radius-5 ph pv++ flex flex-column justify-center items-center text-center min-height-6", [
                         Node.inlineSvg(path: "icon-blocked.svg"),
                         .div(class: "mv", [
-                            .h3("This episode is exclusive to Subscribers", attributes: ["class":"ms1 bold color-blue-darkest"]),
-        					.p(attributes: ["class": "mt- lh-135 color-blue-darkest opacity-60 max-width-8"], "Become a subscriber to watch future and all \(Episode.subscriberOnly) current subscriber-only episodes, plus access to episode video downloads, and \(teamDiscount)% discount for your team members.")
+                            .h3([.text("This episode is exclusive to Subscribers")], attributes: ["class":"ms1 bold color-blue-darkest"]),
+        					.p(attributes: ["class": "mt- lh-135 color-blue-darkest opacity-60 max-width-8"], [.text("Become a subscriber to watch future and all \(Episode.subscriberOnly) current subscriber-only episodes, plus access to episode video downloads, and \(teamDiscount)% discount for your team members.")])
                             
                         ]),
-                        Node.link(to: .subscribe, "Become a subscriber", attributes: ["class": "button button--themed"])
+                        Node.link(to: .subscribe, [Node.text("Become a subscriber")], attributes: ["class": "button button--themed"])
                     ])
                 ])
             ])
@@ -479,20 +478,20 @@ extension Collection {
     func render(_ options: ViewOptions = ViewOptions()) -> [Node] {
         let figureStyle = "background-color: " + (options.whiteBackground ? "#FCFDFC" : "#F2F4F2")
         return [
-            Node.article([
-                .link(to: .collection(slug), [
-                    .figure(attributes: ["class": "mb-", "style": figureStyle], [
-                        .img(src: artwork, attributes: ["class": "block width-full height-auto"])
+            Node.article(attributes: [:], [
+                Node.link(to: .collection(slug), [
+                    Node.figure(attributes: ["class": "mb-", "style": figureStyle], [
+                        Node.img(src: artwork, attributes: ["class": "block width-full height-auto"])
                     ]),
                 ]),
-                .div(class: "flex items-center pt--", [
-                    Node.h3(Node.link(to: .collection(slug), title, attributes: ["class": "inline-block lh-110 no-decoration bold color-black hover-under"]))
+                Node.div(class: "flex items-center pt--", [
+                    Node.h3([Node.link(to: .collection(slug), [Node.text(title)], attributes: ["class": "inline-block lh-110 no-decoration bold color-black hover-under"])])
                 ] + (new ? [
-                    .span(attributes: ["class": "flex-none label smallcaps color-white bgcolor-blue nowrap ml-"], "New")
+                    Node.span(attributes: ["class": "flex-none label smallcaps color-white bgcolor-blue nowrap ml-"], [Node.text("New")])
                 ] : [])),
-                .p(attributes: ["class": "ms-1 color-gray-55 lh-125 mt--"], [
+                Node.p(attributes: ["class": "ms-1 color-gray-55 lh-125 mt--"], [
                     .text(episodes_count.pluralize("Episode")),
-                    .span(attributes: ["class": "ph---"], Node.raw("&middot;")),
+                    .span(attributes: ["class": "ph---"], [Node.raw("&middot;")]),
                     .text(total_duration.hoursAndMinutes)
                 ] as [Node])
             ])
@@ -503,29 +502,30 @@ extension Collection {
 extension LayoutConfig {
     var layout: Node {
         let structured: [Node] = structuredData.map { $0.nodes } ?? []
-        return .html(attributes: ["lang": "en"], [
-            .head([
-                .meta(attributes: ["charset": "utf-8"]),
-                .meta(attributes: ["http-equiv": "X-UA-Compatible", "content": "IE=edge"]),
-                .meta(attributes: ["name": "viewport", "content": "'width=device-width, initial-scale=1, user-scalable=no'"]),
-                .title(pageTitle),
-                // todo rss+atom links
-                .stylesheet(href: "/assets/stylesheets/application.css"),
-                // todo google analytics
-                ] + structured),
+        let head: Node = .head([
+            .meta(attributes: ["charset": "utf-8"]),
+            .meta(attributes: ["http-equiv": "X-UA-Compatible", "content": "IE=edge"]),
+            .meta(attributes: ["name": "viewport", "content": "'width=device-width, initial-scale=1, user-scalable=no'"]),
+            .title(pageTitle),
+            // todo rss+atom links
+            .stylesheet(href: "/assets/stylesheets/application.css"),
+            // todo google analytics
+            ] + structured)
+        return Node.html(attributes: ["lang": "en"], [
+            head,
             .body(attributes: ["class": "theme-" + theme], [ // todo theming classes?
                 .header(attributes: ["class": "bgcolor-white"], [
                     .div(class: "height-3 flex scroller js-scroller js-scroller-container", [
                         .div(class: "container-h flex-grow flex", [
                             .link(to: .home, [
         						.inlineSvg(path: "logo.svg", attributes: ["class": "block logo logo--themed height-auto"]), // todo scaling parameter?
-        						.h1("objc.io", attributes: ["class":"visuallyhidden"]) // todo class
+        						.h1([.text("objc.io")], attributes: ["class":"visuallyhidden"]) // todo class
         					] as [Node]
                             , attributes: ["class": "flex-none outline-none mr++ flex"]),
         					.nav(attributes: ["class": "flex flex-grow"], [
                                 .ul(attributes: ["class": "flex flex-auto"], navigationItems.map { l in
                                     .li(attributes: ["class": "flex mr+"], [
-                                        .link(to: l.0, Node.span(l.1), attributes: [
+                                        .link(to: l.0, [.span([.text(l.1)])], attributes: [
                                             "class": "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration"
                                         ])
                                     ])
@@ -566,8 +566,8 @@ func renderHome() -> [Node] {
     let header = pageHeader(HeaderContent.other(header: "Swift Talk", blurb: "A weekly video series on Swift programming."))
     let recentEpisodes: Node = .section(attributes: ["class": "container"], [
         Node.header(attributes: ["class": "mb+"], [
-            .h2("Recent Episodes", attributes: ["class": "inline-block bold color-black"]),
-            .link(to: .episodes, "See All", attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-under"])
+            .h2([.text("Recent Episodes")], attributes: ["class": "inline-block bold color-black"]),
+            .link(to: .episodes, [.text("See All")], attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-under"])
             ]),
         .div(class: "m-cols flex flex-wrap", [
             .div(class: "mb++ p-col width-full l+|width-1/2", [
@@ -584,8 +584,8 @@ func renderHome() -> [Node] {
         ])
     let collections: Node = .section(attributes: ["class": "container"], [
         .header(attributes: ["class": "mb+"], [
-            .h2("Collections", attributes: ["class": "inline-block bold lh-100 mb---"]),
-            .link(to: .collections, "Show Contents", attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-underline"]),
+            .h2([.text("Collections")], attributes: ["class": "inline-block bold lh-100 mb---"]),
+            .link(to: .collections, [.text("Show Contents")], attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-underline"]),
             .p(attributes: ["class": "lh-125 color-gray-60"], [
                 .text("Browse all Swift Talk episodes by topic.")
                 ])
