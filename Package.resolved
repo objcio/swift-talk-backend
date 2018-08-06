@@ -11,6 +11,24 @@
         }
       },
       {
+        "package": "Ccmark",
+        "repositoryURL": "git@github.com:chriseidhof/Ccmark.git",
+        "state": {
+          "branch": null,
+          "revision": "3e3914c641b8210600a626ef97cd429f4c6a2745",
+          "version": "0.28.0"
+        }
+      },
+      {
+        "package": "CommonMark",
+        "repositoryURL": "https://github.com/chriseidhof/commonmark-swift",
+        "state": {
+          "branch": null,
+          "revision": "0d541c78b9d0da2359a3e7f188086caf6d279c97",
+          "version": "0.28.1"
+        }
+      },
+      {
         "package": "Core",
         "repositoryURL": "https://github.com/vapor/core.git",
         "state": {

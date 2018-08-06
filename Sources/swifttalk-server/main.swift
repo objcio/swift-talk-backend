@@ -29,14 +29,11 @@ enum MyRoute: Equatable {
     case episodes
     case version
     case sitemap
+    case imprint
     case collections
     case collection(Slug<Collection>)
     case episode(Slug<Episode>)
     case staticFile(path: [String])
-}
-
-struct Slug<A>: Codable, Equatable, RawRepresentable {
-    let rawValue: String
 }
 
 let episode: Route<MyRoute> = (Route<()>.c("episodes") / .string()).transform({ MyRoute.episode(Slug(rawValue: $0)) }, { r in
@@ -49,14 +46,6 @@ let collection: Route<MyRoute> = (Route<()>.c("collections") / .string()).transf
     return name.rawValue
 })
 
-extension Array where Element == Route<MyRoute> {
-    func choice() -> Route<MyRoute> {
-        assert(!isEmpty)
-        return dropFirst().reduce(self[0], { $0.or($1) })
-    }
-}
-
-
 let routes: Route<MyRoute> = [
     Route(.home),
     .c("env", .env),
@@ -65,6 +54,7 @@ let routes: Route<MyRoute> = [
     .c("issues", .issues), // todo absolute url
     .c("episodes", .episodes),
     .c("sitemap", .sitemap),
+    .c("imprint", .imprint),
     (.c("assets") / .path()).transform({ MyRoute.staticFile(path:$0) }, { r in
         guard case let .staticFile(path) = r else { return nil }
         return path
@@ -100,8 +90,13 @@ extension Node {
     }
 }
 
+import CommonMark
 
 extension Episode {
+    var transcript: String? {
+        let path = URL(fileURLWithPath: "data/episode-transcripts/episode\(number).md")
+        return try? String(contentsOf: path)
+    }
     static let all: [Episode] = {
         // for this (and the rest of the app) to work we need to launch with a correct working directory (root of the app)
         let d = try! Data(contentsOf: URL(fileURLWithPath: "data/episodes.json"))
@@ -109,6 +104,15 @@ extension Episode {
         return e
 
     }()
+    
+    var toc: [(TimeInterval, title: String)] {
+        guard let t = transcript else { return [] }
+        guard let els = CommonMark.Node(markdown: t)?.elements else { return [] }
+        return els.compactMap { e in
+            guard case let CommonMark.Block.heading(text: text, level: _) = e else { return nil }
+            return (0, "\(text)")
+        }
+    }
 }
 
 extension Collection {
@@ -127,7 +131,7 @@ extension MyRoute {
         switch self {
         case .books, .issues:
             return .notFound()
-        case .collections:
+        case .collections, .imprint:
             return .write("TODO")
         case .collection(let name):
             guard let c = Collection.all.first(where: { $0.slug == name }) else {
@@ -142,42 +146,14 @@ extension MyRoute {
                 return v.map { "\($0)" } ?? "no version"
             })
         case .episode(let s):
-            return .write("Episode \(s)")
+            guard let ep = Episode.all.first(where: { $0.slug == s}) else {
+                return .notFound("No such episode")
+            }            
+            return .write(ep.show())
         case .episodes:
             return .write("All episodes")
         case .home:
-            let header = pageHeader(HeaderContent.other(header: "Swift Talk", blurb: "A weekly video series on Swift programming."))
-            let recentEpisodes: Node = .section(attributes: ["class": "container"], [
-                Node.header(attributes: ["class": "mb+"], [
-            		.h2("Recent Episodes", attributes: ["class": "inline-block bold color-black"]),
-            		.link(to: .episodes, "See All", attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-under"])
-                ]),
-            .div(class: "m-cols flex flex-wrap", [
-                .div(class: "mb++ p-col width-full l+|width-1/2", [
-                    Episode.all.first!.render(Episode.ViewOptions(featured: true))
-                ]),
-                .div(class: "p-col width-full l+|width-1/2", [
-            		.div(class: "s+|cols s+|cols--2n",
-                         Episode.all[1..<5].map { ep in
-                            .div(class: "mb++ s+|col s+|width-1/2", [ep.render(Episode.ViewOptions())])
-                        }
-            		)
-                ])
-                ])
-            ])
-            let collections: Node = .section(attributes: ["class": "container"], [
-                .header(attributes: ["class": "mb+"], [
-            		.h2("Collections", attributes: ["class": "inline-block bold lh-100 mb---"]),
-            		.link(to: .collections, "Show Contents", attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-underline"]),
-                    .p(attributes: ["class": "lh-125 color-gray-60"], [
-                        .text("Browse all Swift Talk episodes by topic.")
-                    ])
-                ]),
-                .ul(attributes: ["class": "cols s+|cols--2n l+|cols--3n"], Collection.all.map { coll in
-                    Node.li(attributes: ["class": "col width-full s+|width-1/2 l+|width-1/3 mb++"], coll.render())
-                })
-            ])
-            return .write(LayoutConfig(contents: [header, recentEpisodes, collections]).layout, status: .ok)
+            return .write(LayoutConfig(contents: renderHome()).layout, status: .ok)
         case .sitemap:
             return .write(siteMap(routes))
         case let .staticFile(path: p):

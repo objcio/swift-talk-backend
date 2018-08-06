@@ -7,8 +7,17 @@
 
 import Foundation
 
+struct Slug<A>: Codable, Equatable, RawRepresentable {
+    let rawValue: String
+}
+
 struct Id<A>: RawRepresentable, Codable, Equatable {
     var rawValue: String
+}
+
+struct Guest: Codable, Equatable {
+    var name: String
+    // todo
 }
 
 struct Episode: Codable, Equatable {
@@ -31,9 +40,14 @@ struct Episode: Codable, Equatable {
     var synopsis: String
     var title: String
     var updated_at: Int
+    var guests: [Guest]?
+    
 }
 
 extension Episode {
+    var fullTitle: String {
+        return title // todo
+    }
     var releasedAt: Date? {
         return released_at.map { Date(timeIntervalSince1970: $0) }
     }

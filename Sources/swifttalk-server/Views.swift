@@ -63,17 +63,32 @@ func pageHeader(_ content: HeaderContent) -> Node {
 }
 
 extension TimeInterval {
+    private var hm: (Int, Int, Int) {
+        let h = floor(self/(60*60))
+        let m = floor(self.truncatingRemainder(dividingBy: 60*60)/60)
+        let s = self.truncatingRemainder(dividingBy: 60).rounded()
+        return (Int(h), Int(m), Int(s))
+    }
+    
     var minutes: String {
         let m = Int((self/60).rounded())
         return "\(m) min"
     }
     
     var hoursAndMinutes: String {
-        let hours = floor(self/(60*60))
+        let (hours, minutes, _) = hm
         if hours > 0 {
-            let m = Int(((self - (hours*60*60))/60).rounded())
-            return "\(Int(hours))h\(m)min"
-        } else { return minutes }
+            return "\(Int(hours))h\(minutes.padded)min"
+        } else { return "\(minutes)min" }
+    }
+    
+    var timeString: String {
+        let (hours, minutes, seconds) = hm
+        if hours == 0 {
+        	return "\(minutes.padded):\(seconds.padded)"
+        } else {
+            return "\(hours):\(minutes.padded):\(seconds.padded)"
+        }
     }
 }
 
@@ -191,6 +206,54 @@ extension Episode {
 
         ])
     }
+
+}
+
+extension Episode {
+    func toc(playable: Bool) -> Node {
+        assert(!playable) // todo
+        return .div(class: "l+|absolute l+|position-stretch stretch width-full flex flex-column", [
+            Node.h3([
+                .span(attributes: ["class": "smallcaps"], playable ? "In this episode" : "In the full episode"),
+                .span(attributes: ["class": "ml-auto ms-1 bold"], media_duration!.timeString)
+            ], attributes: ["class": "color-blue border-top border-2 pt mb+ flex-none flex items-baseline"]),
+            Node.div(class: "flex-auto overflow-auto border-color-lighten-10 border-1 border-top", [
+                Node.ol(attributes: ["class": "lh-125 ms-1 color-white"], toc.map { entry in
+                    Node.li(attributes: ["class": "border-bottom border-1 border-color-lighten-10"], [
+                        Node.span(attributes: ["class": "flex color-inherit pv"], entry.1)
+                    ])
+                })
+            ])
+        ])
+    }
+    
+    func show(watched: Bool = false, playable: Bool = false) -> Node {
+        // todo meta-data
+        assert(guests == nil || guests?.count == 0) // todo
+        let guests_: [Node] = []
+        let main: Node = Node.div(class: "js-episode", [
+            Node.div(class: "bgcolor-night-blue pattern-shade-darker", [
+                Node.div(class: "container l+|pb0 l+|n-mb++", [
+                    Node.header(attributes: ["class": "mb++ pb"], [
+                        Node.p(attributes: ["class": "color-orange ms1"], [
+                            Node.link(to: .home, "Swift Talk", attributes: ["class": "color-inherit no-decoration bold hover-border-bottom"]),
+                            Node.text("#" + number.padded)
+                        ]),
+                        Node.h2(fullTitle, attributes: ["class": "ms5 color-white bold mt-- lh-110"])
+                    ] + guests_ ),
+                    Node.div(class: "l+|flex", [
+                        .div(class: "flex-110 order-2", [
+                            // todo video player
+                        ]),
+                        .div(class: "min-width-5 relative order-1 mt++ l+|mt0 l+|mr++ l+|mb++", [
+                            toc(playable: playable)
+                        ])
+                    ])
+                ])
+            ])
+        ])
+        return LayoutConfig(contents: [main]).layout
+    }
 }
 
 extension Int {
@@ -292,6 +355,41 @@ extension String {
         let allowed = CharacterSet.alphanumerics
         return components(separatedBy: allowed.inverted).filter { !$0.isEmpty }.joined(separator: "-").lowercased() // todo check logic
     }
+}
+
+func renderHome() -> [Node] {
+    let header = pageHeader(HeaderContent.other(header: "Swift Talk", blurb: "A weekly video series on Swift programming."))
+    let recentEpisodes: Node = .section(attributes: ["class": "container"], [
+        Node.header(attributes: ["class": "mb+"], [
+            .h2("Recent Episodes", attributes: ["class": "inline-block bold color-black"]),
+            .link(to: .episodes, "See All", attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-under"])
+            ]),
+        .div(class: "m-cols flex flex-wrap", [
+            .div(class: "mb++ p-col width-full l+|width-1/2", [
+                Episode.all.first!.render(Episode.ViewOptions(featured: true))
+                ]),
+            .div(class: "p-col width-full l+|width-1/2", [
+                .div(class: "s+|cols s+|cols--2n",
+                     Episode.all[1..<5].map { ep in
+                        .div(class: "mb++ s+|col s+|width-1/2", [ep.render(Episode.ViewOptions())])
+                    }
+                )
+                ])
+            ])
+        ])
+    let collections: Node = .section(attributes: ["class": "container"], [
+        .header(attributes: ["class": "mb+"], [
+            .h2("Collections", attributes: ["class": "inline-block bold lh-100 mb---"]),
+            .link(to: .collections, "Show Contents", attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-underline"]),
+            .p(attributes: ["class": "lh-125 color-gray-60"], [
+                .text("Browse all Swift Talk episodes by topic.")
+                ])
+            ]),
+        .ul(attributes: ["class": "cols s+|cols--2n l+|cols--3n"], Collection.all.map { coll in
+            Node.li(attributes: ["class": "col width-full s+|width-1/2 l+|width-1/3 mb++"], coll.render())
+        })
+    ])
+    return [header, recentEpisodes, collections]
 }
 
 extension Episode {

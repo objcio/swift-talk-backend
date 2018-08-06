@@ -151,6 +151,10 @@ extension Node {
         return .node(El(name: "ul", attributes: attributes, children: children))
     }
     
+    static func ol(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "ol", attributes: attributes, children: children))
+    }
+    
     static func li(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         return .node(El(name: "li", attributes: attributes, children: children))
     }
