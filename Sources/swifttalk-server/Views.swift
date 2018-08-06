@@ -71,31 +71,33 @@ extension Episode {
         var canWatch: Bool = false
         var wide: Bool = false
         var collection: Bool = true
+        var synopsis: Bool = false
         
         init(featured: Bool = false, watched: Bool = false, canWatch: Bool = false) {
             self.featured = featured
-            self.largeIcon = featured
             self.watched = watched
             self.canWatch = canWatch
+            if featured {
+                synopsis = true
+                largeIcon = true
+            }
         }
     }
     func render(_ options: ViewOptions) -> Node {
-        assert(options.featured) // todo
         assert(!options.watched)
         assert(!options.canWatch)
         let iconFile = "icon-lock.svg"
         let classes = "flex flex-column width-full" + // normal
 //            " max-width-6 m+|max-width-none m+|flex-row" + // wide
-            " min-height-full hover-scale transition-all transition-transform" // featured
+            (options.featured ? " min-height-full hover-scale transition-all transition-transform" : "") // featured
         let pictureClasses = "flex-none"
         
         let pictureLinkClasses = "block ratio radius-3 overflow-hidden" +
-        " ratio--2/1 radius-5 no-radius-bottom" // featured
-        // "ratio--22/10 hover-scale transition-all transition-transform" !featured
+            (options.featured ? " ratio--2/1 radius-5 no-radius-bottom" : " ratio--22/10 hover-scale transition-all transition-transform")
         
         let largeIconClasses = "absolute position-stretch flex justify-center items-center color-white" + (options.canWatch ? " hover-scale-1.25x transition-all transition-transform" : "")
 
-        let smallIcon: [Node] = options.largeIcon ? [] : [.inlineSvg(path: iconFile, attributes: ["class": "svg-fill-current"])]
+        let smallIcon: [Node] = options.largeIcon ? [] : [.inlineSvg(path: iconFile, attributes: ["class": "svg-fill-current icon-26"])]
         let largeIconSVGClass = "svg-fill-current " + (options.largeIcon ? "icon-46" : "icon-26")
         let largeIcon: [Node] = options.largeIcon ? [.div(class: largeIconClasses, [.inlineSvg(path: iconFile, attributes: ["class": largeIconSVGClass])])] : []
         
@@ -106,8 +108,8 @@ extension Episode {
         
         let coll: [Node]
         if options.collection, let c = collection {
-            coll = [Node.link(to: MyRoute.collection(c), "TODO", attributes: [
-                "class": "inline-block no-decoration color-blue hover-underline mb--" + (options.featured ? " ms-1" : "")
+            coll = [Node.link(to: MyRoute.collection(c), "Todo", attributes: [
+                "class": "inline-block no-decoration color-blue hover-underline mb--" + (options.featured ? "" : " ms-1")
             ])]
         } else { coll = [] }
         
@@ -116,7 +118,9 @@ extension Episode {
         
         let titleClasses = "block lh-110 no-decoration bold color-black hover-underline" + (options.wide ? " ms1" : (options.featured ? " ms2" : ""))
         
-        let footerClasses = "color-gray-65" + (!options.wide && !options.featured ? "mt-- ms-1" : "")
+        let footerClasses = "color-gray-65" + (!options.wide && !options.featured ? " mt-- ms-1" : "")
+        
+        let synopsisNode: [Node] = options.synopsis ? [.p(attributes: ["class": synopsisClasses], [.text(synopsis)])] : [] // todo widow thing
         
         return .article(attributes: ["class": classes], [
             Node.div(class: pictureClasses, [
@@ -134,7 +138,7 @@ extension Episode {
                 .header(coll + [
                     Node.h3(Node.link(to: .episode(slug), title, attributes: ["class": titleClasses]))
                 ]),
-                .p(attributes: ["class": synopsisClasses], [.text(synopsis)]), // todo widow thing
+                ] + synopsisNode + [
                 .p(attributes: ["class": footerClasses
                     ], [
                         .text("Episode \(number)"),

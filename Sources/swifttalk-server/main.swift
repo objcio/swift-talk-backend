@@ -142,9 +142,11 @@ extension MyRoute {
                     allEpisodes.first!.render(Episode.ViewOptions(featured: true))
                 ]),
                 .div(class: "p-col width-full l+|width-1/2", [
-            		.div(class: "s+|cols s+|cols--2n", [
-                        "TODO"
-            		])
+            		.div(class: "s+|cols s+|cols--2n",
+                         allEpisodes[1..<5].map { ep in
+                            .div(class: "mb++ s+|col s+|width-1/2", [ep.render(Episode.ViewOptions())])
+                        }
+            		)
                 ])
                 ])
             ])
