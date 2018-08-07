@@ -167,7 +167,7 @@ extension Episode {
           (options.featured ? " pa bgcolor-pale-gray radius-5 no-radius-top" : "")
         
         let coll: [Node]
-        if options.collection, let id = collection, let collection = Collection.all.first(where: { $0.id == id }) {
+        if options.collection, let name = collections?.first, let collection = Collection.all.first(where: { $0.title == name }) {
             coll = [Node.link(to: MyRoute.collection(collection.slug), [.text(collection.title)], attributes: [
                 "class": "inline-block no-decoration color-blue hover-underline mb--" + (options.featured ? "" : " ms-1")
             ])]
@@ -282,9 +282,9 @@ extension Episode {
         ])
     }
     
-    func show(watched: Bool = false, canWatch: Bool = true, premiumUser: Bool = false) -> Node {
-        // todo meta-data
-        assert(guests == nil || guests?.count == 0) // todo
+    func show(watched: Bool = false, premiumUser: Bool = false) -> Node {
+        // todo guests
+        let canWatch = !subscription_only || premiumUser
         let guests_: [Node] = []
         let main: Node = Node.div(class: "js-episode", [
             .div(class: "bgcolor-night-blue pattern-shade-darker", [
@@ -349,9 +349,8 @@ extension Episode {
 extension DateFormatter {
     static let iso8601: DateFormatter = {
         let dateFormatter = DateFormatter()
-        let enUSPosixLocale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.locale = enUSPosixLocale
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
         return dateFormatter
     }()
 }

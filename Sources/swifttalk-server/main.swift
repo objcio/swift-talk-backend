@@ -32,6 +32,7 @@ enum MyRoute: Equatable {
     case imprint
     case subscribe
     case collections
+    case login
     case collection(Slug<Collection>)
     case episode(Slug<Episode>)
     case staticFile(path: [String])
@@ -57,6 +58,7 @@ let routes: Route<MyRoute> = [
     .c("sitemap", .sitemap),
     .c("subscribe", .subscribe),
     .c("imprint", .imprint),
+    .c("users") / .c("auth") / .c("github", .login),
     (.c("assets") / .path()).transform({ MyRoute.staticFile(path:$0) }, { r in
         guard case let .staticFile(path) = r else { return nil }
         return path
@@ -171,7 +173,7 @@ extension Episode {
         // for this (and the rest of the app) to work we need to launch with a correct working directory (root of the app)
         let d = try! Data(contentsOf: URL(fileURLWithPath: "data/episodes.json"))
         let e = try! JSONDecoder().decode([Episode].self, from: d)
-        return e
+        return e.sorted { $0.number > $1.number }
 
     }()
     
@@ -202,6 +204,8 @@ extension MyRoute {
             return .write("TODO collection: \(c)")
         case .env:
             return .write("\(ProcessInfo.processInfo.environment)")
+        case .login:
+            return .write("TODO login")
         case .version:
             return .write(withConnection { conn in
                 let v = try? conn?.execute("SELECT version()") ?? nil

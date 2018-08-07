@@ -22,7 +22,7 @@ struct Guest: Codable, Equatable {
     // todo
 }
 
-struct Episode: Codable, Equatable {
+struct Episode_Old: Codable, Equatable {
     var collection: Id<Collection>?
     var created_at: Int
     var furthest_watched: Double?
@@ -43,7 +43,32 @@ struct Episode: Codable, Equatable {
     var title: String
     var updated_at: Int
     var guests: [Guest]?
-    
+}
+
+struct Episode: Codable, Equatable {
+    var collections: [String]?
+    var created_at: String
+    var id: Id<Episode>
+    var mailchimp_campaign_id: String?
+    var media_duration: TimeInterval?
+    var media_src: String?
+    var media_version: Int
+    var name: String
+    var number: Int
+    var poster_uid: String?
+    var release_at: String?
+    var released: Bool
+    var sample_src: String?
+    var sample_duration: TimeInterval?
+    var sample_version: Int
+    var season: Int
+//    var small_poster_url: URL?
+    var subscription_only: Bool
+    var synopsis: String
+    var title: String
+    var updated_at: String?
+    var video_id: String?
+//    var guests: [Guest]?
 }
 
 extension Episode {
@@ -51,7 +76,17 @@ extension Episode {
         return title // todo
     }
     var releasedAt: Date? {
-        return released_at.map { Date(timeIntervalSince1970: $0) }
+        let formatter = DateFormatter.iso8601
+        return release_at.flatMap { formatter.date(from: $0) }
+    }
+    
+    var poster_url: URL? {
+        // todo
+        return URL(string: "https://d2sazdeahkz1yk.cloudfront.net/assets/media/W1siZiIsIjIwMTgvMDYvMTQvMTAvMDEvNDEvYjQ1Njc3YWQtNDRlMS00N2E1LWI5NDYtYWFhOTZiOTYxOWM4LzExMSBEZWJ1Z2dlciAzLmpwZyJdLFsicCIsInRodW1iIiwiNTkweDI3MCMiXV0?sha=bb0917beee87a929")
+    }
+    
+    var media_url: URL? {
+        return URL(string: "https://d2sazdeahkz1yk.cloudfront.net/videos/5dbf3160-fb5b-4e5a-88da-3163ea09883b/1/hls.m3u8")
     }
 }
 
