@@ -46,6 +46,7 @@ let test = """
 enum HeaderContent {
     case node(Node)
     case other(header: String, blurb: String)
+    case link(header: String, backlink: MyRoute, label: String)
     
     var asNode: [Node] {
         switch self {
@@ -55,6 +56,10 @@ enum HeaderContent {
             .div(class: "mt--", [
             .p(attributes: ["class": "ms2 color-darken-50 lh-110 mw7"], [Node.text(blurb)])
             ])
+        ]
+        case let .link(header, backlink, label): return [
+		.link(to: backlink, [.text(label)], attributes: ["class": "ms1 inline-block no-decoration lh-100 pb- color-white opacity-70 hover-underline"]),
+            .h1([.text(header)], attributes: ["class": "color-white bold ms4 pb"])
         ]
         }
     }
@@ -128,10 +133,24 @@ func index(_ items: [Collection]) -> Node {
         return Node.li(attributes: ["class": "col width-full s+|width-1/2 l+|width-1/3 mb++"], coll.render(.init(episodes: true)))
     })
     return LayoutConfig(contents: [
-        pageHeader(.other(header: "All Collections", blurb: "TODO backlink")),
+        pageHeader(HeaderContent.link(header: "All Collections", backlink: .home, label: "Swift Talk")),
         .div(class: "container pb0", [
             .h2([Node.text("\(items.count) Collections")], attributes: ["class": "bold lh-100 mb+"]),
             .ul(attributes: ["class": "cols s+|cols--2n l+|cols--3n"], lis)
+        ])
+    ]).layout
+}
+
+func index(_ items: [Episode]) -> Node {
+    return LayoutConfig(contents: [
+        pageHeader(.link(header: "All Episodes", backlink: .home, label: "Swift Talk")),
+        .div(class: "container pb0", [
+            .div([
+                .h2([.span(attributes: ["class": "bold"], [.text("\(items.count) Episodes")])], attributes: ["class": "inline-block lh-100 mb+"])
+            ]),
+            .ul(attributes: ["class": "cols s+|cols--2n m+|cols--3n xl+|cols--4n"], items.map { e in
+                Node.li(attributes: ["class": "col mb++ width-full s+|width-1/2 m+|width-1/3 xl+|width-1/4"], [e.render(.init(synopsis: true))])
+            })
         ])
     ]).layout
 }
@@ -146,12 +165,12 @@ extension Episode {
         var collection: Bool = true
         var synopsis: Bool = false
         
-        init(featured: Bool = false, watched: Bool = false, canWatch: Bool = false) {
+        init(featured: Bool = false, synopsis: Bool, watched: Bool = false, canWatch: Bool = false) {
             self.featured = featured
             self.watched = watched
             self.canWatch = canWatch
+            self.synopsis = synopsis
             if featured {
-                synopsis = true
                 largeIcon = true
             }
         }
@@ -600,12 +619,12 @@ func renderHome() -> [Node] {
             ]),
         .div(class: "m-cols flex flex-wrap", [
             .div(class: "mb++ p-col width-full l+|width-1/2", [
-                Episode.all.first!.render(Episode.ViewOptions(featured: true))
+                Episode.all.first!.render(Episode.ViewOptions(featured: true, synopsis: true))
                 ]),
             .div(class: "p-col width-full l+|width-1/2", [
                 .div(class: "s+|cols s+|cols--2n",
                      Episode.all[1..<5].map { ep in
-                        .div(class: "mb++ s+|col s+|width-1/2", [ep.render(Episode.ViewOptions())])
+                        .div(class: "mb++ s+|col s+|width-1/2", [ep.render(Episode.ViewOptions(synopsis: false))])
                     }
                 )
                 ])

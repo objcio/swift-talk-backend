@@ -219,7 +219,7 @@ extension MyRoute {
             }            
             return .write(ep.show())
         case .episodes:
-            return .write("All episodes")
+            return I.write(index(Episode.all.filter { $0.released }))
         case .home:
             return .write(LayoutConfig(contents: renderHome()).layout, status: .ok)
         case .sitemap:
