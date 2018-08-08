@@ -12,14 +12,16 @@ struct LayoutConfig {
     var contents: [Node]
     var theme: String
     var footerContent: [Node]
+    var preFooter: [Node]
     var structuredData: StructuredData?
     
-    init(pageTitle: String = "objc.io", contents: [Node], theme: String = "default", footerContent: [Node] = [], structuredData: StructuredData? = nil) {
+    init(pageTitle: String = "objc.io", contents: [Node], theme: String = "default", preFooter: [Node] = [], footerContent: [Node] = [], structuredData: StructuredData? = nil) {
         self.pageTitle = pageTitle
         self.contents = contents
         self.theme = theme
         self.footerContent = footerContent
         self.structuredData = structuredData
+        self.preFooter = preFooter
     }
 }
 
@@ -58,7 +60,7 @@ enum HeaderContent {
             ])
         ]
         case let .link(header, backlink, label): return [
-		.link(to: backlink, [.text(label)], attributes: ["class": "ms1 inline-block no-decoration lh-100 pb- color-white opacity-70 hover-underline"]),
+        	.link(to: backlink, [.text(label)], attributes: ["class": "ms1 inline-block no-decoration lh-100 pb- color-white opacity-70 hover-underline"]),
             .h1([.text(header)], attributes: ["class": "color-white bold ms4 pb"])
         ]
         }
@@ -165,24 +167,27 @@ extension Episode {
         var collection: Bool = true
         var synopsis: Bool = false
         
-        init(featured: Bool = false, synopsis: Bool, watched: Bool = false, canWatch: Bool = false) {
+        init(featured: Bool = false, wide: Bool = false, synopsis: Bool, watched: Bool = false, canWatch: Bool = false, collection: Bool = true) {
             self.featured = featured
             self.watched = watched
             self.canWatch = canWatch
             self.synopsis = synopsis
+            self.wide = wide
+            self.collection = collection
             if featured {
                 largeIcon = true
             }
         }
     }
+    
     func render(_ options: ViewOptions) -> Node {
         assert(!options.watched)
         assert(!options.canWatch)
         let iconFile = "icon-lock.svg"
         let classes = "flex flex-column width-full" + // normal
-//            " max-width-6 m+|max-width-none m+|flex-row" + // wide
+            (options.wide ? " max-width-6 m+|max-width-none m+|flex-row" : "") + // wide
             (options.featured ? " min-height-full hover-scale transition-all transition-transform" : "") // featured
-        let pictureClasses = "flex-none"
+        let pictureClasses = options.wide ? "flex-auto mb- m+|width-1/3 m+|order-2 m+|mb0 m+|pl++" : "flex-none"
         
         let pictureLinkClasses = "block ratio radius-3 overflow-hidden" +
             (options.featured ? " ratio--2/1 radius-5 no-radius-bottom" : " ratio--22/10 hover-scale transition-all transition-transform")
@@ -244,6 +249,43 @@ extension Episode {
 
 }
 
+func subscribeBanner() -> Node {
+    let benefits: [(icon: String, name: String, description: String)] = [
+        ("icon-benefit-unlock.svg", "Watch All Episodes", "New subscriber-only episodes every two weeks"),
+        ("icon-benefit-team.svg", "Invite Your Team", "Sign up additional team members at 30% discount"),
+        ("icon-benefit-support.svg", "Support Us", "Ensure the continuous production of new episodes"),
+    ]
+    return Node.aside(attributes: ["class": "bgcolor-blue"], [
+        Node.div(class: "container", [
+            Node.div(class: "cols relative s-|stack+", [
+                Node.raw("""
+  <div class="col s+|width-1/2 relative">
+    <p class="smallcaps color-orange mb">Unlock Full Access</p>
+    <h2 class="color-white bold ms3">Subscribe to Swift Talk</h2>
+  </div>
+"""),
+                Node.div(class: "col s+|width-1/2", [
+                    Node.ul(attributes: ["class": "stack+ lh-110"], benefits.map { b in
+                        Node.li([
+                            Node.div(class: "flag", [
+                                Node.div(class: "flag__image pr color-orange", [
+                                    Node.inlineSvg(path: b.icon, attributes: ["class": "svg-fill-current"])
+                                ]),
+                                Node.div(class: "flag__body", [
+                                    Node.h3([Node.text(b.name)], attributes: ["class": "bold color-white mb---"]),
+                                    Node.p(attributes: ["class": "color-blue-darkest lh-125"], [Node.text(b.description)])
+                                ])
+                            ])
+                        ])
+                    })
+                ]),
+                Node.div(class: "s+|absolute s+|position-sw col s+|width-1/2", [
+                    Node.link(to: .subscribe, [.raw("Pricing &amp; Sign Up")], attributes: ["class": "c-button"])
+                ])
+            ])
+        ])
+    ])
+}
 
 let previewBadge = """
 <div class="js-video-badge bgcolor-orange color-white bold absolute position-nw width-4">
@@ -315,9 +357,34 @@ extension Episode {
     }
     
     func show(watched: Bool = false, premiumUser: Bool = false) -> Node {
-        // todo guests
         let canWatch = !subscription_only || premiumUser
-        let guests_: [Node] = []
+        let guests_: [Node] = [] // todo
+        // todo: subscribe banner
+        
+        let scroller =  // scroller
+            Node.aside(attributes: ["class": "bgcolor-pale-gray pt++ js-scroller"], [
+                Node.header(attributes: ["class": "container-h flex items-center justify-between"], [
+                    Node.div([
+                        Node.h3([.text("Recent Episodes")], attributes: ["class": "inline-block bold color-black"]),
+                        Node.link(to: .episodes, [.text("See All")], attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-underline"])
+                        ]),
+                    Node.div(class: "js-scroller-buttons flex items-center", [
+                        Node.button(attributes: ["class": "scroller-button no-js-hide js-scroller-button-left ml-", "label": "Scroll left"], [
+                            Node.inlineSvg(path: "icon-arrow-16-left.svg", preserveAspectRatio: "xMinYMid meet", attributes: ["class": "icon-16 color-white svg-fill-current block"])
+                        ]),
+                        Node.button(attributes: ["class": "scroller-button no-js-hide js-scroller-button-right ml-", "label": "Scroll right"], [
+                            Node.inlineSvg(path: "icon-arrow-16.svg", preserveAspectRatio: "xMinYMid meet", attributes: ["class": "icon-16 color-white svg-fill-current block"])
+                        ])
+                    ])
+                ]),
+                Node.div(class: "flex scroller js-scroller-container p-edges pt pb++", [
+                    Node.div(class: "scroller__offset flex-none")
+                ] + Episode.all.released.filter { $0 != self }.prefix(8).map { e in
+                    Node.div(class: "flex-110 pr+ min-width-5", [e.render(.init(synopsis: false))]) // todo watched
+                })
+            ])
+        
+        
         let main: Node = Node.div(class: "js-episode", [
             .div(class: "bgcolor-night-blue pattern-shade-darker", [
                 .div(class: "container l+|pb0 l+|n-mb++", [
@@ -374,7 +441,48 @@ extension Episode {
         ])
         
         let data = StructuredData(title: title, description: synopsis, url: absoluteURL(.episode(slug)), image: poster_url, type: .video(duration: media_duration.map(Int.init), releaseDate: releasedAt))
-        return LayoutConfig(contents: [main], footerContent: [Node.raw(transcriptLinks)], structuredData: data).layout
+        return LayoutConfig(contents: [main, scroller] + (premiumUser ? [] : [subscribeBanner()]), footerContent: [Node.raw(transcriptLinks)], structuredData: data).layout
+    }
+}
+
+extension String {
+    /// Inserts a non-breakable space before the last word (to prevent widows)
+    var widont: [Node] {
+        return [.text(self)] // todo
+    }
+}
+
+extension Collection {
+    func show() -> Node {
+        let bgImage = "background-image: url('/assets/images/collections/\(title)@4x.png');"
+        return LayoutConfig(contents: [
+            Node.div(attributes: ["class": "pattern-illustration overflow-hidden", "style": bgImage], [
+                Node.div(class: "wrapper", [
+                    .header(attributes: ["class": "offset-content offset-header pv++ bgcolor-white"], [
+                        .p(attributes: ["class": "ms1 color-gray-70 links clearfix"], [
+                            .link(to: .home, [.text("Swift Talk")], attributes: ["class": "bold"]),
+                            .raw("&#8202;"),
+                            .link(to: .collections, [.text("Collection")], attributes: ["class": "opacity: 90"])
+                        ]),
+                        Node.h2([.text(title)], attributes: ["class": "ms5 bold color-black mt--- lh-110 mb-"]),
+                        Node.p(attributes: ["class": "ms1 color-gray-40 text-wrapper lh-135"], description.widont),
+                    	Node.p(attributes: ["class": "color-gray-65 lh-125 mt"], [
+                            .text(episodes.released.count.pluralize("Episode")),
+                            .span(attributes: ["class": "ph---"], [.raw("&middot;")]),
+                            .text(total_duration.hoursAndMinutes)
+                        ])
+                    ])
+                ])
+            ]),
+            Node.div(class: "wrapper pt++", [
+                Node.ul(attributes: ["class": "offset-content"], episodes.released.map { e in
+                    Node.li(attributes: ["class": "flex justify-center mb++ m+|mb+++"], [
+                        Node.div(class: "width-1 ms1 mr- color-theme-highlight bold lh-110 m-|hide", [.raw("&rarr;")]),
+                        e.render(.init(wide: true, synopsis: true, collection: false))
+                    ])
+                })
+            ]),
+        ], theme: "collection").layout
     }
 }
 
@@ -584,6 +692,7 @@ extension LayoutConfig {
                     ])
                 ]),
                 .main(contents), // todo sidenav
+            ] + preFooter + [
                 .raw(footer),
             ] + footerContent)
         ])

@@ -89,7 +89,7 @@ extension Node {
         return Node.a(attributes: attributes, children, href: routes.print(to)!.prettyPath)
     }
     
-    static func inlineSvg(path: String, attributes: [String:String] = [:]) -> Node {
+    static func inlineSvg(path: String, preserveAspectRatio: String? = nil, attributes: [String:String] = [:]) -> Node {
         let name = resourcePaths.resolve("images/" + path)!
         let contents = try! String(contentsOf: name).replacingOccurrences(of: "<svg", with: "<svg " + attributes.asAttributes) // todo proper xml parsing?
         return .raw(contents)
@@ -203,7 +203,7 @@ extension MyRoute {
             guard let c = Collection.all.first(where: { $0.slug == name }) else {
                 return I.notFound("No such collection")
             }
-            return .write("TODO collection: \(c)")
+            return .write(c.show())
         case .env:
             return .write("\(ProcessInfo.processInfo.environment)")
         case .login:
@@ -228,7 +228,8 @@ extension MyRoute {
             guard inWhitelist(p) else {
                 return .write("forbidden", status: .forbidden)
             }
-            return .writeFile(path: p.joined(separator: "/"))
+            let name = p.map { $0.removingPercentEncoding ?? "" }.joined(separator: "/")
+            return .writeFile(path: name)
         }
     }
 }
@@ -255,8 +256,7 @@ func sanityCheck() {
     }
 }
 
-print(siteMap(routes))
-print(Episode.all.first { $0.number == 108 })
+//print(siteMap(routes))
 let s = MyServer(parse: { routes.runParse($0) }, interpret: { $0.interpret() }, resourcePaths: resourcePaths)
 try s.listen()
 

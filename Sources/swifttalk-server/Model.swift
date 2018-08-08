@@ -83,6 +83,12 @@ extension Episode {
     
 }
 
+extension Sequence where Element == Episode {
+    var released: [Episode] {
+        return filter { $0.released }
+    }
+}
+
 
 struct Collection: Codable, Equatable {
     var id: Id<Collection>
@@ -97,7 +103,7 @@ extension Collection {
     }
     
     var total_duration: TimeInterval {
-        return episodes.map { $0.media_duration ?? 0 }.reduce(0, +)
+        return episodes.released.map { $0.media_duration ?? 0 }.reduce(0, +)
     }
 }
 

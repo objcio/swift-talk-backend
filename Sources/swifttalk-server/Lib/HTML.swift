@@ -120,6 +120,10 @@ extension Node {
         return .node(El(name: "div", attributes: attributes, children: children))
     }
     
+    static func aside(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "div", attributes: attributes, children: children))
+    }
+    
     static func div(class c: String, _ children: [Node] = []) -> Node {
         let attributes = ["class": c]
         return .node(El(name: "div", attributes: attributes, children: children))
@@ -148,6 +152,10 @@ extension Node {
     
     static func li(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         return .node(El(name: "li", attributes: attributes, children: children))
+    }
+    
+    static func button(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "button", attributes: attributes, children: children))
     }
     
     static func main(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
