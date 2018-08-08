@@ -22,31 +22,8 @@ struct Guest: Codable, Equatable {
     // todo
 }
 
-struct Episode_Old: Codable, Equatable {
-    var collection: Id<Collection>?
-    var created_at: Int
-    var furthest_watched: Double?
-    var id: Id<Episode>
-    var media_duration: TimeInterval?
-    var media_url: URL?
-    var name: String?
-    var number: Int
-    var play_position: Double?
-    var poster_url: URL?
-    var released_at: TimeInterval?
-    var sample: Bool
-    var sample_duration: TimeInterval?
-    var season: Int
-    var small_poster_url: URL?
-    var subscription_only: Bool
-    var synopsis: String
-    var title: String
-    var updated_at: Int
-    var guests: [Guest]?
-}
-
 struct Episode: Codable, Equatable {
-    var collections: [String]?
+    var collections: [String]
     var created_at: String
     var id: Id<Episode>
     var mailchimp_campaign_id: String?
@@ -88,6 +65,22 @@ extension Episode {
     var media_url: URL? {
         return URL(string: "https://d2sazdeahkz1yk.cloudfront.net/videos/5dbf3160-fb5b-4e5a-88da-3163ea09883b/1/hls.m3u8")
     }
+    
+    var theCollections: [Collection] {
+        return collections.compactMap { name in
+            Collection.all.first { $0.title ==  name }
+        }
+    }
+    
+    var primaryCollection: Collection? {
+        return theCollections.first
+    }
+    
+    func title(in coll: Collection) -> String {
+        guard let p = primaryCollection, p != coll else { return title }
+        return p.title + ": " + title
+    }
+    
 }
 
 
@@ -96,8 +89,16 @@ struct Collection: Codable, Equatable {
     var artwork: String // todo this is a weird kind of URL we get from JSON
     var description: String
     var title: String
-    var episodes_count: Int // todo compute
-    var total_duration: TimeInterval // todo compute
+}
+
+extension Collection {
+    var episodes: [Episode] {
+        return Episode.all.filter { $0.collections.contains(title) }
+    }
+    
+    var total_duration: TimeInterval {
+        return episodes.map { $0.media_duration ?? 0 }.reduce(0, +)
+    }
 }
 
 extension Collection {

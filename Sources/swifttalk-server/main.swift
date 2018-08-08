@@ -195,7 +195,9 @@ extension MyRoute {
         switch self {
         case .books, .issues:
             return .notFound()
-        case .collections, .imprint, .subscribe:
+        case .collections:
+            return I.write(index(Collection.all))
+        case .imprint, .subscribe:
             return .write("TODO")
         case .collection(let name):
             guard let c = Collection.all.first(where: { $0.slug == name }) else {
@@ -245,8 +247,16 @@ extension HTTPMethod {
     }
 }
 
-print("Hello")
+func sanityCheck() {
+    for e in Episode.all {
+        for c in e.collections {
+            assert(Collection.all.contains(where: { $0.title == c }))
+        }
+    }
+}
+
 print(siteMap(routes))
+print(Episode.all.first { $0.number == 108 })
 let s = MyServer(parse: { routes.runParse($0) }, interpret: { $0.interpret() }, resourcePaths: resourcePaths)
-print("World")
 try s.listen()
+

@@ -123,6 +123,19 @@ extension Date {
     }
 }
 
+func index(_ items: [Collection]) -> Node {
+    let lis: [Node] = items.map({ (coll: Collection) -> Node in
+        return Node.li(attributes: ["class": "col width-full s+|width-1/2 l+|width-1/3 mb++"], coll.render(.init(episodes: true)))
+    })
+    return LayoutConfig(contents: [
+        pageHeader(.other(header: "All Collections", blurb: "TODO backlink")),
+        .div(class: "container pb0", [
+            .h2([Node.text("\(items.count) Collections")], attributes: ["class": "bold lh-100 mb+"]),
+            .ul(attributes: ["class": "cols s+|cols--2n l+|cols--3n"], lis)
+        ])
+    ]).layout
+}
+
 extension Episode {
     struct ViewOptions {
         var featured: Bool = false
@@ -167,7 +180,7 @@ extension Episode {
           (options.featured ? " pa bgcolor-pale-gray radius-5 no-radius-top" : "")
         
         let coll: [Node]
-        if options.collection, let name = collections?.first, let collection = Collection.all.first(where: { $0.title == name }) {
+        if options.collection, let collection = primaryCollection {
             coll = [Node.link(to: MyRoute.collection(collection.slug), [.text(collection.title)], attributes: [
                 "class": "inline-block no-decoration color-blue hover-underline mb--" + (options.featured ? "" : " ms-1")
             ])]
@@ -473,9 +486,26 @@ extension Collection {
     struct ViewOptions {
         var episodes: Bool = false
         var whiteBackground: Bool = false
+        init(episodes: Bool = false, whiteBackground: Bool = false) {
+            self.episodes = episodes
+            self.whiteBackground = whiteBackground
+        }
     }
     func render(_ options: ViewOptions = ViewOptions()) -> [Node] {
         let figureStyle = "background-color: " + (options.whiteBackground ? "#FCFDFC" : "#F2F4F2")
+        let episodes_: [Node] = options.episodes ? [
+            .ul(attributes: ["class": "mt-"],
+        		episodes.filter { $0.released }.map { e in
+                    let title = e.title(in: self)
+                    return Node.li(attributes: ["class": "flex items-baseline justify-between ms-1 line-125"], [
+                        Node.span(attributes: ["class": "nowrap overflow-hidden text-overflow-ellipsis pv- color-gray-45"], [
+                            Node.link(to: .episode(e.slug), [.text(title)], attributes: ["class": "no-decoration color-inherit hover-underline"])
+                        ]),
+                        .span(attributes: ["class": "flex-none pl- pv- color-gray-70"], [.text(e.media_duration?.timeString ?? "")])
+                    ])
+                }
+            )
+        ] : []
         return [
             Node.article(attributes: [:], [
                 Node.link(to: .collection(slug), [
@@ -489,11 +519,11 @@ extension Collection {
                     Node.span(attributes: ["class": "flex-none label smallcaps color-white bgcolor-blue nowrap ml-"], [Node.text("New")])
                 ] : [])),
                 Node.p(attributes: ["class": "ms-1 color-gray-55 lh-125 mt--"], [
-                    .text(episodes_count.pluralize("Episode")),
+                    .text(episodes.count.pluralize("Episode")),
                     .span(attributes: ["class": "ph---"], [Node.raw("&middot;")]),
                     .text(total_duration.hoursAndMinutes)
                 ] as [Node])
-            ])
+            ] + episodes_)
         ]
     }
 }
@@ -534,7 +564,7 @@ extension LayoutConfig {
                         ])
                     ])
                 ]),
-                .main(contents.elements), // todo sidenav
+                .main(contents), // todo sidenav
                 .raw(footer),
             ] + footerContent)
         ])

@@ -64,24 +64,6 @@ extension Node {
     }
 }
 
-protocol ToElements {
-    var elements: [Node] { get }
-}
-
-extension Node: ToElements {
-    var elements: [Node] { return [self] }
-}
-
-extension Array: ToElements where Element == Node {
-    var elements: [Element] {
-        return self
-    }
-}
-
-extension String: ToElements {
-    var elements: [Node] { return [.text(self)] } // todo escape
-}
-
 extension Node {
     static func html(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         return .node(El(name: "html", attributes: attributes, children: children))
@@ -96,7 +78,7 @@ extension Node {
     }
     
     static func p(attributes: [String:String] = [:], _ children: [Node]) -> Node {
-        return .node(El(name: "p", attributes: attributes, children: children.elements))
+        return .node(El(name: "p", attributes: attributes, children: children))
     }
     
     static func head(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
@@ -108,23 +90,23 @@ extension Node {
     }
     
     static func title(_ text: String) -> Node {
-        return .node(El(name: "title", block: false, children: text.elements))
+        return .node(El(name: "title", block: false, children: [.text(text)]))
     }
 
     static func span(attributes: [String:String] = [:], _ text: [Node]) -> Node {
-        return .node(El(name: "span", block: false, attributes: attributes, children: text.elements))
+        return .node(El(name: "span", block: false, attributes: attributes, children: text))
     }
 
     static func h1(_ title: [Node], attributes: [String:String] = [:]) -> Node {
-        return .node(El(name: "h1", block: false, attributes: attributes, children: title.elements))
+        return .node(El(name: "h1", block: false, attributes: attributes, children: title))
     }
     
     static func h2(_ title: [Node], attributes: [String:String] = [:]) -> Node {
-        return .node(El(name: "h2", block: false, attributes: attributes, children: title.elements))
+        return .node(El(name: "h2", block: false, attributes: attributes, children: title))
     }
     
     static func h3(_ title: [Node], attributes: [String:String] = [:]) -> Node {
-        return .node(El(name: "h3", block: false, attributes: attributes, children: title.elements))
+        return .node(El(name: "h3", block: false, attributes: attributes, children: title))
     }
     
     static func img(src: String, alt: String = "", attributes: [String:String] = [:]) -> Node {
@@ -197,7 +179,7 @@ extension Node {
         assert(attributes["href"] == nil)
         var att = attributes
         att["href"] = href
-        return .node(El(name: "a", block: false, attributes: att, children: title.elements))
+        return .node(El(name: "a", block: false, attributes: att, children: title))
     }
 }
 
