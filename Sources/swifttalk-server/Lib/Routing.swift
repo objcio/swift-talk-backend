@@ -54,13 +54,6 @@ extension Route {
     }
 }
 
-extension Array where Element == Route<MyRoute> {
-    func choice() -> Route<MyRoute> {
-        assert(!isEmpty)
-        return dropFirst().reduce(self[0], { $0.or($1) })
-    }
-}
-
 extension Route where A: Equatable {
     init(_ value: A) {
         self.init(parse: { _ in value }, print: { x in

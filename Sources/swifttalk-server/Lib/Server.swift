@@ -13,7 +13,19 @@ protocol Interpreter {
     static func write(_ string: String, status: HTTPResponseStatus) -> Self
     static func writeFile(path: String) -> Self
     static func redirect(path: String) -> Self
-    static func onComplete<A>(callback: @escaping (@escaping (A) -> ()) -> (), do cont: @escaping (A) -> Self) -> Self
+    static func onComplete<A>(promise: Promise<A>, do cont: @escaping (A) -> Self) -> Self
+}
+
+struct Promise<A> {
+    let run: (@escaping (A) -> ()) -> ()
+    
+    func map<B>(_ f: @escaping (A) -> B) -> Promise<B> {
+        return Promise<B>(run: { cb in
+            self.run { a in
+                cb(f(a))
+            }
+        })
+    }
 }
 
 extension Interpreter {
@@ -86,9 +98,9 @@ struct NIOInterpreter: Interpreter {
         }
     }
     
-    static func onComplete<A>(callback: @escaping (@escaping (A) -> ()) -> (), do cont: @escaping (A) -> NIOInterpreter) -> NIOInterpreter {
+    static func onComplete<A>(promise: Promise<A>, do cont: @escaping (A) -> NIOInterpreter) -> NIOInterpreter {
         return NIOInterpreter { env in
-            callback { str in
+            promise.run { str in
                 env.ctx.eventLoop.execute {
                     cont(str).run(env)
                 }

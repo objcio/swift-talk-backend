@@ -7,6 +7,8 @@ enum Accept: String {
     case json = "application/json"
 }
 
+
+
 struct RemoteEndpoint<A> {
     var request: URLRequest
     var parse: (Data) -> A?
@@ -53,6 +55,15 @@ extension URLSession {
             guard let d = data else { callback(nil); return }
             return callback(e.parse(d))
         }).resume()
+    }
+    
+    func load<A>(_ e: RemoteEndpoint<A>) -> Promise<A?> {
+        return Promise { [unowned self] cb in
+            self.dataTask(with: e.request, completionHandler: { data, resp, err in
+                guard let d = data else { cb(nil); return }
+                return cb(e.parse(d))
+            }).resume()
+        }
     }
 }
 
@@ -132,6 +143,13 @@ enum MyRoute: Equatable {
     case staticFile(path: [String])
 }
 
+extension Array where Element == Route<MyRoute> {
+    func choice() -> Route<MyRoute> {
+        assert(!isEmpty)
+        return dropFirst().reduce(self[0], { $0.or($1) })
+    }
+}
+
 let episode: Route<MyRoute> = (Route<()>.c("episodes") / .string()).transform({ MyRoute.episode(Slug(rawValue: $0)) }, { r in
     guard case let .episode(num) = r else { return nil }
     return num.rawValue
@@ -142,10 +160,15 @@ let collection: Route<MyRoute> = (Route<()>.c("collections") / .string()).transf
     return name.rawValue
 })
 
-let callback: Route<MyRoute> = .c("users") / .c("auth") / .c("github") / .c("callback") / (Route<String>.queryParam(name: "code").transform({ MyRoute.githubCallback($0) }, { r in
+let callbackRoute: Route<MyRoute> = .c("users") / .c("auth") / .c("github") / .c("callback") / (Route<String>.queryParam(name: "code").transform({ MyRoute.githubCallback($0) }, { r in
     guard case let .githubCallback(x) = r else { return nil }
     return x
 }))
+
+let assetsRoute: Route<MyRoute> = (.c("assets") / .path()).transform({ MyRoute.staticFile(path:$0) }, { r in
+    guard case let .staticFile(path) = r else { return nil }
+    return path
+})
 
 let routes: Route<MyRoute> = [
     Route(.home),
@@ -157,11 +180,8 @@ let routes: Route<MyRoute> = [
     .c("subscribe", .subscribe),
     .c("imprint", .imprint),
     .c("users") / .c("auth") / .c("github", .login),
-    callback,
-    (.c("assets") / .path()).transform({ MyRoute.staticFile(path:$0) }, { r in
-        guard case let .staticFile(path) = r else { return nil }
-        return path
-    }),
+    callbackRoute,
+    assetsRoute,
     .c("collections", .collections),
     episode,
     collection
@@ -288,7 +308,6 @@ extension Collection {
     }()
 }
 
-
 extension MyRoute {
     func interpret<I: Interpreter>() -> I {
         switch self {
@@ -306,15 +325,11 @@ extension MyRoute {
         case .login:
             return I.redirect(path: "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(Github.clientId)")
         case .githubCallback(let code):
-            return I.onComplete(callback: { cb in
-                URLSession.shared.load(Github.getAccessToken(code), callback: { token in
-                    cb(token?.access_token)
-                })
-            }, do: { token in
+            return I.onComplete(promise:
+                URLSession.shared.load(Github.getAccessToken(code)).map({ $0?.access_token })
+            	, do: { token in
                 guard let t = token else { return .write("No access") }
-                return I.onComplete(callback: { cb in
-                    URLSession.shared.load(Github(t).getProfile(), callback: cb)
-                }, do: { str in
+                return I.onComplete(promise: URLSession.shared.load(Github(t).getProfile()), do: { str in
                     I.write(str ?? "no profile")
                 })
                 
