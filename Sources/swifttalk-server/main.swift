@@ -3,14 +3,29 @@ import NIO
 import NIOHTTP1
 import PostgreSQL
 
+enum Accept: String {
+    case json = "application/json"
+}
+
 struct RemoteEndpoint<A> {
     var request: URLRequest
     var parse: (Data) -> A?
+    
+    init(get: URL, accept: Accept? = nil, query: [String:String], parse: @escaping (Data) -> A?) {
+        var comps = URLComponents(string: get.absoluteString)!
+        comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
+        request = URLRequest(url: comps.url!)
+        if let a = accept {
+            request.setValue(a.rawValue, forHTTPHeaderField: "Accept")
+        }
+        self.parse = parse
+    }
     
     init(post: URL, accept: String? = nil, query: [String:String], parse: @escaping (Data) -> A?) {
         var comps = URLComponents(string: post.absoluteString)!
         comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
         request = URLRequest(url: comps.url!)
+        request.httpMethod = "POST"
         if let a = accept {
             request.setValue(a, forHTTPHeaderField: "Accept")
         }
@@ -24,7 +39,8 @@ extension RemoteEndpoint where A: Decodable {
         var comps = URLComponents(string: post.absoluteString)!
         comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
         request = URLRequest(url: comps.url!)
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue(Accept.json.rawValue, forHTTPHeaderField: "Accept")
+        request.httpMethod = "POST"
         self.parse = { data in
             return try? JSONDecoder().decode(A.self, from: data)
         }
@@ -61,8 +77,13 @@ struct Github {
         var token_type: String
         var scope: String
     }
+    
+    let accessToken: String
+    init(_ accessToken: String) {
+        self.accessToken = accessToken
+    }
 
-    func getAccessToken(_ code: String) -> RemoteEndpoint<AccessTokenResponse> {
+    static func getAccessToken(_ code: String) -> RemoteEndpoint<AccessTokenResponse> {
         let url = URL(string: "https://github.com/login/oauth/access_token")!
         let query = [
             "client_id": Github.clientId,
@@ -71,6 +92,12 @@ struct Github {
             "accept": "json"
         ]
         return RemoteEndpoint(post: url, query: query)
+    }
+    
+    func getProfile() -> RemoteEndpoint<String> {
+        let url = URL(string: "https://api.github.com/user")!
+        let query = ["access_token": accessToken]
+        return RemoteEndpoint(get: url, accept: .json, query: query, parse: { String(data: $0, encoding: .utf8)})
     }
 }
 
@@ -279,10 +306,19 @@ extension MyRoute {
         case .login:
             return I.redirect(path: "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(Github.clientId)")
         case .githubCallback(let code):
-            URLSession.shared.load(Github().getAccessToken(code), callback: { result in
-                print("github result: \(result)")
+            return I.onComplete(callback: { cb in
+                URLSession.shared.load(Github.getAccessToken(code), callback: { token in
+                    cb(token?.access_token)
+                })
+            }, do: { token in
+                guard let t = token else { return .write("No access") }
+                return I.onComplete(callback: { cb in
+                    URLSession.shared.load(Github(t).getProfile(), callback: cb)
+                }, do: { str in
+                    I.write(str ?? "no profile")
+                })
+                
             })
-            return .write(code)
         case .version:
             return .write(withConnection { conn in
                 let v = try? conn?.execute("SELECT version()") ?? nil

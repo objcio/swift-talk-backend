@@ -13,6 +13,7 @@ protocol Interpreter {
     static func write(_ string: String, status: HTTPResponseStatus) -> Self
     static func writeFile(path: String) -> Self
     static func redirect(path: String) -> Self
+    static func onComplete<A>(callback: @escaping (@escaping (A) -> ()) -> (), do cont: @escaping (A) -> Self) -> Self
 }
 
 extension Interpreter {
@@ -84,6 +85,18 @@ struct NIOInterpreter: Interpreter {
             }
         }
     }
+    
+    static func onComplete<A>(callback: @escaping (@escaping (A) -> ()) -> (), do cont: @escaping (A) -> NIOInterpreter) -> NIOInterpreter {
+        return NIOInterpreter { env in
+            callback { str in
+                env.ctx.eventLoop.execute {
+                    cont(str).run(env)
+                }
+
+            }
+        }
+    }
+    
     static func write(_ string: String, status: HTTPResponseStatus = .ok) -> NIOInterpreter {
         return NIOInterpreter { env in
             let head = HTTPResponseHead(version: env.header.version, status: status)
