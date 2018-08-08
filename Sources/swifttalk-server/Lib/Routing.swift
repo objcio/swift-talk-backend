@@ -18,6 +18,7 @@ struct Request {
 indirect enum RouteDescription {
     case constant(String)
     case parameter(String)
+    case queryParameter(String)
     case joined(RouteDescription, RouteDescription)
     case choice(RouteDescription, RouteDescription)
     case empty
@@ -37,6 +38,7 @@ extension RouteDescription {
         case .parameter(let p): return ":\(p)"
         case .any: return "*"
         case .empty: return ""
+        case let .queryParameter(name): return "?\(name)=*"
         case let .joined(lhs, rhs): return lhs.pretty + "/" + rhs.pretty
         case let .choice(lhs, rhs): return "choice(\(lhs.pretty), \(rhs.pretty))"
 	}
@@ -115,6 +117,16 @@ extension Route where A == String {
         }, print: { (str: String) in
             return Request(path: [str], query: [:], method: .get, body: nil)
         }, description: .parameter("string"))
+    }
+    
+    static func queryParam(name: String) -> Route<String> {
+        return Route<String>(parse: { req in
+            guard let x = req.query[name] else { return nil }
+            req.query[name] = nil
+            return x
+        }, print: { (str: String) in
+            return Request(path: [], query: [name: str], method: .get, body: nil)
+        }, description: .queryParameter(name))
     }
 }
 

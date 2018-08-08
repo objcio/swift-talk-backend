@@ -3,9 +3,76 @@ import NIO
 import NIOHTTP1
 import PostgreSQL
 
-// Inspired/parts copied from http://www.alwaysrightinstitute.com/microexpress-nio/
+struct RemoteEndpoint<A> {
+    var request: URLRequest
+    var parse: (Data) -> A?
+    
+    init(post: URL, accept: String? = nil, query: [String:String], parse: @escaping (Data) -> A?) {
+        var comps = URLComponents(string: post.absoluteString)!
+        comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
+        request = URLRequest(url: comps.url!)
+        if let a = accept {
+            request.setValue(a, forHTTPHeaderField: "Accept")
+        }
+        self.parse = parse
+    }
+}
 
-let env = ProcessInfo.processInfo.environment
+extension RemoteEndpoint where A: Decodable {
+    /// Parses the result as JSON
+    init(post: URL, query: [String:String]) {
+        var comps = URLComponents(string: post.absoluteString)!
+        comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
+        request = URLRequest(url: comps.url!)
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        self.parse = { data in
+            return try? JSONDecoder().decode(A.self, from: data)
+        }
+    }
+}
+
+extension URLSession {
+    func load<A>(_ e: RemoteEndpoint<A>, callback: @escaping (A?) -> ()) {
+        dataTask(with: e.request, completionHandler: { data, resp, err in
+            guard let d = data else { callback(nil); return }
+            return callback(e.parse(d))
+        }).resume()
+    }
+}
+
+
+func readDotEnv() -> [String:String] {
+    guard let c = try? String(contentsOfFile: ".env") else { return [:] }
+    return Dictionary(c.split(separator: "\n").compactMap { $0.keyAndValue }, uniquingKeysWith: { $1 })
+}
+let env: [String:String] = readDotEnv().merging(ProcessInfo.processInfo.environment, uniquingKeysWith: { $1 })
+assert(env["GITHUB_CLIENT_ID"] != nil)
+assert(env["GITHUB_CLIENT_SECRET"] != nil)
+assert(env["GITHUB_CLIENT_SECRET"] != nil)
+
+struct Github {
+    static var clientId: String { return env["GITHUB_CLIENT_ID"]! }
+    static var clientSecret: String { return env["GITHUB_CLIENT_SECRET"]! }
+    
+    static let contentType = "application/json"
+    
+    struct AccessTokenResponse: Codable, Equatable {
+        var access_token: String
+        var token_type: String
+        var scope: String
+    }
+
+    func getAccessToken(_ code: String) -> RemoteEndpoint<AccessTokenResponse> {
+        let url = URL(string: "https://github.com/login/oauth/access_token")!
+        let query = [
+            "client_id": Github.clientId,
+            "client_secret": Github.clientSecret,
+            "code": code,
+            "accept": "json"
+        ]
+        return RemoteEndpoint(post: url, query: query)
+    }
+}
 
 let postgreSQL = try? PostgreSQL.Database(connInfo: ConnInfo.params([
     "host": env["RDS_HOSTNAME"] ?? "localhost",
@@ -25,7 +92,6 @@ enum MyRoute: Equatable {
     case home
     case books
     case issues
-    case env
     case episodes
     case version
     case sitemap
@@ -33,6 +99,7 @@ enum MyRoute: Equatable {
     case subscribe
     case collections
     case login
+    case githubCallback(String)
     case collection(Slug<Collection>)
     case episode(Slug<Episode>)
     case staticFile(path: [String])
@@ -48,9 +115,13 @@ let collection: Route<MyRoute> = (Route<()>.c("collections") / .string()).transf
     return name.rawValue
 })
 
+let callback: Route<MyRoute> = .c("users") / .c("auth") / .c("github") / .c("callback") / (Route<String>.queryParam(name: "code").transform({ MyRoute.githubCallback($0) }, { r in
+    guard case let .githubCallback(x) = r else { return nil }
+    return x
+}))
+
 let routes: Route<MyRoute> = [
     Route(.home),
-    .c("env", .env),
     .c("version", .version),
     .c("books", .books), // todo absolute url
     .c("issues", .issues), // todo absolute url
@@ -59,6 +130,7 @@ let routes: Route<MyRoute> = [
     .c("subscribe", .subscribe),
     .c("imprint", .imprint),
     .c("users") / .c("auth") / .c("github", .login),
+    callback,
     (.c("assets") / .path()).transform({ MyRoute.staticFile(path:$0) }, { r in
         guard case let .staticFile(path) = r else { return nil }
         return path
@@ -204,10 +276,13 @@ extension MyRoute {
                 return I.notFound("No such collection")
             }
             return .write(c.show())
-        case .env:
-            return .write("\(ProcessInfo.processInfo.environment)")
         case .login:
-            return .write("TODO login")
+            return I.redirect(path: "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(Github.clientId)")
+        case .githubCallback(let code):
+            URLSession.shared.load(Github().getAccessToken(code), callback: { result in
+                print("github result: \(result)")
+            })
+            return .write(code)
         case .version:
             return .write(withConnection { conn in
                 let v = try? conn?.execute("SELECT version()") ?? nil
@@ -257,6 +332,7 @@ func sanityCheck() {
 }
 
 //print(siteMap(routes))
+sanityCheck()
 let s = MyServer(parse: { routes.runParse($0) }, interpret: { $0.interpret() }, resourcePaths: resourcePaths)
 try s.listen()
 

@@ -12,6 +12,7 @@ import NIOHTTP1
 protocol Interpreter {
     static func write(_ string: String, status: HTTPResponseStatus) -> Self
     static func writeFile(path: String) -> Self
+    static func redirect(path: String) -> Self
 }
 
 extension Interpreter {
@@ -37,6 +38,18 @@ struct NIOInterpreter: Interpreter {
         let resourcePaths: [URL]
     }
     let run: (Deps) -> ()
+    
+    static func redirect(path: String) -> NIOInterpreter {
+        return NIOInterpreter { env in
+            var head = HTTPResponseHead(version: env.header.version, status: .temporaryRedirect) // todo should this be temporary?
+            head.headers.add(name: "Location", value: path)
+            let part = HTTPServerResponsePart.head(head)
+            _ = env.ctx.channel.write(part)
+            _ = env.ctx.channel.writeAndFlush(HTTPServerResponsePart.end(nil)).then {
+                env.ctx.channel.close()
+            }
+        }
+    }
     
     static func writeFile(path: String) -> NIOInterpreter {
         return NIOInterpreter { deps in
@@ -87,6 +100,30 @@ struct NIOInterpreter: Interpreter {
     }
 }
 
+extension StringProtocol {
+    var keyAndValue: (String, String)? {
+        guard let i = index(of: "=") else { return nil }
+        let n = index(after: i)
+        return (String(self[..<i]), String(self[n...]))
+    }
+}
+
+extension StringProtocol {
+    var parseAsQueryPart: [String:String] {
+        let items = split(separator: "&").compactMap { $0.keyAndValue }
+        return Dictionary(items.map { (k,v) in (k.removingPercentEncoding ?? "", v.removingPercentEncoding ?? "") }, uniquingKeysWith: { $1 })
+    }
+}
+
+extension String {
+    var parseQuery: (String, [String:String]) {
+        guard let i = self.index(of: "?") else { return (self, [:]) }
+        let path = self[..<i]
+        let remainder = self[index(after: i)...]
+        return (String(path), remainder.parseAsQueryPart)
+    }
+}
+
 final class RouteHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPServerRequestPart
     typealias OutboundOut = HTTPServerResponsePart
@@ -104,7 +141,8 @@ final class RouteHandler: ChannelInboundHandler {
         let reqPart = unwrapInboundIn(data)
         switch reqPart {
         case .head(let header):
-            let r = Request(path: header.uri.split(separator: "/").map(String.init), query: [:], method: .init(header.method), body: nil)
+            let (path, query) = header.uri.parseQuery
+            let r = Request(path: path.split(separator: "/").map(String.init), query: query, method: .init(header.method), body: nil)
             let env = NIOInterpreter.Deps(header: header, ctx: ctx, fileIO: fileIO, handler: self, manager: FileManager.default, resourcePaths: paths)
             if let i = handle(r) {
                 i.run(env)

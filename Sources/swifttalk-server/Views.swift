@@ -667,9 +667,7 @@ extension LayoutConfig {
             .stylesheet(href: "/assets/stylesheets/application.css"),
             // todo google analytics
             ] + structured)
-        return Node.html(attributes: ["lang": "en"], [
-            head,
-            .body(attributes: ["class": "theme-" + theme], [ // todo theming classes?
+        let body: Node = .body(attributes: ["class": "theme-" + theme], [ // todo theming classes?
                 .header(attributes: ["class": "bgcolor-white"], [
                     .div(class: "height-3 flex scroller js-scroller js-scroller-container", [
                         .div(class: "container-h flex-grow flex", [
@@ -695,7 +693,7 @@ extension LayoutConfig {
             ] + preFooter + [
                 .raw(footer),
             ] + footerContent)
-        ])
+        return Node.html(attributes: ["lang": "en"], [head, body])
     }
 
 }
