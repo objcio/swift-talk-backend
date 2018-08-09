@@ -18,7 +18,8 @@ let postgreSQL = try? PostgreSQL.Database(connInfo: ConnInfo.params([
     "host": env["RDS_HOSTNAME"] ?? "localhost",
     "dbname": env["RDS_DB_NAME"] ?? "swifttalk_dev",
     "user": env["RDS_DB_USERNAME"] ?? "chris",
-    "password": env["RDS_DB_PASSWORD"] ?? ""
+    "password": env["RDS_DB_PASSWORD"] ?? "",
+    "connect_timeout": "1",
 ]))
 
 func withConnection<A>(_ x: (Connection?) throws -> A) rethrows -> A {
