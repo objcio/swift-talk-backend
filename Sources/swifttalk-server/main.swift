@@ -4,6 +4,14 @@ import NIOHTTP1
 import PostgreSQL
 
 
+var standardError = FileHandle.standardError
+
+extension Foundation.FileHandle : TextOutputStream {
+    public func write(_ string: String) {
+        guard let data = string.data(using: .utf8) else { return }
+        self.write(data)
+    }
+}
 
 func readDotEnv() -> [String:String] {
     guard let c = try? String(contentsOfFile: ".env") else { return [:] }
@@ -28,9 +36,9 @@ func withConnection<A>(_ x: (Connection?) throws -> A) rethrows -> A {
             let conn = try $0.makeConnection()
             return conn
         } catch {
-            print(error)
-            print(env.filter({ $0.0.hasPrefix("RDS" )}))
-            print(error.localizedDescription)
+            print(error, to: &standardError)
+//            print(env.filter({ $0.0.hasPrefix("RDS" )}))
+            print(error.localizedDescription, to: &standardError)
             return nil
         }
     }
@@ -91,14 +99,6 @@ func absoluteURL(_ route: MyRoute) -> URL? {
     return URL(string: "https://www.objc.io" + p)
 }
 
-var standardError = FileHandle.standardError
-
-extension Foundation.FileHandle : TextOutputStream {
-    public func write(_ string: String) {
-        guard let data = string.data(using: .utf8) else { return }
-        self.write(data)
-    }
-}
 
 extension MyRoute {
     func interpret<I: Interpreter>() -> I {
