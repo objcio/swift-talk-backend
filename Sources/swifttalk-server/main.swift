@@ -133,7 +133,15 @@ let postgreSQL = try? PostgreSQL.Database(connInfo: ConnInfo.params([
 ]))
 
 func withConnection<A>(_ x: (Connection?) throws -> A) rethrows -> A {
-    let conn: Connection? = postgreSQL.flatMap { try? $0.makeConnection() }
+    let conn: Connection? = postgreSQL.flatMap {
+        do {
+            let conn = try $0.makeConnection()
+            return conn
+        } catch {
+            print(error.localizedDescription)
+            return nil
+        }
+    }
     let result = try x(conn)
     try? conn?.close()
     return result
