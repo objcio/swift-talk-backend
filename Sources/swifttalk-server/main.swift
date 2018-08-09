@@ -122,14 +122,17 @@ extension MyRoute {
                     print("got token: \(token)", to: &standardError)
                 guard let t = token else { return .write("No access") }
                 return I.onComplete(promise: URLSession.shared.load(Github(t).profile), do: { str in
-                    print("got profile: \(token)", to: &standardError)
+                    print("got profile: \(str)", to: &standardError)
                     guard let p = str else { return .write("No profile") }
                     do {
+                        print("going to try to connect: ", to: &standardError)
                         return try withConnection { conn in
+                            print("conn: \(conn)", to: &standardError)
                             guard let c = conn else { return .write("No database connection") }
                             let d = Database(c)
                             // todo ask for email if we don't get it
                             let uid = try d.insert(UserData(email: p.email ?? "no email", githubUID: p.id, githubLogin: p.login, githubToken: t, avatarURL: p.avatar_url, name: p.name ?? ""))
+                            print("got uid: \(uid)", to: &standardError)
                             return .write("Hello \(uid)")
                         }
                     } catch {
