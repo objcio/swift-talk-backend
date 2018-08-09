@@ -120,13 +120,10 @@ extension MyRoute {
             return I.onComplete(promise:
                 URLSession.shared.load(Github.getAccessToken(code)).map({ $0?.access_token })
             	, do: { token in
-                    print("got token: \(token)", to: &standardError)
                 guard let t = token else { return .write("No access") }
                 return I.onComplete(promise: URLSession.shared.load(Github(t).profile), do: { str in
-                    print("got profile: \(str)", to: &standardError)
                     guard let p = str else { return .write("No profile") }
                     do {
-                        print("going to try to connect: ", to: &standardError)
                         return try withConnection { conn in
                             print("conn: \(conn)", to: &standardError)
                             guard let c = conn else { return .write("No database connection") }
@@ -137,6 +134,7 @@ extension MyRoute {
                             return .write("Hello \(uid)")
                         }
                     } catch {
+                        print("something else: \(error)", to: &standardError)
                         print("something else: \(error.localizedDescription)", to: &standardError)
                         return I.write("Error", status: .internalServerError)
                     }
