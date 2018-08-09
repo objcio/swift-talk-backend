@@ -37,7 +37,6 @@ COPY Sources ./Sources
 RUN swift build --product swifttalk-server --configuration release
 
 COPY data ./data
-COPY .env* ./
 
 EXPOSE 8765
 
