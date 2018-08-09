@@ -7,7 +7,14 @@ enum Accept: String {
     case json = "application/json"
 }
 
-
+struct GithubProfile: Codable {
+    let login: String
+    let id: Int
+    let avatar_url: String
+    let email: String?
+    let name: String?
+    // todo we get more than this, but should be enough info
+}
 
 struct RemoteEndpoint<A> {
     var request: URLRequest
@@ -46,6 +53,12 @@ extension RemoteEndpoint where A: Decodable {
         self.parse = { data in
             return try? JSONDecoder().decode(A.self, from: data)
         }
+    }
+    
+    init(get: URL, query: [String:String] = [:]) {
+        self.init(get: get, accept: Accept.json, query: query, parse: { data in
+            return try? JSONDecoder().decode(A.self, from: data)
+        })
     }
 }
 
@@ -105,23 +118,23 @@ struct Github {
         return RemoteEndpoint(post: url, query: query)
     }
     
-    func getProfile() -> RemoteEndpoint<String> {
+    func getProfile() -> RemoteEndpoint<GithubProfile> {
         let url = URL(string: "https://api.github.com/user")!
         let query = ["access_token": accessToken]
-        return RemoteEndpoint(get: url, accept: .json, query: query, parse: { String(data: $0, encoding: .utf8)})
+        return RemoteEndpoint(get: url, query: query)
     }
 }
 
 let postgreSQL = try? PostgreSQL.Database(connInfo: ConnInfo.params([
     "host": env["RDS_HOSTNAME"] ?? "localhost",
-    "dbname": env["RDS_DB_NAME"] ?? "swifttalk",
+    "dbname": env["RDS_DB_NAME"] ?? "swifttalk_dev",
     "user": env["RDS_DB_USERNAME"] ?? "chris",
     "password": env["RDS_DB_PASSWORD"] ?? ""
 ]))
 
-func withConnection<A>(_ x: (Connection?) -> A) -> A {
+func withConnection<A>(_ x: (Connection?) throws -> A) rethrows -> A {
     let conn: Connection? = postgreSQL.flatMap { try? $0.makeConnection() }
-    let result = x(conn)
+    let result = try x(conn)
     try? conn?.close()
     return result
 }
@@ -330,7 +343,19 @@ extension MyRoute {
             	, do: { token in
                 guard let t = token else { return .write("No access") }
                 return I.onComplete(promise: URLSession.shared.load(Github(t).getProfile()), do: { str in
-                    I.write(str ?? "no profile")
+                    guard let p = str else { return .write("No profile") }
+                    do {
+                        return try withConnection { conn in
+                            guard let c = conn else { return .write("No database connection") }
+                            let d = Database(c)
+                            // todo ask for email if we don't get it
+                            let uid = try d.insert(Database.UserData(email: p.email ?? "no email", githubUID: p.id, githubLogin: p.login, githubToken: t, avatarURL: p.avatar_url, name: p.name ?? ""))
+                            return .write("Hello \(uid)")
+                        }
+                    } catch {
+                        return I.write("Error", status: .internalServerError)
+                    }
+                    
                 })
                 
             })
@@ -382,8 +407,16 @@ func sanityCheck() {
     }
 }
 
+try withConnection { conn in
+    guard let c = conn else { fatalError() }
+    let db = Database(c)
+    try db.migrate()
+    try db.createUser("chris", 123)
+}
+
 //print(siteMap(routes))
 sanityCheck()
 let s = MyServer(parse: { routes.runParse($0) }, interpret: { $0.interpret() }, resourcePaths: resourcePaths)
 try s.listen()
+
 
