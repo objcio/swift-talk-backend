@@ -416,7 +416,10 @@ func sanityCheck() {
 }
 
 try withConnection { conn in
-    guard let c = conn else { fatalError("Can't connect to database") }
+    guard let c = conn else {
+        print("Can't connect to database")
+        return
+    }
     let db = Database(c)
     try db.migrate()
     try db.createUser("chris", 123)
