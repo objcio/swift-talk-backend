@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CommonMark
 
 let teamDiscount = 30
 
@@ -111,4 +112,69 @@ extension Collection {
     var new: Bool {
         return false // todo
     }
+}
+
+extension Episode {
+    var rawTranscript: String? {
+        let path = URL(fileURLWithPath: "data/episode-transcripts/episode\(number).md")
+        return try? String(contentsOf: path)
+    }
+    
+    var transcript: CommonMark.Node? {
+        guard let t = rawTranscript, let nodes = CommonMark.Node(markdown: t) else { return nil }
+        return CommonMark.Node(blocks: nodes.elements.deepApply({ (inl: Inline) -> [Inline] in
+            guard case let .text(t) = inl else { return [inl] }
+            if let (m,s,remainder) = t.scanTimePrefix() {
+                let totalSeconds = m*60 + s
+                let pretty = "\(m.padded):\(s.padded)"
+                return [Inline.link(children: [.text(text: pretty)], title: "", url: "#\(totalSeconds)"), .text(text: remainder)]
+            } else {
+                return [inl]
+            }
+        }))
+    }
+    
+    var tableOfContents: [((TimeInterval), title: String)] {
+        guard let t = rawTranscript, let els = CommonMark.Node(markdown: t)?.elements else { return [] }
+        
+        var result: [(TimeInterval, title: String)] = []
+        var currentTitle: String?
+        for el in els {
+            switch el {
+            case let .heading(text: text, _):
+                let strs = text.deep(collect: { (i: Inline) -> [String] in
+                    guard case let Inline.text(text: t) = i else { return [] }
+                    return [t]
+                })
+                currentTitle = strs.joined(separator: " ")
+            case let .paragraph(text: c) where currentTitle != nil:
+                if case let .text(t)? = c.first, let (minutes, seconds, _) = t.scanTimePrefix() {
+                    result.append((TimeInterval(minutes*60 + seconds), title: currentTitle!))
+                    currentTitle = nil
+                }
+            default:
+                ()
+            }
+        }
+        return result
+    }
+    
+    static let all: [Episode] = {
+        // for this (and the rest of the app) to work we need to launch with a correct working directory (root of the app)
+        let d = try! Data(contentsOf: URL(fileURLWithPath: "data/episodes.json"))
+        let e = try! JSONDecoder().decode([Episode].self, from: d)
+        return e.sorted { $0.number > $1.number }
+        
+    }()
+    
+}
+
+extension Collection {
+    static let all: [Collection] = {
+        // for this (and the rest of the app) to work we need to launch with a correct working directory (root of the app)
+        let d = try! Data(contentsOf: URL(fileURLWithPath: "data/collections.json"))
+        let e = try! JSONDecoder().decode([Collection].self, from: d)
+        return e
+        
+    }()
 }

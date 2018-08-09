@@ -3,82 +3,6 @@ import NIO
 import NIOHTTP1
 import PostgreSQL
 
-enum Accept: String {
-    case json = "application/json"
-}
-
-struct GithubProfile: Codable {
-    let login: String
-    let id: Int
-    let avatar_url: String
-    let email: String?
-    let name: String?
-    // todo we get more than this, but should be enough info
-}
-
-struct RemoteEndpoint<A> {
-    var request: URLRequest
-    var parse: (Data) -> A?
-    
-    init(get: URL, accept: Accept? = nil, query: [String:String], parse: @escaping (Data) -> A?) {
-        var comps = URLComponents(string: get.absoluteString)!
-        comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
-        request = URLRequest(url: comps.url!)
-        if let a = accept {
-            request.setValue(a.rawValue, forHTTPHeaderField: "Accept")
-        }
-        self.parse = parse
-    }
-    
-    init(post: URL, accept: String? = nil, query: [String:String], parse: @escaping (Data) -> A?) {
-        var comps = URLComponents(string: post.absoluteString)!
-        comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
-        request = URLRequest(url: comps.url!)
-        request.httpMethod = "POST"
-        if let a = accept {
-            request.setValue(a, forHTTPHeaderField: "Accept")
-        }
-        self.parse = parse
-    }
-}
-
-extension RemoteEndpoint where A: Decodable {
-    /// Parses the result as JSON
-    init(post: URL, query: [String:String]) {
-        var comps = URLComponents(string: post.absoluteString)!
-        comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
-        request = URLRequest(url: comps.url!)
-        request.setValue(Accept.json.rawValue, forHTTPHeaderField: "Accept")
-        request.httpMethod = "POST"
-        self.parse = { data in
-            return try? JSONDecoder().decode(A.self, from: data)
-        }
-    }
-    
-    init(get: URL, query: [String:String] = [:]) {
-        self.init(get: get, accept: Accept.json, query: query, parse: { data in
-            return try? JSONDecoder().decode(A.self, from: data)
-        })
-    }
-}
-
-extension URLSession {
-    func load<A>(_ e: RemoteEndpoint<A>, callback: @escaping (A?) -> ()) {
-        dataTask(with: e.request, completionHandler: { data, resp, err in
-            guard let d = data else { callback(nil); return }
-            return callback(e.parse(d))
-        }).resume()
-    }
-    
-    func load<A>(_ e: RemoteEndpoint<A>) -> Promise<A?> {
-        return Promise { [unowned self] cb in
-            self.dataTask(with: e.request, completionHandler: { data, resp, err in
-                guard let d = data else { cb(nil); return }
-                return cb(e.parse(d))
-            }).resume()
-        }
-    }
-}
 
 
 func readDotEnv() -> [String:String] {
@@ -88,42 +12,7 @@ func readDotEnv() -> [String:String] {
 let env: [String:String] = readDotEnv().merging(ProcessInfo.processInfo.environment, uniquingKeysWith: { $1 })
 assert(env["GITHUB_CLIENT_ID"] != nil)
 assert(env["GITHUB_CLIENT_SECRET"] != nil)
-assert(env["GITHUB_CLIENT_SECRET"] != nil)
 
-struct Github {
-    static var clientId: String { return env["GITHUB_CLIENT_ID"]! }
-    static var clientSecret: String { return env["GITHUB_CLIENT_SECRET"]! }
-    
-    static let contentType = "application/json"
-    
-    struct AccessTokenResponse: Codable, Equatable {
-        var access_token: String
-        var token_type: String
-        var scope: String
-    }
-    
-    let accessToken: String
-    init(_ accessToken: String) {
-        self.accessToken = accessToken
-    }
-
-    static func getAccessToken(_ code: String) -> RemoteEndpoint<AccessTokenResponse> {
-        let url = URL(string: "https://github.com/login/oauth/access_token")!
-        let query = [
-            "client_id": Github.clientId,
-            "client_secret": Github.clientSecret,
-            "code": code,
-            "accept": "json"
-        ]
-        return RemoteEndpoint(post: url, query: query)
-    }
-    
-    func getProfile() -> RemoteEndpoint<GithubProfile> {
-        let url = URL(string: "https://api.github.com/user")!
-        let query = ["access_token": accessToken]
-        return RemoteEndpoint(get: url, query: query)
-    }
-}
 
 let postgreSQL = try? PostgreSQL.Database(connInfo: ConnInfo.params([
     "host": env["RDS_HOSTNAME"] ?? "localhost",
@@ -138,6 +27,8 @@ func withConnection<A>(_ x: (Connection?) throws -> A) rethrows -> A {
             let conn = try $0.makeConnection()
             return conn
         } catch {
+            print(error)
+            print(env.filter({ $0.0.hasPrefix("RDS" )}))
             print(error.localizedDescription)
             return nil
         }
@@ -145,71 +36,6 @@ func withConnection<A>(_ x: (Connection?) throws -> A) rethrows -> A {
     let result = try x(conn)
     try? conn?.close()
     return result
-}
-
-enum MyRoute: Equatable {
-    case home
-    case books
-    case issues
-    case episodes
-    case version
-    case sitemap
-    case imprint
-    case subscribe
-    case collections
-    case login
-    case githubCallback(String)
-    case collection(Slug<Collection>)
-    case episode(Slug<Episode>)
-    case staticFile(path: [String])
-}
-
-extension Array where Element == Route<MyRoute> {
-    func choice() -> Route<MyRoute> {
-        assert(!isEmpty)
-        return dropFirst().reduce(self[0], { $0.or($1) })
-    }
-}
-
-let episode: Route<MyRoute> = (Route<()>.c("episodes") / .string()).transform({ MyRoute.episode(Slug(rawValue: $0)) }, { r in
-    guard case let .episode(num) = r else { return nil }
-    return num.rawValue
-})
-
-let collection: Route<MyRoute> = (Route<()>.c("collections") / .string()).transform({ MyRoute.collection(Slug(rawValue: $0)) }, { r in
-    guard case let .collection(name) = r else { return nil }
-    return name.rawValue
-})
-
-let callbackRoute: Route<MyRoute> = .c("users") / .c("auth") / .c("github") / .c("callback") / (Route<String>.queryParam(name: "code").transform({ MyRoute.githubCallback($0) }, { r in
-    guard case let .githubCallback(x) = r else { return nil }
-    return x
-}))
-
-let assetsRoute: Route<MyRoute> = (.c("assets") / .path()).transform({ MyRoute.staticFile(path:$0) }, { r in
-    guard case let .staticFile(path) = r else { return nil }
-    return path
-})
-
-let routes: Route<MyRoute> = [
-    Route(.home),
-    .c("version", .version),
-    .c("books", .books), // todo absolute url
-    .c("issues", .issues), // todo absolute url
-    .c("episodes", .episodes),
-    .c("sitemap", .sitemap),
-    .c("subscribe", .subscribe),
-    .c("imprint", .imprint),
-    .c("users") / .c("auth") / .c("github", .login),
-    callbackRoute,
-    assetsRoute,
-    .c("collections", .collections),
-    episode,
-    collection
-].choice()
-
-func inWhitelist(_ path: [String]) -> Bool {
-    return !path.contains("..")
 }
 
 let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
@@ -264,71 +90,6 @@ func absoluteURL(_ route: MyRoute) -> URL? {
     return URL(string: "https://www.objc.io" + p)
 }
 
-extension Episode {
-    var rawTranscript: String? {
-        let path = URL(fileURLWithPath: "data/episode-transcripts/episode\(number).md")
-        return try? String(contentsOf: path)
-    }
-    
-    var transcript: CommonMark.Node? {
-        guard let t = rawTranscript, let nodes = CommonMark.Node(markdown: t) else { return nil }
-        return CommonMark.Node(blocks: nodes.elements.deepApply({ (inl: Inline) -> [Inline] in
-            guard case let .text(t) = inl else { return [inl] }
-            if let (m,s,remainder) = t.scanTimePrefix() {
-                let totalSeconds = m*60 + s
-                let pretty = "\(m.padded):\(s.padded)"
-                return [Inline.link(children: [.text(text: pretty)], title: "", url: "#\(totalSeconds)"), .text(text: remainder)]
-            } else {
-                return [inl]
-            }
-        }))
-    }
-
-    var tableOfContents: [((TimeInterval), title: String)] {
-        guard let t = rawTranscript, let els = CommonMark.Node(markdown: t)?.elements else { return [] }
-        
-        var result: [(TimeInterval, title: String)] = []
-        var currentTitle: String?
-        for el in els {
-            switch el {
-            case let .heading(text: text, _):
-                let strs = text.deep(collect: { (i: Inline) -> [String] in
-                    guard case let Inline.text(text: t) = i else { return [] }
-                    return [t]
-                })
-                currentTitle = strs.joined(separator: " ")
-            case let .paragraph(text: c) where currentTitle != nil:
-                if case let .text(t)? = c.first, let (minutes, seconds, _) = t.scanTimePrefix() {
-                    result.append((TimeInterval(minutes*60 + seconds), title: currentTitle!))
-                    currentTitle = nil
-                }
-            default:
-                ()
-            }
-        }
-        return result
-    }
-
-    static let all: [Episode] = {
-        // for this (and the rest of the app) to work we need to launch with a correct working directory (root of the app)
-        let d = try! Data(contentsOf: URL(fileURLWithPath: "data/episodes.json"))
-        let e = try! JSONDecoder().decode([Episode].self, from: d)
-        return e.sorted { $0.number > $1.number }
-
-    }()
-    
-}
-
-extension Collection {
-    static let all: [Collection] = {
-        // for this (and the rest of the app) to work we need to launch with a correct working directory (root of the app)
-        let d = try! Data(contentsOf: URL(fileURLWithPath: "data/collections.json"))
-        let e = try! JSONDecoder().decode([Collection].self, from: d)
-        return e
-        
-    }()
-}
-
 extension MyRoute {
     func interpret<I: Interpreter>() -> I {
         switch self {
@@ -350,14 +111,14 @@ extension MyRoute {
                 URLSession.shared.load(Github.getAccessToken(code)).map({ $0?.access_token })
             	, do: { token in
                 guard let t = token else { return .write("No access") }
-                return I.onComplete(promise: URLSession.shared.load(Github(t).getProfile()), do: { str in
+                return I.onComplete(promise: URLSession.shared.load(Github(t).profile), do: { str in
                     guard let p = str else { return .write("No profile") }
                     do {
                         return try withConnection { conn in
                             guard let c = conn else { return .write("No database connection") }
                             let d = Database(c)
                             // todo ask for email if we don't get it
-                            let uid = try d.insert(Database.UserData(email: p.email ?? "no email", githubUID: p.id, githubLogin: p.login, githubToken: t, avatarURL: p.avatar_url, name: p.name ?? ""))
+                            let uid = try d.insert(UserData(email: p.email ?? "no email", githubUID: p.id, githubLogin: p.login, githubToken: t, avatarURL: p.avatar_url, name: p.name ?? ""))
                             return .write("Hello \(uid)")
                         }
                     } catch {
@@ -422,7 +183,7 @@ try withConnection { conn in
     }
     let db = Database(c)
     try db.migrate()
-    try db.createUser("chris", 123)
+//    try db.createUser("chris", 123)
 }
 
 //print(siteMap(routes))

@@ -38,6 +38,7 @@ fileprivate let migrations: [String] = [
 """
 ]
 
+
 protocol Insertable: Codable {
     associatedtype InsertionResult = ()
     static var tableName: String { get }
@@ -56,56 +57,9 @@ struct Database {
     }
     
     func migrate() throws {
-        for m in migrations {
+        for m in migrations { // global variable, but we could inject it at some point.
             try connection.execute(m)
         }
-    }
-    
-    struct UserData: Codable, Insertable {
-        var email: String
-        var githubUID: Int
-        var githubLogin: String
-        var githubToken: String
-        var avatarURL: String
-        var name: String
-        var rememberCreatedAt: Date
-        var createdAt: Date
-        var updatedAt: Date
-        var recurlyHostedLoginToken: String?
-        var paymentMethodId: UUID?
-        var lastReconciledAt: Date?
-        var receiveNewEpisodeEmails: Bool
-        var collaborator: Bool = false
-        var downloadCredits: Int = 0
-        
-        init(email: String, githubUID: Int, githubLogin: String, githubToken: String, avatarURL: String, name: String) {
-            self.email = email
-            self.githubUID = githubUID
-            self.githubLogin = githubLogin
-            self.githubToken = githubToken
-            self.avatarURL = avatarURL
-            self.name = name
-            let now = Date()
-            rememberCreatedAt = now
-            updatedAt = now
-            createdAt = now
-            receiveNewEpisodeEmails = false
-            collaborator = false
-            downloadCredits = 0
-        }
-        
-        static let tableName: String = "users"
-        static var returning: String? = "id"
-        typealias InsertionResult = UUID
-        static var parse: (PostgreSQL.Node) throws -> UUID = { node in
-            // todo get rid of force-unwraps
-            UUID(uuidString: node[0, "id"]!.string!)!
-        }
-    }
-    
-    func createUser(_ name: String, _ uid: Int) throws -> UUID {
-        let data = UserData(email: "test", githubUID: 123, githubLogin: "test", githubToken: "test", avatarURL: "", name: "Hi")
-        return try insert(data)
     }
 }
 
@@ -294,11 +248,6 @@ public final class PostgresEncoder: Encoder {
         mutating func superEncoder(forKey key: Key) -> Encoder {
             fatalError()
         }
-        
-
-        
-        
-        
     }
     
     public func unkeyedContainer() -> UnkeyedEncodingContainer {

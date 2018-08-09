@@ -29,13 +29,15 @@ COPY build-css.sh ./
 RUN ./build-css.sh
 
 COPY Package.swift ./
+RUN swift package update
+
 COPY Sources ./Sources
 # COPY Tests ./Tests
 
-RUN swift package update
 RUN swift build --product swifttalk-server --configuration release
 
 COPY data ./data
+COPY .env* ./
 
 EXPOSE 8765
 
