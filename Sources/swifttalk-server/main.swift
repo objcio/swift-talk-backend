@@ -17,16 +17,38 @@ func readDotEnv() -> [String:String] {
     guard let c = try? String(contentsOfFile: ".env") else { return [:] }
     return Dictionary(c.split(separator: "\n").compactMap { $0.keyAndValue }, uniquingKeysWith: { $1 })
 }
-let env: [String:String] = readDotEnv().merging(ProcessInfo.processInfo.environment, uniquingKeysWith: { $1 })
-assert(env["GITHUB_CLIENT_ID"] != nil)
-assert(env["GITHUB_CLIENT_SECRET"] != nil)
+
+struct Env {
+    let env: [String:String] = readDotEnv().merging(ProcessInfo.processInfo.environment, uniquingKeysWith: { $1 })
+
+    subscript(optional string: String) -> String? {
+        return env[string]
+    }
+    
+    subscript(string: String) -> String {
+        guard let e = env[string] else {
+            print("Forgot to set env variable \(string)", to: &standardError)
+            return ""
+        }
+        return e
+    }
+    
+    init() {
+        // todo a different check than assert (gets compiled out during release)
+        assert(env["GITHUB_CLIENT_ID"] != nil)
+        assert(env["GITHUB_CLIENT_SECRET"] != nil)
+    }
+}
+
+let env = Env()
+
 
 
 let postgreSQL = try? PostgreSQL.Database(connInfo: ConnInfo.params([
-    "host": env["RDS_HOSTNAME"] ?? "localhost",
-    "dbname": env["RDS_DB_NAME"] ?? "swifttalk_dev",
-    "user": env["RDS_DB_USERNAME"] ?? "chris",
-    "password": env["RDS_DB_PASSWORD"] ?? "",
+    "host": env[optional: "RDS_HOSTNAME"] ?? "localhost",
+    "dbname": env[optional: "RDS_DB_NAME"] ?? "swifttalk_dev",
+    "user": env[optional: "RDS_DB_USERNAME"] ?? "chris",
+    "password": env[optional: "RDS_DB_PASSWORD"] ?? "",
     "connect_timeout": "1",
 ]))
 
@@ -138,7 +160,6 @@ extension MyRoute {
                         print("something else: \(error.localizedDescription)", to: &standardError)
                         return I.write("Error", status: .internalServerError)
                     }
-                    
                 })
                 
             })
@@ -190,14 +211,18 @@ func sanityCheck() {
     }
 }
 
-try withConnection { conn in
-    guard let c = conn else {
-        print("Can't connect to database")
-        return
+do {
+    try withConnection { conn in
+        guard let c = conn else {
+            print("Can't connect to database")
+            return
+        }
+        let db = Database(c)
+        try db.migrate()
+    //    try db.createUser("chris", 123)
     }
-    let db = Database(c)
-    try db.migrate()
-//    try db.createUser("chris", 123)
+} catch {
+    print("Migration error: \(error, error.localizedDescription)", to: &standardError)
 }
 
 //print(siteMap(routes))

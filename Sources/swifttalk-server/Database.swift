@@ -13,9 +13,6 @@ fileprivate let migrations: [String] = [
     	CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 """,
     """
-    	COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
-""",
-    """
         CREATE TABLE IF NOT EXISTS users (
         id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
         email character varying,

@@ -91,8 +91,8 @@ extension URLSession {
 
 struct Github {
     // todo initialize?
-    static var clientId: String { return env["GITHUB_CLIENT_ID"]! }
-    static var clientSecret: String { return env["GITHUB_CLIENT_SECRET"]! }
+    static var clientId: String { return env["GITHUB_CLIENT_ID"] }
+    static var clientSecret: String { return env["GITHUB_CLIENT_SECRET"] }
     
     static let contentType = "application/json"
     
