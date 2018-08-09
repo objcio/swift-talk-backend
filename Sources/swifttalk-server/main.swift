@@ -90,6 +90,15 @@ func absoluteURL(_ route: MyRoute) -> URL? {
     return URL(string: "https://www.objc.io" + p)
 }
 
+var standardError = FileHandle.standardError
+
+extension Foundation.FileHandle : TextOutputStream {
+    public func write(_ string: String) {
+        guard let data = string.data(using: .utf8) else { return }
+        self.write(data)
+    }
+}
+
 extension MyRoute {
     func interpret<I: Interpreter>() -> I {
         switch self {
@@ -110,8 +119,10 @@ extension MyRoute {
             return I.onComplete(promise:
                 URLSession.shared.load(Github.getAccessToken(code)).map({ $0?.access_token })
             	, do: { token in
+                    print("got token: \(token)", to: &standardError)
                 guard let t = token else { return .write("No access") }
                 return I.onComplete(promise: URLSession.shared.load(Github(t).profile), do: { str in
+                    print("got profile: \(token)", to: &standardError)
                     guard let p = str else { return .write("No profile") }
                     do {
                         return try withConnection { conn in
@@ -122,6 +133,7 @@ extension MyRoute {
                             return .write("Hello \(uid)")
                         }
                     } catch {
+                        print("something else: \(error.localizedDescription)", to: &standardError)
                         return I.write("Error", status: .internalServerError)
                     }
                     
