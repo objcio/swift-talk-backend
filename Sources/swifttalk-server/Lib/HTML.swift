@@ -7,7 +7,16 @@
 
 import Foundation
 
-import Foundation
+struct Class: ExpressibleByStringLiteral {
+    var classes: String
+    init(stringLiteral string: String) {
+        self.classes = string
+    }
+    
+    static func +(lhs: Class, rhs: Class) -> Class {
+        return Class(stringLiteral: lhs.classes + " " + rhs.classes)
+    }
+}
 
 enum Node {
     case node(El)
@@ -21,9 +30,12 @@ struct El {
     var block: Bool
     var children: [Node]
     
-    init(name: String, block: Bool = true, attributes: [String:String] = [:], children: [Node] = []) {
+    init(name: String, block: Bool = true, classes: Class? = nil, attributes: [String:String] = [:], children: [Node] = []) {
         self.name = name
         self.attributes = attributes
+        if let c = classes {
+            self.attributes["class", default: ""] += " " + c.classes
+        }
         self.children = children
         self.block = block
     }
@@ -65,72 +77,68 @@ extension Node {
 }
 
 extension Node {
-    static func html(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(El(name: "html", attributes: attributes, children: children))
+    static func html(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "html", classes: classes, attributes: attributes, children: children))
     }
     
-    static func meta(attributes: [String:String] = [:]) -> Node {
+    static func meta(classes: Class? = nil, attributes: [String:String] = [:]) -> Node {
         return .node(El(name: "meta", block: false, attributes: attributes, children: []))
     }
     
-    static func body(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(El(name: "body", attributes: attributes, children: children))
+    static func body(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "body", classes: classes, attributes: attributes, children: children))
     }
     
-    static func p(attributes: [String:String] = [:], _ children: [Node]) -> Node {
-        return .node(El(name: "p", attributes: attributes, children: children))
+    static func p(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
+        return .node(El(name: "p", classes: classes, attributes: attributes, children: children))
     }
     
     static func head(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         return .node(El(name: "head", attributes: attributes, children: children))
     }
     
-    static func header(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(El(name: "header", attributes: attributes, children: children))
+    static func header(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "header", classes: classes, attributes: attributes, children: children))
     }
     
     static func title(_ text: String) -> Node {
         return .node(El(name: "title", block: false, children: [.text(text)]))
     }
 
-    static func span(attributes: [String:String] = [:], _ text: [Node]) -> Node {
-        return .node(El(name: "span", block: false, attributes: attributes, children: text))
+    static func span(classes: Class? = nil, attributes: [String:String] = [:], _ text: [Node]) -> Node {
+        return .node(El(name: "span", block: false, classes: classes, attributes: attributes, children: text))
     }
 
-    static func h1(_ title: [Node], attributes: [String:String] = [:]) -> Node {
-        return .node(El(name: "h1", block: false, attributes: attributes, children: title))
+    // todo arg order
+    static func h1(classes: Class? = nil, _ title: [Node], attributes: [String:String] = [:]) -> Node {
+        return .node(El(name: "h1", block: false, classes: classes, attributes: attributes, children: title))
     }
     
-    static func h2(_ title: [Node], attributes: [String:String] = [:]) -> Node {
-        return .node(El(name: "h2", block: false, attributes: attributes, children: title))
+    static func h2(classes: Class? = nil, _ title: [Node], attributes: [String:String] = [:]) -> Node {
+        return .node(El(name: "h2", block: false, classes: classes, attributes: attributes, children: title))
     }
     
-    static func h3(_ title: [Node], attributes: [String:String] = [:]) -> Node {
-        return .node(El(name: "h3", block: false, attributes: attributes, children: title))
+    static func h3(classes: Class? = nil, _ title: [Node], attributes: [String:String] = [:]) -> Node {
+        return .node(El(name: "h3", block: false, classes: classes, attributes: attributes, children: title))
     }
     
-    static func img(src: String, alt: String = "", attributes: [String:String] = [:]) -> Node {
+    static func img(src: String, alt: String = "", classes: Class? = nil, attributes: [String:String] = [:]) -> Node {
         var a = attributes
         a["src"] = src
         a["alt"] = alt
-        return .node(El(name: "img", block: false, attributes: a, children: []))
+        return .node(El(name: "img", block: false, classes: classes, attributes: a, children: []))
     }
 
-    static func div(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(El(name: "div", attributes: attributes, children: children))
+    static func div(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "div", classes: classes, attributes: attributes, children: children))
     }
     
-    static func aside(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(El(name: "div", attributes: attributes, children: children))
+    static func aside(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "div", classes: classes, attributes: attributes, children: children))
     }
-    
-    static func div(class c: String, _ children: [Node] = []) -> Node {
-        let attributes = ["class": c]
-        return .node(El(name: "div", attributes: attributes, children: children))
-    }
-    
-    static func video(attributes: [String:String] = [:], _ source: URL, sourceType: String) -> Node {
-        return .node(El(name: "video", attributes: attributes, children: [
+        
+    static func video(classes: Class? = nil, attributes: [String:String] = [:], _ source: URL, sourceType: String) -> Node {
+        return .node(El(name: "video", classes: classes, attributes: attributes, children: [
             .node(El(name: "source", attributes: [
                 "src": source.absoluteString,
                 "type": sourceType
@@ -138,40 +146,40 @@ extension Node {
         ]))
     }
     
-    static func nav(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(El(name: "nav", attributes: attributes, children: children))
+    static func nav(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "nav", classes: classes, attributes: attributes, children: children))
     }
     
-    static func ul(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(El(name: "ul", attributes: attributes, children: children))
+    static func ul(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "ul", classes: classes, attributes: attributes, children: children))
     }
     
-    static func ol(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(El(name: "ol", attributes: attributes, children: children))
+    static func ol(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "ol", classes: classes, attributes: attributes, children: children))
     }
     
-    static func li(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(El(name: "li", attributes: attributes, children: children))
+    static func li(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "li", classes: classes, attributes: attributes, children: children))
     }
     
-    static func button(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(El(name: "button", attributes: attributes, children: children))
+    static func button(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "button", classes: classes, attributes: attributes, children: children))
     }
     
-    static func main(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(El(name: "main", attributes: attributes, children: children))
+    static func main(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "main", classes: classes, attributes: attributes, children: children))
     }
     
-    static func section(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(El(name: "section", attributes: attributes, children: children))
+    static func section(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "section", classes: classes, attributes: attributes, children: children))
     }
     
-    static func article(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(El(name: "article", attributes: attributes, children: children))
+    static func article(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "article", classes: classes, attributes: attributes, children: children))
     }
     
-    static func figure(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(El(name: "figure", attributes: attributes, children: children))
+    static func figure(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "figure", classes: classes, attributes: attributes, children: children))
     }    
     
     static func stylesheet(media: String = "all", href: String) -> Node {
@@ -183,11 +191,11 @@ extension Node {
         return .node(El(name: "link", attributes: attributes, children: []))
     }
     
-    static func a(attributes: [String:String] = [:], _ title: [Node], href: String) -> Node {
+    static func a(classes: Class? = nil, attributes: [String:String] = [:], _ title: [Node], href: String) -> Node {
         assert(attributes["href"] == nil)
         var att = attributes
         att["href"] = href
-        return .node(El(name: "a", block: false, attributes: att, children: title))
+        return .node(El(name: "a", block: false, classes: classes, attributes: att, children: title))
     }
 }
 

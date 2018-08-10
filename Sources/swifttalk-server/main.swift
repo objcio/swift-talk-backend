@@ -82,13 +82,17 @@ extension Array where Element == URL {
 import CommonMark
 
 extension Node {
-    static func link(to: MyRoute, _ children: [Node], attributes: [String:String] = [:]) -> Node {
-        return Node.a(attributes: attributes, children, href: routes.print(to)!.prettyPath)
+    static func link(to: MyRoute, _ children: [Node], classes: Class? = nil, attributes: [String:String] = [:]) -> Node {
+        return Node.a(classes: classes, attributes: attributes, children, href: routes.print(to)!.prettyPath)
     }
     
-    static func inlineSvg(path: String, preserveAspectRatio: String? = nil, attributes: [String:String] = [:]) -> Node {
+    static func inlineSvg(path: String, preserveAspectRatio: String? = nil, classes: Class? = nil, attributes: [String:String] = [:]) -> Node {
         let name = resourcePaths.resolve("images/" + path)!
-        let contents = try! String(contentsOf: name).replacingOccurrences(of: "<svg", with: "<svg " + attributes.asAttributes) // todo proper xml parsing?
+        var a = attributes
+        if let c = classes {
+            a["class", default: ""] += c.classes
+        }
+        let contents = try! String(contentsOf: name).replacingOccurrences(of: "<svg", with: "<svg " + a.asAttributes) // todo proper xml parsing?
         return .raw(contents)
     }
     

@@ -15,17 +15,17 @@
         "repositoryURL": "git@github.com:chriseidhof/Ccmark.git",
         "state": {
           "branch": null,
-          "revision": "3e3914c641b8210600a626ef97cd429f4c6a2745",
-          "version": "0.28.0"
+          "revision": "f1baba3429aeb6fe2acabc92309cb7a756250b30",
+          "version": "0.28.2"
         }
       },
       {
         "package": "CommonMark",
         "repositoryURL": "https://github.com/chriseidhof/commonmark-swift",
         "state": {
-          "branch": null,
-          "revision": "0d541c78b9d0da2359a3e7f188086caf6d279c97",
-          "version": "0.28.1"
+          "branch": "master",
+          "revision": "2f5094f7839340e7e0a14fda0f0ed91430c406ca",
+          "version": null
         }
       },
       {
@@ -78,8 +78,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio.git",
         "state": {
           "branch": null,
-          "revision": "695afc5205aaa49fca092b94b479ff71c43d9d3c",
-          "version": "1.8.0"
+          "revision": "c6acf77fc9a310c0ebf8d5f73f285d1639801d2f",
+          "version": "1.9.0"
         }
       },
       {
