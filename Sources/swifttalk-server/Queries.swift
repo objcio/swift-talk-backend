@@ -8,12 +8,33 @@
 import Foundation
 import PostgreSQL
 
+struct SessionData: Codable, Insertable {
+    var userId: UUID
+    var createdAt: Date
+    var updatedAt: Date
+    
+    init(userId: UUID) {
+        self.userId = userId
+        self.createdAt = Date()
+        self.updatedAt = self.createdAt
+    }
+
+    static let tableName: String = "sessions"
+    static var returning: String? = "id"
+    typealias InsertionResult = UUID
+    static var parse: (PostgreSQL.Node) throws -> UUID = { node in
+        // todo get rid of force-unwraps
+        UUID(uuidString: node[0, "id"]!.string!)!
+    }
+}
+
 struct UserData: Codable, Insertable {
     var email: String
     var githubUID: Int
     var githubLogin: String
     var githubToken: String
     var avatarURL: String
+    var admin: Bool = false
     var name: String
     var rememberCreatedAt: Date
     var createdAt: Date
@@ -47,5 +68,11 @@ struct UserData: Codable, Insertable {
     static var parse: (PostgreSQL.Node) throws -> UUID = { node in
         // todo get rid of force-unwraps
         UUID(uuidString: node[0, "id"]!.string!)!
+    }
+}
+
+extension UserData {
+    var premiumAccess: Bool {
+        return admin || collaborator
     }
 }

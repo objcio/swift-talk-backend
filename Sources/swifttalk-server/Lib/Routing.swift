@@ -9,6 +9,7 @@ struct Request {
     var path: [String]
     var query: [String:String]
     var method: HTTPMethod
+    var cookies: [(String, String)]
     var body: Data?
     var prettyPath: String {
         return "/" + path.joined(separator: "/")
@@ -58,7 +59,7 @@ extension Route where A: Equatable {
     init(_ value: A) {
         self.init(parse: { _ in value }, print: { x in
             guard value == x else { return nil }
-            return Request(path: [], query: [:], method: .get, body: nil)
+            return Request(path: [], query: [:], method: .get, cookies: [], body: nil)
         }, description: .empty)
     }
     
@@ -76,7 +77,7 @@ extension Route where A == () {
             req.path.removeFirst()
             return ()
         }, print: { _ in
-            return Request(path: [string], query: [:], method: .get, body: nil)
+            return Request(path: [string], query: [:], method: .get, cookies: [], body: nil)
         }, description: .constant(string))
     }
 }
@@ -95,7 +96,7 @@ extension Route where A == [String] {
             req.path.removeAll()
             return result
         }, print: { p in
-            return Request(path: p, query: [:], method: .get, body: nil)
+            return Request(path: p, query: [:], method: .get, cookies: [], body: nil)
         }, description: .any)
     }
 }
@@ -108,7 +109,7 @@ extension Route where A == String {
             req.path.removeFirst()
             return f
         }, print: { (str: String) in
-            return Request(path: [str], query: [:], method: .get, body: nil)
+            return Request(path: [str], query: [:], method: .get, cookies: [], body: nil)
         }, description: .parameter("string"))
     }
     
@@ -118,7 +119,7 @@ extension Route where A == String {
             req.query[name] = nil
             return x
         }, print: { (str: String) in
-            return Request(path: [], query: [name: str], method: .get, body: nil)
+            return Request(path: [], query: [name: str], method: .get, cookies: [], body: nil)
         }, description: .queryParameter(name))
     }
 }
@@ -148,7 +149,7 @@ extension Route {
 func +(lhs: Request, rhs: Request) -> Request {
     let body = lhs.body.xor(rhs.body)
     let query = lhs.query.merging(rhs.query, uniquingKeysWith: { _,_ in fatalError("Duplicate key") })
-    return Request(path: lhs.path + rhs.path, query: query, method: lhs.method, body: body)
+    return Request(path: lhs.path + rhs.path, query: query, method: lhs.method, cookies: lhs.cookies + rhs.cookies, body: body)
 }
 
 extension Route {

@@ -143,7 +143,7 @@ func index(_ items: [Collection]) -> Node {
     ]).layout
 }
 
-func index(_ items: [Episode]) -> Node {
+func index(_ items: [Episode], subscribed: Bool) -> Node {
     return LayoutConfig(contents: [
         pageHeader(.link(header: "All Episodes", backlink: .home, label: "Swift Talk")),
         .div(classes: "container pb0", [
@@ -151,7 +151,7 @@ func index(_ items: [Episode]) -> Node {
                 .h2([.span(attributes: ["class": "bold"], [.text("\(items.count) Episodes")])], attributes: ["class": "inline-block lh-100 mb+"])
             ]),
             .ul(attributes: ["class": "cols s+|cols--2n m+|cols--3n xl+|cols--4n"], items.map { e in
-                Node.li(attributes: ["class": "col mb++ width-full s+|width-1/2 m+|width-1/3 xl+|width-1/4"], [e.render(.init(synopsis: true))])
+                Node.li(attributes: ["class": "col mb++ width-full s+|width-1/2 m+|width-1/3 xl+|width-1/4"], [e.render(.init(synopsis: true, canWatch: subscribed || !e.subscription_only))])
             })
         ])
     ]).layout
@@ -167,7 +167,7 @@ extension Episode {
         var collection: Bool = true
         var synopsis: Bool = false
         
-        init(featured: Bool = false, wide: Bool = false, synopsis: Bool, watched: Bool = false, canWatch: Bool = false, collection: Bool = true) {
+        init(featured: Bool = false, wide: Bool = false, synopsis: Bool, watched: Bool = false, canWatch: Bool, collection: Bool = true) {
             self.featured = featured
             self.watched = watched
             self.canWatch = canWatch
@@ -182,8 +182,7 @@ extension Episode {
     
     func render(_ options: ViewOptions) -> Node {
         assert(!options.watched)
-        assert(!options.canWatch)
-        let iconFile = "icon-lock.svg"
+        let iconFile = options.canWatch ? "icon-play.svg" : "icon-lock.svg"
         let classes: Class = "flex flex-column width-full" + // normal
             (options.wide ? "max-width-6 m+|max-width-none m+|flex-row" : "") + // wide
             (options.featured ? "min-height-full hover-scale transition-all transition-transform" : "") // featured
@@ -355,8 +354,8 @@ extension Episode {
         ])
     }
     
-    func show(watched: Bool = false, premiumUser: Bool = false) -> Node {
-        let canWatch = !subscription_only || premiumUser
+    func show(watched: Bool = false, subscribed: Bool = false) -> Node {
+        let canWatch = !subscription_only || subscribed
         let guests_: [Node] = [] // todo
         // todo: subscribe banner
         
@@ -379,7 +378,7 @@ extension Episode {
                 Node.div(classes: "flex scroller js-scroller-container p-edges pt pb++", [
                     Node.div(classes: "scroller__offset flex-none")
                 ] + Episode.all.released.filter { $0 != self }.prefix(8).map { e in
-                    Node.div(classes: "flex-110 pr+ min-width-5", [e.render(.init(synopsis: false))]) // todo watched
+                    Node.div(classes: "flex-110 pr+ min-width-5", [e.render(.init(synopsis: false, canWatch: canWatch))]) // todo watched
                 })
             ])
         
@@ -440,7 +439,7 @@ extension Episode {
         ])
         
         let data = StructuredData(title: title, description: synopsis, url: absoluteURL(.episode(slug)), image: poster_url, type: .video(duration: media_duration.map(Int.init), releaseDate: releasedAt))
-        return LayoutConfig(contents: [main, scroller] + (premiumUser ? [] : [subscribeBanner()]), footerContent: [Node.raw(transcriptLinks)], structuredData: data).layout
+        return LayoutConfig(contents: [main, scroller] + (subscribed ? [] : [subscribeBanner()]), footerContent: [Node.raw(transcriptLinks)], structuredData: data).layout
     }
 }
 
@@ -452,7 +451,7 @@ extension String {
 }
 
 extension Collection {
-    func show() -> Node {
+    func show(subscribed: Bool) -> Node {
         let bgImage = "background-image: url('/assets/images/collections/\(title)@4x.png');"
         return LayoutConfig(contents: [
             Node.div(attributes: ["class": "pattern-illustration overflow-hidden", "style": bgImage], [
@@ -477,7 +476,7 @@ extension Collection {
                 Node.ul(attributes: ["class": "offset-content"], episodes.released.map { e in
                     Node.li(attributes: ["class": "flex justify-center mb++ m+|mb+++"], [
                         Node.div(classes: "width-1 ms1 mr- color-theme-highlight bold lh-110 m-|hide", [.raw("&rarr;")]),
-                        e.render(.init(wide: true, synopsis: true, collection: false))
+                        e.render(.init(wide: true, synopsis: true, canWatch: subscribed || !e.subscription_only, collection: false))
                     ])
                 })
             ]),
@@ -716,26 +715,29 @@ extension String {
     }
 }
 
-func renderHome() -> [Node] {
+func renderHome(subscribed: Bool) -> [Node] {
     let header = pageHeader(HeaderContent.other(header: "Swift Talk", blurb: "A weekly video series on Swift programming."))
-    let recentEpisodes: Node = .section(attributes: ["class": "container"], [
+    let firstEpisode = Episode.all.first!
+    let recentEpisodes: Node = .section(classes: "container", [
         Node.header(attributes: ["class": "mb+"], [
             .h2([.text("Recent Episodes")], attributes: ["class": "inline-block bold color-black"]),
             .link(to: .episodes, [.text("See All")], attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-under"])
-            ]),
+        ]),
         .div(classes: "m-cols flex flex-wrap", [
             .div(classes: "mb++ p-col width-full l+|width-1/2", [
-                Episode.all.first!.render(Episode.ViewOptions(featured: true, synopsis: true))
-                ]),
+                firstEpisode.render(Episode.ViewOptions(featured: true, synopsis: true, canWatch: subscribed || !firstEpisode.subscription_only))
+            ]),
             .div(classes: "p-col width-full l+|width-1/2", [
                 .div(classes: "s+|cols s+|cols--2n",
                      Episode.all[1..<5].map { ep in
-                        .div(classes: "mb++ s+|col s+|width-1/2", [ep.render(Episode.ViewOptions(synopsis: false))])
+                        .div(classes: "mb++ s+|col s+|width-1/2", [
+                            ep.render(Episode.ViewOptions(synopsis: false, canWatch: subscribed || !ep.subscription_only))
+                        ])
                     }
                 )
-                ])
             ])
         ])
+    ])
     let collections: Node = .section(attributes: ["class": "container"], [
         .header(attributes: ["class": "mb+"], [
             .h2([.text("Collections")], attributes: ["class": "inline-block bold lh-100 mb---"]),

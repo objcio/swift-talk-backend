@@ -125,9 +125,28 @@ func absoluteURL(_ route: MyRoute) -> URL? {
     return URL(string: "https://www.objc.io" + p)
 }
 
+func tryOrPrint<A>(_ f: () throws -> A?) -> A? {
+    do {
+        return try f()
+    } catch {
+        print("Error: \(error) \(error.localizedDescription)", to: &standardError)
+        return nil
+    }
+}
 
 extension MyRoute {
-    func interpret<I: Interpreter>() -> I {
+    func interpret<I: Interpreter>(sessionId: UUID?) -> I {
+        let user: UserData?
+        if let s = sessionId {
+            user = withConnection { connection in
+                guard let c = connection else { return nil }
+                let database = Database(c)
+                return tryOrPrint { try database.user(for: s) }
+            }
+        } else {
+            user = nil
+        }
+        let premiumAccess = user?.premiumAccess ?? false
         switch self {
         case .books, .issues:
             return .notFound()
@@ -139,7 +158,7 @@ extension MyRoute {
             guard let c = Collection.all.first(where: { $0.slug == name }) else {
                 return I.notFound("No such collection")
             }
-            return .write(c.show())
+            return .write(c.show(subscribed: false)) // TODO
         case .login:
             return I.redirect(path: "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(Github.clientId)")
         case .githubCallback(let code):
@@ -156,8 +175,10 @@ extension MyRoute {
                             let d = Database(c)
                             // todo ask for email if we don't get it
                             let uid = try d.insert(UserData(email: p.email ?? "no email", githubUID: p.id, githubLogin: p.login, githubToken: t, avatarURL: p.avatar_url, name: p.name ?? ""))
-                            print("got uid: \(uid)", to: &standardError)
-                            return .write("Hello \(uid)")
+                            let sid = try d.insert(SessionData(userId: uid))
+                            print("got user id: \(uid)", to: &standardError)
+                            print("got session id: \(sid)", to: &standardError)
+                            return I.redirect(path: "/", headers: ["Set-Cookie": "sessionid=\"\(sid.uuidString)\"; HttpOnly; Path=/"]) // TODO secure, TODO return to where user came from
                         }
                     } catch {
                         print("something else: \(error)", to: &standardError)
@@ -168,7 +189,7 @@ extension MyRoute {
                 
             })
         case .version:
-            return .write(withConnection { conn in
+            return .write(withConnection { conn -> String in
                 let v = try? conn?.execute("SELECT version()") ?? nil
                 return v.map { "\($0)" } ?? "no version"
             })
@@ -178,9 +199,9 @@ extension MyRoute {
             }            
             return .write(ep.show())
         case .episodes:
-            return I.write(index(Episode.all.filter { $0.released }))
+            return I.write(index(Episode.all.filter { $0.released }, subscribed: premiumAccess))
         case .home:
-            return .write(LayoutConfig(contents: renderHome()).layout, status: .ok)
+            return .write(LayoutConfig(contents: renderHome(subscribed: premiumAccess)).layout, status: .ok)
         case .sitemap:
             return .write(siteMap(routes))
         case let .staticFile(path: p):
@@ -231,7 +252,12 @@ do {
 
 //print(siteMap(routes))
 sanityCheck()
-let s = MyServer(parse: { routes.runParse($0) }, interpret: { $0.interpret() }, resourcePaths: resourcePaths)
+let s = MyServer(handle: { request in
+    let route = routes.runParse(request)
+    let sessionString = request.cookies.first { $0.0 == "sessionid" }?.1
+    let sessionId = sessionString.flatMap { UUID(uuidString: $0) }
+    return route?.interpret(sessionId: sessionId)
+}, resourcePaths: resourcePaths)
 try s.listen()
 
 

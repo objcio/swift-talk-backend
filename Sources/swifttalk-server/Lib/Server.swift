@@ -10,9 +10,9 @@ import NIO
 import NIOHTTP1
 
 protocol Interpreter {
-    static func write(_ string: String, status: HTTPResponseStatus) -> Self
+    static func write(_ string: String, status: HTTPResponseStatus, headers: [String: String]) -> Self
     static func writeFile(path: String) -> Self
-    static func redirect(path: String) -> Self
+    static func redirect(path: String, headers: [String: String]) -> Self
     static func onComplete<A>(promise: Promise<A>, do cont: @escaping (A) -> Self) -> Self
 }
 
@@ -32,12 +32,17 @@ extension Interpreter {
     static func notFound(_ string: String = "Not found") -> Self {
         return .write(string, status: .notFound)
     }
-    static func write(_ string: String) -> Self {
-        return .write(string, status: .ok)
+
+    static func write(_ string: String, status: HTTPResponseStatus = .ok) -> Self {
+        return .write(string, status: status, headers: [:])
     }
-    
+
     static func write(_ html: Node, status: HTTPResponseStatus = .ok) -> Self {
         return .write(html.document)
+    }
+    
+    static func redirect(path: String) -> Self {
+        return .redirect(path: path, headers: [:])
     }
 }
 
@@ -51,11 +56,14 @@ struct NIOInterpreter: Interpreter {
         let resourcePaths: [URL]
     }
     let run: (Deps) -> ()
-    
-    static func redirect(path: String) -> NIOInterpreter {
+
+    static func redirect(path: String, headers: [String: String] = [:]) -> NIOInterpreter {
         return NIOInterpreter { env in
             var head = HTTPResponseHead(version: env.header.version, status: .temporaryRedirect) // todo should this be temporary?
             head.headers.add(name: "Location", value: path)
+            for (key, value) in headers {
+                head.headers.add(name: key, value: value)
+            }
             let part = HTTPServerResponsePart.head(head)
             _ = env.ctx.channel.write(part)
             _ = env.ctx.channel.writeAndFlush(HTTPServerResponsePart.end(nil)).then {
@@ -109,9 +117,12 @@ struct NIOInterpreter: Interpreter {
         }
     }
     
-    static func write(_ string: String, status: HTTPResponseStatus = .ok) -> NIOInterpreter {
+    static func write(_ string: String, status: HTTPResponseStatus = .ok, headers: [String: String] = [:]) -> NIOInterpreter {
         return NIOInterpreter { env in
-            let head = HTTPResponseHead(version: env.header.version, status: status)
+            var head = HTTPResponseHead(version: env.header.version, status: status)
+            for (key, value) in headers {
+                head.headers.add(name: key, value: value)
+            }
             let part = HTTPServerResponsePart.head(head)
             _ = env.ctx.channel.write(part)
             var buffer = env.ctx.channel.allocator.buffer(capacity: string.utf8.count)
@@ -129,7 +140,7 @@ extension StringProtocol {
     var keyAndValue: (String, String)? {
         guard let i = index(of: "=") else { return nil }
         let n = index(after: i)
-        return (String(self[..<i]), String(self[n...]))
+        return (String(self[..<i]), String(self[n...]).trimmingCharacters(in: CharacterSet(charactersIn: "\"")))
     }
 }
 
@@ -167,7 +178,10 @@ final class RouteHandler: ChannelInboundHandler {
         switch reqPart {
         case .head(let header):
             let (path, query) = header.uri.parseQuery
-            let r = Request(path: path.split(separator: "/").map(String.init), query: query, method: .init(header.method), body: nil)
+            let cookies = header.headers["Cookie"].first.map {
+                $0.split(separator: ";").compactMap { $0.trimmingCharacters(in: .whitespaces).keyAndValue }
+            } ?? []
+            let r = Request(path: path.split(separator: "/").map(String.init), query: query, method: .init(header.method), cookies: cookies, body: nil)
             let env = NIOInterpreter.Deps(header: header, ctx: ctx, fileIO: fileIO, handler: self, manager: FileManager.default, resourcePaths: paths)
             if let i = handle(r) {
                 i.run(env)
@@ -185,16 +199,16 @@ final class RouteHandler: ChannelInboundHandler {
 
 struct MyServer {
     let threadPool: BlockingIOThreadPool = {
-        let t = BlockingIOThreadPool(numberOfThreads: 6)
+        let t = BlockingIOThreadPool(numberOfThreads: 1)
         t.start()
         return t
     }()
     let fileIO: NonBlockingFileIO
     let handle: (Request) -> NIOInterpreter?
     let paths: [URL]
-    init<A>(parse: @escaping (Request) -> A?, interpret: @escaping (A) -> NIOInterpreter, resourcePaths: [URL]) {
+    init(handle: @escaping (Request) -> NIOInterpreter?, resourcePaths: [URL]) {
         fileIO = NonBlockingFileIO(threadPool: threadPool)
-        handle = { parse($0).map(interpret) }
+        self.handle = handle
         paths = resourcePaths
     }
     
