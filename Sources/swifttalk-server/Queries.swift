@@ -45,6 +45,7 @@ struct UserData: Codable, Insertable {
     var receiveNewEpisodeEmails: Bool
     var collaborator: Bool = false
     var downloadCredits: Int = 0
+    var subscriber: Bool = false
     
     init(email: String, githubUID: Int, githubLogin: String, githubToken: String, avatarURL: String, name: String) {
         self.email = email
@@ -73,6 +74,6 @@ struct UserData: Codable, Insertable {
 
 extension UserData {
     var premiumAccess: Bool {
-        return admin || collaborator
+        return admin || collaborator || subscriber
     }
 }

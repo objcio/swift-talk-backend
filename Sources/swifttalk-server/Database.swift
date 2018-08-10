@@ -47,6 +47,9 @@ fileprivate let migrations: [String] = [
         updated_at timestamp NOT NULL
     );
     """,
+    """
+    ALTER TABLE users ADD IF NOT EXISTS subscriber boolean
+    """
 ]
 
 
