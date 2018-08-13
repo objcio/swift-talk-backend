@@ -27,18 +27,22 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
     var node: XMLNode
     var codingPath: [CodingKey] = []
     var userInfo: [CodingUserInfoKey : Any] = [:]
-    init(_ element: XMLNode) {
+    init(_ element: XMLNode, elementNameForType: @escaping (Decodable.Type) -> String) {
         self.node = element
+        self.elementNameForType = elementNameForType
     }
+    let elementNameForType: (Decodable.Type) -> String
     
     func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key: CodingKey {
-        return KeyedDecodingContainer(KDC(node))
+        return KeyedDecodingContainer(KDC(node, elementNameForType: elementNameForType))
     }
     
     struct KDC<Key: CodingKey>: KeyedDecodingContainerProtocol {
         let node: XMLNode
-        init(_ node: XMLNode) {
+    	let elementNameForType: (Decodable.Type) -> String
+        init(_ node: XMLNode, elementNameForType: @escaping (Decodable.Type) -> String) {
             self.node = node
+            self.elementNameForType = elementNameForType
         }
         
         var codingPath: [CodingKey] = []
@@ -162,7 +166,7 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
                 guard let d = DateFormatter.iso8601WithTimeZone.date(from: c) else { throw DecodingError(message: "Malformatted date: \(c)") }
                 return d as! T
             }
-            let decoder = RecurlyXMLDecoder(node)
+            let decoder = RecurlyXMLDecoder(node, elementNameForType: elementNameForType)
             return try T(from: decoder)
         }
         
@@ -184,6 +188,7 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
     }
     
     struct UDC: UnkeyedDecodingContainer {
+        let elementNameForType: (Decodable.Type) -> String
         let nodes: [XMLNode]
         var codingPath: [CodingKey]
         var count: Int? { return nodes.count }
@@ -254,14 +259,14 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
         }
         
         mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
-            let str = String(describing: type).lowercased()
+            let str = elementNameForType(type)
             let node = nodes[currentIndex]
             guard node.name == str else {
                 throw DecodingError(message: "Expected a node named \(str), but got: \(nodes[currentIndex])")
             }
             currentIndex += 1
-            var x = RecurlyXMLDecoder(node)
-            return try T(from: x)
+            let decoder = RecurlyXMLDecoder(node, elementNameForType: self.elementNameForType)
+            return try T(from: decoder)
         }
         
         mutating func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
@@ -279,16 +284,16 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
     }
     
     func unkeyedContainer() throws -> UnkeyedDecodingContainer {
-        return UDC(nodes: node.children ?? [], codingPath: [], currentIndex: 0)
+        return UDC(elementNameForType: elementNameForType, nodes: node.children ?? [], codingPath: [], currentIndex: 0)
     }
     
     func singleValueContainer() throws -> SingleValueDecodingContainer {
-        return SVDC(node)
+        return SVDC(node, elementNameForType: elementNameForType)
     }
     
     struct SVDC: SingleValueDecodingContainer {
         let node: XMLNode
-        
+        let elementNameForType: (Decodable.Type) -> String
         var codingPath: [CodingKey] = []
         
         func decodeNil() -> Bool {
@@ -359,11 +364,12 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
         }
         
         func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
-            return try T.init(from: RecurlyXMLDecoder(node))
+            return try T.init(from: RecurlyXMLDecoder(node, elementNameForType: elementNameForType))
         }
         
-        init(_ node: XMLNode) {
+        init(_ node: XMLNode, elementNameForType: @escaping (Decodable.Type) -> String) {
             self.node = node
+            self.elementNameForType = elementNameForType
         }
     }
 }
@@ -373,7 +379,7 @@ func decodeXML<T: Decodable>(from data: Data) throws -> T {
     guard let x: XMLElement = try XMLDocument(data: data, options: []).rootElement() else {
         throw DecodingError(message: "Couldn't parse XML")
     }
-    let decoder = RecurlyXMLDecoder(x)
+    let decoder = RecurlyXMLDecoder(x) { String(describing: $0).lowercased() }
     return try T(from: decoder)
 }
 
