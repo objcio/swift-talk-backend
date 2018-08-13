@@ -6,30 +6,31 @@
 //
 
 import Foundation
+import XMLParsing
 
 enum Accept: String {
     case json = "application/json"
-}
-
-struct GithubProfile: Codable {
-    let login: String
-    let id: Int
-    let avatar_url: String
-    let email: String?
-    let name: String?
-    // todo we get more than this, but should be enough info
+    case xml = "application/xml"
 }
 
 struct RemoteEndpoint<A> {
     var request: URLRequest
     var parse: (Data) -> A?
     
-    init(get: URL, accept: Accept? = nil, query: [String:String], parse: @escaping (Data) -> A?) {
+    init(request: URLRequest, parse: @escaping (Data) -> A?) {
+        self.request = request
+        self.parse = parse
+    }
+    
+    init(get: URL, accept: Accept? = nil, headers: [String:String] = [:], query: [String:String], parse: @escaping (Data) -> A?) {
         var comps = URLComponents(string: get.absoluteString)!
         comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
         request = URLRequest(url: comps.url!)
         if let a = accept {
             request.setValue(a.rawValue, forHTTPHeaderField: "Accept")
+        }
+        for (key, value) in headers {
+            request.setValue(value, forHTTPHeaderField: key)
         }
         self.parse = parse
     }
@@ -45,7 +46,23 @@ struct RemoteEndpoint<A> {
         }
         self.parse = parse
     }
+    
+    func map<B>(_ f: @escaping (A) -> B) -> RemoteEndpoint<B> {
+        return RemoteEndpoint<B>(request: request, parse: { value in
+            self.parse(value).map(f)
+        })
+    }
 }
+
+extension DateFormatter {
+    static let iso8601WithTimeZone: DateFormatter = {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        return dateFormatter
+    }()
+}
+
 
 extension RemoteEndpoint where A: Decodable {
     /// Parses the result as JSON
@@ -60,10 +77,25 @@ extension RemoteEndpoint where A: Decodable {
         }
     }
     
-    init(get: URL, query: [String:String] = [:]) {
-        self.init(get: get, accept: Accept.json, query: query, parse: { data in
-            return try? JSONDecoder().decode(A.self, from: data)
-        })
+    init(get: URL, accept: Accept = .json, headers: [String:String] = [:], query: [String:String] = [:]) {
+        switch accept {
+        case .json:
+            self.init(get: get, accept: accept, headers: headers, query: query, parse: { data in
+                return try? JSONDecoder().decode(A.self, from: data)
+            })
+        case .xml:
+            self.init(get: get, accept: accept, headers: headers, query: query, parse: { data in
+//                print(String(data: data, encoding: .utf8)!)
+                let decoder = XMLDecoder.init()
+                decoder.dateDecodingStrategy =  XMLDecoder.DateDecodingStrategy.formatted(DateFormatter.iso8601WithTimeZone) // todo: should this be a parameter?
+                do {
+                	return try decoder.decode(A.self, from: data)
+                } catch {
+                    print("Decoding error: \(error), \(error.localizedDescription)", to: &standardError)
+                    return nil
+                }
+            })
+        }
     }
 }
 
@@ -89,38 +121,3 @@ extension URLSession {
     }
 }
 
-struct Github {
-    // todo initialize?
-    static var clientId: String { return env["GITHUB_CLIENT_ID"] }
-    static var clientSecret: String { return env["GITHUB_CLIENT_SECRET"] }
-    
-    static let contentType = "application/json"
-    
-    struct AccessTokenResponse: Codable, Equatable {
-        var access_token: String
-        var token_type: String
-        var scope: String
-    }
-    
-    let accessToken: String
-    init(_ accessToken: String) {
-        self.accessToken = accessToken
-    }
-    
-    static func getAccessToken(_ code: String) -> RemoteEndpoint<AccessTokenResponse> {
-        let url = URL(string: "https://github.com/login/oauth/access_token")!
-        let query = [
-            "client_id": Github.clientId,
-            "client_secret": Github.clientSecret,
-            "code": code,
-            "accept": "json"
-        ]
-        return RemoteEndpoint(post: url, query: query)
-    }
-    
-    var profile: RemoteEndpoint<GithubProfile> {
-        let url = URL(string: "https://api.github.com/user")!
-        let query = ["access_token": accessToken]
-        return RemoteEndpoint(get: url, query: query)
-    }
-}

@@ -42,7 +42,24 @@ struct Env {
 
 let env = Env()
 
+// TODO: I'm not sure if it's a good idea to initialize the plans like this. We should maybe also have static data?
+private(set) var plans: [Plan] = []
+let recurly = Recurly(subdomain: "\(env["RECURLY_SUBDOMAIN"]).recurly.com", apiKey: env["RECURLY_API_KEY"])
+URLSession.shared.load(recurly.plans, callback: { value in
+    if let p = value {
+        plans = p
+    } else {
+        print("Could not load plans", to: &standardError) // todo: fall back to old plans?
+    }
+})
 
+URLSession.shared.load(recurly.listAccounts) { a in
+    if let accounts = a {
+        dump(accounts.filter { $0.state == .active }.map { ($0.email, $0.account_code) })
+    } else {
+        print("no accounts")
+    }
+}
 
 let postgreSQL = try? PostgreSQL.Database(connInfo: ConnInfo.params([
     "host": env[optional: "RDS_HOSTNAME"] ?? "localhost",
@@ -152,8 +169,10 @@ extension MyRoute {
             return .notFound()
         case .collections:
             return I.write(index(Collection.all))
-        case .imprint, .subscribe:
+        case .imprint:
             return .write("TODO")
+        case .subscribe:
+            return .write("\(plans)")
         case .collection(let name):
             guard let c = Collection.all.first(where: { $0.slug == name }) else {
                 return I.notFound("No such collection")
