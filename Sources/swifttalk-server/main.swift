@@ -153,7 +153,7 @@ func tryOrPrint<A>(_ f: () throws -> A?) -> A? {
 
 extension MyRoute {
     func interpret<I: Interpreter>(sessionId: UUID?) -> I {
-        let user: UserData?
+        let user: UserResult?
         if let s = sessionId {
             user = withConnection { connection in
                 guard let c = connection else { return nil }
@@ -163,7 +163,7 @@ extension MyRoute {
         } else {
             user = nil
         }
-        let premiumAccess = user?.premiumAccess ?? false
+        let premiumAccess = user?.data.premiumAccess ?? false
         switch self {
         case .books, .issues:
             return .notFound()
@@ -189,14 +189,19 @@ extension MyRoute {
                     guard let p = str else { return .write("No profile") }
                     do {
                         return try withConnection { conn in
-                            print("conn: \(conn)", to: &standardError)
                             guard let c = conn else { return .write("No database connection") }
                             let d = Database(c)
                             // todo ask for email if we don't get it
-                            let uid = try d.insert(UserData(email: p.email ?? "no email", githubUID: p.id, githubLogin: p.login, githubToken: t, avatarURL: p.avatar_url, name: p.name ?? ""))
+                            let uid: UUID
+                            if let user = try d.user(withGithubId: p.id) {
+                                uid = user.id
+                                print("Found existing user: \(user)")
+                            } else {
+                                let data = UserData(email: p.email ?? "no email", githubUID: p.id, githubLogin: p.login, githubToken: t, avatarURL: p.avatar_url, name: p.name ?? "")
+                                uid = try d.insert(data)
+                                print("Created new user: \(data)")
+                            }
                             let sid = try d.insert(SessionData(userId: uid))
-                            print("got user id: \(uid)", to: &standardError)
-                            print("got session id: \(sid)", to: &standardError)
                             return I.redirect(path: "/", headers: ["Set-Cookie": "sessionid=\"\(sid.uuidString)\"; HttpOnly; Path=/"]) // TODO secure, TODO return to where user came from
                         }
                     } catch {
