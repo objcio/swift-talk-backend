@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import XMLParsing
 
 extension String {
     var base64Encoded: String {
@@ -21,14 +20,6 @@ struct Amount: Codable {
     var usd: Int
 }
 
-struct Plans: Codable {
-    var plans: [Plan]
-    
-    enum CodingKeys: String, CodingKey {
-        case plans = "plan"
-    }
-}
-
 struct Plan: Codable {
     var plan_code: String
     var name: String
@@ -38,71 +29,40 @@ struct Plan: Codable {
     var unit_amount_in_cents: Amount
 }
 
-
-struct Accounts: Codable {
-    var accounts: [Account]
-    
-    enum CodingKeys: String, CodingKey {
-        case accounts = "account"
-    }
-}
-
-struct RecurlyURL: Codable {
-    let href: URL
-}
-
-enum RecurlyOptional<Value>: Codable where Value: Codable {
-    init(from decoder: Decoder) throws {
-        do {
-            self = .some(try decoder.singleValueContainer().decode(Value.self))
-        } catch {
-        	self = .none
-        }
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        fatalError()
-    }
-    
-    case none
-    case some(Value)
-}
-
-
 struct Account: Codable {
     enum State: String, Codable {
         case active, closed, subscriber, non_subscriber, past_due
     }
-    var adjustments:    RecurlyURL
-    var account_balance:    RecurlyURL
-    var billing_info:    RecurlyURL?
-    var invoices:    RecurlyURL
-    var redemption:    RecurlyURL?
-    var subscriptions:    RecurlyURL
-    var transactions:    RecurlyURL
-    var account_code:    String
-    var state:    State
-//    var username:    String?
-    var email:    String
-    var cc_emails:    RecurlyOptional<String>?
-    var first_name:    RecurlyOptional<String>
-    var last_name:    RecurlyOptional<String>
-    var company_name:    RecurlyOptional<String>
-    var vat_number:    RecurlyOptional<String>
-    var tax_exempt:    Bool
-//    var address:    object
-    var accept_language: RecurlyOptional<String>
-    var hosted_login_token:    String
-    var created_at:    Date
-    var updated_at:    Date
-    var closed_at:    RecurlyOptional<Date>
-    var has_live_subscription:    Bool
-    var has_active_subscription:    Bool
-    var has_future_subscription:    Bool
-    var has_canceled_subscription:    Bool
-    var has_paused_subscription:    String
-    var has_past_due_invoice:    Bool
-    var preferred_locale:    RecurlyOptional<String>
+    var adjustments: URL
+    var account_balance: URL
+    var billing_info: URL?
+    var invoices: URL
+    var redemption: URL?
+    var subscriptions: URL
+    var transactions: URL
+    var account_code: String
+    var state: State
+    var username: String?
+    var email: String
+    var cc_emails: String?
+    var first_name: String?
+    var last_name: String?
+    var company_name: String?
+    var vat_number: String?
+    var tax_exempt: Bool
+    // var address: object
+    var accept_language: String?
+    var hosted_login_token: String
+    var created_at: Date
+    var updated_at: Date
+    var closed_at: Date?
+    var has_live_subscription: Bool
+    var has_active_subscription: Bool
+    var has_future_subscription: Bool
+    var has_canceled_subscription: Bool
+    var has_paused_subscription: String
+    var has_past_due_invoice: Bool
+    var preferred_locale: String?
 }
 
 struct CreateSubscription: Codable {
@@ -137,10 +97,23 @@ struct Recurly {
     }    
     
     var plans: RemoteEndpoint<[Plan]> {
-        return RemoteEndpoint<Plans>(get: base.appendingPathComponent("plans"), accept: .xml, headers: headers, query: [:]).map { $0.plans }
+        return RemoteEndpoint<[Plan]>(getXML: base.appendingPathComponent("plans"), headers: headers, query: [:])
     }
     
     var listAccounts: RemoteEndpoint<[Account]> {
-        return RemoteEndpoint<Accounts>(get: base.appendingPathComponent("accounts"), accept: .xml, headers: headers, query: [:]).map { $0.accounts }
+        return RemoteEndpoint(getXML: base.appendingPathComponent("accounts"), headers: headers, query: [:])
+    }
+}
+
+extension RemoteEndpoint where A: Codable {
+    init(getXML get: URL, headers: [String:String], query: [String:String]) {
+        self.init(get: get, accept: .xml, headers: headers, query: query, parse: { data in
+            do {
+                return try decodeXML(from: data)
+            } catch {
+                print("Decoding error: \(error), \(error.localizedDescription)", to: &standardError)
+                return nil
+            }
+        })
     }
 }

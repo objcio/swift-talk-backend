@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import XMLParsing
 
 enum Accept: String {
     case json = "application/json"
@@ -77,25 +76,10 @@ extension RemoteEndpoint where A: Decodable {
         }
     }
     
-    init(get: URL, accept: Accept = .json, headers: [String:String] = [:], query: [String:String] = [:]) {
-        switch accept {
-        case .json:
-            self.init(get: get, accept: accept, headers: headers, query: query, parse: { data in
-                return try? JSONDecoder().decode(A.self, from: data)
-            })
-        case .xml:
-            self.init(get: get, accept: accept, headers: headers, query: query, parse: { data in
-//                print(String(data: data, encoding: .utf8)!)
-                let decoder = XMLDecoder.init()
-                decoder.dateDecodingStrategy =  XMLDecoder.DateDecodingStrategy.formatted(DateFormatter.iso8601WithTimeZone) // todo: should this be a parameter?
-                do {
-                	return try decoder.decode(A.self, from: data)
-                } catch {
-                    print("Decoding error: \(error), \(error.localizedDescription)", to: &standardError)
-                    return nil
-                }
-            })
-        }
+    init(get: URL, headers: [String:String] = [:], query: [String:String] = [:]) {
+        self.init(get: get, accept: .json, headers: headers, query: query, parse: { data in
+            return try? JSONDecoder().decode(A.self, from: data)
+        })
     }
 }
 
