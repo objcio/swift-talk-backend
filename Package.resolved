@@ -90,15 +90,6 @@
           "revision": "37760e9a52030bb9011972c5213c3350fa9d41fd",
           "version": "1.0.0"
         }
-      },
-      {
-        "package": "XMLParsing",
-        "repositoryURL": "https://github.com/ShawnMoore/XMLParsing",
-        "state": {
-          "branch": "master",
-          "revision": "fc91ba35d6385f23d5a96d727d55f034f46e643f",
-          "version": null
-        }
       }
     ]
   },
