@@ -492,22 +492,22 @@ public final class PostgresNodeDecoder: Decoder {
 
 public final class PostgresEncoder: Encoder {
     private var result: [(String, NodeRepresentable)] = []
-    private let transform: (String) -> String
+    private let transformKey: (String) -> String
     public var codingPath: [CodingKey] { return [] }
     public var userInfo: [CodingUserInfoKey : Any] { return [:] }
 
-    static func encode(_ c: Encodable, transform: @escaping (String) -> String = { $0.snakeCased }) throws -> [(String, NodeRepresentable)] {
-        let e = PostgresEncoder(transform)
-        try c.encode(to: e)
-        return e.result
+    static func encode(_ value: Encodable, transformKey: @escaping (String) -> String = { $0.snakeCased }) throws -> [(String, NodeRepresentable)] {
+        let encoder = PostgresEncoder(transformKey)
+        try value.encode(to: encoder)
+        return encoder.result
     }
     
-    private init(_ transform: @escaping (String) -> String){
-        self.transform = transform
+    private init(_ transform: @escaping (String) -> String) {
+        self.transformKey = transform
     }
     
     public func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
-        return KeyedEncodingContainer(KEC(self, transformKey: transform))
+        return KeyedEncodingContainer(KEC(encoder: self, transformKey: transformKey))
     }
 
     public func unkeyedContainer() -> UnkeyedEncodingContainer {
@@ -519,12 +519,12 @@ public final class PostgresEncoder: Encoder {
     }
 
     private struct KEC<Key: CodingKey>: KeyedEncodingContainerProtocol {
-        var codingPath: [CodingKey] = []
-        let transformKey: (String) -> String
+        var codingPath: [CodingKey] { return [] }
+        private let transformKey: (String) -> String
+        private let encoder: PostgresEncoder
         
-        let encoder: PostgresEncoder
-        init(_ e: PostgresEncoder, transformKey: @escaping (String) -> String) {
-            encoder = e
+        init(encoder: PostgresEncoder, transformKey: @escaping (String) -> String) {
+            self.encoder = encoder
             self.transformKey = transformKey
         }
         
@@ -536,72 +536,65 @@ public final class PostgresEncoder: Encoder {
             push(key, Optional<String>.none) // todo is it a good idea to use a string optional?
         }
         
-        mutating func encodeNode<N: NodeRepresentable>(_ value: N, forKey key: Key) throws {
+        mutating func encode(_ value: Bool, forKey key: Key) throws {
             push(key, value)
         }
         
-        mutating func encode(_ value: Bool, forKey key: Key) throws {
-            try encodeNode(value, forKey: key)
-        }
-        
         mutating func encode(_ value: String, forKey key: Key) throws {
-            try encodeNode(value, forKey: key)
+            push(key, value)
         }
         
         mutating func encode(_ value: Double, forKey key: Key) throws {
-            try encodeNode(value, forKey: key)
+            push(key, value)
         }
         
         mutating func encode(_ value: Float, forKey key: Key) throws {
-            try encodeNode(value, forKey: key)
+            push(key, value)
         }
         
         mutating func encode(_ value: Int, forKey key: Key) throws {
-            try encodeNode(value, forKey: key)
+            push(key, value)
         }
         
         mutating func encode(_ value: Int8, forKey key: Key) throws {
-            try encodeNode(value, forKey: key)
+            push(key, value)
         }
         
         mutating func encode(_ value: Int16, forKey key: Key) throws {
-            try encodeNode(value, forKey: key)
+            push(key, value)
         }
         
         mutating func encode(_ value: Int32, forKey key: Key) throws {
-            try encodeNode(value, forKey: key)
+            push(key, value)
         }
         
         mutating func encode(_ value: Int64, forKey key: Key) throws {
-            try encodeNode(value, forKey: key)
+            push(key, value)
         }
         
         mutating func encode(_ value: UInt, forKey key: Key) throws {
-            try encodeNode(value, forKey: key)
+            push(key, value)
         }
         
         mutating func encode(_ value: UInt8, forKey key: Key) throws {
-            try encodeNode(value, forKey: key)
+            push(key, value)
         }
         
         mutating func encode(_ value: UInt16, forKey key: Key) throws {
-            try encodeNode(value, forKey: key)
+            push(key, value)
         }
         
         mutating func encode(_ value: UInt32, forKey key: Key) throws {
-            try encodeNode(value, forKey: key)
+            push(key, value)
         }
         
         mutating func encode(_ value: UInt64, forKey key: Key) throws {
-            try encodeNode(value, forKey: key)
+            push(key, value)
         }
         
         mutating func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
-            if let n = value as? NodeRepresentable {
-                push(key, n)
-            } else {
-                fatalError()
-            }
+            guard let n = value as? NodeRepresentable else { fatalError() }
+            push(key, n)
         }
         
         mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
