@@ -102,8 +102,8 @@ extension UserResult {
         })
     }
 
-    var deleteAllSessions: Query<()> {
-        return Query(query: "DELETE FROM \(SessionData.tableName) where user_id = $1", values: [id], parse: { _ in })
+    func deleteSession(_ sessionId: UUID) -> Query<()> {
+        return Query(query: "DELETE FROM \(SessionData.tableName) where user_id = $1 AND id = $2", values: [id, sessionId], parse: { _ in })
     }
 }
 

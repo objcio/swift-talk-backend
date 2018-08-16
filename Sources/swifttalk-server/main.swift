@@ -152,18 +152,19 @@ func tryOrPrint<A>(_ f: () throws -> A?) -> A? {
 }
 
 struct Session {
+    var sessionId: UUID
     var user: UserResult
 }
 
 extension MyRoute {
     func interpret<I: Interpreter>(sessionId: UUID?) -> I {
         let session: Session?
-        if let s = sessionId {
+        if let sId = sessionId {
             session = withConnection { connection in
                 guard let c = connection else { return nil }
                 let database = Database(c)
-                let user = tryOrPrint { try database.execute(UserResult.query(withSessionId: s)) }
-                return user.map { Session(user: $0) }
+                let user = tryOrPrint { try database.execute(UserResult.query(withSessionId: sId)) }
+                return user.map { Session(sessionId: sId, user: $0) }
             }
         } else {
             session = nil
@@ -189,7 +190,7 @@ extension MyRoute {
                 guard let c = conn else { return .write("No database connection") }
                 if let s = session {
                     let d = Database(c)
-                    tryOrPrint { try d.execute(s.user.deleteAllSessions) }
+                    tryOrPrint { try d.execute(s.user.deleteSession(s.sessionId)) }
                 }
                 return I.redirect(path: routes.print(.home)!.prettyPath)
             }
