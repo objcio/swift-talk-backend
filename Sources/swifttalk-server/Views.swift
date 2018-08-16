@@ -808,7 +808,7 @@ extension Array where Element == Plan {
         assert(coupon == nil) // todo
         func node(plan: Plan, title: String) -> Node {
             let amount = Double(plan.unit_amount_in_cents.usd) / 100
-            let amountStr =  amount.isInt ? "\(Int(amount))" : NSString(format: "%.2f", amount) as String // don't use a decimal point for integer numbers
+            let amountStr =  amount.isInt ? "\(Int(amount))" : String(format: "%.2f", amount) // don't use a decimal point for integer numbers
             // todo take coupon into account
             return .div(classes: "pb-", [
                 .div(classes: "smallcaps-large mb-", ["Monthly"]),
@@ -851,12 +851,24 @@ extension Array where Element == Plan {
                     ])
             
                 ]),
-                newSubscriptionBanner()
-                // TODO details
+                newSubscriptionBanner(),
+                .div(classes: "ms-1 color-gray-65 text-center pt+", [
+                    .ul(classes: "stack pl", smallPrint(coupon: coupon != nil).map { Node.li([.text($0)])})
+                ])
             ]),
         ]
         return LayoutConfig(session: session, pageTitle: "Subscribe", contents: contents).layout
     }
+}
+
+func smallPrint(coupon: Bool) -> [String] {
+    return
+        (coupon ? ["The discount doesn’t apply to added team members."] : []) +
+        [
+        "Subscriptions can be cancelled at any time.",
+        "All prices shown excluding VAT.",
+        "VAT only applies to EU customers."
+	]
 }
 
 let footer = """
