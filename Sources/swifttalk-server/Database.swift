@@ -8,6 +8,14 @@
 import Foundation
 import PostgreSQL
 
+let postgresConfig = ConnInfo.params([
+    "host": env[optional: "RDS_HOSTNAME"] ?? "localhost",
+    "dbname": env[optional: "RDS_DB_NAME"] ?? "swifttalk_dev",
+    "user": env[optional: "RDS_DB_USERNAME"] ?? "chris",
+    "password": env[optional: "RDS_DB_PASSWORD"] ?? "",
+    "connect_timeout": "1",
+])
+
 let postgreSQL = try? PostgreSQL.Database(connInfo: postgresConfig)
 
 func withConnection<A>(_ x: (Connection?) throws -> A) rethrows -> A {

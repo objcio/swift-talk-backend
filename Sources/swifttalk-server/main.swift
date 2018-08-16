@@ -7,6 +7,7 @@ import PostgreSQL
 var standardError = FileHandle.standardError
 let env = Env()
 
+let recurly = Recurly(subdomain: "\(env["RECURLY_SUBDOMAIN"]).recurly.com", apiKey: env["RECURLY_API_KEY"])
 
 // TODO: I'm not sure if it's a good idea to initialize the plans like this. We should maybe also have static data?
 private(set) var plans: [Plan] = []
