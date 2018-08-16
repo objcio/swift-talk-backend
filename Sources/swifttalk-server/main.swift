@@ -185,18 +185,13 @@ extension MyRoute {
         case .login:
             return I.redirect(path: "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(Github.clientId)")
         case .logout:
-            do {
-                return try withConnection { conn in
-                    guard let c = conn else { return .write("No database connection") }
-                    if let s = session {
-                        let d = Database(c)
-                        try d.execute(s.user.deleteAllSessions)
-                    }
-                    return I.redirect(path: routes.print(.home)!.prettyPath)
+            return withConnection { conn in
+                guard let c = conn else { return .write("No database connection") }
+                if let s = session {
+                    let d = Database(c)
+                    tryOrPrint { try d.execute(s.user.deleteAllSessions) }
                 }
-            } catch {
-                print(String(describing: error), to: &standardError)
-                return I.write("Error", status: .internalServerError)
+                return I.redirect(path: routes.print(.home)!.prettyPath)
             }
         case .githubCallback(let code):
             return I.onComplete(promise:
