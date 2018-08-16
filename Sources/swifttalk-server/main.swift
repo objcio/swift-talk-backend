@@ -19,14 +19,6 @@ URLSession.shared.load(recurly.plans, callback: { value in
     }
 })
 
-URLSession.shared.load(recurly.listAccounts) { a in
-    if let accounts = a {
-        dump(accounts.filter { $0.state == .active }.map { ($0.email, $0.account_code) })
-    } else {
-        print("no accounts")
-    }
-}
-
 extension MyRoute {
     func interpret<I: Interpreter>(sessionId: UUID?) -> I {
         let session: Session?
@@ -47,14 +39,23 @@ extension MyRoute {
         case .imprint:
             return .write("TODO")
         case .subscribe:
-            return .write("\(plans)")
+            return I.write(plans.subscribe(session: session))
         case .collection(let name):
             guard let c = Collection.all.first(where: { $0.slug == name }) else {
                 return I.notFound("No such collection")
             }
             return .write(c.show(session: session))
-        case .login:
-            return I.redirect(path: "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(Github.clientId)")
+        case .newSubscription:
+            return .write("TODO")
+        case .login(let cont):
+            // todo take cont into account
+            var path = "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(Github.clientId)"
+            if let c = cont {
+                let baseURL = env["BASE_URL"]
+                path.append("&redirect_uri=\(baseURL)" + routes.print(.githubCallback("", origin: c.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!))!.prettyPath)
+            }
+            print(path)
+            return I.redirect(path: path)
         case .logout:
             return withConnection { conn in
                 guard let c = conn else { return .write("No database connection") }
@@ -63,7 +64,7 @@ extension MyRoute {
                 }
                 return I.redirect(path: routes.print(.home)!.prettyPath)
             }
-        case .githubCallback(let code):
+        case .githubCallback(let code, let origin):
             return I.onComplete(promise:
                 URLSession.shared.load(Github.getAccessToken(code)).map({ $0?.access_token })
             	, do: { token in
@@ -85,7 +86,13 @@ extension MyRoute {
                             }
                             let sessionData: SessionData = SessionData(userId: uid)
                             let sid = try c.execute(sessionData.insert)
-                            return I.redirect(path: "/", headers: ["Set-Cookie": "sessionid=\"\(sid.uuidString)\"; HttpOnly; Path=/"]) // TODO secure, TODO return to where user came from
+                            let destination: String
+                            if let o = origin, o.hasPrefix("/") {
+                                destination = o
+                            } else {
+                                destination = "/"
+                            }
+                            return I.redirect(path: destination, headers: ["Set-Cookie": "sessionid=\"\(sid.uuidString)\"; HttpOnly; Path=/"]) // TODO secure, TODO return to where user came from
                         }
                     } catch {
                         print("something else: \(error)", to: &standardError)
@@ -117,6 +124,8 @@ extension MyRoute {
             }
             let name = p.map { $0.removingPercentEncoding ?? "" }.joined(separator: "/")
             return .writeFile(path: name)
+        case .accountBilling:
+            return .write("TODO")
         }
     }
 }
@@ -135,6 +144,7 @@ let s = MyServer(handle: { request in
     let route = routes.runParse(request)
     let sessionString = request.cookies.first { $0.0 == "sessionid" }?.1
     let sessionId = sessionString.flatMap { UUID(uuidString: $0) }
+    print((request.path, request.query))
     return route?.interpret(sessionId: sessionId)
 }, resourcePaths: resourcePaths)
 try s.listen()

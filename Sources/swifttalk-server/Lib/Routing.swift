@@ -12,7 +12,10 @@ struct Request {
     var cookies: [(String, String)]
     var body: Data?
     var prettyPath: String {
-        return "/" + path.joined(separator: "/")
+        var components = NSURLComponents(string: "http://localhost")!
+        components.queryItems = query.map { x in URLQueryItem(name: x.0, value: x.1.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)) }
+        let q = components.query ?? ""
+        return "/" + path.joined(separator: "/") + (q.isEmpty ? "" : "?\(q)")
     }
 }
 
@@ -120,6 +123,16 @@ extension Route where A == String {
             return x
         }, print: { (str: String) in
             return Request(path: [], query: [name: str], method: .get, cookies: [], body: nil)
+        }, description: .queryParameter(name))
+    }
+    
+    static func optionalQueryParam(name: String) -> Route<String?> {
+        return Route<String?>(parse: { req in
+            guard let x = req.query[name] else { return .some(nil) }
+            req.query[name] = nil
+            return x
+        }, print: { (str: String?) in
+            return Request(path: [], query: str == nil ? [:] : [name: str!], method: .get, cookies: [], body: nil)
         }, description: .queryParameter(name))
     }
 }

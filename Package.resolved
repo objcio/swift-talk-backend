@@ -12,7 +12,7 @@
       },
       {
         "package": "Ccmark",
-        "repositoryURL": "git@github.com:chriseidhof/Ccmark.git",
+        "repositoryURL": "https://github.com/chriseidhof/Ccmark.git",
         "state": {
           "branch": null,
           "revision": "f1baba3429aeb6fe2acabc92309cb7a756250b30",
@@ -78,8 +78,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio.git",
         "state": {
           "branch": null,
-          "revision": "c6acf77fc9a310c0ebf8d5f73f285d1639801d2f",
-          "version": "1.9.0"
+          "revision": "cf08e673dc41dc63d34065234c8fc432e8d334c4",
+          "version": "1.9.2"
         }
       },
       {
@@ -89,15 +89,6 @@
           "branch": null,
           "revision": "37760e9a52030bb9011972c5213c3350fa9d41fd",
           "version": "1.0.0"
-        }
-      },
-      {
-        "package": "XMLParsing",
-        "repositoryURL": "https://github.com/ShawnMoore/XMLParsing",
-        "state": {
-          "branch": "master",
-          "revision": "fc91ba35d6385f23d5a96d727d55f034f46e643f",
-          "version": null
         }
       }
     ]

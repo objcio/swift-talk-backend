@@ -17,9 +17,11 @@ enum MyRoute: Equatable {
     case imprint
     case subscribe
     case collections
-    case login
+    case login(continue: String?)
     case logout
-    case githubCallback(String)
+    case newSubscription // .subscription(.new)
+    case accountBilling // account(.billing)
+    case githubCallback(String, origin: String?)
     case collection(Slug<Collection>)
     case episode(Slug<Episode>)
     case staticFile(path: [String])
@@ -42,14 +44,19 @@ let collection: Route<MyRoute> = (Route<()>.c("collections") / .string()).transf
     return name.rawValue
 })
 
-let callbackRoute: Route<MyRoute> = .c("users") / .c("auth") / .c("github") / .c("callback") / (Route<String>.queryParam(name: "code").transform({ MyRoute.githubCallback($0) }, { r in
-    guard case let .githubCallback(x) = r else { return nil }
-    return x
+let callbackRoute: Route<MyRoute> = .c("users") / .c("auth") / .c("github") / .c("callback") / ((Route<String>.queryParam(name: "code") / Route.optionalQueryParam(name: "origin")).transform({ MyRoute.githubCallback($0.0, origin: $0.1) }, { r in
+    guard case let .githubCallback(x, y) = r else { return nil }
+    return (x,y)
 }))
 
 let assetsRoute: Route<MyRoute> = (.c("assets") / .path()).transform({ MyRoute.staticFile(path:$0) }, { r in
     guard case let .staticFile(path) = r else { return nil }
     return path
+})
+
+let loginRoute: Route<MyRoute> = (.c("users") / .c("auth") / .c("github") / Route.optionalQueryParam(name: "origin")).transform({ MyRoute.login(continue: $0)}, { r in
+    guard case .login(let x) = r else { return nil }
+    return x
 })
 
 let routes: Route<MyRoute> = [
@@ -61,7 +68,9 @@ let routes: Route<MyRoute> = [
     .c("sitemap", .sitemap),
     .c("subscribe", .subscribe),
     .c("imprint", .imprint),
-    .c("users") / .c("auth") / .c("github", .login),
+    .c("subscription") / .c("new", .newSubscription),
+    .c("account") / .c("billing", .accountBilling),
+    loginRoute,
     .c("logout", .logout),
     callbackRoute,
     assetsRoute,

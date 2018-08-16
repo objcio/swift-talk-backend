@@ -20,12 +20,17 @@ struct Amount: Codable {
     var usd: Int
 }
 
+
 struct Plan: Codable {
+    enum IntervalUnit: String, Codable {
+        case months
+        case days
+    }
     var plan_code: String
     var name: String
     var description: String?
     var plan_interval_length: Int
-    var plan_interval_unit: String
+    var plan_interval_unit: IntervalUnit
     var unit_amount_in_cents: Amount
 }
 
