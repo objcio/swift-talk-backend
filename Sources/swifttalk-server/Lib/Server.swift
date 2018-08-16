@@ -165,7 +165,7 @@ extension HTTPMethod {
         switch value {
         case .GET: self = .get
         case .POST: self = .post
-        default: fatalError() // todo
+        default: fatalError("Unsupported method: \(value)") // todo
         }
     }
 }

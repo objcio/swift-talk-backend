@@ -117,7 +117,7 @@ public final class PostgresNodeDecoder: Decoder {
         }
         
         func decodeNil(forKey key: Key) throws -> Bool {
-            guard let value = node[transformKey(key.stringValue)] else { fatalError() }
+            guard let value = node[transformKey(key.stringValue)] else { fatalError("\(#function), \(#line)") }
             return value.isNull
         }
         
@@ -184,25 +184,25 @@ public final class PostgresNodeDecoder: Decoder {
         }
         
         func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T : Decodable {
-            guard let newNode = node[transformKey(key.stringValue)] else { fatalError() }
+            guard let newNode = node[transformKey(key.stringValue)] else { fatalError("\(#function), \(#line)") }
             let decoder = PostgresNodeDecoder(newNode, transformKey: transformKey)
             return try T(from: decoder)
         }
         
         func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         func superDecoder() throws -> Decoder {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         func superDecoder(forKey key: Key) throws -> Decoder {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
     }
     
@@ -220,63 +220,63 @@ public final class PostgresNodeDecoder: Decoder {
         }
         
         mutating func decodeNil() throws -> Bool {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         mutating func decode(_ type: Bool.Type) throws -> Bool {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         mutating func decode(_ type: String.Type) throws -> String {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         mutating func decode(_ type: Double.Type) throws -> Double {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         mutating func decode(_ type: Float.Type) throws -> Float {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         mutating func decode(_ type: Int.Type) throws -> Int {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         mutating func decode(_ type: Int8.Type) throws -> Int8 {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         mutating func decode(_ type: Int16.Type) throws -> Int16 {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         mutating func decode(_ type: Int32.Type) throws -> Int32 {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         mutating func decode(_ type: Int64.Type) throws -> Int64 {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         mutating func decode(_ type: UInt.Type) throws -> UInt {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         mutating func decode(_ type: UInt8.Type) throws -> UInt8 {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         mutating func decode(_ type: UInt16.Type) throws -> UInt16 {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         mutating func decode(_ type: UInt32.Type) throws -> UInt32 {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         mutating func decode(_ type: UInt64.Type) throws -> UInt64 {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
@@ -286,15 +286,15 @@ public final class PostgresNodeDecoder: Decoder {
         }
         
         mutating func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         mutating func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         mutating func superDecoder() throws -> Decoder {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
     }
     

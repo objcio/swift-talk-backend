@@ -126,19 +126,19 @@ public final class PropertyNamesDecoder: Decoder {
         }
         
         func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         func superDecoder() throws -> Decoder {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         func superDecoder(forKey key: Key) throws -> Decoder {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
     }
     
@@ -218,15 +218,15 @@ public final class PropertyNamesDecoder: Decoder {
         }
         
         mutating func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         mutating func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         mutating func superDecoder() throws -> Decoder {
-            fatalError()
+            fatalError("\(#function), \(#line)")
         }
         
         

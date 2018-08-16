@@ -144,7 +144,6 @@ let s = MyServer(handle: { request in
     let route = routes.runParse(request)
     let sessionString = request.cookies.first { $0.0 == "sessionid" }?.1
     let sessionId = sessionString.flatMap { UUID(uuidString: $0) }
-    print((request.path, request.query))
     return route?.interpret(sessionId: sessionId)
 }, resourcePaths: resourcePaths)
 try s.listen()
