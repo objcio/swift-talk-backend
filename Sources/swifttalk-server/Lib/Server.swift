@@ -160,6 +160,16 @@ extension String {
     }
 }
 
+extension HTTPMethod {
+    init(_ value: NIOHTTP1.HTTPMethod) {
+        switch value {
+        case .GET: self = .get
+        case .POST: self = .post
+        default: fatalError() // todo
+        }
+    }
+}
+
 final class RouteHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPServerRequestPart
     typealias OutboundOut = HTTPServerResponsePart

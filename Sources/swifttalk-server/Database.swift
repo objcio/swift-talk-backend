@@ -8,53 +8,23 @@
 import Foundation
 import PostgreSQL
 
-fileprivate let migrations: [String] = [
-//    """
-//    DROP TABLE IF EXusers IF EXISTS
-//    """,
-//    """
-//    DROP TABLE sessions
-//    """,
-    """
-    CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
-    """,
-    """
-    CREATE TABLE IF NOT EXISTS users (
-        id uuid DEFAULT public.uuid_generate_v4() PRIMARY KEY,
-        email character varying,
-        github_uid integer,
-        github_login character varying,
-        github_token character varying,
-        avatar_url character varying,
-        name character varying,
-        remember_created_at timestamp,
-        admin boolean DEFAULT false NOT NULL,
-        created_at timestamp NOT NULL,
-        updated_at timestamp NOT NULL,
-        recurly_hosted_login_token character varying,
-        payment_method_id uuid,
-        last_reconciled_at timestamp,
-        receive_new_episode_emails boolean DEFAULT true,
-        collaborator boolean,
-        download_credits integer DEFAULT 0 NOT NULL
-    );
-    """,
-    """
-    CREATE TABLE IF NOT EXISTS sessions (
-        id uuid DEFAULT public.uuid_generate_v4() PRIMARY KEY,
-        user_id uuid REFERENCES users NOT NULL,
-        created_at timestamp NOT NULL,
-        updated_at timestamp NOT NULL
-    );
-    """,
-    """
-    ALTER TABLE users ADD IF NOT EXISTS subscriber boolean
-    """,
-    """
-    CREATE INDEX IF NOT EXISTS users_github_uid ON users (github_uid);
-    """
-]
+let postgreSQL = try? PostgreSQL.Database(connInfo: postgresConfig)
 
+func withConnection<A>(_ x: (Connection?) throws -> A) rethrows -> A {
+    let conn: Connection? = postgreSQL.flatMap {
+        do {
+            let conn = try $0.makeConnection()
+            return conn
+        } catch {
+            print(error, to: &standardError)
+            print(error.localizedDescription, to: &standardError)
+            return nil
+        }
+    }
+    let result = try x(conn)
+    try? conn?.close()
+    return result
+}
 
 protocol Insertable: Codable {
     static var tableName: String { get }

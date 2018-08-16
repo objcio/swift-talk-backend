@@ -8,6 +8,12 @@
 import Foundation
 import CommonMark
 
+
+struct Session {
+    var sessionId: UUID
+    var user: UserResult
+}
+
 let teamDiscount = 30
 
 struct Slug<A>: Codable, Equatable, RawRepresentable {
@@ -114,6 +120,19 @@ extension Collection {
     }
 }
 
+extension String {
+    func scanTimePrefix() -> (minutes: Int, seconds: Int, remainder: String)? {
+        let s = Scanner(string: self)
+        var minutes: Int = 0
+        var seconds: Int = 0
+        if s.scanInt(&minutes), s.scanString(":", into: nil), s.scanInt(&seconds) {
+            return (minutes, seconds, s.remainder)
+        } else {
+            return nil
+        }
+    }
+}
+
 extension Episode {
     var rawTranscript: String? {
         let path = URL(fileURLWithPath: "data/episode-transcripts/episode\(number).md")
@@ -158,23 +177,4 @@ extension Episode {
         }
         return result
     }
-    
-    static let all: [Episode] = {
-        // for this (and the rest of the app) to work we need to launch with a correct working directory (root of the app)
-        let d = try! Data(contentsOf: URL(fileURLWithPath: "data/episodes.json"))
-        let e = try! JSONDecoder().decode([Episode].self, from: d)
-        return e.sorted { $0.number > $1.number }
-        
-    }()
-    
-}
-
-extension Collection {
-    static let all: [Collection] = {
-        // for this (and the rest of the app) to work we need to launch with a correct working directory (root of the app)
-        let d = try! Data(contentsOf: URL(fileURLWithPath: "data/collections.json"))
-        let e = try! JSONDecoder().decode([Collection].self, from: d)
-        return e
-        
-    }()
 }

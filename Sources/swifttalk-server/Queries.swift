@@ -42,7 +42,6 @@ struct UserData: Codable, Insertable {
     var recurlyHostedLoginToken: String?
     var paymentMethodId: UUID?
     var lastReconciledAt: Date?
-    var receiveNewEpisodeEmails: Bool
     var collaborator: Bool = false
     var downloadCredits: Int = 0
     var subscriber: Bool = false
@@ -58,7 +57,6 @@ struct UserData: Codable, Insertable {
         rememberCreatedAt = now
         updatedAt = now
         createdAt = now
-        receiveNewEpisodeEmails = false
         collaborator = false
         downloadCredits = 0
     }

@@ -7,6 +7,28 @@
 
 import Foundation
 
+func tryOrPrint<A>(_ f: () throws -> A?) -> A? {
+    do {
+        return try f()
+    } catch {
+        print("Error: \(error) \(error.localizedDescription)", to: &standardError)
+        return nil
+    }
+}
+
+extension Foundation.FileHandle : TextOutputStream {
+    public func write(_ string: String) {
+        guard let data = string.data(using: .utf8) else { return }
+        self.write(data)
+    }
+}
+
+extension Scanner {
+    var remainder: String {
+        return NSString(string: string).substring(from: scanLocation)
+    }
+}
+
 extension String {
     // todo attribution: copied from swift's standard library
     var snakeCased: String {
