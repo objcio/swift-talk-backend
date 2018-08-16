@@ -83,20 +83,9 @@ extension Insertable {
 }
 
 
-struct Database {
-    let connection: Connection
-    init(_ c: Connection) {
-        self.connection = c
-    }
-    
-    func migrate() throws {
-        for m in migrations { // global variable, but we could inject it at some point.
-            try connection.execute(m)
-        }
-    }
-
+extension Connection {
     func execute<A>(_ query: Query<A>) throws -> A {
-        let node = try connection.execute(query.query, query.values)
+        let node = try execute(query.query, query.values)
         return query.parse(node)
     }
 }

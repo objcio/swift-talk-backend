@@ -162,8 +162,7 @@ extension MyRoute {
         if let sId = sessionId {
             session = withConnection { connection in
                 guard let c = connection else { return nil }
-                let database = Database(c)
-                let user = tryOrPrint { try database.execute(UserResult.query(withSessionId: sId)) }
+                let user = tryOrPrint { try c.execute(UserResult.query(withSessionId: sId)) }
                 return user.map { Session(sessionId: sId, user: $0) }
             }
         } else {
@@ -189,8 +188,7 @@ extension MyRoute {
             return withConnection { conn in
                 guard let c = conn else { return .write("No database connection") }
                 if let s = session {
-                    let d = Database(c)
-                    tryOrPrint { try d.execute(s.user.deleteSession(s.sessionId)) }
+                    tryOrPrint { try c.execute(s.user.deleteSession(s.sessionId)) }
                 }
                 return I.redirect(path: routes.print(.home)!.prettyPath)
             }
@@ -204,19 +202,18 @@ extension MyRoute {
                     do {
                         return try withConnection { conn in
                             guard let c = conn else { return .write("No database connection") }
-                            let d = Database(c)
                             // todo ask for email if we don't get it
                             let uid: UUID
-                            if let user = try d.execute(UserResult.query(withGithubId: p.id)) {
+                            if let user = try c.execute(UserResult.query(withGithubId: p.id)) {
                                 uid = user.id
                                 print("Found existing user: \(user)")
                             } else {
                                 let userData = UserData(email: p.email ?? "no email", githubUID: p.id, githubLogin: p.login, githubToken: t, avatarURL: p.avatar_url, name: p.name ?? "")
-                                uid = try d.execute(userData.insert)
+                                uid = try c.execute(userData.insert)
                                 print("Created new user: \(userData)")
                             }
                             let sessionData: SessionData = SessionData(userId: uid)
-                            let sid = try d.execute(sessionData.insert)
+                            let sid = try c.execute(sessionData.insert)
                             return I.redirect(path: "/", headers: ["Set-Cookie": "sessionid=\"\(sid.uuidString)\"; HttpOnly; Path=/"]) // TODO secure, TODO return to where user came from
                         }
                     } catch {
