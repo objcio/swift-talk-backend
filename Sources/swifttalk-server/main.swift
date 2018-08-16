@@ -151,24 +151,28 @@ func tryOrPrint<A>(_ f: () throws -> A?) -> A? {
     }
 }
 
+struct Session {
+    var user: UserResult
+}
+
 extension MyRoute {
     func interpret<I: Interpreter>(sessionId: UUID?) -> I {
-        let user: UserResult?
+        let session: Session?
         if let s = sessionId {
-            user = withConnection { connection in
+            session = withConnection { connection in
                 guard let c = connection else { return nil }
                 let database = Database(c)
-                return tryOrPrint { try database.execute(UserResult.query(withSessionId: s)) }
+                let user = tryOrPrint { try database.execute(UserResult.query(withSessionId: s)) }
+                return user.map { Session(user: $0) }
             }
         } else {
-            user = nil
+            session = nil
         }
-        let premiumAccess = user?.data.premiumAccess ?? false
         switch self {
         case .books, .issues:
             return .notFound()
         case .collections:
-            return I.write(index(Collection.all))
+            return I.write(index(Collection.all, session: session))
         case .imprint:
             return .write("TODO")
         case .subscribe:
@@ -177,9 +181,23 @@ extension MyRoute {
             guard let c = Collection.all.first(where: { $0.slug == name }) else {
                 return I.notFound("No such collection")
             }
-            return .write(c.show(subscribed: false)) // TODO
+            return .write(c.show(session: session))
         case .login:
             return I.redirect(path: "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(Github.clientId)")
+        case .logout:
+            do {
+                return try withConnection { conn in
+                    guard let c = conn else { return .write("No database connection") }
+                    if let s = session {
+                        let d = Database(c)
+                        try d.execute(s.user.deleteAllSessions)
+                    }
+                    return I.redirect(path: routes.print(.home)!.prettyPath)
+                }
+            } catch {
+                print(String(describing: error), to: &standardError)
+                return I.write("Error", status: .internalServerError)
+            }
         case .githubCallback(let code):
             return I.onComplete(promise:
                 URLSession.shared.load(Github.getAccessToken(code)).map({ $0?.access_token })
@@ -222,11 +240,11 @@ extension MyRoute {
             guard let ep = Episode.all.first(where: { $0.slug == s}) else {
                 return .notFound("No such episode")
             }            
-            return .write(ep.show())
+            return .write(ep.show(session: session))
         case .episodes:
-            return I.write(index(Episode.all.filter { $0.released }, subscribed: premiumAccess))
+            return I.write(index(Episode.all.filter { $0.released }, session: session))
         case .home:
-            return .write(LayoutConfig(contents: renderHome(subscribed: premiumAccess)).layout, status: .ok)
+            return .write(LayoutConfig(session: session, contents: renderHome(session: session)).layout, status: .ok)
         case .sitemap:
             return .write(siteMap(routes))
         case let .staticFile(path: p):

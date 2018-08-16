@@ -18,6 +18,7 @@ enum MyRoute: Equatable {
     case subscribe
     case collections
     case login
+    case logout
     case githubCallback(String)
     case collection(Slug<Collection>)
     case episode(Slug<Episode>)
@@ -61,6 +62,7 @@ let routes: Route<MyRoute> = [
     .c("subscribe", .subscribe),
     .c("imprint", .imprint),
     .c("users") / .c("auth") / .c("github", .login),
+    .c("logout", .logout),
     callbackRoute,
     assetsRoute,
     .c("collections", .collections),

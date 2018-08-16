@@ -101,6 +101,10 @@ extension UserResult {
             return result.first
         })
     }
+
+    var deleteAllSessions: Query<()> {
+        return Query(query: "DELETE FROM \(SessionData.tableName) where user_id = $1", values: [id], parse: { _ in })
+    }
 }
 
 

@@ -14,8 +14,10 @@ struct LayoutConfig {
     var footerContent: [Node]
     var preFooter: [Node]
     var structuredData: StructuredData?
+    var session: Session?
     
-    init(pageTitle: String = "objc.io", contents: [Node], theme: String = "default", preFooter: [Node] = [], footerContent: [Node] = [], structuredData: StructuredData? = nil) {
+    init(session: Session?, pageTitle: String = "objc.io", contents: [Node], theme: String = "default", preFooter: [Node] = [], footerContent: [Node] = [], structuredData: StructuredData? = nil) {
+        self.session = session
         self.pageTitle = pageTitle
         self.contents = contents
         self.theme = theme
@@ -25,25 +27,18 @@ struct LayoutConfig {
     }
 }
 
+extension Optional where Wrapped == Session {
+    var premiumAccess: Bool {
+        return self?.user.data.premiumAccess ?? false
+    }
+}
+
 let navigationItems: [(MyRoute, String)] = [
     (.home, "Swift Talk"), // todo
     (.books, "Books"),
     (.issues, "Issues")
 ]
 
-let test = """
-<nav class="flex-none self-center border-left border-1 border-color-gray-85 flex ml+">
-<ul class="flex items-stretch">
-<li class="flex ml+">
-<a class="flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration" href="/users/auth/github">Log in</a>
-</li>
-
-<li class="flex items-center ml+">
-<a class="button button--tight button--themed fz-nav" href="/subscribe">Subscribe</a>
-</li>
-</ul>
-</nav>
-"""
 
 enum HeaderContent {
     case node(Node)
@@ -130,11 +125,11 @@ extension Date {
     }
 }
 
-func index(_ items: [Collection]) -> Node {
+func index(_ items: [Collection], session: Session?) -> Node {
     let lis: [Node] = items.map({ (coll: Collection) -> Node in
         return Node.li(attributes: ["class": "col width-full s+|width-1/2 l+|width-1/3 mb++"], coll.render(.init(episodes: true)))
     })
-    return LayoutConfig(contents: [
+    return LayoutConfig(session: session, contents: [
         pageHeader(HeaderContent.link(header: "All Collections", backlink: .home, label: "Swift Talk")),
         .div(classes: "container pb0", [
             .h2([Node.text("\(items.count) Collections")], attributes: ["class": "bold lh-100 mb+"]),
@@ -143,15 +138,15 @@ func index(_ items: [Collection]) -> Node {
     ]).layout
 }
 
-func index(_ items: [Episode], subscribed: Bool) -> Node {
-    return LayoutConfig(contents: [
+func index(_ items: [Episode], session: Session?) -> Node {
+    return LayoutConfig(session: session, contents: [
         pageHeader(.link(header: "All Episodes", backlink: .home, label: "Swift Talk")),
         .div(classes: "container pb0", [
             .div([
                 .h2([.span(attributes: ["class": "bold"], [.text("\(items.count) Episodes")])], attributes: ["class": "inline-block lh-100 mb+"])
             ]),
             .ul(attributes: ["class": "cols s+|cols--2n m+|cols--3n xl+|cols--4n"], items.map { e in
-                Node.li(attributes: ["class": "col mb++ width-full s+|width-1/2 m+|width-1/3 xl+|width-1/4"], [e.render(.init(synopsis: true, canWatch: subscribed || !e.subscription_only))])
+                Node.li(attributes: ["class": "col mb++ width-full s+|width-1/2 m+|width-1/3 xl+|width-1/4"], [e.render(.init(synopsis: true, canWatch: (session.premiumAccess) || !e.subscription_only))])
             })
         ])
     ]).layout
@@ -354,8 +349,8 @@ extension Episode {
         ])
     }
     
-    func show(watched: Bool = false, subscribed: Bool = false) -> Node {
-        let canWatch = !subscription_only || subscribed
+    func show(watched: Bool = false, session: Session?) -> Node {
+        let canWatch = !subscription_only || session.premiumAccess
         let guests_: [Node] = [] // todo
         // todo: subscribe banner
         
@@ -439,7 +434,7 @@ extension Episode {
         ])
         
         let data = StructuredData(title: title, description: synopsis, url: absoluteURL(.episode(slug)), image: poster_url, type: .video(duration: media_duration.map(Int.init), releaseDate: releasedAt))
-        return LayoutConfig(contents: [main, scroller] + (subscribed ? [] : [subscribeBanner()]), footerContent: [Node.raw(transcriptLinks)], structuredData: data).layout
+        return LayoutConfig(session: session, contents: [main, scroller] + (session.premiumAccess ? [] : [subscribeBanner()]), footerContent: [Node.raw(transcriptLinks)], structuredData: data).layout
     }
 }
 
@@ -451,9 +446,9 @@ extension String {
 }
 
 extension Collection {
-    func show(subscribed: Bool) -> Node {
+    func show(session: Session?) -> Node {
         let bgImage = "background-image: url('/assets/images/collections/\(title)@4x.png');"
-        return LayoutConfig(contents: [
+        return LayoutConfig(session: session, contents: [
             Node.div(attributes: ["class": "pattern-illustration overflow-hidden", "style": bgImage], [
                 Node.div(classes: "wrapper", [
                     .header(attributes: ["class": "offset-content offset-header pv++ bgcolor-white"], [
@@ -476,7 +471,7 @@ extension Collection {
                 Node.ul(attributes: ["class": "offset-content"], episodes.released.map { e in
                     Node.li(attributes: ["class": "flex justify-center mb++ m+|mb+++"], [
                         Node.div(classes: "width-1 ms1 mr- color-theme-highlight bold lh-110 m-|hide", [.raw("&rarr;")]),
-                        e.render(.init(wide: true, synopsis: true, canWatch: subscribed || !e.subscription_only, collection: false))
+                        e.render(.init(wide: true, synopsis: true, canWatch: session.premiumAccess || !e.subscription_only, collection: false))
                     ])
                 })
             ]),
@@ -672,8 +667,7 @@ extension LayoutConfig {
                             .link(to: .home, [
         						.inlineSvg(path: "logo.svg", attributes: ["class": "block logo logo--themed height-auto"]), // todo scaling parameter?
         						.h1([.text("objc.io")], attributes: ["class":"visuallyhidden"]) // todo class
-        					] as [Node]
-                            , attributes: ["class": "flex-none outline-none mr++ flex"]),
+        					] as [Node], attributes: ["class": "flex-none outline-none mr++ flex"]),
         					.nav(attributes: ["class": "flex flex-grow"], [
                                 .ul(attributes: ["class": "flex flex-auto"], navigationItems.map { l in
                                     .li(attributes: ["class": "flex mr+"], [
@@ -683,7 +677,7 @@ extension LayoutConfig {
                                     ])
                                 }) // todo: search
                             ]),
-                            .raw(test)
+                            userHeader(session)
                         ])
                     ])
                 ]),
@@ -693,7 +687,29 @@ extension LayoutConfig {
             ] + footerContent)
         return Node.html(attributes: ["lang": "en"], [head, body])
     }
+}
 
+func userHeader(_ session: Session?) -> Node {
+    let subscribeButton = Node.li(classes: "flex items-center ml+", [
+        .link(to: .subscribe, [.text("Subscribe")], classes: "button button--tight button--themed fz-nav")
+    ])
+    
+    func link(to route: MyRoute, text: String) -> Node {
+        return .li(classes: "flex ml+", [
+            .link(to: route, [.text(text)], classes: "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration")
+        ])
+    }
+
+    let items: [Node]
+    if let s = session {
+        let logout = link(to: .logout, text: "Log out")
+        items = s.user.data.premiumAccess ? [logout] : [logout, subscribeButton]
+    } else {
+        items = [link(to: .login, text: "Log in"), subscribeButton]
+    }
+    return .nav(classes: "flex-none self-center border-left border-1 border-color-gray-85 flex ml+", [
+        .ul(classes: "flex items-stretch", items)
+    ])
 }
 
 extension Int {
@@ -715,7 +731,7 @@ extension String {
     }
 }
 
-func renderHome(subscribed: Bool) -> [Node] {
+func renderHome(session: Session?) -> [Node] {
     let header = pageHeader(HeaderContent.other(header: "Swift Talk", blurb: "A weekly video series on Swift programming."))
     let firstEpisode = Episode.all.first!
     let recentEpisodes: Node = .section(classes: "container", [
@@ -725,13 +741,13 @@ func renderHome(subscribed: Bool) -> [Node] {
         ]),
         .div(classes: "m-cols flex flex-wrap", [
             .div(classes: "mb++ p-col width-full l+|width-1/2", [
-                firstEpisode.render(Episode.ViewOptions(featured: true, synopsis: true, canWatch: subscribed || !firstEpisode.subscription_only))
+                firstEpisode.render(Episode.ViewOptions(featured: true, synopsis: true, canWatch: session.premiumAccess || !firstEpisode.subscription_only))
             ]),
             .div(classes: "p-col width-full l+|width-1/2", [
                 .div(classes: "s+|cols s+|cols--2n",
                      Episode.all[1..<5].map { ep in
                         .div(classes: "mb++ s+|col s+|width-1/2", [
-                            ep.render(Episode.ViewOptions(synopsis: false, canWatch: subscribed || !ep.subscription_only))
+                            ep.render(Episode.ViewOptions(synopsis: false, canWatch: session.premiumAccess || !ep.subscription_only))
                         ])
                     }
                 )
