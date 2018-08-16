@@ -158,7 +158,7 @@ extension MyRoute {
             user = withConnection { connection in
                 guard let c = connection else { return nil }
                 let database = Database(c)
-                return tryOrPrint { try database.user(for: s) }
+                return tryOrPrint { try database.execute(UserResult.query(withSessionId: s)) }
             }
         } else {
             user = nil
@@ -193,15 +193,16 @@ extension MyRoute {
                             let d = Database(c)
                             // todo ask for email if we don't get it
                             let uid: UUID
-                            if let user = try d.user(withGithubId: p.id) {
+                            if let user = try d.execute(UserResult.query(withGithubId: p.id)) {
                                 uid = user.id
                                 print("Found existing user: \(user)")
                             } else {
-                                let data = UserData(email: p.email ?? "no email", githubUID: p.id, githubLogin: p.login, githubToken: t, avatarURL: p.avatar_url, name: p.name ?? "")
-                                uid = try d.insert(data)
-                                print("Created new user: \(data)")
+                                let userData = UserData(email: p.email ?? "no email", githubUID: p.id, githubLogin: p.login, githubToken: t, avatarURL: p.avatar_url, name: p.name ?? "")
+                                uid = try d.execute(userData.insert)
+                                print("Created new user: \(userData)")
                             }
-                            let sid = try d.insert(SessionData(userId: uid))
+                            let sessionData: SessionData = SessionData(userId: uid)
+                            let sid = try d.execute(sessionData.insert)
                             return I.redirect(path: "/", headers: ["Set-Cookie": "sessionid=\"\(sid.uuidString)\"; HttpOnly; Path=/"]) // TODO secure, TODO return to where user came from
                         }
                     } catch {

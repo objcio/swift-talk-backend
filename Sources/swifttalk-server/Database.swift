@@ -57,15 +57,31 @@ fileprivate let migrations: [String] = [
 
 
 protocol Insertable: Codable {
-    associatedtype InsertionResult = ()
     static var tableName: String { get }
-    static var returning: String? { get }
-    static var parse: (PostgreSQL.Node) throws -> InsertionResult { get }
 }
 
-extension Insertable where InsertionResult == () {
-    static var parse: ((PostgreSQL.Node) throws -> ()) { return { _ in return () } }
+extension Insertable {
+    var fieldNamesAndValues: [(String, NodeRepresentable)] {
+        let m = Mirror(reflecting: self)
+        return m.children.map { ($0.label!.snakeCased, $0.value as! NodeRepresentable) }
+    }
+    
+    static var fieldNames: [String] {
+        return try! PropertyNamesDecoder.decode(UserData.self).map { $0.snakeCased }
+    }
+    
+    var insert: Query<UUID> {
+        let fields = fieldNamesAndValues
+        let names = fields.map { $0.0 }.joined(separator: ",")
+        let values = fields.map { $0.1 }
+        let placeholders = (1...fields.count).map { "$\($0)" }.joined(separator: ",")
+        let query = "INSERT INTO \(Self.tableName) (\(names)) VALUES (\(placeholders)) RETURNING id"
+        return Query(query: query, values: values, parse: { node in
+            return UUID(uuidString: node[0, "id"]!.string!)!
+        })
+    }
 }
+
 
 struct Database {
     let connection: Connection
@@ -78,106 +94,12 @@ struct Database {
             try connection.execute(m)
         }
     }
-}
 
-struct UserResult: Codable {
-    var id: UUID
-    var data: UserData
-    
-    init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        self.id = try c.decode(UUID.self, forKey: CodingKeys.id)
-        self.data = try UserData(from: decoder)
+    func execute<A>(_ query: Query<A>) throws -> A {
+        let node = try connection.execute(query.query, query.values)
+        return query.parse(node)
     }
 }
-
-extension Database {
-    func insert<E: Insertable>(_ item: E) throws -> E.InsertionResult {
-        let result = try insert(item, into: E.tableName, returning: E.returning)
-        return try E.parse(result)
-    }
-    
-    private func insert<E: Encodable>(_ item: E, into table: String, returning: String? = nil) throws -> PostgreSQL.Node {
-        let fields = try PostgresEncoder.encode(item)
-        let fieldNames = fields.map { $0.0 }.joined(separator: ",")
-        let placeholders = zip(fields, 1...).map { "$\($0.1)" }.joined(separator: ",")
-        var query = "INSERT INTO \(table) (\(fieldNames)) VALUES (\(placeholders))"
-        if let r = returning {
-            query.append("RETURNING (\(r))")
-        }
-        return try connection.execute(query, fields.map { $0.1 })
-    }
-
-    func user(for session: UUID) throws -> UserResult? {
-        let fields = try! PropertyNamesDecoder.decode(UserData.self).map { "u.\($0.snakeCased)" }.joined(separator: ",")
-        let query = "SELECT u.id, \(fields) FROM users AS u INNER JOIN sessions AS s ON s.user_id = u.id WHERE s.id = $1"
-        let node = try connection.execute(query, [session])
-        let users = PostgresNodeDecoder.decode([UserResult].self, transformKey: { $0.snakeCased }, node: node)
-        assert(users.count <= 1)
-        return users.first
-    }
-    
-    func user(withGithubId githubId: Int) throws -> UserResult? {
-        let node = try connection.execute("SELECT * FROM users WHERE github_uid = $1", [githubId])
-        let users = PostgresNodeDecoder.decode([UserResult].self, transformKey: { $0.snakeCased }, node: node)
-        assert(users.count <= 1)
-        return users.first
-    }
-}
-
-extension String {
-    // todo attribution: copied from swift's standard library
-    fileprivate var snakeCased: String {
-        guard !self.isEmpty else { return self }
-        let stringKey = self // todo inline
-        
-        var words : [Range<String.Index>] = []
-        // The general idea of this algorithm is to split words on transition from lower to upper case, then on transition of >1 upper case characters to lowercase
-        //
-        // myProperty -> my_property
-        // myURLProperty -> my_url_property
-        //
-        // We assume, per Swift naming conventions, that the first character of the key is lowercase.
-        var wordStart = stringKey.startIndex
-        var searchRange = stringKey.index(after: wordStart)..<stringKey.endIndex
-        
-        // Find next uppercase character
-        while let upperCaseRange = stringKey.rangeOfCharacter(from: CharacterSet.uppercaseLetters, options: [], range: searchRange) {
-            let untilUpperCase = wordStart..<upperCaseRange.lowerBound
-            words.append(untilUpperCase)
-            
-            // Find next lowercase character
-            searchRange = upperCaseRange.lowerBound..<searchRange.upperBound
-            guard let lowerCaseRange = stringKey.rangeOfCharacter(from: CharacterSet.lowercaseLetters, options: [], range: searchRange) else {
-                // There are no more lower case letters. Just end here.
-                wordStart = searchRange.lowerBound
-                break
-            }
-            
-            // Is the next lowercase letter more than 1 after the uppercase? If so, we encountered a group of uppercase letters that we should treat as its own word
-            let nextCharacterAfterCapital = stringKey.index(after: upperCaseRange.lowerBound)
-            if lowerCaseRange.lowerBound == nextCharacterAfterCapital {
-                // The next character after capital is a lower case character and therefore not a word boundary.
-                // Continue searching for the next upper case for the boundary.
-                wordStart = upperCaseRange.lowerBound
-            } else {
-                // There was a range of >1 capital letters. Turn those into a word, stopping at the capital before the lower case character.
-                let beforeLowerIndex = stringKey.index(before: lowerCaseRange.lowerBound)
-                words.append(upperCaseRange.lowerBound..<beforeLowerIndex)
-                
-                // Next word starts at the capital before the lowercase we just found
-                wordStart = beforeLowerIndex
-            }
-            searchRange = lowerCaseRange.upperBound..<searchRange.upperBound
-        }
-        words.append(wordStart..<searchRange.upperBound)
-        let result = words.map({ (range) in
-            return stringKey[range].lowercased()
-        }).joined(separator: "_")
-        return result
-    }
-}
-
 
 
 public final class PostgresNodeDecoder: Decoder {
@@ -488,130 +410,3 @@ public final class PostgresNodeDecoder: Decoder {
         }
     }
 }
-
-
-public final class PostgresEncoder: Encoder {
-    private var result: [(String, NodeRepresentable)] = []
-    private let transformKey: (String) -> String
-    public var codingPath: [CodingKey] { return [] }
-    public var userInfo: [CodingUserInfoKey : Any] { return [:] }
-
-    static func encode(_ value: Encodable, transformKey: @escaping (String) -> String = { $0.snakeCased }) throws -> [(String, NodeRepresentable)] {
-        let encoder = PostgresEncoder(transformKey)
-        try value.encode(to: encoder)
-        return encoder.result
-    }
-    
-    private init(_ transform: @escaping (String) -> String) {
-        self.transformKey = transform
-    }
-    
-    public func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
-        return KeyedEncodingContainer(KEC(encoder: self, transformKey: transformKey))
-    }
-
-    public func unkeyedContainer() -> UnkeyedEncodingContainer {
-        fatalError()
-    }
-    
-    public func singleValueContainer() -> SingleValueEncodingContainer {
-        fatalError()
-    }
-
-    private struct KEC<Key: CodingKey>: KeyedEncodingContainerProtocol {
-        var codingPath: [CodingKey] { return [] }
-        private let transformKey: (String) -> String
-        private let encoder: PostgresEncoder
-        
-        init(encoder: PostgresEncoder, transformKey: @escaping (String) -> String) {
-            self.encoder = encoder
-            self.transformKey = transformKey
-        }
-        
-        mutating func push(_ key: Key, _ value: NodeRepresentable) {
-            encoder.result.append((transformKey(key.stringValue), value))
-        }
-        
-        mutating func encodeNil(forKey key: Key) throws {
-            push(key, Optional<String>.none) // todo is it a good idea to use a string optional?
-        }
-        
-        mutating func encode(_ value: Bool, forKey key: Key) throws {
-            push(key, value)
-        }
-        
-        mutating func encode(_ value: String, forKey key: Key) throws {
-            push(key, value)
-        }
-        
-        mutating func encode(_ value: Double, forKey key: Key) throws {
-            push(key, value)
-        }
-        
-        mutating func encode(_ value: Float, forKey key: Key) throws {
-            push(key, value)
-        }
-        
-        mutating func encode(_ value: Int, forKey key: Key) throws {
-            push(key, value)
-        }
-        
-        mutating func encode(_ value: Int8, forKey key: Key) throws {
-            push(key, value)
-        }
-        
-        mutating func encode(_ value: Int16, forKey key: Key) throws {
-            push(key, value)
-        }
-        
-        mutating func encode(_ value: Int32, forKey key: Key) throws {
-            push(key, value)
-        }
-        
-        mutating func encode(_ value: Int64, forKey key: Key) throws {
-            push(key, value)
-        }
-        
-        mutating func encode(_ value: UInt, forKey key: Key) throws {
-            push(key, value)
-        }
-        
-        mutating func encode(_ value: UInt8, forKey key: Key) throws {
-            push(key, value)
-        }
-        
-        mutating func encode(_ value: UInt16, forKey key: Key) throws {
-            push(key, value)
-        }
-        
-        mutating func encode(_ value: UInt32, forKey key: Key) throws {
-            push(key, value)
-        }
-        
-        mutating func encode(_ value: UInt64, forKey key: Key) throws {
-            push(key, value)
-        }
-        
-        mutating func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
-            guard let n = value as? NodeRepresentable else { fatalError() }
-            push(key, n)
-        }
-        
-        mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
-            fatalError()
-        }
-        
-        mutating func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
-            fatalError()
-        }
-        
-        mutating func superEncoder() -> Encoder {
-            fatalError()
-        }
-        
-        mutating func superEncoder(forKey key: Key) -> Encoder {
-            fatalError()
-        }
-    }
-}
-
