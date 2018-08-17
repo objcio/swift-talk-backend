@@ -20,7 +20,6 @@ struct Amount: Codable {
     var usd: Int
 }
 
-
 struct Plan: Codable {
     enum IntervalUnit: String, Codable {
         case months
@@ -32,6 +31,25 @@ struct Plan: Codable {
     var plan_interval_length: Int
     var plan_interval_unit: IntervalUnit
     var unit_amount_in_cents: Amount
+}
+
+struct Subscription: Codable {
+    enum State: String, Codable {
+        case active, canceled, future, expired
+    }
+    var state: State
+    var activated_at: Date?
+    var expires_at: Date?
+    var current_period_ends_at: Date?
+}
+
+extension Subscription {
+    var activeMonths: UInt {
+        guard let act = activated_at, let end = current_period_ends_at else { return 0 }
+        let toMinusOneDay = Calendar.current.date(byAdding: DateComponents(day: -1), to: end)!
+        let components = Calendar.current.dateComponents([.month], from: act, to: toMinusOneDay)
+        return UInt(components.month!) + 1
+    }
 }
 
 struct Account: Codable {
@@ -107,6 +125,14 @@ struct Recurly {
     
     var listAccounts: RemoteEndpoint<[Account]> {
         return RemoteEndpoint(getXML: base.appendingPathComponent("accounts"), headers: headers, query: [:])
+    }
+    
+    func account(with id: UUID) -> RemoteEndpoint<Account> {
+        return RemoteEndpoint(getXML: base.appendingPathComponent("accounts/\(id.uuidString)"), headers: headers, query: [:])
+    }
+
+    func listSubscriptions(accountId: String) -> RemoteEndpoint<[Subscription]> {
+        return RemoteEndpoint(getXML: base.appendingPathComponent("accounts/\(accountId)/subscriptions"), headers: headers, query: ["per_page": "200"])
     }
 }
 

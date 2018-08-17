@@ -19,6 +19,16 @@ URLSession.shared.load(recurly.plans, callback: { value in
     }
 })
 
+// fetches mail@floriankugler.com account from recurly staging and calculates number of months with an active subscription
+//let myId = UUID(uuidString: "06a5313b-7972-48a9-a0a9-3d7d741afe44")!
+//URLSession.shared.load(recurly.account(with: myId)) { result in
+//    guard let acc = result else { fatalError() }
+//    URLSession.shared.load(recurly.listSubscriptions(accountId: acc.account_code)) { subs in
+//        let months = subs?.map { $0.activeMonths }.reduce(0, +)
+//        print("Months of active subscription: \(months)")
+//    }
+//}
+
 func log(_ e: Error) {
     print(e.localizedDescription, to: &standardError)
 }
