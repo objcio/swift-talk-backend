@@ -120,7 +120,7 @@ extension Route {
         case .episodes:
             return I.write(index(Episode.all.filter { $0.released }, session: session))
         case .home:
-            return .write(LayoutConfig(session: session, contents: renderHome(session: session)).layout, status: .ok)
+            return .write(renderHome(session: session), status: .ok)
         case .sitemap:
             return .write(Route.siteMap)
         case let .staticFile(path: p):

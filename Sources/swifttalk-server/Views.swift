@@ -754,7 +754,7 @@ extension String {
     }
 }
 
-func renderHome(session: Session?) -> [Node] {
+func renderHome(session: Session?) -> Node {
     let header = pageHeader(HeaderContent.other(header: "Swift Talk", blurb: "A weekly video series on Swift programming.", extraClasses: "ms4"))
     let firstEpisode = Episode.all.first!
     let recentEpisodes: Node = .section(classes: "container", [
@@ -789,7 +789,7 @@ func renderHome(session: Session?) -> [Node] {
             Node.li(attributes: ["class": "col width-full s+|width-1/2 l+|width-1/3 mb++"], coll.render())
         })
     ])
-    return [header, recentEpisodes, collections]
+    return LayoutConfig(session: session, contents: [header, recentEpisodes, collections]).layout
 }
 
 extension Episode {
