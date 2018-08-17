@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import HTMLString
 
 struct Class: ExpressibleByStringLiteral {
     var classes: String
@@ -44,7 +45,7 @@ struct El {
 extension Dictionary where Key == String, Value == String {
     var asAttributes: String {
         return isEmpty ? "" : " " + map { (k,v) in
-            "\(k)=\"\(v)\"" // todo escape
+            "\(k)=\"\(v.addingUnicodeEntities)\""
             }.joined(separator: " ")
 
     }

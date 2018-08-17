@@ -894,18 +894,41 @@ func newSub(session: Session?) -> Node {
     // TODO this should have a different layout.
     return LayoutConfig(session: session, contents: [
         .header([
-		.div(classes: "container-h pb+ pt+", [
-                .h1(classes: "ms4 color-blue bold", ["Subscribe to Swift Talk"])
-		])
+            .div(classes: "container-h pb+ pt+", [
+                    .h1(classes: "ms4 color-blue bold", ["Subscribe to Swift Talk"])
+            ])
         ]),
         .div(classes: "container", [
-            // todo real data
-            .raw("""
-<div class="react-component" data-params="{&quot;action&quot;:&quot;/subscription&quot;,&quot;public_key&quot;:&quot;sjc-IML2dEGX2HuQdXtiufmj36&quot;,&quot;plans&quot;:[{&quot;id&quot;:&quot;subscriber&quot;,&quot;base_price&quot;:1500,&quot;interval&quot;:&quot;monthly&quot;},{&quot;id&quot;:&quot;yearly-subscriber&quot;,&quot;base_price&quot;:15000,&quot;interval&quot;:&quot;yearly&quot;}],&quot;payment_errors&quot;:[],&quot;method&quot;:&quot;POST&quot;,&quot;coupon&quot;:{}}" data-component="NewSubscription"></div>
-""")
+            .div(classes: "react-component", attributes: [
+                "data-params": reactData,
+                "data-component": "NewSubscription"
+            ], [])
         ])
     ]).layout
 }
+
+// todo
+let reactData = """
+{
+  "action": "/subscription",
+  "public_key": "sjc-IML2dEGX2HuQdXtiufmj36",
+  "plans": [
+    {
+      "id": "subscriber",
+      "base_price": 1500,
+      "interval": "monthly"
+    },
+    {
+      "id": "yearly-subscriber",
+      "base_price": 15000,
+      "interval": "yearly"
+    }
+  ],
+  "payment_errors": [],
+  "method": "POST",
+  "coupon": {}
+}
+"""
 
 let footer = """
 <footer>
