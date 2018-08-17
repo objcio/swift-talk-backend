@@ -26,7 +26,7 @@ extension Route {
             session = withConnection { connection in
                 guard let c = connection else { return nil }
                 let user = tryOrPrint { try c.execute(UserResult.select(sessionId: sId)) }
-                return user.map { Session(sessionId: sId, user: $0) }
+                return user.map { Session(sessionId: sId, user: $0, csrfToken: "TODO") }
             }
         } else {
             session = nil
@@ -46,7 +46,7 @@ extension Route {
             }
             return .write(c.show(session: session))
         case .newSubscription:
-            return .write("TODO")
+            return I.write(newSub(session: session))
         case .login(let cont):
             // todo take cont into account
             var path = "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(Github.clientId)"

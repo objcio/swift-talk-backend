@@ -180,7 +180,14 @@ extension Node {
     
     static func figure(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         return .node(El(name: "figure", classes: classes, attributes: attributes, children: children))
-    }    
+    }
+
+
+    static func script(src: String) -> Node {
+        return .node(El(name: "script", attributes: [
+            "src": src
+		], children: []))
+    }
     
     static func stylesheet(media: String = "all", href: String) -> Node {
         let attributes = [

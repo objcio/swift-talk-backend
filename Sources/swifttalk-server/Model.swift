@@ -12,6 +12,7 @@ import CommonMark
 struct Session {
     var sessionId: UUID
     var user: UserResult
+    var csrfToken: String = "TODO" // todo
 }
 
 let teamDiscount = 30

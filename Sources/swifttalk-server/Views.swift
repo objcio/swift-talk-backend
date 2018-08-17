@@ -16,7 +16,7 @@ struct LayoutConfig {
     var structuredData: StructuredData?
     var session: Session?
     
-    init(session: Session?, pageTitle: String = "objc.io", contents: [Node], theme: String = "default", preFooter: [Node] = [], footerContent: [Node] = [], structuredData: StructuredData? = nil) {
+    init(session: Session?, pageTitle: String = "objc.io", contents: [Node], theme: String = "default", preFooter: [Node] = [], footerContent: [Node] = [], structuredData: StructuredData? = nil, csrf: String? = nil) {
         self.session = session
         self.pageTitle = pageTitle
         self.contents = contents
@@ -667,14 +667,20 @@ extension Collection {
 
 extension LayoutConfig {
     var layout: Node {
+        let csrf: String? = session?.csrfToken
         let structured: [Node] = structuredData.map { $0.nodes } ?? []
         let head: Node = .head([
             .meta(attributes: ["charset": "utf-8"]),
             .meta(attributes: ["http-equiv": "X-UA-Compatible", "content": "IE=edge"]),
             .meta(attributes: ["name": "viewport", "content": "'width=device-width, initial-scale=1, user-scalable=no'"]),
+        ] + (csrf == nil ? [] : [
+		.meta(attributes: ["name": "csrf-token", "content": "'\(csrf!)'"])
+        ]) +
+            [
             .title(pageTitle),
             // todo rss+atom links
             .stylesheet(href: "/assets/stylesheets/application.css"),
+            .script(src: "/assets/javascripts/application-411354e402c95a5b5383a167ecd6703285d5fef51012a3fad51f8628ec92e84b.js")
             // todo google analytics
             ] + structured)
         let body: Node = .body(attributes: ["class": "theme-" + theme], [ // todo theming classes?
@@ -869,6 +875,23 @@ func smallPrint(coupon: Bool) -> [String] {
         "All prices shown excluding VAT.",
         "VAT only applies to EU customers."
 	]
+}
+
+func newSub(session: Session?) -> Node {
+    // TODO this should have a different layout.
+    return LayoutConfig(session: session, contents: [
+        .header([
+		.div(classes: "container-h pb+ pt+", [
+                .h1(classes: "ms4 color-blue bold", ["Subscribe to Swift Talk"])
+		])
+        ]),
+        .div(classes: "container", [
+            // todo real data
+            .raw("""
+<div class="react-component" data-params="{&quot;action&quot;:&quot;/subscription&quot;,&quot;public_key&quot;:&quot;sjc-IML2dEGX2HuQdXtiufmj36&quot;,&quot;plans&quot;:[{&quot;id&quot;:&quot;subscriber&quot;,&quot;base_price&quot;:1500,&quot;interval&quot;:&quot;monthly&quot;},{&quot;id&quot;:&quot;yearly-subscriber&quot;,&quot;base_price&quot;:15000,&quot;interval&quot;:&quot;yearly&quot;}],&quot;payment_errors&quot;:[],&quot;method&quot;:&quot;POST&quot;,&quot;coupon&quot;:{}}" data-component="NewSubscription"></div>
+""")
+        ])
+    ]).layout
 }
 
 let footer = """
