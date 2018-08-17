@@ -9,6 +9,8 @@ let package = Package(
                  from: "1.5.0"),
 		.package(url: "https://github.com/vapor-community/postgresql.git", .exact("2.1.2")),
         .package(url: "https://github.com/chriseidhof/commonmark-swift", .branch("master")),
+        .package(url:"https://github.com/PerfectlySoft/Perfect-XML.git", .exact("3.1.3"))
+
     ],
     targets: [
         .target(
@@ -18,6 +20,7 @@ let package = Package(
                 "NIOHTTP1",
 				"PostgreSQL",
                 "CommonMark",
+                "PerfectXML"
 		]),
     ]
 )
