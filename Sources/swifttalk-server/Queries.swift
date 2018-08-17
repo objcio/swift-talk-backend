@@ -82,7 +82,7 @@ struct UserResult: Codable {
 }
 
 extension UserResult {
-    static func query(withGithubId id: Int) -> Query<UserResult?> {
+    static func select(githubId id: Int) -> Query<UserResult?> {
         let fields = UserData.fieldNames.joined(separator: ",")
         let query = "SELECT id,\(fields) FROM \(UserData.tableName) WHERE github_uid = $1"
         return Query(query: query, values: [id], parse: { node in
@@ -91,7 +91,7 @@ extension UserResult {
         })
     }
     
-    static func query(withSessionId id: UUID) -> Query<UserResult?> {
+    static func select(sessionId id: UUID) -> Query<UserResult?> {
         let fields = UserData.fieldNames.map { "u.\($0)" }.joined(separator: ",")
         let query = "SELECT u.id,\(fields) FROM \(UserData.tableName) AS u INNER JOIN \(SessionData.tableName) AS s ON s.user_id = u.id WHERE s.id = $1"
         return Query(query: query, values: [id], parse: { node in

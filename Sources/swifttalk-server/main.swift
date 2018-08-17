@@ -25,7 +25,7 @@ extension MyRoute {
         if let sId = sessionId {
             session = withConnection { connection in
                 guard let c = connection else { return nil }
-                let user = tryOrPrint { try c.execute(UserResult.query(withSessionId: sId)) }
+                let user = tryOrPrint { try c.execute(UserResult.select(sessionId: sId)) }
                 return user.map { Session(sessionId: sId, user: $0) }
             }
         } else {
@@ -76,7 +76,7 @@ extension MyRoute {
                             guard let c = conn else { return .write("No database connection") }
                             // todo ask for email if we don't get it
                             let uid: UUID
-                            if let user = try c.execute(UserResult.query(withGithubId: p.id)) {
+                            if let user = try c.execute(UserResult.select(githubId: p.id)) {
                                 uid = user.id
                                 print("Found existing user: \(user)")
                             } else {
