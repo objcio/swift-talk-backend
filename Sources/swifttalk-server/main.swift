@@ -19,6 +19,10 @@ URLSession.shared.load(recurly.plans, callback: { value in
     }
 })
 
+func log(_ e: Error) {
+    print(e.localizedDescription, to: &standardError)
+}
+
 extension Route {
     func interpret<I: Interpreter>(sessionId: UUID?) -> I {
         let session: Session?
@@ -39,7 +43,16 @@ extension Route {
         case .imprint:
             return .write("TODO")
         case .subscribe:
-            return I.write(plans.subscribe(session: session))
+            do {
+                return try I.write(plans.subscribe(session: session))
+            } catch {
+                log(error)
+                if let e = error as? RenderingError {
+                    return I.write(e.publicMessage, status: .internalServerError)
+                } else {
+                    return I.write("Something went wrong", status: .internalServerError)
+                }
+            }
         case .collection(let name):
             guard let c = Collection.all.first(where: { $0.slug == name }) else {
                 return I.notFound("No such collection")

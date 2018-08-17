@@ -803,14 +803,25 @@ extension Double {
         return floor(self) == self
     }
 }
+
+struct RenderingError: Error {
+    let privateMessage: String
+    let publicMessage: String
+}
+
 extension Array where Element == Plan {
-    var monthly: Plan {
-        return self.first(where: { $0.plan_interval_unit == .months && $0.plan_interval_length == 1 })!
+    var monthly: Plan? {
+        return first(where: { $0.plan_interval_unit == .months && $0.plan_interval_length == 1 })
     }
-    var yearly: Plan {
-        return self.first(where: { $0.plan_interval_unit == .months && $0.plan_interval_length == 12 })!
+    var yearly: Plan? {
+        return first(where: { $0.plan_interval_unit == .months && $0.plan_interval_length == 12 })
     }
-    func subscribe(session: Session?, coupon: String? = nil) -> Node {
+    
+    func subscribe(session: Session?, coupon: String? = nil) throws -> Node {
+        guard let monthly = self.monthly, let yearly = self.yearly else {
+            throw RenderingError(privateMessage: "Can't find monthly or yearly plan: \([plans])", publicMessage: "Something went wrong, please try again later")
+        }
+        
         assert(coupon == nil) // todo
         func node(plan: Plan, title: String) -> Node {
             let amount = Double(plan.unit_amount_in_cents.usd) / 100
