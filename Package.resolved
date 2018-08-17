@@ -12,7 +12,7 @@
       },
       {
         "package": "Ccmark",
-        "repositoryURL": "https://github.com/chriseidhof/Ccmark.git",
+        "repositoryURL": "git@github.com:chriseidhof/Ccmark.git",
         "state": {
           "branch": null,
           "revision": "f1baba3429aeb6fe2acabc92309cb7a756250b30",
