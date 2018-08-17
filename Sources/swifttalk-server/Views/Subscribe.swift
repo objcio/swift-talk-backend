@@ -108,7 +108,13 @@ func smallPrint(coupon: Bool) -> [String] {
     ]
 }
 
-func newSub(session: Session?) -> Node {
+func newSub(session: Session?) throws -> Node {
+    guard let m = plans.monthly, let y = plans.yearly else {
+        throw RenderingError(privateMessage: "No monthly or yearly plan: \(plans)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
+    }
+    let data = NewSubscriptionData(action: "/subscription", public_key: env["RECURLY_PUBLIC_KEY"], plans: [
+        .init(m), .init(y)
+        ], payment_errors: [], method: .post, coupon: .init())
     // TODO this should have a different layout.
     return LayoutConfig(session: session, contents: [
         .header([
@@ -118,11 +124,50 @@ func newSub(session: Session?) -> Node {
             ]),
         .div(classes: "container", [
             .div(classes: "react-component", attributes: [
-                "data-params": reactData,
+                "data-params": json(data),
                 "data-component": "NewSubscription"
                 ], [])
             ])
         ]).layout
+}
+
+func json<A: Encodable>(_ value: A) -> String {
+    let encoder = JSONEncoder()
+//    encoder.keyEncodingStrategy = .convertToSnakeCase // TODO doesn't compile on Linux (?)
+    return try! String(data: encoder.encode(value), encoding: .utf8)!
+}
+
+extension Plan {
+    var prettyInterval: String {
+        switch  plan_interval_unit {
+        case .months where plan_interval_length == 1:
+            return "monthly"
+        case .months where plan_interval_length == 12:
+            return "yearly"
+        default:
+            return "every \(plan_interval_length) \(plan_interval_unit.rawValue)"
+        }
+    }
+}
+struct NewSubscriptionData: Codable {
+    struct SubscriptionPlan: Codable {
+        var id: String
+        var base_price: Int
+        var interval: String
+        
+        init(_ plan: Plan) {
+            id = plan.plan_code
+            base_price = plan.unit_amount_in_cents.usd
+            interval = plan.prettyInterval
+        }
+    }
+    struct Coupon: Codable { }
+    var action: String = "/subscription" // todo use URL
+    var public_key: String = env["RECURLY_PUBLIC_KEY"]
+    var plans: [SubscriptionPlan]
+    var payment_errors: [String] // TODO verify type
+    var method: HTTPMethod = .post
+    var coupon: Coupon
 }
 
 // todo

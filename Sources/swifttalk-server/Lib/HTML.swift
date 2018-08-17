@@ -66,7 +66,7 @@ extension El {
 extension Node {
     var render: String {
         switch self {
-        case .text(let s): return s // todo escape
+        case .text(let s): return s.addingASCIIEntities
         case .raw(let s): return s
         case .node(let n): return n.render
         }

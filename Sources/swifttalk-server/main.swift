@@ -61,7 +61,7 @@ extension Route {
             }
             return .write(c.show(session: session))
         case .newSubscription:
-            return I.write(newSub(session: session))
+            return try I.write(newSub(session: session))
         case .login(let cont):
             // todo take cont into account
             var path = "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(Github.clientId)"

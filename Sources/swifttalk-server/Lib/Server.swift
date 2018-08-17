@@ -10,7 +10,7 @@ import NIO
 import NIOHTTP1
 
 
-enum HTTPMethod: String {
+enum HTTPMethod: String, Codable {
     case post = "POST"
     case get = "GET"
 }
