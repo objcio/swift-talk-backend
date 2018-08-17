@@ -9,8 +9,8 @@ import Foundation
 import CommonMark
 
 extension Node {
-    static func link(to: MyRoute, _ children: [Node], classes: Class? = nil, attributes: [String:String] = [:]) -> Node {
-        return Node.a(classes: classes, attributes: attributes, children, href: routes.print(to)!.prettyPath)
+    static func link(to route: Route, _ children: [Node], classes: Class? = nil, attributes: [String:String] = [:]) -> Node {
+        return Node.a(classes: classes, attributes: attributes, children, href: route.path)
     }
     
     static func inlineSvg(path: String, preserveAspectRatio: String? = nil, classes: Class? = nil, attributes: [String:String] = [:]) -> Node {

@@ -33,7 +33,7 @@ extension Optional where Wrapped == Session {
     }
 }
 
-let navigationItems: [(MyRoute, String)] = [
+let navigationItems: [(Route, String)] = [
     (.home, "Swift Talk"), // todo
     (.books, "Books"),
     (.issues, "Issues")
@@ -43,7 +43,7 @@ let navigationItems: [(MyRoute, String)] = [
 enum HeaderContent {
     case node(Node)
     case other(header: String, blurb: String?, extraClasses: Class)
-    case link(header: String, backlink: MyRoute, label: String)
+    case link(header: String, backlink: Route, label: String)
     
     var asNode: [Node] {
         switch self {
@@ -201,7 +201,7 @@ extension Episode {
         
         let coll: [Node]
         if options.collection, let collection = primaryCollection {
-            coll = [Node.link(to: MyRoute.collection(collection.slug), [.text(collection.title)], attributes: [
+            coll = [Node.link(to: Route.collection(collection.slug), [.text(collection.title)], attributes: [
                 "class": "inline-block no-decoration color-blue hover-underline mb--" + (options.featured ? "" : " ms-1")
             ])]
         } else { coll = [] }
@@ -593,7 +593,7 @@ let subscriptionPitch: String = """
     <h3 class="mb-- bold lh-125">This episode is freely available thanks to the support of our subscribers</h3>
     <p class="lh-135">
     <span class="opacity-60">Subscribers get exclusive access to new and all previous subscriber-only episodes, video downloads, and 30% discount for team members.</span>
-<a href="\(routes.print(.subscribe)!.prettyPath)" class="color-blue no-decoration hover-cascade">
+<a href="\(Route.subscribe.path)" class="color-blue no-decoration hover-cascade">
     <span class="hover-cascade__border-bottom">Become a Subscriber</span> <span class="bold">&rarr;</span>
 </a>
     </p>
@@ -711,7 +711,7 @@ func userHeader(_ session: Session?) -> Node {
         .link(to: .subscribe, [.text("Subscribe")], classes: "button button--tight button--themed fz-nav")
     ])
     
-    func link(to route: MyRoute, text: String) -> Node {
+    func link(to route: Route, text: String) -> Node {
         return .li(classes: "flex ml+", [
             .link(to: route, [.text(text)], classes: "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration")
         ])
@@ -828,7 +828,7 @@ extension Array where Element == Plan {
             continueLink = Node.link(to: .newSubscription, ["Proceed to payment"], classes: linkClasses)
         } else {
             // todo continue to .newSubscription
-            continueLink = Node.link(to: .login(continue: routes.print(.newSubscription)!.prettyPath), ["Sign in with Github"], classes: linkClasses)
+            continueLink = Node.link(to: .login(continue: Route.newSubscription.path), ["Sign in with Github"], classes: linkClasses)
         }
         let contents: [Node] = [
             pageHeader(.other(header: "Subscribe to Swift Talk", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),

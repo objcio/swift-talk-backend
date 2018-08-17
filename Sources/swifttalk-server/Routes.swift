@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum MyRoute: Equatable {
+enum Route: Equatable {
     case home
     case books
     case issues
@@ -27,40 +27,60 @@ enum MyRoute: Equatable {
     case staticFile(path: [String])
 }
 
-extension Array where Element == Route<MyRoute> {
-    func choice() -> Route<MyRoute> {
+extension Route {
+    var path: String {
+        return router.print(self)!.prettyPath
+    }
+    
+    static var siteMap: String {
+        return router.description.pretty
+    }
+    
+    init?(_ request: Request) {
+        guard let route = router.route(for: request) else { return nil }
+        self = route
+    }
+}
+
+func inWhitelist(_ path: [String]) -> Bool {
+    return !path.contains("..")
+}
+
+
+private extension Array where Element == Router<Route> {
+    func choice() -> Router<Route> {
         assert(!isEmpty)
         return dropFirst().reduce(self[0], { $0.or($1) })
     }
 }
 
-let episode: Route<MyRoute> = (Route<()>.c("episodes") / .string()).transform({ MyRoute.episode(Slug(rawValue: $0)) }, { r in
+private let episode: Router<Route> = (Router<()>.c("episodes") / .string()).transform({ Route.episode(Slug(rawValue: $0)) }, { r in
     guard case let .episode(num) = r else { return nil }
     return num.rawValue
 })
 
-let collection: Route<MyRoute> = (Route<()>.c("collections") / .string()).transform({ MyRoute.collection(Slug(rawValue: $0)) }, { r in
+private let collection: Router<Route> = (Router<()>.c("collections") / .string()).transform({ Route.collection(Slug(rawValue: $0)) }, { r in
     guard case let .collection(name) = r else { return nil }
     return name.rawValue
 })
 
-let callbackRoute: Route<MyRoute> = .c("users") / .c("auth") / .c("github") / .c("callback") / ((Route<String>.queryParam(name: "code") / Route.optionalQueryParam(name: "origin")).transform({ MyRoute.githubCallback($0.0, origin: $0.1) }, { r in
+private let callbackRoute: Router<Route> = .c("users") / .c("auth") / .c("github") / .c("callback") / ((Router<String>.queryParam(name: "code") / Router.optionalQueryParam(name: "origin")).transform({ Route.githubCallback($0.0, origin: $0.1) }, { r in
     guard case let .githubCallback(x, y) = r else { return nil }
     return (x,y)
 }))
 
-let assetsRoute: Route<MyRoute> = (.c("assets") / .path()).transform({ MyRoute.staticFile(path:$0) }, { r in
+private let assetsRoute: Router<Route> = (.c("assets") / .path()).transform({ Route.staticFile(path:$0) }, { r in
     guard case let .staticFile(path) = r else { return nil }
     return path
 })
 
-let loginRoute: Route<MyRoute> = (.c("users") / .c("auth") / .c("github") / Route.optionalQueryParam(name: "origin")).transform({ MyRoute.login(continue: $0)}, { r in
+private let loginRoute: Router<Route> = (.c("users") / .c("auth") / .c("github") / Router.optionalQueryParam(name: "origin")).transform({ Route.login(continue: $0)}, { r in
     guard case .login(let x) = r else { return nil }
     return x
 })
 
-let routes: Route<MyRoute> = [
-    Route(.home),
+private let router: Router<Route> = [
+    Router(.home),
     .c("version", .version),
     .c("books", .books), // todo absolute url
     .c("issues", .issues), // todo absolute url
@@ -77,8 +97,5 @@ let routes: Route<MyRoute> = [
     .c("collections", .collections),
     episode,
     collection
-    ].choice()
+].choice()
 
-func inWhitelist(_ path: [String]) -> Bool {
-    return !path.contains("..")
-}

@@ -9,6 +9,21 @@ import Foundation
 import NIO
 import NIOHTTP1
 
+
+enum HTTPMethod: String {
+    case post = "POST"
+    case get = "GET"
+}
+
+struct Request {
+    var path: [String]
+    var query: [String:String]
+    var method: HTTPMethod
+    var cookies: [(String, String)]
+    var body: Data?
+}
+
+
 protocol Interpreter {
     static func write(_ string: String, status: HTTPResponseStatus, headers: [String: String]) -> Self
     static func writeFile(path: String) -> Self
@@ -43,6 +58,10 @@ extension Interpreter {
     
     static func redirect(path: String) -> Self {
         return .redirect(path: path, headers: [:])
+    }
+    
+    static func redirect(to route: Route, headers: [String: String] = [:]) -> Self {
+        return .redirect(path: route.path, headers: headers)
     }
 }
 

@@ -19,7 +19,7 @@ URLSession.shared.load(recurly.plans, callback: { value in
     }
 })
 
-extension MyRoute {
+extension Route {
     func interpret<I: Interpreter>(sessionId: UUID?) -> I {
         let session: Session?
         if let sId = sessionId {
@@ -52,7 +52,7 @@ extension MyRoute {
             var path = "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(Github.clientId)"
             if let c = cont {
                 let baseURL = env["BASE_URL"]
-                path.append("&redirect_uri=\(baseURL)" + routes.print(.githubCallback("", origin: c.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!))!.prettyPath)
+                path.append("&redirect_uri=\(baseURL)" + Route.githubCallback("", origin: c.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!).path)
             }
             print(path)
             return I.redirect(path: path)
@@ -62,7 +62,7 @@ extension MyRoute {
                 if let s = session {
                     tryOrPrint { try c.execute(s.user.deleteSession(s.sessionId)) }
                 }
-                return I.redirect(path: routes.print(.home)!.prettyPath)
+                return I.redirect(to: .home)
             }
         case .githubCallback(let code, let origin):
             return I.onComplete(promise:
@@ -117,7 +117,7 @@ extension MyRoute {
         case .home:
             return .write(LayoutConfig(session: session, contents: renderHome(session: session)).layout, status: .ok)
         case .sitemap:
-            return .write(siteMap(routes))
+            return .write(Route.siteMap)
         case let .staticFile(path: p):
             guard inWhitelist(p) else {
                 return .write("forbidden", status: .forbidden)
@@ -130,10 +130,6 @@ extension MyRoute {
     }
 }
 
-func siteMap<A>(_ routes: Route<A>) -> String {
-    return routes.description.pretty
-}
-
 let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
 let resourcePaths = [currentDir.appendingPathComponent("assets"), currentDir.appendingPathComponent("node_modules")]
 
@@ -141,10 +137,10 @@ runMigrations()
 loadStaticData()
 
 let s = MyServer(handle: { request in
-    let route = routes.runParse(request)
+    guard let route = Route(request) else { return nil }
     let sessionString = request.cookies.first { $0.0 == "sessionid" }?.1
     let sessionId = sessionString.flatMap { UUID(uuidString: $0) }
-    return route?.interpret(sessionId: sessionId)
+    return route.interpret(sessionId: sessionId)
 }, resourcePaths: resourcePaths)
 try s.listen()
 

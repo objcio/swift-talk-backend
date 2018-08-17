@@ -13,8 +13,7 @@ extension Array where Element == URL {
     }
 }
 
-func absoluteURL(_ route: MyRoute) -> URL? {
-    guard let p = routes.print(route)?.prettyPath else { return nil }
-    return URL(string: "https://www.objc.io" + p)
+func absoluteURL(_ route: Route) -> URL? {
+    return URL(string: "https://www.objc.io" + route.path)
 }
 
