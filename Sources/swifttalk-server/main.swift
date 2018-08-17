@@ -24,7 +24,7 @@ func log(_ e: Error) {
 }
 
 extension Route {
-    func interpret<I: Interpreter>(sessionId: UUID?) -> I {
+    func interpret<I: Interpreter>(sessionId: UUID?) throws -> I {
         let session: Session?
         if let sId = sessionId {
             session = withConnection { connection in
@@ -43,18 +43,10 @@ extension Route {
         case .imprint:
             return .write("TODO")
         case .subscribe:
-            do {
-                return try I.write(plans.subscribe(session: session))
-            } catch {
-                log(error)
-                if let e = error as? RenderingError {
-                    return I.write(e.publicMessage, status: .internalServerError)
-                } else {
-                    return I.write("Something went wrong", status: .internalServerError)
-                }
-            }
+            return try I.write(plans.subscribe(session: session))
         case .collection(let name):
             guard let c = Collection.all.first(where: { $0.slug == name }) else {
+                // todo throw
                 return I.notFound("No such collection")
             }
             return .write(c.show(session: session))
@@ -153,7 +145,16 @@ let s = MyServer(handle: { request in
     guard let route = Route(request) else { return nil }
     let sessionString = request.cookies.first { $0.0 == "sessionid" }?.1
     let sessionId = sessionString.flatMap { UUID(uuidString: $0) }
-    return route.interpret(sessionId: sessionId)
+    do {
+    	return try route.interpret(sessionId: sessionId)
+    } catch {
+    	log(error)
+        if let e = error as? RenderingError {
+    	    return .write(e.publicMessage, status: .internalServerError)
+        } else {
+        	return .write("Something went wrong", status: .internalServerError)
+        }
+    }
 }, resourcePaths: resourcePaths)
 try s.listen()
 

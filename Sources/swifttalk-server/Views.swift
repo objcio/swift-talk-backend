@@ -805,7 +805,9 @@ extension Double {
 }
 
 struct RenderingError: Error {
+    /// Private message for logging
     let privateMessage: String
+    /// Message shown to the user
     let publicMessage: String
 }
 
