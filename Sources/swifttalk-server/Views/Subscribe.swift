@@ -112,7 +112,7 @@ func newSub(session: Session?) throws -> Node {
     guard let m = plans.monthly, let y = plans.yearly else {
         throw RenderingError(privateMessage: "No monthly or yearly plan: \(plans)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
     }
-    let data = NewSubscriptionData(action: "/subscription", public_key: env["RECURLY_PUBLIC_KEY"], plans: [
+    let data = NewSubscriptionData(action: Route.createSubscription.path, public_key: env["RECURLY_PUBLIC_KEY"], plans: [
         .init(m), .init(y)
         ], payment_errors: [], method: .post, coupon: .init())
     // TODO this should have a different layout.
@@ -162,8 +162,8 @@ struct NewSubscriptionData: Codable {
         }
     }
     struct Coupon: Codable { }
-    var action: String = "/subscription" // todo use URL
-    var public_key: String = env["RECURLY_PUBLIC_KEY"]
+    var action: String
+    var public_key: String
     var plans: [SubscriptionPlan]
     var payment_errors: [String] // TODO verify type
     var method: HTTPMethod = .post

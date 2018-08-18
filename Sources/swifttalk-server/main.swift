@@ -52,6 +52,8 @@ extension Route {
             return I.write(index(Collection.all, session: session))
         case .imprint:
             return .write("TODO")
+        case .createSubscription:
+            return try I.write("TODO")
         case .subscribe:
             return try I.write(plans.subscribe(session: session))
         case .collection(let name):
