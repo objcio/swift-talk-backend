@@ -7,6 +7,7 @@ indirect enum RouteDescription {
     case joined(RouteDescription, RouteDescription)
     case choice(RouteDescription, RouteDescription)
     case empty
+    case body
     case any
 }
 
@@ -40,6 +41,7 @@ extension RouteDescription {
         case .parameter(let p): return ":\(p)"
         case .any: return "*"
         case .empty: return ""
+        case .body: return "<post body>"
         case let .queryParameter(name): return "?\(name)=*"
         case let .joined(lhs, rhs): return lhs.pretty + "/" + rhs.pretty
         case let .choice(lhs, rhs): return "choice(\(lhs.pretty), \(rhs.pretty))"
@@ -86,6 +88,18 @@ extension Router where A == () {
 extension Router where A == Int {
     static func int() -> Router<Int> {
         return Router<String>.string().transform(Int.init, { "\($0)"}, { _ in .parameter("int") })
+    }
+}
+
+extension Router where A == Data {
+    static func body() -> Router<Data> {
+        return Router<Data>(parse: { req in
+            guard let r = req.body else { return nil }
+            req.body = nil
+            return r
+        }, print: { p in
+            return Endpoint(path: [])
+        }, description: .body)
     }
 }
 

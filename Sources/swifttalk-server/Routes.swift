@@ -19,7 +19,7 @@ enum Route: Equatable {
     case collections
     case login(continue: String?)
     case logout
-    case createSubscription // .subscription(.create) (TODO should be a post)
+    case createSubscription(Data) // .subscription(.create) (TODO should be a post)
     case newSubscription // .subscription(.new)
     case accountBilling // account(.billing)
     case githubCallback(String, origin: String?)
@@ -80,6 +80,11 @@ private let loginRoute: Router<Route> = (.c("users") / .c("auth") / .c("github")
     return x
 })
 
+private let createSubRoute: Router<Route> = (.c("subscription") / Router.body()).transform({ .createSubscription($0)}, { c in
+    guard case let Route.createSubscription(d) = c else { return nil }
+    return d
+})
+
 private let router: Router<Route> = [
     Router(.home),
     .c("version", .version),
@@ -90,7 +95,7 @@ private let router: Router<Route> = [
     .c("subscribe", .subscribe),
     .c("imprint", .imprint),
     .c("subscription") / .c("new", .newSubscription),
-    .c("subscription", .createSubscription),
+    createSubRoute,
     .c("account") / .c("billing", .accountBilling),
     loginRoute,
     .c("logout", .logout),

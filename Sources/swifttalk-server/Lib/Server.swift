@@ -8,6 +8,7 @@
 import Foundation
 import NIO
 import NIOHTTP1
+import NIOFoundationCompat
 
 
 enum HTTPMethod: String, Codable {
@@ -24,6 +25,7 @@ struct Request {
 }
 
 
+// todo: we could have a method `withBody(cont: (Data) -> Self) -> Self`, and not parse the body in the Request.
 protocol Interpreter {
     static func write(_ string: String, status: HTTPResponseStatus, headers: [String: String]) -> Self
     static func writeFile(path: String) -> Self
@@ -189,11 +191,15 @@ extension HTTPMethod {
     }
 }
 
+
+
 final class RouteHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPServerRequestPart
     typealias OutboundOut = HTTPServerResponsePart
     let handle: (Request) -> NIOInterpreter?
     let paths: [URL]
+    var r: Request!
+    var header: HTTPRequestHead!
     
     let fileIO: NonBlockingFileIO
     init(_ fileIO: NonBlockingFileIO, resourcePaths: [URL], handle: @escaping (Request) -> NIOInterpreter?) {
@@ -206,20 +212,27 @@ final class RouteHandler: ChannelInboundHandler {
         let reqPart = unwrapInboundIn(data)
         switch reqPart {
         case .head(let header):
+            self.header = header
             let (path, query) = header.uri.parseQuery
             let cookies = header.headers["Cookie"].first.map {
                 $0.split(separator: ";").compactMap { $0.trimmingCharacters(in: .whitespaces).keyAndValue }
             } ?? []
-            let r = Request(path: path.split(separator: "/").map(String.init), query: query, method: .init(header.method), cookies: cookies, body: nil)
-            let env = NIOInterpreter.Deps(header: header, ctx: ctx, fileIO: fileIO, handler: self, manager: FileManager.default, resourcePaths: paths)
+            r = Request(path: path.split(separator: "/").map(String.init), query: query, method: .init(header.method), cookies: cookies, body: nil)
+        case .body(var b):
+            if r.body == nil {
+                r.body = Data()
+            }
+            if let d = b.readData(length: b.readableBytes) {
+                r.body?.append(d)
+            }
+        case .end:
+            let env = NIOInterpreter.Deps(header: header!, ctx: ctx, fileIO: fileIO, handler: self, manager: FileManager.default, resourcePaths: paths)
             if let i = handle(r) {
                 i.run(env)
             } else {
-                print("Not found: \(header.uri)")
+                print("Not found: \(header!.uri)")
                 NIOInterpreter.write("Not found: \(header.uri)").run(env)
             }
-        case .body, .end:
-            break
         }
     }
 }
