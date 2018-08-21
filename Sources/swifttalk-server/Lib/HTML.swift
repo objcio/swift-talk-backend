@@ -6,7 +6,32 @@
 //
 
 import Foundation
-import HTMLString
+
+// This extension is from HTMLString: https://github.com/alexaubry/HTMLString
+extension UnicodeScalar {
+    /// Returns the decimal HTML entity for this Unicode scalar.
+    public var htmlEscaped: String {
+        return "&#" + String(value) + ";"
+    }
+    
+    /// Escapes the scalar only if it needs to be escaped for Unicode pages.
+    ///
+    /// [Reference](http://wonko.com/post/html-escaping)
+    fileprivate var escapingIfNeeded: String {
+        switch value {
+        case 33, 34, 36, 37, 38, 39, 43, 44, 60, 61, 62, 64, 91, 93, 96, 123, 125: return htmlEscaped
+        default: return String(self)
+        }
+        
+    }    
+}
+
+
+extension String {
+    var addingUnicodeEntities: String {
+        return unicodeScalars.reduce(into: "", { $0.append($1.escapingIfNeeded) })
+    }
+}
 
 struct Class: ExpressibleByStringLiteral {
     var classes: String

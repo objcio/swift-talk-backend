@@ -99,8 +99,7 @@ extension Route {
                         
                     }
                 }
-            })
-            
+            })            
         case .subscribe:
             return try I.write(plans.subscribe(session: session))
         case .collection(let name):
