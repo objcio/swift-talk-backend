@@ -169,27 +169,3 @@ struct NewSubscriptionData: Codable {
     var method: HTTPMethod = .post
     var coupon: Coupon
 }
-
-// todo
-let reactData = """
-{
-"action": "/subscription",
-"public_key": "sjc-IML2dEGX2HuQdXtiufmj36",
-"plans": [
-{
-"id": "subscriber",
-"base_price": 1500,
-"interval": "monthly"
-},
-{
-"id": "yearly-subscriber",
-"base_price": 15000,
-"interval": "yearly"
-}
-],
-"payment_errors": [],
-"method": "POST",
-"coupon": {}
-}
-"""
-
