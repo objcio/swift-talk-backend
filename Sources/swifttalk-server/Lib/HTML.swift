@@ -52,28 +52,45 @@ extension Dictionary where Key == String, Value == String {
 }
 
 extension El {
-    var render: String {
+    func render(encodeText: (String) -> String) -> String {
         let atts: String = attributes.asAttributes
         if children.isEmpty && !block {
             return "<\(name)\(atts) />"
         } else if block {
-            return "<\(name)\(atts)>\n" + children.map { $0.render }.joined(separator: "\n") + "\n</\(name)>"
+            return "<\(name)\(atts)>\n" + children.map { $0.render(encodeText: encodeText) }.joined(separator: "\n") + "\n</\(name)>"
         } else {
-            return "<\(name)\(atts)>" + children.map { $0.render }.joined(separator: "") + "</\(name)>"
+            return "<\(name)\(atts)>" + children.map { $0.render(encodeText: encodeText) }.joined(separator: "") + "</\(name)>"
         }
     }
 }
 extension Node {
-    var render: String {
+    func render(encodeText: (String) -> String = { $0.addingUnicodeEntities }) -> String {
         switch self {
-        case .text(let s): return s.addingASCIIEntities
+        case .text(let s): return encodeText(s)
         case .raw(let s): return s
-        case .node(let n): return n.render
+        case .node(let n): return n.render(encodeText: encodeText)
         }
     }
     
-    var document: String {
-        return ["<!DOCTYPE html>", render].joined(separator: "\n")
+    var htmlDocument: String {
+        return ["<!DOCTYPE html>", render()].joined(separator: "\n")
+    }
+    
+    var xmlDocument: String {
+        return ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>", render(encodeText: { $0.xmlString })].joined(separator: "\n")
+    }
+}
+
+extension String {
+    var xmlString: String {
+        // todo this is not efficient!
+        var result = self
+        result = result.replacingOccurrences(of: "&", with: "&amp") // this has to happen first to prevent double escaping...
+        let entities = ["\"": "&quot;", "'": "&apos;", "<": "&lt;", ">": "&gt;"]
+        for (key,value) in entities {
+            result = result.replacingOccurrences(of: key, with: value)
+        }
+        return result
     }
 }
 

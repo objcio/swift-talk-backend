@@ -108,13 +108,13 @@ func smallPrint(coupon: Bool) -> [String] {
     ]
 }
 
-func newSub(session: Session?) throws -> Node {
+func newSub(session: Session?, errs: [String]) throws -> Node {
     guard let m = plans.monthly, let y = plans.yearly else {
         throw RenderingError(privateMessage: "No monthly or yearly plan: \(plans)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
     }
-    let data = NewSubscriptionData(action: Route.createSubscription(Data()).path, public_key: env["RECURLY_PUBLIC_KEY"], plans: [
+    let data = NewSubscriptionData(action: Route.createSubscription(planId: "", billingInfoToken: "").path, public_key: env["RECURLY_PUBLIC_KEY"], plans: [
         .init(m), .init(y)
-        ], payment_errors: [], method: .post, coupon: .init())
+    ], payment_errors: errs, method: .post, coupon: .init())
     // TODO this should have a different layout.
     return LayoutConfig(session: session, contents: [
         .header([

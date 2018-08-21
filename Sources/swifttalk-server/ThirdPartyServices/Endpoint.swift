@@ -34,14 +34,18 @@ struct RemoteEndpoint<A> {
         self.parse = parse
     }
     
-    init(post: URL, accept: String? = nil, query: [String:String], parse: @escaping (Data) -> A?) {
+    init(post: URL, accept: Accept? = nil, body: Data? = nil, headers: [String:String] = [:], query: [String:String], parse: @escaping (Data) -> A?) {
         var comps = URLComponents(string: post.absoluteString)!
         comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
         request = URLRequest(url: comps.url!)
         request.httpMethod = "POST"
+        request.httpBody = body
 
         if let a = accept {
-            request.setValue(a, forHTTPHeaderField: "Accept")
+            request.setValue(a.rawValue, forHTTPHeaderField: "Accept")
+        }
+        for (key, value) in headers {
+            request.setValue(value, forHTTPHeaderField: key)
         }
         self.parse = parse
     }

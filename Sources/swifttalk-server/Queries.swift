@@ -103,6 +103,10 @@ extension UserResult {
     func deleteSession(_ sessionId: UUID) -> Query<()> {
         return Query(query: "DELETE FROM \(SessionData.tableName) where user_id = $1 AND id = $2", values: [id, sessionId], parse: { _ in })
     }
+    
+    func changeSubscriptionStatus(_ subscribed: Bool) -> Query<()> {
+        return Query(query: "UPDATE USERS SET subscriber = $1 where id = $2", values: [subscribed, id], parse: { _ in () })
+    }
 }
 
 

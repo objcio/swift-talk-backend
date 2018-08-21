@@ -55,7 +55,7 @@ extension Interpreter {
     }
 
     static func write(_ html: Node, status: HTTPResponseStatus = .ok) -> Self {
-        return .write(html.document)
+        return .write(html.htmlDocument)
     }
     
     static func redirect(path: String) -> Self {

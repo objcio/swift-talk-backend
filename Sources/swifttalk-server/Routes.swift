@@ -19,7 +19,8 @@ enum Route: Equatable {
     case collections
     case login(continue: String?)
     case logout
-    case createSubscription(Data) // .subscription(.create) (TODO should be a post)
+    case thankYou
+    case createSubscription(planId: String, billingInfoToken: String) // .subscription(.create) (TODO should be a post)
     case newSubscription // .subscription(.new)
     case accountBilling // account(.billing)
     case githubCallback(String, origin: String?)
@@ -30,7 +31,12 @@ enum Route: Equatable {
 
 extension Route {
     var path: String {
-        return router.print(self)!.prettyPath
+        
+        guard let result = router.print(self)?.prettyPath else {
+            log(error: "Couldn't print path for \(self)")
+            return ""
+        }
+        return result
     }
     
     static var siteMap: String {
@@ -80,9 +86,9 @@ private let loginRoute: Router<Route> = (.c("users") / .c("auth") / .c("github")
     return x
 })
 
-private let createSubRoute: Router<Route> = (.c("subscription") / Router.body()).transform({ .createSubscription($0)}, { c in
-    guard case let Route.createSubscription(d) = c else { return nil }
-    return d
+private let createSubRoute: Router<Route> = (.c("subscription") / Router.postParam(name: "plan_id") / Router.postParam(name: "billing_info[token]")).transform({ .createSubscription(planId: $0.0, billingInfoToken: $0.1)}, { c in
+    guard case let Route.createSubscription(x,y) = c else { return nil }
+    return (x,y)
 })
 
 private let router: Router<Route> = [

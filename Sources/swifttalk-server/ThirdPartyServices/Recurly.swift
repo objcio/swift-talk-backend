@@ -88,12 +88,13 @@ struct Account: Codable {
     var preferred_locale: String?
 }
 
-struct CreateSubscription: Codable {
+struct CreateSubscription: Codable, RootElement {
+    static let rootElementName: String = "subscription"
     struct CreateBillingInfo: Codable {
         var token_id: String
     }
     struct CreateAccount: Codable {
-        var code: UUID // Recurly allows more things than this, but we'll just go for the UUID
+        var account_code: UUID // Recurly allows more things than this, but we'll just go for the UUID
         var email: String
         var billing_info: CreateBillingInfo
     }
@@ -101,6 +102,29 @@ struct CreateSubscription: Codable {
     var currency: String = "USD"
     var coupon_code: String? = nil
     var account: CreateAccount
+}
+
+struct RecurlyError: Decodable {
+    let field: String
+    let symbol: String
+    let message: String
+}
+
+enum RecurlyResult<A> {
+    case success(A)
+    case errors([RecurlyError])
+}
+
+extension RecurlyResult: Decodable where A: Decodable {
+    init(from decoder: Decoder) throws {
+        do {
+            let value = try A(from: decoder)
+            self = .success(value)
+        } catch {
+            let value = try [RecurlyError](from: decoder)
+            self = .errors(value)
+        }
+    }
 }
 
 struct Recurly {
@@ -134,12 +158,30 @@ struct Recurly {
     func listSubscriptions(accountId: String) -> RemoteEndpoint<[Subscription]> {
         return RemoteEndpoint(getXML: base.appendingPathComponent("accounts/\(accountId)/subscriptions"), headers: headers, query: ["per_page": "200"])
     }
+    
+    func createSubscription(_ x: CreateSubscription) throws -> RemoteEndpoint<RecurlyResult<Subscription>> {
+        let url = base.appendingPathComponent("subscriptions")
+        return try RemoteEndpoint(postXML: url, value: x, headers: headers, query: [:])
+    }
 }
 
-extension RemoteEndpoint where A: Codable {
+extension RemoteEndpoint where A: Decodable {
     init(getXML get: URL, headers: [String:String], query: [String:String]) {
         self.init(get: get, accept: .xml, headers: headers, query: query, parse: { data in
             do {
+                return try decodeXML(from: data)
+            } catch {
+                print("Decoding error: \(error), \(error.localizedDescription)", to: &standardError)
+                return nil
+            }
+        })
+    }
+    
+    init<B: Encodable & RootElement>(postXML url: URL, value: B, headers: [String:String], query: [String:String]) throws {
+        print(try! encodeXML(value))
+        self.init(post: url, accept: .xml, body: try! encodeXML(value).data(using: .utf8)!, headers: headers, query: query, parse: { data in
+            do {
+                print("str: \(String(data: data, encoding: .utf8)!)")
                 return try decodeXML(from: data)
             } catch {
                 print("Decoding error: \(error), \(error.localizedDescription)", to: &standardError)

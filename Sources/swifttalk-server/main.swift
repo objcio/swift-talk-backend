@@ -33,6 +33,25 @@ func log(_ e: Error) {
     print(e.localizedDescription, to: &standardError)
 }
 
+func log(error: String) {
+    print(error, to: &standardError)
+}
+
+func catchAndDisplayError<I: Interpreter>(_ f: () throws -> I) -> I {
+    do {
+        return try f()
+    } catch {
+        log(error)
+        if let e = error as? RenderingError {
+            return .write(e.publicMessage, status: .internalServerError)
+        } else {
+            return .write("Something went wrong", status: .internalServerError)
+        }
+    }
+}
+
+struct NoDatabaseConnection: Error { }
+
 extension Route {
     func interpret<I: Interpreter>(sessionId: UUID?) throws -> I {
         let session: Session?
@@ -52,9 +71,36 @@ extension Route {
             return I.write(index(Collection.all, session: session))
         case .imprint:
             return .write("TODO")
-        case .createSubscription(let data):
-            print(String(data: data, encoding: .utf8))
-            return try I.write("TODO")
+        case .thankYou:
+            return .write("TODO thanks")
+        case .createSubscription(let planId, let token):
+            guard let plan = plans.first(where: { $0.plan_code == planId }) else {
+                throw RenderingError.init(privateMessage: "Illegal plan: \(planId)", publicMessage: "Couldn't find the plan you selected.")
+            }
+            guard let u = session?.user else {
+                throw RenderingError(privateMessage: "Creating subscription without user", publicMessage: "You're not logged in.")
+            }
+            let c = CreateSubscription.init(plan_code: planId, currency: "USD", coupon_code: nil, account: .init(account_code: u.id, email: u.data.email, billing_info: .init(token_id: token)))
+            let req = try recurly.createSubscription(c)
+            return I.onComplete(promise: URLSession.shared.load(req), do: { sub in
+                catchAndDisplayError {
+                    guard let s = sub else {
+                        throw RenderingError(privateMessage: "Couldn't load create subscription URL", publicMessage: "Something went wrong, please try again.")
+                    }
+                    switch s {
+                    case .errors(let messages):
+                        return try I.write(newSub(session: session, errs: messages.map { $0.message }))
+                    case .success(let sub):
+                        return try withConnection({ connection in
+                            guard let c = connection else { throw NoDatabaseConnection() }
+                            try c.execute(u.changeSubscriptionStatus(sub.state == .active))
+                            return try I.write("Got a sub \(sub)")
+                        })
+                        
+                    }
+                }
+            })
+            
         case .subscribe:
             return try I.write(plans.subscribe(session: session))
         case .collection(let name):
@@ -64,7 +110,8 @@ extension Route {
             }
             return .write(c.show(session: session))
         case .newSubscription:
-            return try I.write(newSub(session: session))
+            // todo check that we have a valid email address, otherwise we'll fail when we create the subscription.
+            return try I.write(newSub(session: session, errs: []))
         case .login(let cont):
             // todo take cont into account
             var path = "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(Github.clientId)"
@@ -158,16 +205,7 @@ let s = MyServer(handle: { request in
     guard let route = Route(request) else { return nil }
     let sessionString = request.cookies.first { $0.0 == "sessionid" }?.1
     let sessionId = sessionString.flatMap { UUID(uuidString: $0) }
-    do {
-    	return try route.interpret(sessionId: sessionId)
-    } catch {
-    	log(error)
-        if let e = error as? RenderingError {
-    	    return .write(e.publicMessage, status: .internalServerError)
-        } else {
-        	return .write("Something went wrong", status: .internalServerError)
-        }
-    }
+    return catchAndDisplayError { try route.interpret(sessionId: sessionId) }
 }, resourcePaths: resourcePaths)
 try s.listen()
 
