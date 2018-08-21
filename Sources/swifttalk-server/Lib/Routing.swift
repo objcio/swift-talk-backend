@@ -22,7 +22,7 @@ struct Endpoint {
 
     var prettyPath: String {
         let components = NSURLComponents(string: "http://localhost")!
-        components.queryItems = query.map { x in URLQueryItem(name: x.0, value: x.1.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)) }
+        components.queryItems = query.map { x in URLQueryItem(name: x.0, value: x.1.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)) }
         let q = components.query ?? ""
         return "/" + path.joined(separator: "/") + (q.isEmpty ? "" : "?\(q)")
     }

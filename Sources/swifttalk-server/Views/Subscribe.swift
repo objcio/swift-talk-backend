@@ -28,6 +28,20 @@ func newSubscriptionBanner() -> Node {
     })
 }
 
+func registerForm() -> (Node, parse: ([String:String]) -> (email: String, name: String)?) {
+    func parse(_ dict: [String:String]) -> (email: String, name: String)? {
+        guard let e = dict["email"], let n = dict["name"] else { return nil }
+        return (email: e, name: n)
+    }
+    
+    let node = LayoutConfig(session: nil, contents: [Node.header([
+        Node.div(classes: "container-h pb+ pt-", [
+            Node.h1(classes: "ms4 color-blue bold", ["Create Your Account"], attributes: [:])
+        ]),
+        Node.text("TODO FORM")
+    ])]).layoutForCheckout
+    return (node, parse)
+}
 
 extension Array where Element == Plan {
     var monthly: Plan? {
@@ -115,7 +129,6 @@ func newSub(session: Session?, errs: [String]) throws -> Node {
     let data = NewSubscriptionData(action: Route.createSubscription(planId: "", billingInfoToken: "").path, public_key: env["RECURLY_PUBLIC_KEY"], plans: [
         .init(m), .init(y)
     ], payment_errors: errs, method: .post, coupon: .init())
-    // TODO this should have a different layout.
     return LayoutConfig(session: session, contents: [
         .header([
             .div(classes: "container-h pb+ pt+", [
@@ -128,7 +141,7 @@ func newSub(session: Session?, errs: [String]) throws -> Node {
                 "data-component": "NewSubscription"
                 ], [])
             ])
-        ]).layout
+        ]).layoutForCheckout
 }
 
 func json<A: Encodable>(_ value: A) -> String {

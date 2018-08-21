@@ -16,6 +16,7 @@ enum Route: Equatable {
     case sitemap
     case imprint
     case subscribe
+    case register
     case collections
     case login(continue: String?)
     case logout
@@ -100,6 +101,7 @@ private let router: Router<Route> = [
     .c("sitemap", .sitemap),
     .c("subscribe", .subscribe),
     .c("imprint", .imprint),
+    .c("register", .register),
     .c("subscription") / .c("new", .newSubscription),
     createSubRoute,
     .c("account") / .c("billing", .accountBilling),

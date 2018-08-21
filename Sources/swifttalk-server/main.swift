@@ -73,6 +73,8 @@ extension Route {
             return .write("TODO")
         case .thankYou:
             return .write("TODO thanks")
+        case .register:
+            return .write("register")
         case .createSubscription(let planId, let token):
             guard let plan = plans.first(where: { $0.plan_code == planId }) else {
                 throw RenderingError.init(privateMessage: "Illegal plan: \(planId)", publicMessage: "Couldn't find the plan you selected.")
@@ -109,16 +111,22 @@ extension Route {
             }
             return .write(c.show(session: session))
         case .newSubscription:
-            // todo check that we have a valid email address, otherwise we'll fail when we create the subscription.
-            return try I.write(newSub(session: session, errs: []))
+            guard let u = session?.user else {
+                return I.redirect(path: Route.subscribe.path, headers: [:])
+            }
+            if !u.data.confirmedNameAndEmail ||  !u.data.validEmail || !u.data.validName {
+                return I.write(registerForm().0)
+            } else {
+                return try I.write(newSub(session: session, errs: []))
+            }
         case .login(let cont):
             // todo take cont into account
             var path = "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(Github.clientId)"
             if let c = cont {
                 let baseURL = env["BASE_URL"]
-                path.append("&redirect_uri=\(baseURL)" + Route.githubCallback("", origin: c.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!).path)
+                let encoded = baseURL + Route.githubCallback("", origin: c).path
+                path.append("&redirect_uri=" + encoded.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)
             }
-            print(path)
             return I.redirect(path: path)
         case .logout:
             return withConnection { conn in
@@ -151,7 +159,7 @@ extension Route {
                             let sessionData: SessionData = SessionData(userId: uid)
                             let sid = try c.execute(sessionData.insert)
                             let destination: String
-                            if let o = origin, o.hasPrefix("/") {
+                            if let o = origin?.removingPercentEncoding, o.hasPrefix("/") {
                                 destination = o
                             } else {
                                 destination = "/"
@@ -201,6 +209,7 @@ runMigrations()
 loadStaticData()
 
 let s = MyServer(handle: { request in
+    print(request)
     guard let route = Route(request) else { return nil }
     let sessionString = request.cookies.first { $0.0 == "sessionid" }?.1
     let sessionId = sessionString.flatMap { UUID(uuidString: $0) }

@@ -62,6 +62,9 @@ fileprivate let migrations: [String] = [
         created_at timestamp NOT NULL,
         updated_at timestamp NOT NULL
     );
+    """,
     """
+	ALTER TABLE users ADD COLUMN IF NOT EXISTS confirmed_name_and_email boolean DEFAULT false NOT NULL;
+	"""
 ]
 

@@ -130,6 +130,49 @@ extension LayoutConfig {
             ] + footerContent)
         return Node.html(attributes: ["lang": "en"], [head, body])
     }
+    
+    var layoutForCheckout: Node {
+        let csrf: String? = session?.csrfToken
+        let structured: [Node] = structuredData.map { $0.nodes } ?? []
+        let head: Node = .head([
+            .meta(attributes: ["charset": "utf-8"]),
+            .meta(attributes: ["http-equiv": "X-UA-Compatible", "content": "IE=edge"]),
+            .meta(attributes: ["name": "viewport", "content": "'width=device-width, initial-scale=1, user-scalable=no'"]),
+            ] + (csrf == nil ? [] : [
+                .meta(attributes: ["name": "csrf-token", "content": "'\(csrf!)'"])
+                ]) +
+            [
+                .title(pageTitle),
+                // todo rss+atom links
+                .stylesheet(href: "/assets/stylesheets/application.css"),
+                .script(src: "/assets/javascripts/application-411354e402c95a5b5383a167ecd6703285d5fef51012a3fad51f8628ec92e84b.js")
+                // todo google analytics
+            ] + structured)
+        let linkClasses: Class = "no-decoration color-inherit hover-color-black mr"
+        let body: Node = .body(attributes: ["class": "theme-" + theme], [ // todo theming classes?
+            .header(attributes: ["class": "site-header"], [
+        		.div(classes: "site-header__nav flex", [
+                    .div(classes: "container-h flex-grow flex items-center", [
+                        .link(to: .home, [
+                            .inlineSvg(path: "logo.svg", attributes: ["class": "logo ms-2"]), // todo scaling parameter?
+                            .h1([.text("objc.io")], attributes: ["class":"visuallyhidden"]) // todo class
+                        ] as [Node], attributes: ["class": "block flex-none outline-none mr++"]),
+                        ])
+                    ])
+                ]),
+            .main(contents), // todo sidenav
+            ] + preFooter + [
+                Node.footer([
+                    Node.div(classes: "container-h pv", [
+                        Node.div(classes: "ms-1 color-gray-60", [
+                            Node.a(classes: linkClasses, [Node.text("Email")], href: "mailto:mail@objc.io"),
+                            Node.link(to: .imprint, ["Imprint"], classes: linkClasses, attributes: [:])
+                        ])
+                    ])
+                ])
+            ] + footerContent)
+        return Node.html(attributes: ["lang": "en"], [head, body])
+    }
 }
 
 func userHeader(_ session: Session?) -> Node {

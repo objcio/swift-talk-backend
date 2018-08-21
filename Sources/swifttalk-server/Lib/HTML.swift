@@ -224,7 +224,10 @@ extension Node {
     static func figure(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         return .node(El(name: "figure", classes: classes, attributes: attributes, children: children))
     }
-
+    
+    static func footer(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "footer", classes: classes, attributes: attributes, children: children))
+    }
 
     static func script(src: String) -> Node {
         return .node(El(name: "script", attributes: [
