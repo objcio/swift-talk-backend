@@ -38,8 +38,35 @@ func registerForm() -> (Node, parse: ([String:String]) -> (email: String, name: 
         Node.div(classes: "container-h pb+ pt-", [
             Node.h1(classes: "ms4 color-blue bold", ["Create Your Account"], attributes: [:])
         ]),
-        Node.text("TODO FORM")
-    ])]).layoutForCheckout
+    ]),
+    Node.raw("""
+ <div class="container">
+      <div class="max-width-6">
+        <form class="new_user" id="new_user" action="/registration" accept-charset="UTF-8" method="post"><input name="utf8" type="hidden" value="&#x2713;" /><input type="hidden" name="authenticity_token" value="KezkKFJ1XLt7szpFU0gXICe7qCVAQtUc2VC7lW67Yr0bcfS34Z4R3hnDsSuKDHGueOX8rW80QnRjBlLV/R+QsQ==" />
+    
+          <div class="stack+">
+            <fieldset class="input-unit">
+              <p>
+                <label class="input-label input-label--required" for="user_name">Name</label>
+              </p>
+              <p>
+                <input class="text-input width-full" required="required" type="text" name="user[name]" id="user_name" />
+              </p>
+    </fieldset>
+            <fieldset class="input-unit">
+              <p>
+                <label class="input-label input-label--required" for="user_email">Email</label>
+              </p>
+              <p>
+                <input class="text-input width-full" required="required" type="text" name="user[email]" id="user_email" />
+              </p>
+    </fieldset>        <div>
+              <input type="submit" name="commit" value="Create Account" class="c-button c-button--blue" data-disable-with="Create Account" />
+            </div>
+          </div>
+    </form>  </div>
+    </div>
+""")]).layoutForCheckout
     return (node, parse)
 }
 
