@@ -91,25 +91,25 @@ extension Router where A == Int {
     }
 }
 
-extension Router where A == Data {
-    static func body() -> Router<Data> {
-        return Router<Data>(parse: { req in
-            guard let r = req.body else { return nil }
-//            req.body = nil -> enabling this line prevents us from reading the body  more than once (which we do for the query params)
-            return r
-        }, print: { p in
-            return Endpoint(path: [])
-        }, description: .body)
-    }
-}
-
-extension Router where A == [String:String] {
-    static func body() -> Router<[String:String]> {
-        return Router<Data>.body().transform({ data in
-            String(data: data, encoding: .utf8)?.parseAsQueryPart
-        }, { _ in Data() })
-    }
-}
+//extension Router where A == Data {
+//    static func body() -> Router<Data> {
+//        return Router<Data>(parse: { req in
+//            guard let r = req.body else { return nil }
+////            req.body = nil -> enabling this line prevents us from reading the body  more than once (which we do for the query params)
+//            return r
+//        }, print: { p in
+//            return Endpoint(path: [])
+//        }, description: .body)
+//    }
+//}
+//
+//extension Router where A == [String:String] {
+//    static func body() -> Router<[String:String]> {
+//        return Router<Data>.body().transform({ data in
+//            String(data: data, encoding: .utf8)?.parseAsQueryPart
+//        }, { _ in Data() })
+//    }
+//}
 
 extension Router where A == [String] {
     // eats up the entire path of a route
@@ -154,10 +154,6 @@ extension Router where A == String {
         }, print: { (str: String?) in
             return Endpoint(path: [], query: str == nil ? [:] : [name: str!])
         }, description: .queryParameter(name))
-    }
-    
-    static func postParam(name: String) -> Router<String> {
-        return Router<[String:String]>.body().transform({ $0[name] }, { [name:$0] })
     }
 }
 

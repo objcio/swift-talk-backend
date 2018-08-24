@@ -27,6 +27,12 @@ extension Interpreter {
             catchAndDisplayError { try cont(value) }
         })
     }
+    
+    static func withPostBody(do cont: @escaping ([String:String]) throws -> Self) -> Self {
+        return .withPostBody { dict in
+            return catchAndDisplayError { try cont(dict) }
+        }
+    }
 }
 
 final class Lazy<A> {
@@ -50,6 +56,8 @@ final class Lazy<A> {
     }
 }
 
+struct NotLoggedInError: Error { }
+
 extension Route {
     func interpret<I: Interpreter>(sessionId: UUID?, connection c: Lazy<Connection>) throws -> I {
         let session: Session?
@@ -69,28 +77,40 @@ extension Route {
         case .thankYou:
             return .write("TODO thanks")
         case .register:
-            return .write("register")
-        case .createSubscription(let planId, let token):
-            guard let plan = plans.first(where: { $0.plan_code == planId }) else {
-                throw RenderingError.init(privateMessage: "Illegal plan: \(planId)", publicMessage: "Couldn't find the plan you selected.")
+            guard let s = session else {
+                throw NotLoggedInError()
             }
-            guard let u = session?.user else {
-                throw RenderingError(privateMessage: "Creating subscription without user", publicMessage: "You're not logged in.")
-            }
-            let cr = CreateSubscription.init(plan_code: plan.plan_code, currency: "USD", coupon_code: nil, account: .init(account_code: u.id, email: u.data.email, billing_info: .init(token_id: token)))
-            let req = try recurly.createSubscription(cr)
-            return I.onComplete(promise: URLSession.shared.load(req), do: { sub in
-                guard let s = sub else {
-                    throw RenderingError(privateMessage: "Couldn't load create subscription URL", publicMessage: "Something went wrong, please try again.")
-                }
-                switch s {
-                case .errors(let messages):
-                    return try I.write(newSub(session: session, errs: messages.map { $0.message }))
-                case .success(let sub):
-                    try c.get().execute(u.changeSubscriptionStatus(sub.state == .active))
-                    return I.write("Got a sub \(sub)")
-                }
+            return I.withPostBody(do: { body in
+                let result = registerForm(s).parse(body)
+                return I.write("\(result)")
             })
+        case .createSubscription:
+            return I.withPostBody { dict in
+                guard let planId = dict["plan_id"], let token = dict["billing_info[token]"] else {
+                    throw RenderingError(privateMessage: "Incorrect post data", publicMessage: "Something went wrong")
+                }
+                // todo: Router.postParam(name: "plan_id") / Router.postParam(name: "billing_info[token]")
+                guard let plan = plans.first(where: { $0.plan_code == planId }) else {
+                    throw RenderingError.init(privateMessage: "Illegal plan: \(planId)", publicMessage: "Couldn't find the plan you selected.")
+                }
+                guard let u = session?.user else {
+                    throw RenderingError(privateMessage: "Creating subscription without user", publicMessage: "You're not logged in.")
+                }
+                let cr = CreateSubscription.init(plan_code: plan.plan_code, currency: "USD", coupon_code: nil, account: .init(account_code: u.id, email: u.data.email, billing_info: .init(token_id: token)))
+                let req = try recurly.createSubscription(cr)
+                return I.onComplete(promise: URLSession.shared.load(req), do: { sub in
+                    guard let s = sub else {
+                        throw RenderingError(privateMessage: "Couldn't load create subscription URL", publicMessage: "Something went wrong, please try again.")
+                    }
+                    switch s {
+                    case .errors(let messages):
+                        return try I.write(newSub(session: session, errs: messages.map { $0.message }))
+                    case .success(let sub):
+                        try c.get().execute(u.changeSubscriptionStatus(sub.state == .active))
+                        return I.write("Got a sub \(sub)")
+                    }
+                })
+            }
         case .subscribe:
             return try I.write(plans.subscribe(session: session))
         case .collection(let name):

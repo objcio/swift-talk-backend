@@ -21,7 +21,7 @@ struct Request {
     var query: [String:String]
     var method: HTTPMethod
     var cookies: [(String, String)]
-    var body: Data?
+//    var body: Data?
 }
 
 
@@ -31,6 +31,7 @@ protocol Interpreter {
     static func writeFile(path: String) -> Self
     static func redirect(path: String, headers: [String: String]) -> Self
     static func onComplete<A>(promise: Promise<A>, do cont: @escaping (A) -> Self) -> Self
+    static func withPostData(do cont: @escaping (Data) -> Self) -> Self
 }
 
 struct Promise<A> {
@@ -65,6 +66,13 @@ extension Interpreter {
     static func redirect(to route: Route, headers: [String: String] = [:]) -> Self {
         return .redirect(path: route.path, headers: headers)
     }
+    
+    static func withPostBody(do cont: @escaping ([String:String]) -> Self) -> Self {
+        return .withPostData { data in
+            let result = String(data: data, encoding: .utf8)?.parseAsQueryPart
+            return cont(result ?? [:])
+        }
+    }
 }
 
 struct NIOInterpreter: Interpreter {
@@ -76,7 +84,14 @@ struct NIOInterpreter: Interpreter {
         let manager: FileManager
         let resourcePaths: [URL]
     }
-    let run: (Deps) -> ()
+    let run: (Deps) -> PostContinuation?
+    typealias PostContinuation = (Data) -> NIOInterpreter
+    
+    static func withPostData(do cont: @escaping PostContinuation) -> NIOInterpreter {
+        return NIOInterpreter { env in
+            return cont
+        }
+    }
 
     static func redirect(path: String, headers: [String: String] = [:]) -> NIOInterpreter {
         return NIOInterpreter { env in
@@ -90,6 +105,7 @@ struct NIOInterpreter: Interpreter {
             _ = env.ctx.channel.writeAndFlush(HTTPServerResponsePart.end(nil)).then {
                 env.ctx.channel.close()
             }
+            return nil
         }
     }
     
@@ -100,7 +116,7 @@ struct NIOInterpreter: Interpreter {
             
             let fileHandleAndRegion = deps.fileIO.openFile(path: fullPath.path, eventLoop: deps.ctx.eventLoop)
             fileHandleAndRegion.whenFailure { _ in
-                write("Error", status: .badRequest).run(deps)
+                _ = write("Error", status: .badRequest).run(deps)
             }
             fileHandleAndRegion.whenSuccess { (file, region) in
                 var response = HTTPResponseHead(version: deps.header.version, status: .ok)
@@ -124,6 +140,7 @@ struct NIOInterpreter: Interpreter {
                         _ = try? file.close()
                 }
             }
+            return nil
         }
     }
     
@@ -131,10 +148,12 @@ struct NIOInterpreter: Interpreter {
         return NIOInterpreter { env in
             promise.run { str in
                 env.ctx.eventLoop.execute {
-                    cont(str).run(env)
+                    let result = cont(str).run(env)
+                    assert(result == nil, "You have to read POST data as the first step")
                 }
 
             }
+            return nil
         }
     }
     
@@ -153,6 +172,7 @@ struct NIOInterpreter: Interpreter {
             _ = env.ctx.channel.writeAndFlush(HTTPServerResponsePart.end(nil)).then {
                 env.ctx.channel.close()
             }
+            return nil
         }
     }
 }
@@ -198,8 +218,8 @@ final class RouteHandler: ChannelInboundHandler {
     typealias OutboundOut = HTTPServerResponsePart
     let handle: (Request) -> NIOInterpreter?
     let paths: [URL]
-    var r: Request!
-    var header: HTTPRequestHead!
+    var postCont: (NIOInterpreter.PostContinuation, HTTPRequestHead)? = nil
+    var accumData = Data()
     
     let fileIO: NonBlockingFileIO
     init(_ fileIO: NonBlockingFileIO, resourcePaths: [URL], handle: @escaping (Request) -> NIOInterpreter?) {
@@ -212,26 +232,31 @@ final class RouteHandler: ChannelInboundHandler {
         let reqPart = unwrapInboundIn(data)
         switch reqPart {
         case .head(let header):
-            self.header = header
             let (path, query) = header.uri.parseQuery
             let cookies = header.headers["Cookie"].first.map {
                 $0.split(separator: ";").compactMap { $0.trimmingCharacters(in: .whitespaces).keyAndValue }
             } ?? []
-            r = Request(path: path.split(separator: "/").map(String.init), query: query, method: .init(header.method), cookies: cookies, body: nil)
-        case .body(var b):
-            if r.body == nil {
-                r.body = Data()
+            let r = Request(path: path.split(separator: "/").map(String.init), query: query, method: .init(header.method), cookies: cookies)
+            let env = NIOInterpreter.Deps(header: header, ctx: ctx, fileIO: fileIO, handler: self, manager: FileManager.default, resourcePaths: paths)
+            if let i = handle(r) {
+                if let c = i.run(env) {
+                    postCont = (c, header)
+                }
+            } else {
+                print("Not found: \(header.uri)")
+                _ = NIOInterpreter.write("Not found: \(header.uri)").run(env)
             }
+
+        case .body(var b):
+            guard postCont != nil else { return }
             if let d = b.readData(length: b.readableBytes) {
-                r.body?.append(d)
+                accumData.append(d)
             }
         case .end:
-            let env = NIOInterpreter.Deps(header: header!, ctx: ctx, fileIO: fileIO, handler: self, manager: FileManager.default, resourcePaths: paths)
-            if let i = handle(r) {
-                i.run(env)
-            } else {
-                print("Not found: \(header!.uri)")
-                NIOInterpreter.write("Not found: \(header.uri)").run(env)
+            if let (p, header) = postCont {
+                let env = NIOInterpreter.Deps(header: header, ctx: ctx, fileIO: fileIO, handler: self, manager: FileManager.default, resourcePaths: paths)
+                let result = p(accumData).run(env)
+                assert(result == nil, "Can't read post data twice")
             }
         }
     }
