@@ -185,10 +185,16 @@ extension StringProtocol {
     }
 }
 
+extension String {
+    fileprivate var decoded: String {
+    	return (removingPercentEncoding ?? "").replacingOccurrences(of: "+", with: " ")
+    }
+}
+
 extension StringProtocol {
     var parseAsQueryPart: [String:String] {
         let items = split(separator: "&").compactMap { $0.keyAndValue }
-        return Dictionary(items.map { (k,v) in (k.removingPercentEncoding ?? "", v.removingPercentEncoding ?? "") }, uniquingKeysWith: { $1 })
+        return Dictionary(items.map { (k,v) in (k.decoded, v.decoded) }, uniquingKeysWith: { $1 })
     }
 }
 

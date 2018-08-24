@@ -159,9 +159,9 @@ struct Recurly {
         return RemoteEndpoint(getXML: base.appendingPathComponent("accounts/\(accountId)/subscriptions"), headers: headers, query: ["per_page": "200"])
     }
     
-    func createSubscription(_ x: CreateSubscription) throws -> RemoteEndpoint<RecurlyResult<Subscription>> {
+    func createSubscription(_ x: CreateSubscription) -> RemoteEndpoint<RecurlyResult<Subscription>> {
         let url = base.appendingPathComponent("subscriptions")
-        return try RemoteEndpoint(postXML: url, value: x, headers: headers, query: [:])
+        return RemoteEndpoint(postXML: url, value: x, headers: headers, query: [:])
     }
 }
 
@@ -177,11 +177,9 @@ extension RemoteEndpoint where A: Decodable {
         })
     }
     
-    init<B: Encodable & RootElement>(postXML url: URL, value: B, headers: [String:String], query: [String:String]) throws {
-        print(try! encodeXML(value))
+    init<B: Encodable & RootElement>(postXML url: URL, value: B, headers: [String:String], query: [String:String]) {
         self.init(post: url, accept: .xml, body: try! encodeXML(value).data(using: .utf8)!, headers: headers, query: query, parse: { data in
             do {
-                print("str: \(String(data: data, encoding: .utf8)!)")
                 return try decodeXML(from: data)
             } catch {
                 print("Decoding error: \(error), \(error.localizedDescription)", to: &standardError)

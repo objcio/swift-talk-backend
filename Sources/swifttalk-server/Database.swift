@@ -38,16 +38,20 @@ protocol Insertable: Codable {
     static var tableName: String { get }
 }
 
-extension Insertable {
+extension Encodable {
     var fieldNamesAndValues: [(String, NodeRepresentable)] {
         let m = Mirror(reflecting: self)
         return m.children.map { ($0.label!.snakeCased, $0.value as! NodeRepresentable) }
     }
-    
+}
+
+extension Decodable {    
     static var fieldNames: [String] {
-        return try! PropertyNamesDecoder.decode(UserData.self).map { $0.snakeCased }
+        return try! PropertyNamesDecoder.decode(Self.self).map { $0.snakeCased }
     }
-    
+}
+
+extension Insertable {
     var insert: Query<UUID> {
         let fields = fieldNamesAndValues
         let names = fields.map { $0.0 }.joined(separator: ",")

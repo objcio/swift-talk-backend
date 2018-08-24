@@ -11,7 +11,7 @@ import CommonMark
 
 struct Session {
     var sessionId: UUID
-    var user: UserResult
+    var user: Row<UserData>
     var csrfToken: String = "TODO" // todo
 }
 

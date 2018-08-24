@@ -14,9 +14,9 @@ func catchAndDisplayError<I: Interpreter>(_ f: () throws -> I) -> I {
     } catch {
         log(error)
         if let e = error as? RenderingError {
-            return .write(e.publicMessage, status: .internalServerError)
+            return .write(errorView(e.publicMessage), status: .internalServerError)
         } else {
-            return .write("Something went wrong", status: .internalServerError)
+            return .write(errorView("Something went wrong."), status: .internalServerError)
         }
     }
 }
@@ -58,15 +58,27 @@ final class Lazy<A> {
 
 struct NotLoggedInError: Error { }
 
+infix operator ?!: NilCoalescingPrecedence
+func ?!<A>(lhs: A?, rhs: Error) throws -> A {
+    guard let value = lhs else {
+        throw rhs
+    }
+    return value
+}
+
 extension Route {
     func interpret<I: Interpreter>(sessionId: UUID?, connection c: Lazy<Connection>) throws -> I {
         let session: Session?
         if let sId = sessionId {
-            let user = try c.get().execute(UserResult.select(sessionId: sId))
+            let user = try c.get().execute(Row<UserData>.select(sessionId: sId))
             session = user.map { Session(sessionId: sId, user: $0, csrfToken: "TODO") }
         } else {
             session = nil
         }
+        func requireSession() throws -> Session {
+            return try session ?! NotLoggedInError()
+        }
+
         switch self {
         case .books, .issues:
             return .notFound()
@@ -77,37 +89,34 @@ extension Route {
         case .thankYou:
             return .write("TODO thanks")
         case .register:
-            guard let s = session else {
-                throw NotLoggedInError()
-            }
+            let s = try requireSession()
             return I.withPostBody(do: { body in
-                let result = registerForm(s).parse(body)
-                return I.write("\(result)")
+                guard let result = registerForm(s).parse(body) else { throw RenderingError(privateMessage: "todo", publicMessage: "todo") }
+                var u = s.user
+                u.data.email = result.email
+                u.data.name = result.name
+                u.data.confirmedNameAndEmail = true
+                try c.get().execute(u.update())
+                return I.redirect(to: .newSubscription)
             })
         case .createSubscription:
+            let s = try requireSession()
             return I.withPostBody { dict in
                 guard let planId = dict["plan_id"], let token = dict["billing_info[token]"] else {
                     throw RenderingError(privateMessage: "Incorrect post data", publicMessage: "Something went wrong")
                 }
-                // todo: Router.postParam(name: "plan_id") / Router.postParam(name: "billing_info[token]")
-                guard let plan = plans.first(where: { $0.plan_code == planId }) else {
-                    throw RenderingError.init(privateMessage: "Illegal plan: \(planId)", publicMessage: "Couldn't find the plan you selected.")
-                }
-                guard let u = session?.user else {
-                    throw RenderingError(privateMessage: "Creating subscription without user", publicMessage: "You're not logged in.")
-                }
-                let cr = CreateSubscription.init(plan_code: plan.plan_code, currency: "USD", coupon_code: nil, account: .init(account_code: u.id, email: u.data.email, billing_info: .init(token_id: token)))
-                let req = try recurly.createSubscription(cr)
+                let plan = try plans.first(where: { $0.plan_code == planId }) ?! RenderingError.init(privateMessage: "Illegal plan: \(planId)", publicMessage: "Couldn't find the plan you selected.")
+                let cr = CreateSubscription.init(plan_code: plan.plan_code, currency: "USD", coupon_code: nil, account: .init(account_code: s.user.id, email: s.user.data.email, billing_info: .init(token_id: token)))
+                let req = recurly.createSubscription(cr)
                 return I.onComplete(promise: URLSession.shared.load(req), do: { sub in
-                    guard let s = sub else {
-                        throw RenderingError(privateMessage: "Couldn't load create subscription URL", publicMessage: "Something went wrong, please try again.")
-                    }
-                    switch s {
+                    let sub_ = try sub ?! RenderingError(privateMessage: "Couldn't load create subscription URL", publicMessage: "Something went wrong, please try again.")
+                    switch sub_ {
                     case .errors(let messages):
                         return try I.write(newSub(session: session, errs: messages.map { $0.message }))
                     case .success(let sub):
-                        try c.get().execute(u.changeSubscriptionStatus(sub.state == .active))
-                        return I.write("Got a sub \(sub)")
+                        try c.get().execute(s.user.changeSubscriptionStatus(sub.state == .active))
+                        // todo flash
+                        return I.redirect(to: .thankYou)
                     }
                 })
             }
@@ -120,9 +129,7 @@ extension Route {
             }
             return .write(c.show(session: session))
         case .newSubscription:
-            guard let s = session else {
-                return I.redirect(path: Route.subscribe.path, headers: [:])
-            }
+            let s = try requireSession()
             let u = s.user
             if !u.data.confirmedNameAndEmail ||  !u.data.validEmail || !u.data.validName {
                 return I.write(registerForm(s).0(RegisterFormData(email: u.data.email, name: u.data.name)))
@@ -139,20 +146,19 @@ extension Route {
             }
             return I.redirect(path: path)
         case .logout:
-            if let s = session {
-                try c.get().execute(s.user.deleteSession(s.sessionId))
-            }
+            let s = try requireSession()
+            try c.get().execute(s.user.deleteSession(s.sessionId))
             return I.redirect(to: .home)
         case .githubCallback(let code, let origin):
             return I.onComplete(promise:
                 URLSession.shared.load(Github.getAccessToken(code)).map({ $0?.access_token })
                 , do: { token in
-                    guard let t = token else { throw RenderingError(privateMessage: "No github access token", publicMessage: "Couldn't access your Github profile.") }
+                    let t = try token ?! RenderingError(privateMessage: "No github access token", publicMessage: "Couldn't access your Github profile.")
                     return I.onComplete(promise: URLSession.shared.load(Github(t).profile), do: { profile in
-                        guard let p = profile else { throw RenderingError(privateMessage: "Couldn't load Github profile", publicMessage: "Couldn't access your Github profile.") }
+                        let p = try profile ?! RenderingError(privateMessage: "Couldn't load Github profile", publicMessage: "Couldn't access your Github profile.")
                         // todo ask for email if we don't get it
                         let uid: UUID
-                        if let user = try c.get().execute(UserResult.select(githubId: p.id)) {
+                        if let user = try c.get().execute(Row<UserData>.select(githubId: p.id)) {
                             uid = user.id
                         } else {
                             let userData = UserData(email: p.email ?? "no email", githubUID: p.id, githubLogin: p.login, githubToken: t, avatarURL: p.avatar_url, name: p.name ?? "")
@@ -166,9 +172,7 @@ extension Route {
                             destination = "/"
                         }
                         return I.redirect(path: destination, headers: ["Set-Cookie": "sessionid=\"\(sid.uuidString)\"; HttpOnly; Path=/"]) // TODO secure, TODO return to where user came from
-
                     })
-                    
             })
         case .episode(let s):
             guard let ep = Episode.all.first(where: { $0.slug == s}) else {

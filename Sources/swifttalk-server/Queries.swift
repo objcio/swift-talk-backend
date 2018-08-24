@@ -79,32 +79,32 @@ extension UserData {
     }
 }
 
-struct UserResult: Codable {
+struct Row<A: Codable>: Codable {
     var id: UUID
-    var data: UserData
+    var data: A
     
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try c.decode(UUID.self, forKey: CodingKeys.id)
-        self.data = try UserData(from: decoder)
+        self.data = try A(from: decoder)
     }
 }
 
-extension UserResult {
-    static func select(githubId id: Int) -> Query<UserResult?> {
+extension Row where A == UserData {
+    static func select(githubId id: Int) -> Query<Row<A>?> {
         let fields = UserData.fieldNames.joined(separator: ",")
         let query = "SELECT id,\(fields) FROM \(UserData.tableName) WHERE github_uid = $1"
         return Query(query: query, values: [id], parse: { node in
-            let result = PostgresNodeDecoder.decode([UserResult].self, transformKey: { $0.snakeCased }, node: node)
+            let result = PostgresNodeDecoder.decode([Row<A>].self, transformKey: { $0.snakeCased }, node: node)
             return result.first
         })
     }
     
-    static func select(sessionId id: UUID) -> Query<UserResult?> {
+    static func select(sessionId id: UUID) -> Query<Row<A>?> {
         let fields = UserData.fieldNames.map { "u.\($0)" }.joined(separator: ",")
         let query = "SELECT u.id,\(fields) FROM \(UserData.tableName) AS u INNER JOIN \(SessionData.tableName) AS s ON s.user_id = u.id WHERE s.id = $1"
         return Query(query: query, values: [id], parse: { node in
-            let result = PostgresNodeDecoder.decode([UserResult].self, transformKey: { $0.snakeCased }, node: node)
+            let result = PostgresNodeDecoder.decode([Row<A>].self, transformKey: { $0.snakeCased }, node: node)
             return result.first
         })
     }
@@ -114,7 +114,17 @@ extension UserResult {
     }
     
     func changeSubscriptionStatus(_ subscribed: Bool) -> Query<()> {
-        return Query(query: "UPDATE USERS SET subscriber = $1 where id = $2", values: [subscribed, id], parse: { _ in () })
+        return Query(query: "UPDATE users SET subscriber = $1 where id = $2", values: [subscribed, id], parse: { _ in () })
+    }
+}
+
+extension Row where A: Insertable {
+    func update() -> Query<()> {
+        let fields = data.fieldNamesAndValues
+        let fieldNames = zip(fields, 2...).map { (nameAndValue, idx) in
+            return "\(nameAndValue.0) = $\(idx)"
+        }.joined(separator: ", ")
+        return Query(query: "UPDATE \(A.tableName) SET \(fieldNames) where id = $1", values: [id] + fields.map { $0.1 }, parse: { _ in () })
     }
 }
 

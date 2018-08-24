@@ -44,3 +44,11 @@ func pageHeader(_ content: HeaderContent, extraClasses: Class? = nil) -> Node {
     ])
 }
 
+func errorView(_ message: String) -> Node {
+    return LayoutConfig(session: nil, pageTitle: "Error", contents: [
+        .div(classes: "container", [
+            .text(message)
+        ])
+    ]).layoutForCheckout
+}
+
