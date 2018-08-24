@@ -100,11 +100,12 @@ extension Route {
             }
             return .write(c.show(session: session))
         case .newSubscription:
-            guard let u = session?.user else {
+            guard let s = session else {
                 return I.redirect(path: Route.subscribe.path, headers: [:])
             }
+            let u = s.user
             if !u.data.confirmedNameAndEmail ||  !u.data.validEmail || !u.data.validName {
-                return I.write(registerForm().0(RegisterFormData(email: u.data.email, name: u.data.name)))
+                return I.write(registerForm(s).0(RegisterFormData(email: u.data.email, name: u.data.name)))
             } else {
                 return try I.write(newSub(session: session, errs: []))
             }

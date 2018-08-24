@@ -32,46 +32,45 @@ struct RegisterFormData {
     var email: String
     var name: String
 }
-func registerForm() -> ((RegisterFormData) -> Node, parse: ([String:String]) -> RegisterFormData?) {
+func registerForm(_ session: Session) -> ((RegisterFormData) -> Node, parse: ([String:String]) -> RegisterFormData?) {
     func parse(_ dict: [String:String]) -> RegisterFormData? {
         guard let e = dict["email"], let n = dict["name"] else { return nil }
         return RegisterFormData(email: e, name: n)
     }
     
     func build(_ data: RegisterFormData) -> Node {
-        return LayoutConfig(session: nil, contents: [Node.header([
-            Node.div(classes: "container-h pb+ pt-", [
-                Node.h1(classes: "ms4 color-blue bold", ["Create Your Account"], attributes: [:])
+        func field(id: String, description: String, value: String?) -> Node {
+            return Node.fieldset(classes: "input-unit", [
+                .p([
+                    Node.label(classes: "input-label input-label--required", attributes: ["for": id], [.text(description)])
+                ]),
+                .p([
+                    Node.input(classes: "text-input width-full", name: id, attributes: ["required": "required", "value": value ?? ""])
+                ])
+            ])
+        }
+        return LayoutConfig(session: nil, contents: [
+            Node.header([
+                Node.div(classes: "container-h pb+ pt-", [
+                    Node.h1(classes: "ms4 color-blue bold", ["Create Your Account"], attributes: [:])
+                ]),
             ]),
-        ]),
-        Node.raw("""
-     <div class="container">
-          <div class="max-width-6">
-            <form class="new_user" id="new_user" action="/registration" accept-charset="UTF-8" method="post"><input name="utf8" type="hidden" value="&#x2713;" /><input type="hidden" name="authenticity_token" value="KezkKFJ1XLt7szpFU0gXICe7qCVAQtUc2VC7lW67Yr0bcfS34Z4R3hnDsSuKDHGueOX8rW80QnRjBlLV/R+QsQ==" />
-        
-              <div class="stack+">
-                <fieldset class="input-unit">
-                  <p>
-                    <label class="input-label input-label--required" for="user_name">Name</label>
-                  </p>
-                  <p>
-                    <input class="text-input width-full" required="required" type="text" name="user[name]" id="user_name" />
-                  </p>
-        </fieldset>
-                <fieldset class="input-unit">
-                  <p>
-                    <label class="input-label input-label--required" for="user_email">Email</label>
-                  </p>
-                  <p>
-                    <input class="text-input width-full" required="required" type="text" name="user[email]" id="user_email" />
-                  </p>
-        </fieldset>        <div>
-                  <input type="submit" name="commit" value="Create Account" class="c-button c-button--blue" data-disable-with="Create Account" />
-                </div>
-              </div>
-        </form>  </div>
-        </div>
-    """)]).layoutForCheckout
+            Node.div(classes: "container", [
+                Node.div(classes: "max-width-6", [
+                    Node.form(classes: "new_user", action: "/registration", attributes: ["id": "new_user"], [
+                        // todo utf8?
+                        // todo authenticity token (CSRF token)
+                        Node.div(classes: "stack+", [
+                            field(id: "name", description: "Name", value: data.name),
+                            field(id: "email", description: "Email", value: data.email),
+                            .div([
+                                Node.input(classes: "c-button c-button--blue", name: "commit", type: "submit", attributes: ["value": "Create Account", "data-disable-with": "Create Account"], [])
+                            ])
+                        ])
+                    ])
+                ])
+            ])
+    	]).layoutForCheckout
     }
     return (build, parse)
 }

@@ -176,6 +176,31 @@ extension Node {
         return .node(El(name: "div", classes: classes, attributes: attributes, children: children))
     }
     
+    static func fieldset(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "fieldset", classes: classes, attributes: attributes, children: children))
+    }
+    
+    static func label(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "label", classes: classes, attributes: attributes, children: children))
+    }
+    
+    static func input(classes: Class? = nil, name: String, id: String? = nil, type: String = "text",  attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        var a = attributes
+        a["type"] = type
+        a["name"] = name
+        a["id"] = id ?? name
+        a["type"] = type
+        return .node(El(name: "input", classes: classes, attributes: a, children: children))
+    }
+    
+    static func form(classes: Class? = nil, action: String, acceptCharset: String = "UTF-8", method: HTTPMethod = .post, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        var a = attributes
+        a["action"] = action
+        a["accept-charset"] = acceptCharset
+        a["method"] = method.rawValue
+        return .node(El(name: "form", classes: classes, attributes: a, children: children))
+    }
+    
     static func aside(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         return .node(El(name: "div", classes: classes, attributes: attributes, children: children))
     }
