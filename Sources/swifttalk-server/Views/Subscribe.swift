@@ -57,7 +57,7 @@ func registerForm(_ session: Session) -> ((RegisterFormData) -> Node, parse: ([S
             ]),
             Node.div(classes: "container", [
                 Node.div(classes: "max-width-6", [
-                    Node.form(classes: "new_user", action: "/registration", attributes: ["id": "new_user"], [
+                    Node.form(classes: "new_user", action: Route.register.path, attributes: ["id": "new_user"], [
                         // todo utf8?
                         // todo authenticity token (CSRF token)
                         Node.div(classes: "stack+", [
