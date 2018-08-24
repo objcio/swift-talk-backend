@@ -37,170 +37,7 @@ func log(error: String) {
     print(error, to: &standardError)
 }
 
-func catchAndDisplayError<I: Interpreter>(_ f: () throws -> I) -> I {
-    do {
-        return try f()
-    } catch {
-        log(error)
-        if let e = error as? RenderingError {
-            return .write(e.publicMessage, status: .internalServerError)
-        } else {
-            return .write("Something went wrong", status: .internalServerError)
-        }
-    }
-}
-
 struct NoDatabaseConnection: Error { }
-
-extension Route {
-    func interpret<I: Interpreter>(sessionId: UUID?) throws -> I {
-        let session: Session?
-        if let sId = sessionId {
-            session = withConnection { connection in
-                guard let c = connection else { return nil }
-                let user = tryOrPrint { try c.execute(UserResult.select(sessionId: sId)) }
-                return user.map { Session(sessionId: sId, user: $0, csrfToken: "TODO") }
-            }
-        } else {
-            session = nil
-        }
-        switch self {
-        case .books, .issues:
-            return .notFound()
-        case .collections:
-            return I.write(index(Collection.all, session: session))
-        case .imprint:
-            return .write("TODO")
-        case .thankYou:
-            return .write("TODO thanks")
-        case .register:
-            return .write("register")
-        case .createSubscription(let planId, let token):
-            guard let plan = plans.first(where: { $0.plan_code == planId }) else {
-                throw RenderingError.init(privateMessage: "Illegal plan: \(planId)", publicMessage: "Couldn't find the plan you selected.")
-            }
-            guard let u = session?.user else {
-                throw RenderingError(privateMessage: "Creating subscription without user", publicMessage: "You're not logged in.")
-            }
-            let c = CreateSubscription.init(plan_code: planId, currency: "USD", coupon_code: nil, account: .init(account_code: u.id, email: u.data.email, billing_info: .init(token_id: token)))
-            let req = try recurly.createSubscription(c)
-            return I.onComplete(promise: URLSession.shared.load(req), do: { sub in
-                catchAndDisplayError {
-                    guard let s = sub else {
-                        throw RenderingError(privateMessage: "Couldn't load create subscription URL", publicMessage: "Something went wrong, please try again.")
-                    }
-                    switch s {
-                    case .errors(let messages):
-                        return try I.write(newSub(session: session, errs: messages.map { $0.message }))
-                    case .success(let sub):
-                        return try withConnection({ connection in
-                            guard let c = connection else { throw NoDatabaseConnection() }
-                            try c.execute(u.changeSubscriptionStatus(sub.state == .active))
-                            return try I.write("Got a sub \(sub)")
-                        })
-                        
-                    }
-                }
-            })            
-        case .subscribe:
-            return try I.write(plans.subscribe(session: session))
-        case .collection(let name):
-            guard let c = Collection.all.first(where: { $0.slug == name }) else {
-                // todo throw
-                return I.notFound("No such collection")
-            }
-            return .write(c.show(session: session))
-        case .newSubscription:
-            guard let u = session?.user else {
-                return I.redirect(path: Route.subscribe.path, headers: [:])
-            }
-            if !u.data.confirmedNameAndEmail ||  !u.data.validEmail || !u.data.validName {
-                return I.write(registerForm().0)
-            } else {
-                return try I.write(newSub(session: session, errs: []))
-            }
-        case .login(let cont):
-            // todo take cont into account
-            var path = "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(Github.clientId)"
-            if let c = cont {
-                let baseURL = env["BASE_URL"]
-                let encoded = baseURL + Route.githubCallback("", origin: c).path
-                path.append("&redirect_uri=" + encoded.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)
-            }
-            return I.redirect(path: path)
-        case .logout:
-            return withConnection { conn in
-                guard let c = conn else { return .write("No database connection") }
-                if let s = session {
-                    tryOrPrint { try c.execute(s.user.deleteSession(s.sessionId)) }
-                }
-                return I.redirect(to: .home)
-            }
-        case .githubCallback(let code, let origin):
-            return I.onComplete(promise:
-                URLSession.shared.load(Github.getAccessToken(code)).map({ $0?.access_token })
-            	, do: { token in
-                guard let t = token else { return .write("No access") }
-                return I.onComplete(promise: URLSession.shared.load(Github(t).profile), do: { str in
-                    guard let p = str else { return .write("No profile") }
-                    do {
-                        return try withConnection { conn in
-                            guard let c = conn else { return .write("No database connection") }
-                            // todo ask for email if we don't get it
-                            let uid: UUID
-                            if let user = try c.execute(UserResult.select(githubId: p.id)) {
-                                uid = user.id
-                                print("Found existing user: \(user)")
-                            } else {
-                                let userData = UserData(email: p.email ?? "no email", githubUID: p.id, githubLogin: p.login, githubToken: t, avatarURL: p.avatar_url, name: p.name ?? "")
-                                uid = try c.execute(userData.insert)
-                                print("Created new user: \(userData)")
-                            }
-                            let sessionData: SessionData = SessionData(userId: uid)
-                            let sid = try c.execute(sessionData.insert)
-                            let destination: String
-                            if let o = origin?.removingPercentEncoding, o.hasPrefix("/") {
-                                destination = o
-                            } else {
-                                destination = "/"
-                            }
-                            return I.redirect(path: destination, headers: ["Set-Cookie": "sessionid=\"\(sid.uuidString)\"; HttpOnly; Path=/"]) // TODO secure, TODO return to where user came from
-                        }
-                    } catch {
-                        print("something else: \(error)", to: &standardError)
-                        print("something else: \(error.localizedDescription)", to: &standardError)
-                        return I.write("Error", status: .internalServerError)
-                    }
-                })
-                
-            })
-        case .version:
-            return .write(withConnection { conn -> String in
-                let v = try? conn?.execute("SELECT version()") ?? nil
-                return v.map { "\($0)" } ?? "no version"
-            })
-        case .episode(let s):
-            guard let ep = Episode.all.first(where: { $0.slug == s}) else {
-                return .notFound("No such episode")
-            }            
-            return .write(ep.show(session: session))
-        case .episodes:
-            return I.write(index(Episode.all.filter { $0.released }, session: session))
-        case .home:
-            return .write(renderHome(session: session), status: .ok)
-        case .sitemap:
-            return .write(Route.siteMap)
-        case let .staticFile(path: p):
-            guard inWhitelist(p) else {
-                return .write("forbidden", status: .forbidden)
-            }
-            let name = p.map { $0.removingPercentEncoding ?? "" }.joined(separator: "/")
-            return .writeFile(path: name)
-        case .accountBilling:
-            return .write("TODO")
-        }
-    }
-}
 
 let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
 let resourcePaths = [currentDir.appendingPathComponent("assets"), currentDir.appendingPathComponent("node_modules")]
@@ -209,11 +46,31 @@ runMigrations()
 loadStaticData()
 
 let s = MyServer(handle: { request in
-    print(request)
     guard let route = Route(request) else { return nil }
     let sessionString = request.cookies.first { $0.0 == "sessionid" }?.1
     let sessionId = sessionString.flatMap { UUID(uuidString: $0) }
-    return catchAndDisplayError { try route.interpret(sessionId: sessionId) }
+    let conn = Lazy<Connection>({ () throws -> Connection in
+        let c: Connection? = postgreSQL.flatMap {
+            do {
+                let conn = try $0.makeConnection()
+                return conn
+            } catch {
+                print(error, to: &standardError)
+                print(error.localizedDescription, to: &standardError)
+                return nil
+            }
+        }
+        if let conn = c {
+            return conn
+        } else {
+            throw NoDatabaseConnection()
+        }
+    }, cleanup: { conn in
+        try? conn.close()
+    })
+    return catchAndDisplayError {
+        return try route.interpret(sessionId: sessionId, connection: conn)
+    }
 }, resourcePaths: resourcePaths)
 try s.listen()
 

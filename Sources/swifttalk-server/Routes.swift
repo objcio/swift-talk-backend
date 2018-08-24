@@ -12,7 +12,6 @@ enum Route: Equatable {
     case books
     case issues
     case episodes
-    case version
     case sitemap
     case imprint
     case subscribe
@@ -94,7 +93,6 @@ private let createSubRoute: Router<Route> = (.c("subscription") / Router.postPar
 
 private let router: Router<Route> = [
     Router(.home),
-    .c("version", .version),
     .c("books", .books), // todo absolute url
     .c("issues", .issues), // todo absolute url
     .c("episodes", .episodes),
