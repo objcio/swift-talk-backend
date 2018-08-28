@@ -7,7 +7,92 @@
 
 import Foundation
 
-func loadStaticData() {
+final class Static<A> {
+    typealias Compute = (_ callback: @escaping (A?) -> ()) -> ()
+    private let compute: Compute
+    var cached: A?
+    init(sync: @escaping () -> A?) {
+        self.cached = sync()
+        self.compute = { cb in
+            cb(sync())
+        }
+    }
+    
+    init(async: @escaping Compute) {
+        self.cached = nil
+        self.compute = async
+        flush()
+    }
+    
+    func flush() {
+        compute { x in
+            self.cached = x
+        }
+    }
+}
+
+struct StaticJSON<A: Codable> {
+    let fileName: String
+    let process: (A) -> A
+    init(fileName: String, process: @escaping (A) -> A = { $0 }) {
+        self.fileName = fileName
+        self.process = process
+    }
+    
+    func read() -> A? {
+        guard let d = try? Data(contentsOf: URL(fileURLWithPath: fileName)),
+            let e = try? JSONDecoder().decode(A.self, from: d) else { return nil }
+        return process(e)
+    }
+    
+    func write(_ value: A) throws {
+        let d = try JSONEncoder().encode(value)
+        try d.write(to: URL(fileURLWithPath: fileName))
+    }
+}
+
+// todo we could have a struct/func that caches/reads cached JSON data
+
+fileprivate let episodeData = StaticJSON<[Episode]>(fileName: "data/episodes.json", process: { $0.sorted { $0.number > $1.number }})
+fileprivate let episodes: Static<[Episode]> = Static(sync: episodeData.read)
+
+let collectionData = StaticJSON<[Collection]>(fileName: "data/collections.json")
+fileprivate let collections: Static<[Collection]> = Static(sync: collectionData.read)
+
+func flushStaticData() {
+    episodes.flush()
+    collections.flush()
+    plans.flush()
+    verifyStaticData()
+}
+
+fileprivate let cachedPlanData = StaticJSON<[Plan]>(fileName: "data/plans.json")
+fileprivate let plans: Static<[Plan]> = Static(async: { cb in
+    cb(cachedPlanData.read())
+    URLSession.shared.load(recurly.plans, callback: { value in
+        cb(value)
+        guard let v = value else {
+            print("Could not load plans", to: &standardError)
+            cb(nil)
+            return
+        }
+        try? cachedPlanData.write(v)
+    })
+})
+
+func myAssert(_ cond: @autoclosure () -> Bool, _ message: @autoclosure () -> String = "Assertion failure \(#file):\(#line) \(#function)", file: StaticString = #file, line: UInt = #line, method: StaticString = #function) {
+    // todo if production/debug
+    if true {
+        guard !cond() else { return }
+        print(message(), to: &standardError)
+    } else {
+        assert(cond(), message, file: file, line: line)
+    }
+    
+}
+
+func verifyStaticData() {
+    myAssert(Plan.all.count >= 2)
     for e in Episode.all {
         for c in e.collections {
             assert(Collection.all.contains(where: { $0.title == c }))
@@ -15,23 +100,14 @@ func loadStaticData() {
     }
 }
 
+extension Plan {
+    static var all: [Plan] { return plans.cached ?? [] }
+}
 extension Episode {
-    static let all: [Episode] = {
-        // for this (and the rest of the app) to work we need to launch with a correct working directory (root of the app)
-        let d = try! Data(contentsOf: URL(fileURLWithPath: "data/episodes.json"))
-        let e = try! JSONDecoder().decode([Episode].self, from: d)
-        return e.sorted { $0.number > $1.number }
-        
-    }()
-    
+    static var all: [Episode] { return episodes.cached ?? [] }
 }
 
 extension Collection {
-    static let all: [Collection] = {
-        // for this (and the rest of the app) to work we need to launch with a correct working directory (root of the app)
-        let d = try! Data(contentsOf: URL(fileURLWithPath: "data/collections.json"))
-        let e = try! JSONDecoder().decode([Collection].self, from: d)
-        return e
-    }()
+    static var all: [Collection] { return collections.cached ?? [] }
 }
 

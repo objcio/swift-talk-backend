@@ -105,7 +105,7 @@ extension Route {
                 guard let planId = dict["plan_id"], let token = dict["billing_info[token]"] else {
                     throw RenderingError(privateMessage: "Incorrect post data", publicMessage: "Something went wrong")
                 }
-                let plan = try plans.first(where: { $0.plan_code == planId }) ?! RenderingError.init(privateMessage: "Illegal plan: \(planId)", publicMessage: "Couldn't find the plan you selected.")
+                let plan = try Plan.all.first(where: { $0.plan_code == planId }) ?! RenderingError.init(privateMessage: "Illegal plan: \(planId)", publicMessage: "Couldn't find the plan you selected.")
                 let cr = CreateSubscription.init(plan_code: plan.plan_code, currency: "USD", coupon_code: nil, account: .init(account_code: s.user.id, email: s.user.data.email, billing_info: .init(token_id: token)))
                 let req = recurly.createSubscription(cr)
                 return I.onComplete(promise: URLSession.shared.load(req), do: { sub in
@@ -121,7 +121,7 @@ extension Route {
                 })
             }
         case .subscribe:
-            return try I.write(plans.subscribe(session: session))
+            return try I.write(Plan.all.subscribe(session: session))
         case .collection(let name):
             guard let c = Collection.all.first(where: { $0.slug == name }) else {
                 // todo throw

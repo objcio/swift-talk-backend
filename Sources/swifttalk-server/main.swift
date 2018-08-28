@@ -9,16 +9,6 @@ let env = Env()
 
 let recurly = Recurly(subdomain: "\(env["RECURLY_SUBDOMAIN"]).recurly.com", apiKey: env["RECURLY_API_KEY"])
 
-// TODO: I'm not sure if it's a good idea to initialize the plans like this. We should maybe also have static data?
-private(set) var plans: [Plan] = []
-URLSession.shared.load(recurly.plans, callback: { value in
-    if let p = value {
-        plans = p
-    } else {
-        print("Could not load plans", to: &standardError) // todo: fall back to old plans?
-    }
-})
-
 // fetches mail@floriankugler.com account from recurly staging and calculates number of months with an active subscription
 //let myId = UUID(uuidString: "06a5313b-7972-48a9-a0a9-3d7d741afe44")!
 //URLSession.shared.load(recurly.account(with: myId)) { result in
@@ -43,7 +33,7 @@ let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
 let resourcePaths = [currentDir.appendingPathComponent("assets"), currentDir.appendingPathComponent("node_modules")]
 
 runMigrations()
-loadStaticData()
+verifyStaticData()
 
 let s = MyServer(handle: { request in
     guard let route = Route(request) else { return nil }

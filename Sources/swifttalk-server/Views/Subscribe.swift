@@ -75,17 +75,20 @@ func registerForm(_ session: Session) -> ((RegisterFormData) -> Node, parse: ([S
     return (build, parse)
 }
 
+extension Plan {
+    static var monthly: Plan? {
+        return all.first(where: { $0.plan_interval_unit == .months && $0.plan_interval_length == 1 })
+    }
+    static var yearly: Plan? {
+        return all.first(where: { $0.plan_interval_unit == .months && $0.plan_interval_length == 12 })
+    }
+
+}
 extension Array where Element == Plan {
-    var monthly: Plan? {
-        return first(where: { $0.plan_interval_unit == .months && $0.plan_interval_length == 1 })
-    }
-    var yearly: Plan? {
-        return first(where: { $0.plan_interval_unit == .months && $0.plan_interval_length == 12 })
-    }
     
     func subscribe(session: Session?, coupon: String? = nil) throws -> Node {
-        guard let monthly = self.monthly, let yearly = self.yearly else {
-            throw RenderingError(privateMessage: "Can't find monthly or yearly plan: \([plans])", publicMessage: "Something went wrong, please try again later")
+        guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
+            throw RenderingError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
         }
         
         assert(coupon == nil) // todo
@@ -155,8 +158,8 @@ func smallPrint(coupon: Bool) -> [String] {
 }
 
 func newSub(session: Session?, errs: [String]) throws -> Node {
-    guard let m = plans.monthly, let y = plans.yearly else {
-        throw RenderingError(privateMessage: "No monthly or yearly plan: \(plans)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
+    guard let m = Plan.monthly, let y = Plan.yearly else {
+        throw RenderingError(privateMessage: "No monthly or yearly plan: \(Plan.all)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
     }
     let data = NewSubscriptionData(action: Route.createSubscription.path, public_key: env["RECURLY_PUBLIC_KEY"], plans: [
         .init(m), .init(y)
