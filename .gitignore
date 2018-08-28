@@ -13,3 +13,4 @@
 .sass-cache
 node_modules
 .env
+data/plans.json
