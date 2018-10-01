@@ -32,13 +32,15 @@ struct RegisterFormData {
     var email: String
     var name: String
 }
-func registerForm(_ session: Session) -> ((RegisterFormData) -> Node, parse: ([String:String]) -> RegisterFormData?) {
+
+typealias ValidationError = (field: String, message: String)
+func registerForm(_ session: Session) -> (form: (RegisterFormData, [ValidationError]) -> Node, parse: ([String:String]) -> RegisterFormData?) {
     func parse(_ dict: [String:String]) -> RegisterFormData? {
         guard let e = dict["email"], let n = dict["name"] else { return nil }
         return RegisterFormData(email: e, name: n)
     }
     
-    func build(_ data: RegisterFormData) -> Node {
+    func build(_ data: RegisterFormData, errors: [ValidationError]) -> Node {
         func field(id: String, description: String, value: String?) -> Node {
             return Node.fieldset(classes: "input-unit", [
                 .p([
@@ -56,6 +58,7 @@ func registerForm(_ session: Session) -> ((RegisterFormData) -> Node, parse: ([S
                 ]),
             ]),
             Node.div(classes: "container", [
+                Node.p(classes: "mb++ bgcolor-invalid color-white ms-1 pa radius-3 bold", [.text("\(errors)")]), // todo
                 Node.div(classes: "max-width-6", [
                     Node.form(classes: "new_user", action: Route.register.path, attributes: ["id": "new_user"], [
                         // todo utf8?

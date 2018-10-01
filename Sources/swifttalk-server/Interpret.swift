@@ -96,8 +96,13 @@ extension Route {
                 u.data.email = result.email
                 u.data.name = result.name
                 u.data.confirmedNameAndEmail = true
-                try c.get().execute(u.update())
-                return I.redirect(to: .newSubscription)
+                let errors = u.data.validate()
+                if errors.isEmpty {
+                    try c.get().execute(u.update())
+                    return I.redirect(to: .newSubscription)
+                } else {
+                    return I.write(registerForm(s).form(result, errors))
+                }
             })
         case .createSubscription:
             let s = try requireSession()
@@ -131,8 +136,8 @@ extension Route {
         case .newSubscription:
             let s = try requireSession()
             let u = s.user
-            if !u.data.confirmedNameAndEmail ||  !u.data.validEmail || !u.data.validName {
-                return I.write(registerForm(s).0(RegisterFormData(email: u.data.email, name: u.data.name)))
+            if !u.data.confirmedNameAndEmail {
+                return I.write(registerForm(s).form(RegisterFormData(email: u.data.email, name: u.data.name), []))
             } else {
                 return try I.write(newSub(session: session, errs: []))
             }

@@ -70,12 +70,15 @@ extension UserData {
         return admin || collaborator || subscriber
     }
     
-    var validEmail: Bool {
-        return email.contains("@") // todo should we really do more than this?
-    }
-    
-    var validName: Bool {
-        return !name.isEmpty
+    func validate() -> [ValidationError] {
+        var result: [(String,String)] = []
+        if !email.contains("@") {
+            result.append(("email", "Invalid email address"))
+        }
+        if name.isEmpty {
+            result.append(("name", "Name isn't empty"))
+        }
+        return result
     }
 }
 
