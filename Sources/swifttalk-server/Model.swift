@@ -31,7 +31,7 @@ struct Guest: Codable, Equatable {
 }
 
 struct Episode: Codable, Equatable {
-    var collections: [String]
+    var collections: [Id<Collection>]
     var created_at: String
     var id: Id<Episode>
     var mailchimp_campaign_id: String?
@@ -54,6 +54,29 @@ struct Episode: Codable, Equatable {
     var updated_at: String?
     var video_id: String?
 //    var guests: [Guest]?
+    var resources: PostgresArray<Resource>
+}
+
+struct PostgresArray<A>: Codable, Equatable where A: Codable, A: Equatable {
+    var values: [A]
+    
+    init(from decoder: Decoder) throws {
+        do {
+            values = try .init(from: decoder)
+        } catch {
+        	values = []
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        try values.encode(to: encoder)
+    }
+}
+
+struct Resource: Codable, Equatable {
+    var title: String
+    var subtitle: String
+    var url: URL
 }
 
 extension Episode {
@@ -75,8 +98,8 @@ extension Episode {
     }
     
     var theCollections: [Collection] {
-        return collections.compactMap { name in
-            Collection.all.first { $0.title ==  name }
+        return collections.compactMap { cid in
+            Collection.all.first { $0.id ==  cid }
         }
     }
     
@@ -107,7 +130,7 @@ struct Collection: Codable, Equatable {
 
 extension Collection {
     var episodes: [Episode] {
-        return Episode.all.filter { $0.collections.contains(title) }
+        return Episode.all.filter { $0.collections.contains(id) }
     }
     
     var total_duration: TimeInterval {

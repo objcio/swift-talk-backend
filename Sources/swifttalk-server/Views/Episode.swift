@@ -82,6 +82,8 @@ extension Episode {
         
         let synopsisNode: [Node] = options.synopsis ? [.p(classes: synopsisClasses, [.text(synopsis)])] : [] // todo widow thing
         
+        // TODO sidebar!
+        
         return Node.article(classes: classes, [
             Node.div(classes: pictureClasses, [
                 .link(to: .episode(slug), [
@@ -111,7 +113,15 @@ extension Episode {
     
 }
 
+
+
 extension Episode {
+    enum DownloadStatus {
+        case notSubscribed
+        case reDownload
+        case canDownload
+        case noCredits
+    }
     struct Media {
         var url: URL
         var type: String
@@ -170,7 +180,7 @@ extension Episode {
             ])
     }
     
-    func show(watched: Bool = false, session: Session?) -> Node {
+    func show(watched: Bool = false, downloadStatus: DownloadStatus, session: Session?) -> Node {
         let canWatch = !subscription_only || session.premiumAccess
         let guests_: [Node] = [] // todo
         // todo: subscribe banner
@@ -198,7 +208,38 @@ extension Episode {
                     })
                 ])
         
+        func smallBlueH3(_ text: Node) -> Node {
+            return Node.h3(classes: "color-blue mb", [Node.span(classes: "smallcaps", [text])])
+        }
         
+        let episodeResource: [[Node]] = [] // todo
+        let download: [[Node]] = [] // todo
+        let resourceItems: [[Node]] = episodeResource + download
+        let resources: [Node] = canWatch ? [
+            Node.section(classes: "pb++", [
+                smallBlueH3("Resources"),
+            Node.ul(classes: "stack", resourceItems.map { Node.li(classes: "flex", $0)})
+            ]) // todo
+        ] : []
+        
+        let inCollection: [Node] = primaryCollection.map { coll in
+            [Node.section(classes: "pb++", [
+                smallBlueH3("In Collection"),
+                Node.text("Render primary collection \(coll.title)"),
+                Node.p(classes: "ms-1 mt text-right", [
+                    Node.link(to: .collections, [
+                        Node.span(classes: "hover-cascade__border-bottom", ["See All Collections"]),
+                        Node.span(classes: "bold", [Node.raw("&rarr;")])
+                    ], classes: "no-decoration color-blue hover-cascade")])
+                ])
+            ]
+        } ?? []
+        let details = canWatch ? [
+            Node.div(classes: "pb++", [
+                "TODO" // todo
+            ])
+        ] : []
+        let sidebar: Node = Node.aside(classes: "p-col max-width-7 center stack l+|width-1/3 xl+|width-3/10 l+|flex-auto", resources + inCollection + details)
         let main: Node = Node.div(classes: "js-episode", [
             .div(classes: "bgcolor-night-blue pattern-shade-darker", [
                 .div(classes: "container l+|pb0 l+|n-mb++", [
@@ -238,7 +279,8 @@ extension Episode {
                                         ])
                                     ])
                                 ])
-                            ])
+                            ]),
+                        	sidebar
                         ])
                     ] : [
                         .div(classes: "bgcolor-pale-blue border border-1 border-color-subtle-blue radius-5 ph pv++ flex flex-column justify-center items-center text-center min-height-6", [

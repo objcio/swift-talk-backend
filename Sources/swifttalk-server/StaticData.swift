@@ -40,9 +40,15 @@ struct StaticJSON<A: Codable> {
     }
     
     func read() -> A? {
-        guard let d = try? Data(contentsOf: URL(fileURLWithPath: fileName)),
-            let e = try? JSONDecoder().decode(A.self, from: d) else { return nil }
-        return process(e)
+        do {
+            let d = try Data(contentsOf: URL(fileURLWithPath: fileName))
+            let e = try JSONDecoder().decode(A.self, from: d)
+            return process(e)
+        } catch {
+            print(error, to: &standardError)
+            print(error.localizedDescription, to: &standardError)
+            return nil
+        }
     }
     
     func write(_ value: A) throws {
@@ -92,10 +98,12 @@ func myAssert(_ cond: @autoclosure () -> Bool, _ message: @autoclosure () -> Str
 }
 
 func verifyStaticData() {
+    dump(Episode.all.first!)
+    dump(Episode.all.last!)
     myAssert(Plan.all.count >= 2)
     for e in Episode.all {
         for c in e.collections {
-            assert(Collection.all.contains(where: { $0.title == c }))
+            assert(Collection.all.contains(where: { $0.id == c }), "\(c) \(e)")
         }
     }
 }

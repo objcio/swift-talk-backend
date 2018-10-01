@@ -9,7 +9,22 @@ A description of this package.
 ```
 \t on
 \pset format unaligned
-SELECT json_agg(t) FROM (SELECT e.id, number, title, release_at, created_at, updated_at, season, media_duration, media_src, subscription_only, name, synopsis, media_version, released, poster_uid, sample_src, sample_duration, sample_version, video_id, mailchimp_campaign_id, (SELECT array(SELECT collection_id FROM collection_episodes where episode_id = e.id ORDER BY "primary" ASC) as collections) FROM episodes e) t \g episodes.json
+SELECT json_agg(t) FROM (
+    SELECT e.id, number, title, release_at, created_at, updated_at, season, media_duration, media_src, subscription_only, name, synopsis, media_version, released, poster_uid, sample_src, sample_duration, sample_version, video_id, mailchimp_campaign_id, 
+    (SELECT array(
+       SELECT collection_id FROM collection_episodes where episode_id = e.id ORDER BY "primary" ASC
+       )
+    as collections),
+    (
+      SELECT json_agg(resource) FROM (
+        SELECT r.title as title, r.subtitle as subtitle, r.url as url 
+        FROM episode_resources r WHERE r.episode_id = e.id
+      ) resource
+    ) resources
+    FROM episodes e
+) 
+t 
+\g episodes.json
 ```
 
 # Postgres
