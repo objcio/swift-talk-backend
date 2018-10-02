@@ -191,6 +191,8 @@ extension Route {
             return .write(renderHome(session: session), status: .ok)
         case .sitemap:
             return .write(Route.siteMap)
+        case .download:
+            return .write("TODO")
         case let .staticFile(path: p):
             // todo: we're creating a database connection for every static file!
             guard inWhitelist(p) else {

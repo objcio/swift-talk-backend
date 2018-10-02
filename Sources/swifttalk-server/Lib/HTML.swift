@@ -165,6 +165,10 @@ extension Node {
         return .node(El(name: "h3", block: false, classes: classes, attributes: attributes, children: title))
     }
     
+    static func h4(classes: Class? = nil, _ title: [Node], attributes: [String:String] = [:]) -> Node {
+        return .node(El(name: "h4", block: false, classes: classes, attributes: attributes, children: title))
+    }
+    
     static func img(src: String, alt: String = "", classes: Class? = nil, attributes: [String:String] = [:]) -> Node {
         var a = attributes
         a["src"] = src

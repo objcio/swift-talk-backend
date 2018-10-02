@@ -212,14 +212,39 @@ extension Episode {
             return Node.h3(classes: "color-blue mb", [Node.span(classes: "smallcaps", [text])])
         }
         
-        let episodeResource: [[Node]] = [] // todo
-        let download: [[Node]] = [] // todo
+        let linkAttrs: [String:String] = ["target": "_blank", "rel": "external"]
+        let episodeResource: [[Node]] = self.resources.values.map { res in
+            [
+                Node.div(classes: "flex-none mr-", [
+                    Node.a(classes: "block bgcolor-orange radius-5 hover-bgcolor-blue", attributes: linkAttrs, [
+                        Node.inlineSvg(path: "icon-resource-code.svg", classes: "block icon-40")
+                        ], href: res.url.absoluteString)
+                ]),
+                Node.div(classes: "ms-1 lh-125", [
+                    Node.h4(classes: "mb---", [
+                        Node.a(classes: "bold color-black hover-underline no-decoration", attributes: linkAttrs, [.text(res.title)], href: res.url.absoluteString)
+                    ]),
+                    Node.p(classes: "color-gray-50", [.text(res.subtitle)])
+                ])
+            ]
+        }
+        let canDownload = downloadStatus == .canDownload || downloadStatus == .reDownload
+        let downloadImage = Node.inlineSvg(path: "icon-resource-download.svg", classes: "block icon-40")
+        let download: [[Node]] = [
+            [Node.div(classes: "flex-none mr-", [
+                canDownload ? Node.link(to: Route.download(slug), [downloadImage], classes: "block bgcolor-orange radius-5 hover-bgcolor-blue")
+                    : Node.span(classes: "block bgcolor-orange radius-5 cursor-not-allowed", [downloadImage])
+                
+            ]),
+            Node.text("TODO")
+            ]
+        ] // todo
         let resourceItems: [[Node]] = episodeResource + download
         let resources: [Node] = canWatch ? [
             Node.section(classes: "pb++", [
                 smallBlueH3("Resources"),
             Node.ul(classes: "stack", resourceItems.map { Node.li(classes: "flex", $0)})
-            ]) // todo
+            ])
         ] : []
         
         let inCollection: [Node] = primaryCollection.map { coll in

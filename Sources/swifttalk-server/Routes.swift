@@ -26,6 +26,7 @@ enum Route: Equatable {
     case githubCallback(String, origin: String?)
     case collection(Slug<Collection>)
     case episode(Slug<Episode>)
+    case download(Slug<Episode>)
     case staticFile(path: [String])
 }
 
