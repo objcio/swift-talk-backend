@@ -202,6 +202,8 @@ extension Route {
             return .writeFile(path: name)
         case .accountBilling:
             return .write("TODO")
+        case .external(let url):
+            return I.redirect(path: url.absoluteString) // is this correct?
         }
     }
 }

@@ -213,6 +213,17 @@ extension Episode {
         }
         
         let linkAttrs: [String:String] = ["target": "_blank", "rel": "external"]
+
+        // nil link displays a "not allowed" span
+        func smallH4(_ text: Node, link: Route?) -> Node {
+            return Node.h4(classes: "mb---", [
+                link.map { l in
+                    Node.link(to: l, [text], classes: "bold color-black hover-underline no-decoration", attributes: linkAttrs)
+                } ??
+                Node.span(classes: "bold color-gray-40 cursor-not-allowed", [text])
+                ])
+        }
+        
         let episodeResource: [[Node]] = self.resources.values.map { res in
             [
                 Node.div(classes: "flex-none mr-", [
@@ -221,9 +232,7 @@ extension Episode {
                         ], href: res.url.absoluteString)
                 ]),
                 Node.div(classes: "ms-1 lh-125", [
-                    Node.h4(classes: "mb---", [
-                        Node.a(classes: "bold color-black hover-underline no-decoration", attributes: linkAttrs, [.text(res.title)], href: res.url.absoluteString)
-                    ]),
+                    smallH4(.text(res.title), link: .external(res.url)),
                     Node.p(classes: "color-gray-50", [.text(res.subtitle)])
                 ])
             ]
@@ -236,7 +245,10 @@ extension Episode {
                     : Node.span(classes: "block bgcolor-orange radius-5 cursor-not-allowed", [downloadImage])
                 
             ]),
-            Node.text("TODO")
+            Node.div(classes: "ms-1 lh-125", [
+                smallH4(.text("Episode Video"), link: canDownload ? Route.download(slug) : nil),
+                
+            ]),
             ]
         ] // todo
         let resourceItems: [[Node]] = episodeResource + download

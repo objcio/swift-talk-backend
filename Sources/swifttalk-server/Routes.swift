@@ -28,6 +28,7 @@ enum Route: Equatable {
     case episode(Slug<Episode>)
     case download(Slug<Episode>)
     case staticFile(path: [String])
+    case external(URL)
 }
 
 extension Route {
