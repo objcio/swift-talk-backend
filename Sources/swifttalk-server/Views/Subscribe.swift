@@ -113,7 +113,7 @@ extension Array where Element == Plan {
         if session.premiumAccess {
             continueLink = Node.link(to: .accountBilling, ["You're already subscribed"], classes: linkClasses + "c-button--ghost")
         } else if session?.user != nil {
-            print(session?.user)
+//            print(session?.user)
             continueLink = Node.link(to: .newSubscription, ["Proceed to payment"], classes: linkClasses)
         } else {
             // todo continue to .newSubscription

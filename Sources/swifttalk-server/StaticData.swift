@@ -98,8 +98,6 @@ func myAssert(_ cond: @autoclosure () -> Bool, _ message: @autoclosure () -> Str
 }
 
 func verifyStaticData() {
-    dump(Episode.all.first!)
-    dump(Episode.all.last!)
     myAssert(Plan.all.count >= 2)
     for e in Episode.all {
         for c in e.collections {

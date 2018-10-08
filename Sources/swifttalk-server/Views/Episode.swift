@@ -261,9 +261,10 @@ extension Episode {
         
         let inCollection: [Node] = primaryCollection.map { coll in
             [Node.section(classes: "pb++", [
-                smallBlueH3("In Collection"),
-                Node.text("Render primary collection \(coll.title)"),
-                Node.p(classes: "ms-1 mt text-right", [
+                smallBlueH3("In Collection")
+                ] +
+                coll.render(.init(episodes: true))
+                + [Node.p(classes: "ms-1 mt text-right", [
                     Node.link(to: .collections, [
                         Node.span(classes: "hover-cascade__border-bottom", ["See All Collections"]),
                         Node.span(classes: "bold", [Node.raw("&rarr;")])
