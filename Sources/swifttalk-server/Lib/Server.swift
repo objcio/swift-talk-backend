@@ -35,14 +35,17 @@ protocol Interpreter {
 }
 
 struct Promise<A> {
-    let run: (@escaping (A) -> ()) -> ()
+    public let run: (@escaping (A) -> ()) -> ()
+    init(_ run: @escaping ((@escaping (A) -> ()) -> ())) {
+        self.run = run
+    }
     
     func map<B>(_ f: @escaping (A) -> B) -> Promise<B> {
-        return Promise<B>(run: { cb in
+        return Promise<B> { cb in
             self.run { a in
                 cb(f(a))
             }
-        })
+        }
     }
 }
 

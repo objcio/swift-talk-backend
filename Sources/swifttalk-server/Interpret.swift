@@ -8,6 +8,20 @@
 import Foundation
 import PostgreSQL
 
+extension Row where A == UserData {
+    var monthsOfActiveSubscription: Promise<UInt> {
+        return Promise { cb in
+            URLSession.shared.load(recurly.account(with: self.id)) { result in
+                guard let acc = result else { fatalError() }
+                URLSession.shared.load(recurly.listSubscriptions(accountId: acc.account_code)) { subs in
+                    let months = subs?.map { $0.activeMonths }.reduce(0, +)
+                    cb(months ?? 0)
+                }
+            }
+            
+        }
+    }
+}
 func catchAndDisplayError<I: Interpreter>(_ f: () throws -> I) -> I {
     do {
         return try f()
@@ -201,7 +215,11 @@ extension Route {
             let name = p.map { $0.removingPercentEncoding ?? "" }.joined(separator: "/")
             return .writeFile(path: name)
         case .accountBilling:
-            return .write("TODO")
+            let sess = try requireSession()
+            return I.onComplete(promise: sess.user.monthsOfActiveSubscription, do: { num in
+                let d = try c.get().execute(sess.user.downloads).count
+                return .write("Number of months of subscription: \(num), downloads: \(d)")
+            })
         case .external(let url):
             return I.redirect(path: url.absoluteString) // is this correct?
         }

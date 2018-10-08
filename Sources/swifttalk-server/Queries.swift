@@ -28,6 +28,19 @@ struct SessionData: Codable, Insertable {
     static let tableName: String = "sessions"
 }
 
+struct DownloadData: Codable, Insertable {
+    var userId: UUID
+    var episodeId: UUID
+    var createdAt: Date
+    init(user: UUID, episode: UUID) {
+        self.userId = user
+        self.episodeId = episode
+        self.createdAt = Date()
+    }
+    
+    static let tableName: String = "downloads"
+}
+
 struct UserData: Codable, Insertable {
     var email: String
     var githubUID: Int
@@ -80,6 +93,7 @@ extension UserData {
         }
         return result
     }
+ 
 }
 
 struct Row<A: Codable>: Codable {
@@ -109,6 +123,15 @@ extension Row where A == UserData {
         return Query(query: query, values: [id], parse: { node in
             let result = PostgresNodeDecoder.decode([Row<A>].self, transformKey: { $0.snakeCased }, node: node)
             return result.first
+        })
+    }
+    
+    var downloads: Query<[Row<DownloadData>]> {
+        let fields = DownloadData.fieldNames.map { "d.\($0)" }.joined(separator: ", ")
+        let query = "SELECT d.id, \(fields) FROM \(DownloadData.tableName) AS d WHERE d.user_id = $1"
+        return Query(query: query, values: [id], parse: { node in
+            let result = PostgresNodeDecoder.decode([Row<DownloadData>].self, transformKey: { $0.snakeCased }, node: node)
+            return result
         })
     }
 

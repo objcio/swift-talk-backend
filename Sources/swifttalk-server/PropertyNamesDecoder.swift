@@ -122,6 +122,9 @@ public final class PropertyNamesDecoder: Decoder {
             decoder.fields.append(key.stringValue)
             let copy = decoder.fields
             defer { decoder.fields = copy }
+            if type == UUID.self {
+                return UUID() as! T
+            }
             return try T(from: decoder)
         }
         

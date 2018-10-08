@@ -65,6 +65,15 @@ fileprivate let migrations: [String] = [
     """,
     """
 	ALTER TABLE users ADD COLUMN IF NOT EXISTS confirmed_name_and_email boolean DEFAULT false NOT NULL;
+	""",
+    """
+	CREATE TABLE IF NOT EXISTS downloads (
+		id uuid DEFAULT public.uuid_generate_v4() PRIMARY KEY,
+		user_id uuid REFERENCES users NOT NULL,
+		episode_id uuid NOT NULL,
+		created_at timestamp NOT NULL,
+		UNIQUE (user_id, episode_id)
+	)
 	"""
 ]
 

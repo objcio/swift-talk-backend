@@ -68,6 +68,7 @@ extension Insertable {
 extension Connection {
     func execute<A>(_ query: Query<A>) throws -> A {
         let node = try execute(query.query, query.values)
+        print(query.query)
         return query.parse(node)
     }
 }
