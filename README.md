@@ -28,7 +28,7 @@ SELECT json_agg(t) FROM (
     FROM episodes e
 ) 
 t 
-\g episodes.json
+\g data/episodes.json
 ```
 
 To export the collaborators as well, do the following:
@@ -36,7 +36,16 @@ To export the collaborators as well, do the following:
 ```swift
 SELECT json_agg(t) FROM (
   SELECT id, name, url, role FROM collaborators ORDER BY created_at ASC
-) t \g collaborators.json
+) h 
+\g data/collaborators.json
+```
+
+Exporting collections:
+
+```swift
+SELECT json_agg(t) FROM (
+    SELECT id, title, description, public, position, artwork_uid, new, slug, use_as_title_prefix FROM collections ORDER by position DESC
+) t \g data/collections.json
 ```
 
 # Postgres

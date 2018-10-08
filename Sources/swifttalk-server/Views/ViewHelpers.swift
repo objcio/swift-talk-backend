@@ -14,12 +14,6 @@ extension Episode {
     }
 }
 
-extension Collection {
-    var slug: Slug<Collection> {
-        return Slug(rawValue: title.asSlug)
-    }
-}
-
 extension Optional where Wrapped == Session {
     var premiumAccess: Bool {
         return self?.user.data.premiumAccess ?? false

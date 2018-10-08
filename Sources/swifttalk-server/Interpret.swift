@@ -83,7 +83,7 @@ extension Route {
         case .books, .issues:
             return .notFound()
         case .collections:
-            return I.write(index(Collection.all, session: session))
+            return I.write(index(Collection.all.filter { !$0.episodes.isEmpty }, session: session))
         case .imprint:
             return .write("TODO")
         case .thankYou:

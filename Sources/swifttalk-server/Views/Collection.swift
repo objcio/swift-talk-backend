@@ -38,7 +38,7 @@ extension Collection {
                         Node.p(attributes: ["class": "color-gray-65 lh-125 mt"], [
                             .text(episodes.released.count.pluralize("Episode")),
                             .span(attributes: ["class": "ph---"], [.raw("&middot;")]),
-                            .text(total_duration.hoursAndMinutes)
+                            .text(totalDuration.hoursAndMinutes)
                             ])
                         ])
                     ])
@@ -94,7 +94,7 @@ extension Collection {
                 Node.p(attributes: ["class": "ms-1 color-gray-55 lh-125 mt--"], [
                     .text(episodes.count.pluralize("Episode")),
                     .span(attributes: ["class": "ph---"], [Node.raw("&middot;")]),
-                    .text(total_duration.hoursAndMinutes)
+                    .text(totalDuration.hoursAndMinutes)
                     ] as [Node])
                 ] + episodes_)
         ]

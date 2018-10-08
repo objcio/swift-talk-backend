@@ -125,6 +125,7 @@ struct NIOInterpreter: Interpreter {
                 // (path as NSString) doesn't work on Linux... so using the initializer below.
                 switch NSString(string: path).pathExtension {
                 case "css": contentType = "text/css; charset=utf-8"
+                case "svg": contentType = "image/svg+xml; charset=utf8"
                 default: contentType = "text/plain; charset=utf-8"
                 }
                 response.headers.add(name: "Content-Type", value: contentType)

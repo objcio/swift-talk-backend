@@ -170,24 +170,27 @@ extension Sequence where Element == Episode {
 
 struct Collection: Codable, Equatable {
     var id: Id<Collection>
-    var artwork: String // todo this is a weird kind of URL we get from JSON
-    var description: String
     var title: String
+    var `public`: Bool
+    var description: String
+    var position: Int
+    var artwork_uid: String?
+    var new: Bool
+    var slug: Slug<Collection>
+    var use_as_title_prefix: Bool
 }
 
 extension Collection {
+    var artwork: String {
+        return "/assets/images/collections/\(title).svg"
+    }
+    
     var episodes: [Episode] {
         return Episode.all.filter { $0.collections.contains(id) }
     }
     
-    var total_duration: TimeInterval {
+    var totalDuration: TimeInterval {
         return episodes.released.map { $0.media_duration ?? 0 }.reduce(0, +)
-    }
-}
-
-extension Collection {
-    var new: Bool {
-        return false // todo
     }
 }
 

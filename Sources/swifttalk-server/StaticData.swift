@@ -121,7 +121,7 @@ extension Episode {
 }
 
 extension Collection {
-    static var all: [Collection] { return collections.cached ?? [] }
+    static var all: [Collection] { return collections.cached?.filter { !$0.episodes.isEmpty && $0.public }.sorted(by:  { $0.new && !$1.new || $0.position > $1.position }) ?? [] }
 }
 
 extension Collaborator {
