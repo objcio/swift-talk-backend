@@ -160,14 +160,12 @@ extension Episode {
         return p.title + ": " + title
     }
     
-}
-
-extension Sequence where Element == Episode {
-    var released: [Episode] {
-        return filter { $0.released }
+    static func scoped(for user: UserData?) -> [Episode] {
+        guard let u = user, u.admin || u.collaborator else { return all.filter { $0.released } }
+        return Episode.all
     }
+    
 }
-
 
 struct Collection: Codable, Equatable {
     var id: Id<Collection>
@@ -186,12 +184,20 @@ extension Collection {
         return "/assets/images/collections/\(title).svg"
     }
     
-    var episodes: [Episode] {
-        return Episode.all.filter { $0.collections.contains(id) }
-    }
-    
+    func episodes(for user: UserData?) -> [Episode] {
+        return Episode.scoped(for: user).filter { $0.collections.contains(id) }
+    }    
+}
+
+extension Sequence where Element == Episode {
     var totalDuration: TimeInterval {
-        return episodes.released.map { $0.media_duration ?? 0 }.reduce(0, +)
+        return lazy.map { $0.media_duration ?? 0 }.reduce(0, +)
+    }
+}
+
+extension Episode {
+    func canWatch(session: Session?) -> Bool {
+        return session.premiumAccess || !subscription_only
     }
 }
 

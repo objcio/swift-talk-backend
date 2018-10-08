@@ -83,7 +83,7 @@ extension Route {
         case .books, .issues:
             return .notFound()
         case .collections:
-            return I.write(index(Collection.all.filter { !$0.episodes.isEmpty }, session: session))
+            return I.write(index(Collection.all.filter { !$0.episodes(for: session?.user.data).isEmpty }, session: session))
         case .imprint:
             return .write("TODO")
         case .thankYou:
@@ -180,13 +180,13 @@ extension Route {
                     })
             })
         case .episode(let s):
-            guard let ep = Episode.all.first(where: { $0.slug == s}) else {
+            guard let ep = Episode.scoped(for: session?.user.data).first(where: { $0.slug == s}) else {
                 return .notFound("No such episode")
             }
             let status = Episode.DownloadStatus.noCredits  // todo
             return .write(ep.show(downloadStatus: status, session: session))
         case .episodes:
-            return I.write(index(Episode.all.filter { $0.released }, session: session))
+            return I.write(index(Episode.scoped(for: session?.user.data), session: session))
         case .home:
             return .write(renderHome(session: session), status: .ok)
         case .sitemap:

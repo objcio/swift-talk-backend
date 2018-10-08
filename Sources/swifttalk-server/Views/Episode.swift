@@ -98,7 +98,7 @@ extension Episode {
                 ]),
             Node.div(classes: contentClasses, [
                 Node.header(coll + ([
-                    Node.h3([Node.link(to: .episode(slug), [Node.text(title)], classes: titleClasses)])
+                    Node.h3([Node.link(to: .episode(slug), [Node.text(title + (released ? "" : " (unreleased)"))], classes: titleClasses)])
                     ] as [Node])),
                 ] + synopsisNode + [
                     .p(classes: footerClasses, [
@@ -227,7 +227,7 @@ extension Episode {
                     ]),
                 Node.div(classes: "flex scroller js-scroller-container p-edges pt pb++", [
                     Node.div(classes: "scroller__offset flex-none")
-                    ] + Episode.all.released.filter { $0 != self }.prefix(8).map { e in
+                    ] + Episode.scoped(for: session?.user.data).filter { $0 != self }.prefix(8).map { e in
                         Node.div(classes: "flex-110 pr+ min-width-5", [e.render(.init(synopsis: false, canWatch: canWatch))]) // todo watched
                     })
                 ])
@@ -286,7 +286,7 @@ extension Episode {
             [Node.section(classes: "pb++", [
                 smallBlueH3("In Collection")
                 ] +
-                coll.render(.init(episodes: true))
+                coll.render(.init(episodes: true), session: session)
                 + [Node.p(classes: "ms-1 mt text-right", [
                     Node.link(to: .collections, [
                         Node.span(classes: "hover-cascade__border-bottom", ["See All Collections"]),
@@ -324,7 +324,7 @@ extension Episode {
                             .link(to: .home, [.text("Swift Talk")], attributes: ["class": "color-inherit no-decoration bold hover-border-bottom"]),
                             .text("#" + number.padded)
                             ]),
-                        .h2([.text(fullTitle)], attributes: ["class": "ms5 color-white bold mt-- lh-110"])
+                        .h2([.text(fullTitle + (released ? "" : " (unreleased)"))], attributes: ["class": "ms5 color-white bold mt-- lh-110"])
                         ] + guests_ ),
                     .div(classes: "l+|flex", [
                         .div(classes: "flex-110 order-2", [

@@ -10,7 +10,7 @@ import Foundation
 
 func index(_ items: [Collection], session: Session?) -> Node {
     let lis: [Node] = items.map({ (coll: Collection) -> Node in
-        return Node.li(attributes: ["class": "col width-full s+|width-1/2 l+|width-1/3 mb++"], coll.render(.init(episodes: true)))
+        return Node.li(attributes: ["class": "col width-full s+|width-1/2 l+|width-1/3 mb++"], coll.render(.init(episodes: true), session: session))
     })
     return LayoutConfig(session: session, contents: [
         pageHeader(HeaderContent.link(header: "All Collections", backlink: .home, label: "Swift Talk")),
@@ -24,6 +24,7 @@ func index(_ items: [Collection], session: Session?) -> Node {
 extension Collection {
     func show(session: Session?) -> Node {
         let bgImage = "background-image: url('/assets/images/collections/\(title)@4x.png');"
+        let eps = episodes(for: session?.user.data)
         return LayoutConfig(session: session, contents: [
             Node.div(attributes: ["class": "pattern-illustration overflow-hidden", "style": bgImage], [
                 Node.div(classes: "wrapper", [
@@ -36,18 +37,18 @@ extension Collection {
                         Node.h2([.text(title)], attributes: ["class": "ms5 bold color-black mt--- lh-110 mb-"]),
                         Node.p(attributes: ["class": "ms1 color-gray-40 text-wrapper lh-135"], description.widont),
                         Node.p(attributes: ["class": "color-gray-65 lh-125 mt"], [
-                            .text(episodes.released.count.pluralize("Episode")),
+                            .text(eps.count.pluralize("Episode")),
                             .span(attributes: ["class": "ph---"], [.raw("&middot;")]),
-                            .text(totalDuration.hoursAndMinutes)
+                            .text(eps.totalDuration.hoursAndMinutes)
                             ])
                         ])
                     ])
                 ]),
             Node.div(classes: "wrapper pt++", [
-                Node.ul(attributes: ["class": "offset-content"], episodes.released.map { e in
+                Node.ul(attributes: ["class": "offset-content"], eps.map { e in
                     Node.li(attributes: ["class": "flex justify-center mb++ m+|mb+++"], [
                         Node.div(classes: "width-1 ms1 mr- color-theme-highlight bold lh-110 m-|hide", [.raw("&rarr;")]),
-                        e.render(.init(wide: true, synopsis: true, canWatch: session.premiumAccess || !e.subscription_only, collection: false))
+                        e.render(.init(wide: true, synopsis: true, canWatch: e.canWatch(session: session), collection: false))
                         ])
                 })
                 ]),
@@ -64,15 +65,16 @@ extension Collection {
             self.whiteBackground = whiteBackground
         }
     }
-    func render(_ options: ViewOptions = ViewOptions()) -> [Node] {
+    func render(_ options: ViewOptions = ViewOptions(), session: Session?) -> [Node] {
         let figureStyle = "background-color: " + (options.whiteBackground ? "#FCFDFC" : "#F2F4F2")
+        let eps = episodes(for: session?.user.data)
         let episodes_: [Node] = options.episodes ? [
             .ul(attributes: ["class": "mt-"],
-                episodes.filter { $0.released }.map { e in
+                eps.map { e in
                     let title = e.title(in: self)
                     return Node.li(attributes: ["class": "flex items-baseline justify-between ms-1 line-125"], [
                         Node.span(attributes: ["class": "nowrap overflow-hidden text-overflow-ellipsis pv- color-gray-45"], [
-                            Node.link(to: .episode(e.slug), [.text(title)], attributes: ["class": "no-decoration color-inherit hover-underline"])
+                            Node.link(to: .episode(e.slug), [.text(title + (e.released ? "" : " (unreleased)"))], attributes: ["class": "no-decoration color-inherit hover-underline"])
                             ]),
                         .span(attributes: ["class": "flex-none pl- pv- color-gray-70"], [.text(e.media_duration?.timeString ?? "")])
                         ])
@@ -92,9 +94,9 @@ extension Collection {
                         Node.span(attributes: ["class": "flex-none label smallcaps color-white bgcolor-blue nowrap ml-"], [Node.text("New")])
                         ] : [])),
                 Node.p(attributes: ["class": "ms-1 color-gray-55 lh-125 mt--"], [
-                    .text(episodes.count.pluralize("Episode")),
+                    .text(eps.count.pluralize("Episode")),
                     .span(attributes: ["class": "ph---"], [Node.raw("&middot;")]),
-                    .text(totalDuration.hoursAndMinutes)
+                    .text(eps.totalDuration.hoursAndMinutes)
                     ] as [Node])
                 ] + episodes_)
         ]
