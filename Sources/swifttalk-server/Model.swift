@@ -122,7 +122,8 @@ struct Resource: Codable, Equatable {
 
 extension Episode {
     var fullTitle: String {
-        return title // todo
+        guard let p = primaryCollection, p.use_as_title_prefix else { return title }
+        return "\(p.title): \(title)"
     }
     var releasedAt: Date? {
         let formatter = DateFormatter.iso8601
