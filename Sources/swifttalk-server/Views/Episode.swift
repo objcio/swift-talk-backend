@@ -119,12 +119,32 @@ extension Node {
     }
 }
 
+
 extension Episode {
     enum DownloadStatus {
         case notSubscribed
         case reDownload
-        case canDownload
+        case canDownload(creditsLeft: Int)
         case noCredits
+        
+        var allowed: Bool {
+            if case .reDownload = self { return true }
+            if case .canDownload = self { return true }
+            return false
+        }
+        
+        var text: String {
+            switch self {
+            case .notSubscribed:
+                return "Become a subscriber to download episode videos."
+            case .reDownload:
+                return "Re-downloading episodes doesn’t use any download credits."
+            case let .canDownload(creditsLeft):
+                return "You have \(creditsLeft) download credits left"
+            case .noCredits:
+                return "No download credits left. You’ll get new credits at the next billing cycle."
+            }
+        }
     }
     struct Media {
         var url: URL
@@ -241,17 +261,16 @@ extension Episode {
                 ])
             ]
         }
-        let canDownload = downloadStatus == .canDownload || downloadStatus == .reDownload
         let downloadImage = Node.inlineSvg(path: "icon-resource-download.svg", classes: "block icon-40")
         let download: [[Node]] = [
             [Node.div(classes: "flex-none mr-", [
-                canDownload ? Node.link(to: Route.download(slug), [downloadImage], classes: "block bgcolor-orange radius-5 hover-bgcolor-blue")
+                downloadStatus.allowed ? Node.link(to: Route.download(slug), [downloadImage], classes: "block bgcolor-orange radius-5 hover-bgcolor-blue")
                     : Node.span(classes: "block bgcolor-orange radius-5 cursor-not-allowed", [downloadImage])
                 
             ]),
             Node.div(classes: "ms-1 lh-125", [
-                smallH4(.text("Episode Video"), link: canDownload ? Route.download(slug) : nil),
-                
+                smallH4(.text("Episode Video"), link: downloadStatus.allowed ? Route.download(slug) : nil),
+                .p(classes: "color-gray-50", [.text(downloadStatus.text)])
             ]),
             ]
         ] // todo

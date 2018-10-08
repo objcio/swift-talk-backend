@@ -183,7 +183,7 @@ extension Route {
             guard let ep = Episode.all.first(where: { $0.slug == s}) else {
                 return .notFound("No such episode")
             }
-            let status: Episode.DownloadStatus = .noCredits // todo
+            let status = Episode.DownloadStatus.noCredits  // todo
             return .write(ep.show(downloadStatus: status, session: session))
         case .episodes:
             return I.write(index(Episode.all.filter { $0.released }, session: session))
