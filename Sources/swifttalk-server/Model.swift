@@ -30,8 +30,49 @@ struct Guest: Codable, Equatable {
     // todo
 }
 
+struct Collaborator: Codable, Equatable {
+    var id: Id<Collaborator>
+    var name: String
+    var url: URL
+    var role: Role
+}
+
+enum Role : Int, Codable, Equatable, Comparable {
+    case host = 0
+    case guestHost = 1
+    case transcript = 2
+    case copyEditing = 3
+    case technicalReview = 4
+    case shooting = 5
+
+    static private let order: [Role] = [.host, .guestHost, .technicalReview, .transcript, .copyEditing, .shooting]
+
+    static func <(lhs: Role, rhs: Role) -> Bool {
+        return Role.order.index(of: lhs)! < Role.order.index(of: rhs)!
+    }
+
+    
+    var name: String {
+        switch self {
+        case .host:
+            return "Host"
+        case .guestHost:
+            return "Guest Host"
+        case .transcript:
+            return "Transcript"
+        case .copyEditing:
+            return "Copy Editing"
+        case .technicalReview:
+            return "Technical Review"
+        case .shooting:
+            return "Shooting"
+        }
+    }
+}
+
 struct Episode: Codable, Equatable {
     var collections: [Id<Collection>]
+    var collaborators: [Id<Collaborator>]
     var created_at: String
     var id: Id<Episode>
     var mailchimp_campaign_id: String?
@@ -100,6 +141,12 @@ extension Episode {
     var theCollections: [Collection] {
         return collections.compactMap { cid in
             Collection.all.first { $0.id ==  cid }
+        }
+    }
+    
+    var theCollaborators: [Collaborator] {
+        return collaborators.compactMap { cid in
+            Collaborator.all.first { $0.id == cid }
         }
     }
     

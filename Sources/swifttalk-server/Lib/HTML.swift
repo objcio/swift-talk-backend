@@ -226,12 +226,24 @@ extension Node {
         return .node(El(name: "ul", classes: classes, attributes: attributes, children: children))
     }
     
+    static func dl(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "dl", classes: classes, attributes: attributes, children: children))
+    }
+    
     static func ol(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         return .node(El(name: "ol", classes: classes, attributes: attributes, children: children))
     }
     
     static func li(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         return .node(El(name: "li", classes: classes, attributes: attributes, children: children))
+    }
+    
+    static func dt(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "dt", classes: classes, attributes: attributes, children: children))
+    }
+    
+    static func dd(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "dd", classes: classes, attributes: attributes, children: children))
     }
     
     static func button(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {

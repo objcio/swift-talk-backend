@@ -65,10 +65,14 @@ fileprivate let episodes: Static<[Episode]> = Static(sync: episodeData.read)
 let collectionData = StaticJSON<[Collection]>(fileName: "data/collections.json")
 fileprivate let collections: Static<[Collection]> = Static(sync: collectionData.read)
 
+fileprivate let collaboratorsData = StaticJSON<[Collaborator]>(fileName: "data/collaborators.json")
+fileprivate let collaborators: Static<[Collaborator]> = Static(sync: collaboratorsData.read)
+
 func flushStaticData() {
     episodes.flush()
     collections.flush()
     plans.flush()
+    collaborators.flush()
     verifyStaticData()
 }
 
@@ -103,6 +107,9 @@ func verifyStaticData() {
         for c in e.collections {
             assert(Collection.all.contains(where: { $0.id == c }), "\(c) \(e)")
         }
+        for c in e.collaborators {
+            assert(Collaborator.all.contains(where: { $0.id == c}), "\(c) \(e)")
+        }
     }
 }
 
@@ -115,5 +122,9 @@ extension Episode {
 
 extension Collection {
     static var all: [Collection] { return collections.cached ?? [] }
+}
+
+extension Collaborator {
+    static var all: [Collaborator] { return collaborators.cached ?? [] }
 }
 

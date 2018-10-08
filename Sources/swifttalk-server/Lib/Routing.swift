@@ -4,6 +4,7 @@ indirect enum RouteDescription {
     case constant(String)
     case parameter(String)
     case queryParameter(String)
+    case external
     case joined(RouteDescription, RouteDescription)
     case choice(RouteDescription, RouteDescription)
     case empty
@@ -11,7 +12,23 @@ indirect enum RouteDescription {
     case any
 }
 
-struct Endpoint {
+enum Endpoint {
+    case external(URL)
+    case relative(RelativePath)
+    
+    init(path: [String], query: [String: String] = [:]) {
+        self = .relative(RelativePath(path: path, query: query))
+    }
+    
+    var prettyPath: String {
+        switch self {
+        case let .external(url): return url.absoluteString
+        case let .relative(p): return p.prettyPath
+        }
+    }
+}
+
+struct RelativePath {
     var path: [String]
     var query: [String: String]
     
@@ -42,6 +59,7 @@ extension RouteDescription {
         case .any: return "*"
         case .empty: return ""
         case .body: return "<post body>"
+        case .external: return "external"
         case let .queryParameter(name): return "?\(name)=*"
         case let .joined(lhs, rhs): return lhs.pretty + "/" + rhs.pretty
         case let .choice(lhs, rhs): return "choice(\(lhs.pretty), \(rhs.pretty))"
@@ -69,6 +87,13 @@ extension Router where A: Equatable {
     /// Constant string
     static func c(_ string: String, _ value: A) -> Router {
         return Router<()>.c(string) / Router(value)
+    }
+    
+}
+
+extension Router where A == URL {
+    static var external: Router {
+        return Router<URL>(parse: { _ in nil}, print: { Endpoint.external($0) }, description: .external)
     }
 }
 
@@ -161,8 +186,13 @@ extension Router {
 }
 
 func +(lhs: Endpoint, rhs: Endpoint) -> Endpoint {
-    let query = lhs.query.merging(rhs.query, uniquingKeysWith: { _, _ in fatalError("Duplicate key") })
-    return Endpoint(path: lhs.path + rhs.path, query: query)
+    guard case let .relative(l) = lhs, case let .relative(r) = rhs else {
+        print("Endpoint mismatch: \(lhs) \(rhs)", to: &standardError)
+        // todo should be a fatalError if that wouldn't crash the server
+        return lhs
+    }
+    let query = l.query.merging(r.query, uniquingKeysWith: { _, _ in fatalError("Duplicate key") })
+    return Endpoint(path: l.path + r.path, query: query)
 }
 
 extension Router {

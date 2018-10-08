@@ -113,7 +113,11 @@ extension Episode {
     
 }
 
-
+extension Node {
+    static func externalLink(to: URL, classes: Class?, children: [Node]) -> Node {
+        return Node.link(to: .external(to), children, classes: classes, attributes: ["target": "_blank", "rel": "external"])
+    }
+}
 
 extension Episode {
     enum DownloadStatus {
@@ -272,9 +276,24 @@ extension Episode {
                 ])
             ]
         } ?? []
+        let detailItems: [(String,String, URL?)] = [
+            ("Released", DateFormatter.fullPretty.string(from: releasedAt ?? Date()), nil)
+            ] + theCollaborators.sorted(by: { $0.role < $1.role }).map { coll in
+                (coll.role.name, coll.name, .some(coll.url))
+        }
         let details = canWatch ? [
             Node.div(classes: "pb++", [
-                "TODO" // todo
+                smallBlueH3("Episode Details"),
+                Node.ul(classes: "ms-1 stack", detailItems.map { key, value, url in
+                    Node.li([
+                        Node.dl(classes: "flex justify-between", [
+                            Node.dt(classes: "color-gray-60", [.text(key)]),
+                            Node.dd(classes: "color-gray-15 text-right", [url.map { u in
+                                Node.externalLink(to: u, classes: "color-gray-15 hover-underline no-decoration", children: [.text(value)])
+                            } ?? .text(value)])
+                        ])
+                    ])
+                })
             ])
         ] : []
         let sidebar: Node = Node.aside(classes: "p-col max-width-7 center stack l+|width-1/3 xl+|width-3/10 l+|flex-auto", resources + inCollection + details)

@@ -33,9 +33,8 @@ enum Route: Equatable {
 
 extension Route {
     var path: String {
-        
         guard let result = router.print(self)?.prettyPath else {
-            log(error: "Couldn't print path for \(self)")
+            log(error: "Couldn't print path for \(self) \(router.print(self))")
             return ""
         }
         return result
@@ -89,6 +88,10 @@ private let loginRoute: Router<Route> = (.c("users") / .c("auth") / .c("github")
 })
 
 private let createSubRoute: Router<Route> = .c("subscription", .createSubscription)
+private let externalRoute: Router<Route> = Router.external.transform({ Route.external($0) }, { r in
+    guard case let .external(url) = r else { return nil }
+    return url
+})
 
 private let router: Router<Route> = [
     Router(.home),
@@ -108,6 +111,7 @@ private let router: Router<Route> = [
     assetsRoute,
     .c("collections", .collections),
     episode,
-    collection
+    collection,
+    externalRoute
 ].choice()
 

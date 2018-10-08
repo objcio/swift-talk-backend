@@ -99,19 +99,15 @@ extension TimeInterval {
 }
 
 extension DateFormatter {
-    static let withYear: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US")
-        f.dateFormat = "MMM dd yyyy"
-        return f
-    }()
+    convenience init(format: String) {
+        self.init()
+        self.locale = Locale(identifier: "en_US")
+        self.dateFormat = format
+    }
     
-    static let withoutYear: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US")
-        f.dateFormat = "MMM dd"
-        return f
-    }()
+    static let withYear = DateFormatter(format: "MMM dd yyyy")
+    static let fullPretty = DateFormatter(format: "MMMM dd, yyyy")
+    static let withoutYear = DateFormatter(format: "MMM dd")
 }
 
 extension Date {

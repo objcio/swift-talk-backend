@@ -20,11 +20,23 @@ SELECT json_agg(t) FROM (
         SELECT r.title as title, r.subtitle as subtitle, r.url as url 
         FROM episode_resources r WHERE r.episode_id = e.id
       ) resource
-    ) resources
+    ) resources,
+    (SELECT array(
+       SELECT collaborator_id FROM collaborators_episodes where episode_id = e.id
+       )
+    as collaborators)
     FROM episodes e
 ) 
 t 
 \g episodes.json
+```
+
+To export the collaborators as well, do the following:
+
+```swift
+SELECT json_agg(t) FROM (
+  SELECT id, name, url, role FROM collaborators ORDER BY created_at ASC
+) t \g collaborators.json
 ```
 
 # Postgres
