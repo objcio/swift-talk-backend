@@ -52,6 +52,12 @@ extension Subscription {
     }
 }
 
+extension Sequence where Element == Subscription {
+    var activeMonths: UInt {
+        return map { $0.activeMonths }.reduce(0, +)
+    }
+}
+
 struct Account: Codable {
     enum State: String, Codable {
         case active, closed, subscriber, non_subscriber, past_due
@@ -86,6 +92,14 @@ struct Account: Codable {
     var has_paused_subscription: String
     var has_past_due_invoice: Bool
     var preferred_locale: String?
+}
+
+struct Webhook: Codable {
+    var account: WebhookAccount
+}
+
+struct WebhookAccount: Codable {
+    var account_code: UUID
 }
 
 struct CreateSubscription: Codable, RootElement {

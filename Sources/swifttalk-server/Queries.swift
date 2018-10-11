@@ -96,32 +96,43 @@ extension UserData {
  
 }
 
-struct Row<A: Codable>: Codable {
+struct Row<Element: Codable>: Codable {
     var id: UUID
-    var data: A
+    var data: Element
     
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try c.decode(UUID.self, forKey: CodingKeys.id)
-        self.data = try A(from: decoder)
+        self.data = try Element(from: decoder)
     }
 }
 
-extension Row where A == UserData {
-    static func select(githubId id: Int) -> Query<Row<A>?> {
+extension Row where Element: Insertable {
+    static func select(_ id: UUID) -> Query<Row<Element>?> {
+        let fields = Element.fieldNames.joined(separator: ",")
+        let query = "SELECT id,\(fields) FROM \(Element.tableName) WHERE id = $1"
+        return Query(query: query, values: [id], parse: { node in
+            let result = PostgresNodeDecoder.decode([Row<Element>].self, transformKey: { $0.snakeCased }, node: node)
+            return result.first
+        })
+    }
+}
+
+extension Row where Element == UserData {
+    static func select(githubId id: Int) -> Query<Row<Element>?> {
         let fields = UserData.fieldNames.joined(separator: ",")
         let query = "SELECT id,\(fields) FROM \(UserData.tableName) WHERE github_uid = $1"
         return Query(query: query, values: [id], parse: { node in
-            let result = PostgresNodeDecoder.decode([Row<A>].self, transformKey: { $0.snakeCased }, node: node)
+            let result = PostgresNodeDecoder.decode([Row<Element>].self, transformKey: { $0.snakeCased }, node: node)
             return result.first
         })
     }
     
-    static func select(sessionId id: UUID) -> Query<Row<A>?> {
+    static func select(sessionId id: UUID) -> Query<Row<Element>?> {
         let fields = UserData.fieldNames.map { "u.\($0)" }.joined(separator: ",")
         let query = "SELECT u.id,\(fields) FROM \(UserData.tableName) AS u INNER JOIN \(SessionData.tableName) AS s ON s.user_id = u.id WHERE s.id = $1"
         return Query(query: query, values: [id], parse: { node in
-            let result = PostgresNodeDecoder.decode([Row<A>].self, transformKey: { $0.snakeCased }, node: node)
+            let result = PostgresNodeDecoder.decode([Row<Element>].self, transformKey: { $0.snakeCased }, node: node)
             return result.first
         })
     }
@@ -144,13 +155,13 @@ extension Row where A == UserData {
     }
 }
 
-extension Row where A: Insertable {
+extension Row where Element: Insertable {
     func update() -> Query<()> {
         let fields = data.fieldNamesAndValues
         let fieldNames = zip(fields, 2...).map { (nameAndValue, idx) in
             return "\(nameAndValue.0) = $\(idx)"
         }.joined(separator: ", ")
-        return Query(query: "UPDATE \(A.tableName) SET \(fieldNames) where id = $1", values: [id] + fields.map { $0.1 }, parse: { _ in () })
+        return Query(query: "UPDATE \(Element.tableName) SET \(fieldNames) where id = $1", values: [id] + fields.map { $0.1 }, parse: { _ in () })
     }
 }
 

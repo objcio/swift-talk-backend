@@ -8,20 +8,20 @@
 import Foundation
 import PostgreSQL
 
-extension Row where A == UserData {
+extension Row where Element == UserData {
     var monthsOfActiveSubscription: Promise<UInt> {
         return Promise { cb in
             URLSession.shared.load(recurly.account(with: self.id)) { result in
                 guard let acc = result else { fatalError() }
                 URLSession.shared.load(recurly.listSubscriptions(accountId: acc.account_code)) { subs in
-                    let months = subs?.map { $0.activeMonths }.reduce(0, +)
-                    cb(months ?? 0)
+                    cb(subs?.activeMonths ?? 0)
                 }
             }
             
         }
     }
 }
+
 func catchAndDisplayError<I: Interpreter>(_ f: () throws -> I) -> I {
     do {
         return try f()
@@ -222,6 +222,27 @@ extension Route {
             })
         case .external(let url):
             return I.redirect(path: url.absoluteString) // is this correct?
+        case .recurlyWebhook:
+            return I.withPostData { data in
+                guard let webhook: Webhook = try? decodeXML(from: data) else { return I.write("", status: .ok) }
+                URLSession.shared.load(recurly.account(with: webhook.account.account_code)) { result in
+                    guard let acc = result else {
+                        log(error: "Received Recurly webhook for account id \(webhook.account.account_code.uuidString), but couldn't load this account from Recurly")
+                        return
+                    }
+                    URLSession.shared.load(recurly.listSubscriptions(accountId: acc.account_code)) { subs in
+                        guard let r = try? c.get().execute(Row<UserData>.select(webhook.account.account_code)), var row = r else {
+                            log(error: "Received Recurly webhook for account \(acc.account_code), but didn't find user in database")
+                            return
+                        }
+                        dump(row)
+                        row.data.subscriber = acc.has_active_subscription || acc.has_canceled_subscription
+                        row.data.downloadCredits = Int(subs?.activeMonths ?? 0)
+                        guard let _ = try? c.get().execute(row.update()) else { log(error: "Failed to update user \(acc.account_code) in response to Recurly webhook"); return }
+                    }
+                }
+                return I.write("", status: .ok)
+            }
         }
     }
 }

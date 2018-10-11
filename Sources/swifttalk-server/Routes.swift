@@ -29,6 +29,7 @@ enum Route: Equatable {
     case download(Slug<Episode>)
     case staticFile(path: [String])
     case external(URL)
+    case recurlyWebhook
 }
 
 extension Route {
@@ -88,6 +89,7 @@ private let loginRoute: Router<Route> = (.c("users") / .c("auth") / .c("github")
 })
 
 private let createSubRoute: Router<Route> = .c("subscription", .createSubscription)
+
 private let externalRoute: Router<Route> = Router.external.transform({ Route.external($0) }, { r in
     guard case let .external(url) = r else { return nil }
     return url
@@ -112,6 +114,7 @@ private let router: Router<Route> = [
     .c("collections", .collections),
     episode,
     collection,
-    externalRoute
+    externalRoute,
+    .c("recurly", .recurlyWebhook)
 ].choice()
 
