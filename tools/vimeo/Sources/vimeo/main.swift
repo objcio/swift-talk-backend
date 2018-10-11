@@ -80,6 +80,7 @@ func loadAll<A>(request: RemoteEndpoint<Page<A>>, accum: [A] = [], onComplete: @
 loadAll(request: firstPage, onComplete: {
     let data = try! JSONEncoder().encode($0)
     try! data.write(to: URL(fileURLWithPath: FileManager.default.currentDirectoryPath + "/videos.json"))
+    print("Done")
 })
 
 sleep(100)

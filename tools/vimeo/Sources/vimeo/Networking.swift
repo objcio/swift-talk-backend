@@ -23,7 +23,7 @@ struct RemoteEndpoint<A> {
     
     init(get: URL, accept: Accept? = nil, headers: [String:String] = [:], query: [String:String], parse: @escaping (Data) -> A?) {
         var comps = URLComponents(string: get.absoluteString)!
-        comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
+        comps.queryItems = (comps.queryItems ?? []) + query.map { URLQueryItem(name: $0.0, value: $0.1) }
         request = URLRequest(url: comps.url!)
         if let a = accept {
             request.setValue(a.rawValue, forHTTPHeaderField: "Accept")
@@ -90,7 +90,7 @@ extension RemoteEndpoint where A: Decodable {
 extension URLSession {
     func load<A>(_ e: RemoteEndpoint<A>, callback: @escaping (A?) -> ()) {
         var r = e.request
-        r.timeoutInterval = 5 // todo?
+        r.timeoutInterval = 10 // todo?
         dataTask(with: r, completionHandler: { data, resp, err in
             guard let d = data else {
                 print(err!, to: &standardError)
