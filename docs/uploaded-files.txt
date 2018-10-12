@@ -1,0 +1,203 @@
+09-QA.m4v
+10-Ledger Introduction.m4v
+100th Anniversary Live Q&A.mp4
+101 Forms 7 Preview.mp4
+101 Forms 7.mp4
+102 Forms 8 Preview.mp4
+102 Forms 8.mp4
+103 Large View Controllers 1 v2.mp4
+103 Large View Controllers 1.mp4
+104 Large View Controllers 2 Preview.mp4
+104 Large View Controllers 2.mp4
+105 Large View Controllers 3 Preview.mp4
+105 Large View Controllers 3 v2.mp4
+106 Large View Controllers 4 Preview.mp4
+106 Large View Controllers 4.mp4
+107 Large View Controllers 5 Preview.m4v
+107 Large View Controllers 5.mp4
+108 Large View Controllers 6 Preview.mp4
+108 Large View Controllers 6.mp4
+109 Debugger 1.mp4
+11-Evaluation 1.m4v
+110 Debugger 2 Preview.mp4
+110 Debugger 2.mp4
+111 Debugger 3 Preview.mp4
+111 Debugger 3.mp4
+112 Debugger 4 Preview.mp4
+112 Debugger 4.mp4
+113 Forms 9.mp4
+114 Reflection Preview.mp4
+114 Reflection.mp4
+115 XML Decoding 1 v2.mp4
+115 XML Decoding 1.mp4
+116 XML Decoding 2 Preview.mp4
+116 XML Decoding 2 v2.mp4
+116 XML Decoding 2.mp4
+117 Forms 10 v2.mp4
+117 Forms 10.mp4
+118 Responsive Layout 1 v2.mp4
+118 Responsive Layout 1.mp4
+119 Responsive Layout 2 Preview.mp4
+119 Responsive Layout 2 v2.mp4
+119 Responsive Layout 2.mp4
+12-Evaluation 2 - Preview.m4v
+12-Evaluation 2.m4v
+120 Responsive Layout 3 Preview.mp4
+120 Responsive Layout 3.mp4
+121 Responsive Layout 4 Preview.mp4
+121 Responsive Layout 4.mp4
+122 Responsive Layout 5.mp4
+123 Responsive Layout 6 v3.mp4
+13-Account Tree Preview.m4v
+13-Account Tree.m4v
+13-Parsing Techniques4.m4v
+14-Account Tree Preview v2.m4v
+14-Account Tree v2.m4v
+15-Parser Combinators 1.m4v
+16-Parser Combinators 2 Preview.m4v
+16-Parser Combinators 2.m4v
+17-Ledger GUI Architecture v2.m4v
+18-Adding Search to the Ledger GUI App Preview v2.m4v
+18-Adding Search to the Ledger GUI App v2.m4v
+19-From Runtime Programming to Functions.m4v
+20-Understanding Value Type Performance Preview.m4v
+20-Understanding Value Type Performance v2.m4v
+21-Structs and Mutation.m4v
+22-Command Line Tools with Swift Preview v2.m4v
+22-Command Line Tools with Swift v2.m4v
+23 Splitting Arrays.m4v
+24 Delegates and Callbacks Preview.m4v
+24 Delegates and Callbacks.m4v
+25 Network Caching.m4v
+26 Generic Table View Controllers (Part 2) Preview.m4v
+26 Generic Table View Controllers (Part 2).m4v
+27 Typed Notifications.m4v
+28 Typed Notifications (Part 2) Preview.mp4
+28 Typed Notifications (Part 2).mp4
+29 Protocols and Class Hierarchies.mp4
+30 Interfaces 3.mp4
+30 Interfaces Preview 3.mp4
+31 Mutating Untyped Dictionaries.mp4
+32 Generic Collection Extensions 1 Preview.mp4
+32 Generic Collection Extensions 1.mp4
+33 Generic Collection Extensions 2.mp4
+34 Reactive Programming Preview.mp4
+34 Reactive Programming.mp4
+35 Sorted Arrays.mp4
+36 Futures Preview.mp4
+36 Futures.mp4
+37 IndexSet 1.mp4
+38 IndexSet 2 Preview.mp4
+38 IndexSet 2.mp4
+39 From Futures to Signals v2.mp4
+40 Signal Ownership and Subscriptions Preview.mp4
+40 Signal Ownership and Subscriptions.mp4
+42 Thread Safety Preview.mp4
+42 Thread Safety v2.mp4
+43 View Controller Refactoring.mp4
+44 Setting Up a Swift Server Side Project Preview.mp4
+44 Setting Up a Swift Server Side Project.mp4
+45 Routing.mp4
+46 Combined Class and Protocol Requirements Preview.mp4
+46 Combined Class and Protocol Requirements.mp4
+47 View Models at Kickstarter 2.mp4
+47 View Models at Kickstarter.mp4
+48 Postgres 1 (Preview).mp4
+48 Postgres 1.mp4
+49 Deeplinking at Kickstarter.mp4
+50 Postgres 2 (Preview).mp4
+50 Postgres 2.mp4
+51 Playground-Driven Development at Kickstarter.mp4
+52 Deleting Code with Swift 4 (Preview).mp4
+52 Deleting Code with Swift 4 v2.mp4
+53 Test-Driven Reactive Programming at Kickstarter.mp4
+54 UI Elements with Callbacks Preview.mp4
+54 UI Elements with Callbacks.mp4
+55 Sorted Arrays with Binary Search.mp4
+56 Binary Search Trees Preview.mp4
+56 Binary Search Trees.mp4
+57 Certificate Pinning.mp4
+58 Red Black Trees Preview.mp4
+58 Red Black Trees v2.mp4
+59 Refactoring with Xcode 9.mp4
+60 Xcode 9 Productivity Tips Preview.mp4
+60 Xcode 9 Productivity Tips.mp4
+61 Mutable Shared Structs (Part 1).mp4
+62 Testable View Controllers with Reducers Preview.mp4
+62 Testable View Controllers with Reducers.mp4
+63 Mutable Shared Structs (Part 2).mp4
+64 Driving Table View Animations Preview.mp4
+64 Driving Table View Animations.mp4
+65 Playground Quicklook for Binary Trees.mp4
+66 The Elm Architecture (Part 1) Preview.mp4
+66 The Elm Architecture (Part 1).mp4
+67 Reactive Data Structures-Linked Lists.mp4
+68 The Elm Architecture (Part 2) Preview.mp4
+68 The Elm Architecture (Part 2).mp4
+69 Reactive Data Structures-Arrays.mp4
+70 Table View Animations with Reactive Arrays Preview.mp4
+70 Table View Animations with Reactive Arrays.mp4
+71 Type-Safe File Paths with Phantom Types.mp4
+72 Laufpark Introduction Preview.mp4
+72 Laufpark Introduction.mp4
+73 View Bindings in Pure Swift.mp4
+74 View Bindings in Pure Swift (Part 2) Preview.mp4
+74 View Bindings in Pure Swift (Part 2).mp4
+75 Auto Layout with Key Paths.mp4
+76 Understanding Reactive Glitches Preview.mp4
+76 Understanding Reactive Glitches-corrected.mp4
+77 A Technique to Avoid Reactive Glitches Preview-corrected2.mp4
+77 A Technique to Avoid Reactive Glitches-corrected2.mp4
+78 Swift Strings and Substrings-corrected.mp4
+79 String Parsing Performance Preview-corrected.mp4
+79 String Parsing Performance-corrected.mp4
+80 String vs NSString-corrected.mp4
+81 Reference Cycles and Ownership Preview-corrected.mp4
+81 Reference Cycles and Ownership-corrected.mp4
+82 Refactoring Imperative Layout Code-corrected.mp4
+83 Wrapping Analytics APIs Preview-corrected.mp4
+83 Wrapping Analytics APIs-corrected.mp4
+84 App Architecture-corrected.mp4
+85 Wrapping LibGit Preview-corrected.mp4
+85 Wrapping LibGit-corrected.mp4
+86 MVC (Part 1)-corrected.mp4
+87 MVC (Part 2) Preview-corrected.mp4
+87 MVC (Part 2)-corrected.mp4
+88 The Expression Problem (Part 1)-corrected.mp4
+89 The Expression Problem (Part 1) Preview.mp4
+89 The Expression Problem (Part 2)-corrected 2.mp4
+90 Concurrent Map-corrected.mp4
+91 Syntax Highlighting v3.mp4
+92 Pointers v4.mp4
+93 Optionals Preview.mp4
+93 Optionals.mp4
+94 Forms 1.mp4
+95 Forms 2 v2.mp4
+95 Forms 2.mp4
+96 Forms 3.mp4
+96 Forms Preview.mp4
+97 Forms 4.mp4
+97 Forms Preview.mp4
+98 Forms 5 Preview.mp4
+98 Forms 5.mp4
+99 Forms 6 Preview.mp4
+99 Forms 6.mp4
+CommonMark Preview2.m4v
+Connecting View Controllers.m4v
+Forms 2 Preview.mp4
+Generic Table View Controllers Preview.m4v
+Generic Table View Controllers.m4v
+IndexSet 3.mp4
+Introduction.m4v
+Introduction2.mp4
+Loading View Controllers - new intro.m4v
+Networking POST Requests-1 Preview.m4v
+Networking POST Requests-1.m4v
+Networking-trimmed.m4v
+Networking-trimmed22.m4v
+Networking.m4v
+Networking1.m4v
+Rendering CommonMark Part 2 Preview.m4v
+Rendering CommonMark Part 2.m4v
+Rendering CommonMark1.m4v
+Stack Views with Enums.m4v
