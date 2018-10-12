@@ -189,7 +189,7 @@ struct Recurly {
             URLSession.shared.load(self.account(with: accountId)) { result in
                 guard let acc = result else { cb(nil); return }
                 URLSession.shared.load(recurly.listSubscriptions(accountId: acc.account_code)) { subs in
-                    cb((acc.subscriber, subs?.activeMonths ?? 0))
+                    cb((acc.subscriber, (subs?.activeMonths ?? 0) * 4))
                 }
             }
         }

@@ -145,6 +145,17 @@ extension Row where Element == UserData {
             return result
         })
     }
+    
+    func downloadStatus(for episode: Episode, downloads: [Row<DownloadData>]) -> Episode.DownloadStatus {
+        guard data.subscriber else { return .notSubscribed }
+        if downloads.contains(where: { $0.id.uuidString == episode.id.rawValue }) {
+            return .reDownload
+        } else if data.downloadCredits - downloads.count > 0 {
+            return .canDownload(creditsLeft: data.downloadCredits - downloads.count)
+        } else {
+            return .noCredits
+        }
+    }
 
     func deleteSession(_ sessionId: UUID) -> Query<()> {
         return Query(query: "DELETE FROM \(SessionData.tableName) where user_id = $1 AND id = $2", values: [id, sessionId], parse: { _ in })

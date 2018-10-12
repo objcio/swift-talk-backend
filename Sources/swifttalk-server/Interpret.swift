@@ -192,7 +192,8 @@ extension Route {
             guard let ep = Episode.scoped(for: session?.user.data).first(where: { $0.slug == s}) else {
                 return .notFound("No such episode")
             }
-            let status = Episode.DownloadStatus.noCredits  // todo
+            let downloads = try (session?.user.downloads).map { try c.get().execute($0) } ?? []
+            let status = session?.user.downloadStatus(for: ep, downloads: downloads) ?? .notSubscribed
             return .write(ep.show(downloadStatus: status, session: session))
         case .episodes:
             return I.write(index(Episode.scoped(for: session?.user.data), session: session))
