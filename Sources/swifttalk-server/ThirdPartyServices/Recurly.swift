@@ -94,6 +94,12 @@ struct Account: Codable {
     var preferred_locale: String?
 }
 
+extension Account {
+    var subscriber: Bool {
+        return has_active_subscription || has_canceled_subscription
+    }
+}
+
 struct Webhook: Codable {
     var account: WebhookAccount
 }
@@ -176,6 +182,17 @@ struct Recurly {
     func createSubscription(_ x: CreateSubscription) -> RemoteEndpoint<RecurlyResult<Subscription>> {
         let url = base.appendingPathComponent("subscriptions")
         return RemoteEndpoint(postXML: url, value: x, headers: headers, query: [:])
+    }
+    
+    func subscriptionStatus(for accountId: UUID) -> Promise<(subscriber: Bool, months: UInt)?> {
+        return Promise { cb in
+            URLSession.shared.load(self.account(with: accountId)) { result in
+                guard let acc = result else { cb(nil); return }
+                URLSession.shared.load(recurly.listSubscriptions(accountId: acc.account_code)) { subs in
+                    cb((acc.subscriber, subs?.activeMonths ?? 0))
+                }
+            }
+        }
     }
 }
 
