@@ -15,10 +15,10 @@ struct LayoutConfig {
     var footerContent: [Node]
     var preFooter: [Node]
     var structuredData: StructuredData?
-    var session: Session?
+    var context: Context
     
-    init(session: Session?, pageTitle: String = "objc.io", contents: [Node], theme: String = "default", preFooter: [Node] = [], footerContent: [Node] = [], structuredData: StructuredData? = nil, csrf: String? = nil) {
-        self.session = session
+    init(context: Context, pageTitle: String = "objc.io", contents: [Node], theme: String = "default", preFooter: [Node] = [], footerContent: [Node] = [], structuredData: StructuredData? = nil, csrf: String? = nil) {
+        self.context = context
         self.pageTitle = pageTitle
         self.contents = contents
         self.theme = theme
@@ -87,7 +87,7 @@ let navigationItems: [(Route, String)] = [
 
 extension LayoutConfig {
     var layout: Node {
-        let csrf: String? = session?.csrfToken
+        let csrf: String? = context.session?.csrfToken
         let structured: [Node] = structuredData.map { $0.nodes } ?? []
         let head: Node = .head([
             .meta(attributes: ["charset": "utf-8"]),
@@ -120,7 +120,7 @@ extension LayoutConfig {
                                     ])
                             }) // todo: search
                             ]),
-                        userHeader(session)
+                        userHeader(context)
                         ])
                     ])
                 ]),
@@ -132,7 +132,7 @@ extension LayoutConfig {
     }
     
     var layoutForCheckout: Node {
-        let csrf: String? = session?.csrfToken
+        let csrf: String? = context.session?.csrfToken
         let structured: [Node] = structuredData.map { $0.nodes } ?? []
         let head: Node = .head([
             .meta(attributes: ["charset": "utf-8"]),
@@ -175,7 +175,7 @@ extension LayoutConfig {
     }
 }
 
-func userHeader(_ session: Session?) -> Node {
+func userHeader(_ context: Context) -> Node {
     let subscribeButton = Node.li(classes: "flex items-center ml+", [
         .link(to: .subscribe, [.text("Subscribe")], classes: "button button--tight button--themed fz-nav")
         ])
@@ -187,11 +187,11 @@ func userHeader(_ session: Session?) -> Node {
     }
     
     let items: [Node]
-    if let s = session {
+    if let s = context.session {
         let logout = link(to: .logout, text: "Log out")
         items = s.user.data.premiumAccess ? [logout] : [logout, subscribeButton]
     } else {
-        items = [link(to: .login(continue: nil), text: "Log in"), subscribeButton]
+        items = [link(to: .login(continue: context.path), text: "Log in"), subscribeButton]
     }
     return .nav(classes: "flex-none self-center border-left border-1 border-color-gray-85 flex ml+", [
         .ul(classes: "flex items-stretch", items)

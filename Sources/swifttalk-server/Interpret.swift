@@ -75,6 +75,11 @@ func ?!<A>(lhs: A?, rhs: Error) throws -> A {
     return value
 }
 
+struct Context {
+    var path: String
+    var session: Session?
+}
+
 extension Route {
     func interpret<I: Interpreter>(sessionId: UUID?, connection c: Lazy<Connection>) throws -> I {
         let session: Session?
@@ -87,12 +92,14 @@ extension Route {
         func requireSession() throws -> Session {
             return try session ?! NotLoggedInError()
         }
+        
+        let context = Context(path: path, session: session)
 
         switch self {
         case .books, .issues:
             return .notFound()
         case .collections:
-            return I.write(index(Collection.all.filter { !$0.episodes(for: session?.user.data).isEmpty }, session: session))
+            return I.write(index(Collection.all.filter { !$0.episodes(for: session?.user.data).isEmpty }, context: context))
         case .imprint:
             return .write("TODO")
         case .thankYou:
@@ -100,7 +107,7 @@ extension Route {
         case .register:
             let s = try requireSession()
             return I.withPostBody(do: { body in
-                guard let result = registerForm(s).parse(body) else { throw RenderingError(privateMessage: "todo", publicMessage: "todo") }
+                guard let result = registerForm(context).parse(body) else { throw RenderingError(privateMessage: "todo", publicMessage: "todo") }
                 var u = s.user
                 u.data.email = result.email
                 u.data.name = result.name
@@ -110,7 +117,7 @@ extension Route {
                     try c.get().execute(u.update())
                     return I.redirect(to: .newSubscription)
                 } else {
-                    return I.write(registerForm(s).form(result, errors))
+                    return I.write(registerForm(context).form(result, errors))
                 }
             })
         case .createSubscription:
@@ -126,7 +133,7 @@ extension Route {
                     let sub_ = try sub ?! RenderingError(privateMessage: "Couldn't load create subscription URL", publicMessage: "Something went wrong, please try again.")
                     switch sub_ {
                     case .errors(let messages):
-                        return try I.write(newSub(session: session, errs: messages.map { $0.message }))
+                        return try I.write(newSub(context: context, errs: messages.map { $0.message }))
                     case .success(let sub):
                         try c.get().execute(s.user.changeSubscriptionStatus(sub.state == .active))
                         // todo flash
@@ -135,27 +142,27 @@ extension Route {
                 })
             }
         case .subscribe:
-            return try I.write(Plan.all.subscribe(session: session))
+            return try I.write(Plan.all.subscribe(context: context))
         case .collection(let name):
             guard let c = Collection.all.first(where: { $0.slug == name }) else {
                 // todo throw
                 return I.notFound("No such collection")
             }
-            return .write(c.show(session: session))
+            return .write(c.show(context: context))
         case .newSubscription:
             let s = try requireSession()
             let u = s.user
             if !u.data.confirmedNameAndEmail {
-                return I.write(registerForm(s).form(RegisterFormData(email: u.data.email, name: u.data.name), []))
+                return I.write(registerForm(context).form(RegisterFormData(email: u.data.email, name: u.data.name), []))
             } else {
-                return try I.write(newSub(session: session, errs: []))
+                return try I.write(newSub(context: context, errs: []))
             }
         case .login(let cont):
-            // todo take cont into account
             var path = "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(Github.clientId)"
             if let c = cont {
                 let baseURL = env["BASE_URL"]
                 let encoded = baseURL + Route.githubCallback("", origin: c).path
+                print(encoded)
                 path.append("&redirect_uri=" + encoded.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)
             }
             return I.redirect(path: path)
@@ -194,11 +201,11 @@ extension Route {
             }
             let downloads = try (session?.user.downloads).map { try c.get().execute($0) } ?? []
             let status = session?.user.downloadStatus(for: ep, downloads: downloads) ?? .notSubscribed
-            return .write(ep.show(downloadStatus: status, session: session))
+            return .write(ep.show(downloadStatus: status, context: context))
         case .episodes:
-            return I.write(index(Episode.scoped(for: session?.user.data), session: session))
+            return I.write(index(Episode.scoped(for: session?.user.data), context: context))
         case .home:
-            return .write(renderHome(session: session), status: .ok)
+            return .write(renderHome(context: context), status: .ok)
         case .sitemap:
             return .write(Route.siteMap)
         case .download:

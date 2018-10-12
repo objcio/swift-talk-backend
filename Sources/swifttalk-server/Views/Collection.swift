@@ -8,11 +8,11 @@
 import Foundation
 
 
-func index(_ items: [Collection], session: Session?) -> Node {
+func index(_ items: [Collection], context: Context) -> Node {
     let lis: [Node] = items.map({ (coll: Collection) -> Node in
-        return Node.li(attributes: ["class": "col width-full s+|width-1/2 l+|width-1/3 mb++"], coll.render(.init(episodes: true), session: session))
+        return Node.li(attributes: ["class": "col width-full s+|width-1/2 l+|width-1/3 mb++"], coll.render(.init(episodes: true), context: context))
     })
-    return LayoutConfig(session: session, contents: [
+    return LayoutConfig(context: context, contents: [
         pageHeader(HeaderContent.link(header: "All Collections", backlink: .home, label: "Swift Talk")),
         .div(classes: "container pb0", [
             .h2([Node.text("\(items.count) Collections")], attributes: ["class": "bold lh-100 mb+"]),
@@ -22,10 +22,10 @@ func index(_ items: [Collection], session: Session?) -> Node {
 }
 
 extension Collection {
-    func show(session: Session?) -> Node {
+    func show(context: Context) -> Node {
         let bgImage = "background-image: url('/assets/images/collections/\(title)@4x.png');"
-        let eps = episodes(for: session?.user.data)
-        return LayoutConfig(session: session, contents: [
+        let eps = episodes(for: context.session?.user.data)
+        return LayoutConfig(context: context, contents: [
             Node.div(attributes: ["class": "pattern-illustration overflow-hidden", "style": bgImage], [
                 Node.div(classes: "wrapper", [
                     .header(attributes: ["class": "offset-content offset-header pv++ bgcolor-white"], [
@@ -48,7 +48,7 @@ extension Collection {
                 Node.ul(attributes: ["class": "offset-content"], eps.map { e in
                     Node.li(attributes: ["class": "flex justify-center mb++ m+|mb+++"], [
                         Node.div(classes: "width-1 ms1 mr- color-theme-highlight bold lh-110 m-|hide", [.raw("&rarr;")]),
-                        e.render(.init(wide: true, synopsis: true, canWatch: e.canWatch(session: session), collection: false))
+                        e.render(.init(wide: true, synopsis: true, canWatch: e.canWatch(session: context.session), collection: false))
                         ])
                 })
                 ]),
@@ -65,9 +65,9 @@ extension Collection {
             self.whiteBackground = whiteBackground
         }
     }
-    func render(_ options: ViewOptions = ViewOptions(), session: Session?) -> [Node] {
+    func render(_ options: ViewOptions = ViewOptions(), context: Context) -> [Node] {
         let figureStyle = "background-color: " + (options.whiteBackground ? "#FCFDFC" : "#F2F4F2")
-        let eps = episodes(for: session?.user.data)
+        let eps = episodes(for: context.session?.user.data)
         let episodes_: [Node] = options.episodes ? [
             .ul(attributes: ["class": "mt-"],
                 eps.map { e in

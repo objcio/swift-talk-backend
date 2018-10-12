@@ -7,15 +7,15 @@
 
 import Foundation
 
-func index(_ items: [Episode], session: Session?) -> Node {
-    return LayoutConfig(session: session, contents: [
+func index(_ items: [Episode], context: Context) -> Node {
+    return LayoutConfig(context: context, contents: [
         pageHeader(.link(header: "All Episodes", backlink: .home, label: "Swift Talk")),
         .div(classes: "container pb0", [
             .div([
                 .h2([.span(attributes: ["class": "bold"], [.text("\(items.count) Episodes")])], attributes: ["class": "inline-block lh-100 mb+"])
                 ]),
             .ul(attributes: ["class": "cols s+|cols--2n m+|cols--3n xl+|cols--4n"], items.map { e in
-                Node.li(attributes: ["class": "col mb++ width-full s+|width-1/2 m+|width-1/3 xl+|width-1/4"], [e.render(.init(synopsis: true, canWatch: (session.premiumAccess) || !e.subscription_only))])
+                Node.li(attributes: ["class": "col mb++ width-full s+|width-1/2 m+|width-1/3 xl+|width-1/4"], [e.render(.init(synopsis: true, canWatch: (context.session.premiumAccess) || !e.subscription_only))])
             })
             ])
         ]).layout
@@ -204,8 +204,8 @@ extension Episode {
             ])
     }
     
-    func show(watched: Bool = false, downloadStatus: DownloadStatus, session: Session?) -> Node {
-        let canWatch = !subscription_only || session.premiumAccess
+    func show(watched: Bool = false, downloadStatus: DownloadStatus, context: Context) -> Node {
+        let canWatch = !subscription_only || context.session.premiumAccess
         let guests_: [Node] = [] // todo
         // todo: subscribe banner
         
@@ -227,7 +227,7 @@ extension Episode {
                     ]),
                 Node.div(classes: "flex scroller js-scroller-container p-edges pt pb++", [
                     Node.div(classes: "scroller__offset flex-none")
-                    ] + Episode.scoped(for: session?.user.data).filter { $0 != self }.prefix(8).map { e in
+                    ] + Episode.scoped(for: context.session?.user.data).filter { $0 != self }.prefix(8).map { e in
                         Node.div(classes: "flex-110 pr+ min-width-5", [e.render(.init(synopsis: false, canWatch: canWatch))]) // todo watched
                     })
                 ])
@@ -286,7 +286,7 @@ extension Episode {
             [Node.section(classes: "pb++", [
                 smallBlueH3("In Collection")
                 ] +
-                coll.render(.init(episodes: true), session: session)
+                coll.render(.init(episodes: true), context: context)
                 + [Node.p(classes: "ms-1 mt text-right", [
                     Node.link(to: .collections, [
                         Node.span(classes: "hover-cascade__border-bottom", ["See All Collections"]),
@@ -373,7 +373,7 @@ extension Episode {
             ])
         
         let data = StructuredData(title: title, description: synopsis, url: absoluteURL(.episode(slug)), image: poster_url, type: .video(duration: media_duration.map(Int.init), releaseDate: releasedAt))
-        return LayoutConfig(session: session, contents: [main, scroller] + (session.premiumAccess ? [] : [subscribeBanner()]), footerContent: [Node.raw(transcriptLinks)], structuredData: data).layout
+        return LayoutConfig(context: context, contents: [main, scroller] + (context.session.premiumAccess ? [] : [subscribeBanner()]), footerContent: [Node.raw(transcriptLinks)], structuredData: data).layout
     }
 }
 

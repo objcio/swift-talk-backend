@@ -7,9 +7,9 @@
 
 import Foundation
 
-func renderHome(session: Session?) -> Node {
+func renderHome(context: Context) -> Node {
     let header = pageHeader(HeaderContent.other(header: "Swift Talk", blurb: "A weekly video series on Swift programming.", extraClasses: "ms4"))
-    let episodes = Episode.scoped(for: session?.user.data)[0..<5]
+    let episodes = Episode.scoped(for: context.session?.user.data)[0..<5]
     let firstEpisode = episodes[0]
     let recentEpisodes: Node = .section(classes: "container", [
         Node.header(attributes: ["class": "mb+"], [
@@ -18,13 +18,13 @@ func renderHome(session: Session?) -> Node {
             ]),
         .div(classes: "m-cols flex flex-wrap", [
             .div(classes: "mb++ p-col width-full l+|width-1/2", [
-                firstEpisode.render(Episode.ViewOptions(featured: true, synopsis: true, canWatch: session.premiumAccess || !firstEpisode.subscription_only))
+                firstEpisode.render(Episode.ViewOptions(featured: true, synopsis: true, canWatch: context.session.premiumAccess || !firstEpisode.subscription_only))
                 ]),
             .div(classes: "p-col width-full l+|width-1/2", [
                 .div(classes: "s+|cols s+|cols--2n",
                      episodes.dropFirst().map { ep in
                         .div(classes: "mb++ s+|col s+|width-1/2", [
-                            ep.render(Episode.ViewOptions(synopsis: false, canWatch: session.premiumAccess || !ep.subscription_only))
+                            ep.render(Episode.ViewOptions(synopsis: false, canWatch: context.session.premiumAccess || !ep.subscription_only))
                             ])
                     }
                 )
@@ -40,9 +40,9 @@ func renderHome(session: Session?) -> Node {
                 ])
             ]),
         .ul(attributes: ["class": "cols s+|cols--2n l+|cols--3n"], Collection.all.map { coll in
-            Node.li(attributes: ["class": "col width-full s+|width-1/2 l+|width-1/3 mb++"], coll.render(session: session))
+            Node.li(attributes: ["class": "col width-full s+|width-1/2 l+|width-1/3 mb++"], coll.render(context: context))
         })
         ])
-    return LayoutConfig(session: session, contents: [header, recentEpisodes, collections]).layout
+    return LayoutConfig(context: context, contents: [header, recentEpisodes, collections]).layout
 }
 

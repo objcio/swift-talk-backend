@@ -34,7 +34,9 @@ struct RegisterFormData {
 }
 
 typealias ValidationError = (field: String, message: String)
-func registerForm(_ session: Session) -> (form: (RegisterFormData, [ValidationError]) -> Node, parse: ([String:String]) -> RegisterFormData?) {
+
+// todo enforce that we get a context with a non-nil session?
+func registerForm(_ context: Context) -> (form: (RegisterFormData, [ValidationError]) -> Node, parse: ([String:String]) -> RegisterFormData?) {
     func parse(_ dict: [String:String]) -> RegisterFormData? {
         guard let e = dict["email"], let n = dict["name"] else { return nil }
         return RegisterFormData(email: e, name: n)
@@ -51,7 +53,7 @@ func registerForm(_ session: Session) -> (form: (RegisterFormData, [ValidationEr
                 ])
             ])
         }
-        return LayoutConfig(session: nil, contents: [
+        return LayoutConfig(context: context, contents: [
             Node.header([
                 Node.div(classes: "container-h pb+ pt-", [
                     Node.h1(classes: "ms4 color-blue bold", ["Create Your Account"], attributes: [:])
@@ -89,7 +91,7 @@ extension Plan {
 }
 extension Array where Element == Plan {
     
-    func subscribe(session: Session?, coupon: String? = nil) throws -> Node {
+    func subscribe(context: Context, coupon: String? = nil) throws -> Node {
         guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
             throw RenderingError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
         }
@@ -110,9 +112,9 @@ extension Array where Element == Plan {
         }
         let continueLink: Node
         let linkClasses: Class = "c-button c-button--big c-button--blue c-button--wide"
-        if session.premiumAccess {
+        if context.session.premiumAccess {
             continueLink = Node.link(to: .accountBilling, ["You're already subscribed"], classes: linkClasses + "c-button--ghost")
-        } else if session?.user != nil {
+        } else if context.session?.user != nil {
 //            print(session?.user)
             continueLink = Node.link(to: .newSubscription, ["Proceed to payment"], classes: linkClasses)
         } else {
@@ -146,7 +148,7 @@ extension Array where Element == Plan {
                     ])
                 ]),
             ]
-        return LayoutConfig(session: session, pageTitle: "Subscribe", contents: contents).layout
+        return LayoutConfig(context: context, pageTitle: "Subscribe", contents: contents).layout
     }
 }
 
@@ -160,14 +162,14 @@ func smallPrint(coupon: Bool) -> [String] {
     ]
 }
 
-func newSub(session: Session?, errs: [String]) throws -> Node {
+func newSub(context: Context, errs: [String]) throws -> Node {
     guard let m = Plan.monthly, let y = Plan.yearly else {
         throw RenderingError(privateMessage: "No monthly or yearly plan: \(Plan.all)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
     }
     let data = NewSubscriptionData(action: Route.createSubscription.path, public_key: env["RECURLY_PUBLIC_KEY"], plans: [
         .init(m), .init(y)
     ], payment_errors: errs, method: .post, coupon: .init())
-    return LayoutConfig(session: session, contents: [
+    return LayoutConfig(context: context, contents: [
         .header([
             .div(classes: "container-h pb+ pt+", [
                 .h1(classes: "ms4 color-blue bold", ["Subscribe to Swift Talk"])
