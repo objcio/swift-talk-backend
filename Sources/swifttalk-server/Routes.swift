@@ -49,6 +49,13 @@ extension Route {
         guard let route = router.route(for: request) else { return nil }
         self = route
     }
+    
+    var loadSession: Bool {
+        switch self {
+        case .staticFile: return false
+        default: return true
+        }
+    }
 }
 
 func inWhitelist(_ path: [String]) -> Bool {

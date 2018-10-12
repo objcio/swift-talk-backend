@@ -78,7 +78,7 @@ func ?!<A>(lhs: A?, rhs: Error) throws -> A {
 extension Route {
     func interpret<I: Interpreter>(sessionId: UUID?, connection c: Lazy<Connection>) throws -> I {
         let session: Session?
-        if let sId = sessionId {
+        if self.loadSession, let sId = sessionId {
             let user = try c.get().execute(Row<UserData>.select(sessionId: sId))
             session = user.map { Session(sessionId: sId, user: $0, csrfToken: "TODO") }
         } else {
@@ -204,7 +204,6 @@ extension Route {
         case .download:
             return .write("TODO")
         case let .staticFile(path: p):
-            // todo: we're creating a database connection for every static file!
             guard inWhitelist(p) else {
                 return .write("forbidden", status: .forbidden)
             }
