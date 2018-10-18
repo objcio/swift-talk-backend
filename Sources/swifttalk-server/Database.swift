@@ -16,22 +16,21 @@ let postgresConfig = ConnInfo.params([
     "connect_timeout": "1",
 ])
 
-let postgreSQL = try? PostgreSQL.Database(connInfo: postgresConfig)
+let postgreSQL = try! PostgreSQL.Database(connInfo: postgresConfig)
 
 func withConnection<A>(_ x: (Connection?) throws -> A) rethrows -> A {
-    let conn: Connection? = postgreSQL.flatMap {
-        do {
-            let conn = try $0.makeConnection()
-            return conn
-        } catch {
-            print(error, to: &standardError)
-            print(error.localizedDescription, to: &standardError)
-            return nil
-        }
-    }
+    let conn = try? postgreSQL.makeConnection()
     let result = try x(conn)
     try? conn?.close()
     return result
+}
+
+func lazyConnection() -> Lazy<Connection> {
+    return Lazy<Connection>({ () throws -> Connection in
+        return try postgreSQL.makeConnection()
+    }, cleanup: { conn in
+        try? conn.close()
+    })
 }
 
 protocol Insertable: Codable {

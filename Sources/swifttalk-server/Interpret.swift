@@ -44,27 +44,6 @@ extension Interpreter {
     }
 }
 
-final class Lazy<A> {
-    private let compute: () throws -> A
-    private var cache: A?
-    private var cleanup: (A) -> ()
-    func get() throws -> A {
-        if cache == nil {
-            cache = try compute()
-        }
-        return cache! // todo throw an error?
-    }
-    init(_ compute: @escaping () throws -> A, cleanup: @escaping (A) -> ()) {
-        self.compute = compute
-        self.cleanup = cleanup
-    }
-    
-    deinit {
-        guard let c = cache else { return }
-        cleanup(c)
-    }
-}
-
 struct NotLoggedInError: Error { }
 
 infix operator ?!: NilCoalescingPrecedence

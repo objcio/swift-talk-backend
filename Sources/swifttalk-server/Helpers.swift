@@ -28,6 +28,28 @@ func tryOrLog<A>(_ message: String = "", _ f: () throws -> A) -> A? {
     }
 }
 
+
+final class Lazy<A> {
+    private let compute: () throws -> A
+    private var cache: A?
+    private var cleanup: (A) -> ()
+    func get() throws -> A {
+        if cache == nil {
+            cache = try compute()
+        }
+        return cache! // todo throw an error?
+    }
+    init(_ compute: @escaping () throws -> A, cleanup: @escaping (A) -> ()) {
+        self.compute = compute
+        self.cleanup = cleanup
+    }
+    
+    deinit {
+        guard let c = cache else { return }
+        cleanup(c)
+    }
+}
+
 extension Foundation.FileHandle : TextOutputStream {
     public func write(_ string: String) {
         guard let data = string.data(using: .utf8) else { return }

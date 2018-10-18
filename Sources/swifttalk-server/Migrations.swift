@@ -7,8 +7,8 @@
 
 import Foundation
 
-func runMigrations() {
-    withConnection { conn in
+func runMigrations() throws {
+    try withConnection { conn in
         guard let c = conn else {
             print("Can't connect to database")
             return
