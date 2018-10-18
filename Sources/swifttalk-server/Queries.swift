@@ -14,6 +14,23 @@ struct Query<A> {
     var parse: (PostgreSQL.Node) -> A
 }
 
+struct FileData: Codable, Insertable {
+    var key: String
+    var value: String
+    
+    static let tableName: String = "files"
+}
+
+extension FileData {
+    init(repository: String, path: String, value: String) {
+        self.init(key: FileData.key(forRepository: repository, path: path), value: value)
+    }
+    
+    static func key(forRepository repository: String, path: String) -> String {
+        return "\(repository)::\(path)"
+    }
+}
+
 struct SessionData: Codable, Insertable {
     var userId: UUID
     var createdAt: Date
@@ -115,6 +132,30 @@ extension Row where Element: Insertable {
             let result = PostgresNodeDecoder.decode([Row<Element>].self, transformKey: { $0.snakeCased }, node: node)
             return result.first
         })
+    }
+}
+
+extension Row where Element: Insertable {
+    static func select(where conditions: [String: NodeRepresentable]) -> Query<Row<Element>?> {
+        let fields = Element.fieldNames.joined(separator: ",")
+        let c = conditions.array
+        let values = c.map { $0.1 }
+        let conditions = c.enumerated().map { idx, p in "\(p.0) = $\(idx + 1)" }.joined(separator: ",")
+        let query = "SELECT id,\(fields) FROM \(Element.tableName) WHERE \(conditions);"
+        return Query(query: query, values: values, parse: { node in
+            let result = PostgresNodeDecoder.decode([Row<Element>].self, transformKey: { $0.snakeCased }, node: node)
+            return result.first
+        })
+    }
+}
+
+extension Row where Element == FileData {
+    static func select(key: String) -> Query<Row<FileData>?> {
+        return select(where: ["key": key])
+    }
+    
+    static func select(repository: String, path: String) -> Query<Row<FileData>?> {
+        return select(key: FileData.key(forRepository: repository, path: path))
     }
 }
 

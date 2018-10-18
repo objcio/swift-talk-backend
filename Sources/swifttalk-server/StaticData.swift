@@ -68,6 +68,19 @@ fileprivate let collections: Static<[Collection]> = Static(sync: collectionData.
 fileprivate let collaboratorsData = StaticJSON<[Collaborator]>(fileName: "data/collaborators.json")
 fileprivate let collaborators: Static<[Collaborator]> = Static(sync: collaboratorsData.read)
 
+func refreshTranscripts() {
+    Github.loadTranscripts.run { results in
+        withConnection { connection in
+            guard let c = connection else { return }
+            for f in results {
+                guard let contents = f.contents else { continue }
+                let fd = FileData(repository: f.file.repository, path: f.file.path, value: contents)
+                tryOrLog("Error caching \(f.file.url)") { try c.execute(fd.insertOrUpdate(uniqueKey: "key")) }
+            }
+        }
+    }
+}
+
 func flushStaticData() {
     episodes.flush()
     collections.flush()

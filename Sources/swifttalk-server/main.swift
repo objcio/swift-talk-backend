@@ -4,20 +4,12 @@ import NIOHTTP1
 import PostgreSQL
 
 
-var standardError = FileHandle.standardError
 let env = Env()
 
 let recurly = Recurly(subdomain: "\(env["RECURLY_SUBDOMAIN"]).recurly.com", apiKey: env["RECURLY_API_KEY"])
 
+refreshTranscripts()
 
-
-func log(_ e: Error) {
-    print(e.localizedDescription, to: &standardError)
-}
-
-func log(error: String) {
-    print(error, to: &standardError)
-}
 
 struct NoDatabaseConnection: Error { }
 

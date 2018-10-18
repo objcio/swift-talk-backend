@@ -7,11 +7,23 @@
 
 import Foundation
 
-func tryOrPrint<A>(_ f: () throws -> A?) -> A? {
+
+var standardError = FileHandle.standardError
+
+func log(_ e: Error) {
+    print(e.localizedDescription, to: &standardError)
+}
+
+func log(error: String) {
+    print(error, to: &standardError)
+}
+
+@discardableResult
+func tryOrLog<A>(_ message: String = "", _ f: () throws -> A) -> A? {
     do {
         return try f()
     } catch {
-        print("Error: \(error) \(error.localizedDescription)", to: &standardError)
+        log(error: "\(error.localizedDescription) — \(message)")
         return nil
     }
 }

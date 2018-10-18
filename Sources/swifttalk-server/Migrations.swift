@@ -13,7 +13,7 @@ func runMigrations() {
             print("Can't connect to database")
             return
         }
-        tryOrPrint {
+        tryOrLog {
             for m in migrations { // global variable, but we could inject it at some point.
                 try c.execute(m)
             }
@@ -74,6 +74,14 @@ fileprivate let migrations: [String] = [
 		created_at timestamp NOT NULL,
 		UNIQUE (user_id, episode_id)
 	)
-	"""
+	""",
+    """
+    CREATE TABLE IF NOT EXISTS files (
+        id uuid DEFAULT public.uuid_generate_v4() PRIMARY KEY,
+        key text NOT NULL,
+        value text NOT NULL,
+        UNIQUE (key)
+    );
+    """
 ]
 

@@ -47,6 +47,26 @@ struct Promise<A> {
             }
         }
     }
+    
+    func flatMap<B>(_ f: @escaping (A) -> Promise<B>) -> Promise<B> {
+        return Promise<B> { cb in
+            self.run { a in
+                let p = f(a)
+                p.run(cb)
+            }
+        }
+    }
+}
+
+func sequentially<A>(_ promises: [Promise<A>]) -> Promise<[A]> {
+    let initial: Promise<[A]> = Promise { $0([]) }
+    return promises.reduce(initial) { result, promise in
+        return result.flatMap { (existing: [A]) in
+            promise.map { new in
+                return existing + [new]
+            }
+        }
+    }
 }
 
 extension Interpreter {

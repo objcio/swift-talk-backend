@@ -62,6 +62,22 @@ extension Insertable {
             return UUID(uuidString: node[0, "id"]!.string!)!
         })
     }
+    
+    func insertOrUpdate(uniqueKey: String) -> Query<UUID> {
+        let fields = fieldNamesAndValues
+        let names = fields.map { $0.0 }.joined(separator: ",")
+        let values = fields.map { $0.1 }
+        let placeholders = (1...fields.count).map { "$\($0)" }.joined(separator: ",")
+        let updates = fields.map { "\($0.0) = EXCLUDED.\($0.0)" }.joined(separator: ",")
+        let query = """
+        INSERT INTO \(Self.tableName) (\(names)) VALUES (\(placeholders))
+        ON CONFLICT (\(uniqueKey)) DO UPDATE SET \(updates)
+        RETURNING id;
+        """
+        return Query(query: query, values: values, parse: { node in
+            return UUID(uuidString: node[0, "id"]!.string!)!
+        })
+    }
 }
 
 

@@ -216,8 +216,11 @@ extension String {
 
 extension Episode {
     var rawTranscript: String? {
-        let path = URL(fileURLWithPath: "data/episode-transcripts/episode\(number).md")
-        return try? String(contentsOf: path)
+        return withConnection { connection in
+            guard let c = connection else { return nil }
+            let row = try? c.execute(Row<FileData>.select(repository: Github.transcriptsRepo, path: "episode\(number).md"))
+            return row??.data.value
+        }
     }
     
     var transcript: CommonMark.Node? {

@@ -31,6 +31,7 @@ struct Env {
         // todo a different check than assert (gets compiled out during release)
         assert(env["GITHUB_CLIENT_ID"] != nil)
         assert(env["GITHUB_CLIENT_SECRET"] != nil)
+        assert(env["GITHUB_ACCESS_TOKEN"] != nil)
     }
 }
 
