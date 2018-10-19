@@ -4,6 +4,3 @@
 [submodule "assets/stylesheets/objcss"]
 	path = assets/stylesheets/objcss
 	url = git@github.com:objcio/objcss.git
-[submodule "episode-transcripts"]
-	path = data/episode-transcripts
-	url = git@github.com:objcio/episode-transcripts.git
