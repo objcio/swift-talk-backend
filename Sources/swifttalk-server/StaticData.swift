@@ -162,6 +162,7 @@ func verifyStaticData() {
             assert(Collaborator.all.contains(where: { $0.id == c}), "\(c) \(e)")
         }
     }
+    myAssert(transcripts.cached != nil)
 }
 
 extension Plan {
