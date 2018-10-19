@@ -82,6 +82,13 @@ fileprivate let migrations: [String] = [
         value text NOT NULL,
         UNIQUE (key)
     );
+    """,
+    """
+    ALTER TABLE downloads
+        DROP CONSTRAINT IF EXISTS downloads_user_id_episode_id_key,
+        DROP COLUMN IF EXISTS episode_id,
+        ADD COLUMN IF NOT EXISTS episode_number integer NOT NULL,
+        ADD UNIQUE (episode_number, user_id);
     """
 ]
 

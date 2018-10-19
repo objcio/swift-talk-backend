@@ -17,10 +17,6 @@ struct Session {
 
 let teamDiscount = 30
 
-struct Slug<A>: Codable, Equatable, RawRepresentable {
-    let rawValue: String
-}
-
 struct Id<A>: RawRepresentable, Codable, Equatable {
     var rawValue: String
 }
@@ -37,13 +33,13 @@ struct Collaborator: Codable, Equatable {
     var role: Role
 }
 
-enum Role : Int, Codable, Equatable, Comparable {
-    case host = 0
-    case guestHost = 1
-    case transcript = 2
-    case copyEditing = 3
-    case technicalReview = 4
-    case shooting = 5
+enum Role: String, Codable, Equatable, Comparable {
+    case host = "host"
+    case guestHost = "guest-host"
+    case transcript = "transcript"
+    case copyEditing = "copy-editing"
+    case technicalReview = "technical-review"
+    case shooting = "shooting"
 
     static private let order: [Role] = [.host, .guestHost, .technicalReview, .transcript, .copyEditing, .shooting]
 
@@ -73,26 +69,18 @@ enum Role : Int, Codable, Equatable, Comparable {
 struct Episode: Codable, Equatable {
     var collections: [Id<Collection>]
     var collaborators: [Id<Collaborator>]
-    var created_at: String
-    var id: Id<Episode>
-    var mailchimp_campaign_id: String?
     var media_duration: TimeInterval?
     var media_src: String?
-    var media_version: Int
-    var name: String
     var number: Int
     var poster_uid: String?
     var release_at: String?
     var released: Bool
     var sample_src: String?
     var sample_duration: TimeInterval?
-    var sample_version: Int
-    var season: Int
 //    var small_poster_url: URL?
     var subscription_only: Bool
     var synopsis: String
     var title: String
-    var updated_at: String?
     var video_id: String?
 //    var guests: [Guest]?
     var resources: PostgresArray<Resource>
@@ -121,6 +109,10 @@ struct Resource: Codable, Equatable {
 }
 
 extension Episode {
+    var id: Id<Episode> {
+        return Id(rawValue: "S01E\(number)-\(title.asSlug)")
+    }
+    
     var fullTitle: String {
         guard let p = primaryCollection, p.use_as_title_prefix else { return title }
         return "\(p.title): \(title)"
@@ -184,9 +176,7 @@ struct Collection: Codable, Equatable {
     var `public`: Bool
     var description: String
     var position: Int
-    var artwork_uid: String?
     var new: Bool
-    var slug: Slug<Collection>
     var use_as_title_prefix: Bool
 }
 

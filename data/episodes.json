@@ -1,57 +1,16 @@
 [
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
-        ],
-        "collections": [],
-        "created_at": "2016-06-08T14:11:36.319811",
-        "id": "de23a257-6d39-49e8-aa50-0307923ec0fb",
-        "mailchimp_campaign_id": null,
-        "media_duration": 71.6,
-        "media_src": "Introduction2.mp4",
-        "media_version": 3,
-        "name": "S01E00",
-        "number": 0,
-        "poster_uid": "2016/06/09/16/36/40/3450ed02-611e-4289-9ce8-8058934a6d89/Introduction poster.jpg",
-        "release_at": "2016-06-07T15:00:00",
-        "released": true,
-        "resources": [
-            {
-                "subtitle": null,
-                "title": null,
-                "url": null
-            }
-        ],
-        "sample_duration": 68.861,
-        "sample_src": "pokerface.mp4",
-        "sample_version": 1,
-        "season": 1,
-        "subscription_only": false,
-        "synopsis": "**Follow us discussing solutions to real problems in real projects.**\r\n\r\nIn this series of videos and articles we build real projects and show you the most interesting aspects of the development process. We discuss our decisions, mistakes and lessons learned.",
-        "title": "Swift Talk",
-        "updated_at": "2016-06-16T15:57:49.204423",
-        "video_id": "8b678246-f3db-4e52-ba79-811115e3c07e"
-    },
-    {
-        "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "rick-minnich",
+            "natalye"
         ],
         "collections": [
-            "dfb1f457-581d-43fd-83d7-6015a8b7b941"
+            "ledger-mac-app"
         ],
-        "created_at": "2016-08-24T14:02:32.50872",
-        "id": "43c12e8e-8bd4-44b4-944a-6434ce14e893",
-        "mailchimp_campaign_id": null,
         "media_duration": 1523.96,
         "media_src": "13-Parsing Techniques4.m4v",
-        "media_version": 2,
-        "name": "S01E13",
         "number": 13,
         "poster_uid": "2016/08/26/09/16/16/6e549064-cf0e-46f2-a27a-1d33b8536314/13-Parsing Techniques.jpg",
         "release_at": "2016-08-26T14:00:00",
@@ -65,31 +24,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We look at two different techniques to parse a simple expression language: handwritten parsers and parser combinators.",
         "title": "Parsing Techniques",
-        "updated_at": "2017-12-05T13:17:47.302682",
         "video_id": "4cd4bec7-b5d4-43a3-a520-ea888a9bbed3"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "rick-minnich",
+            "natalye"
         ],
         "collections": [
-            "d5b08eb0-0d2a-4643-91f7-447199d628d6"
+            "table-views"
         ],
-        "created_at": "2016-07-11T08:46:23.854575",
-        "id": "fd09d64c-a3bf-4d68-bf17-06e1b808457f",
-        "mailchimp_campaign_id": null,
         "media_duration": 1182.24,
         "media_src": "Generic Table View Controllers.m4v",
-        "media_version": 1,
-        "name": "S01E06",
         "number": 6,
         "poster_uid": "2016/07/13/16/01/16/2d60dad1-800c-44f6-a019-87da4396518c/Generic Table View Controllers.jpg",
         "release_at": "2016-07-15T13:00:00",
@@ -103,31 +54,23 @@
         ],
         "sample_duration": 78.52,
         "sample_src": "Generic Table View Controllers Preview.m4v",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We leverage Swift's generics to keep our table view controller code clean.",
         "title": "Generic Table View Controllers",
-        "updated_at": "2017-12-05T13:17:46.396082",
         "video_id": "7f3b5cae-7718-4ca1-acfe-99d1e9b5399d"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "rick-minnich",
+            "natalye"
         ],
         "collections": [
-            "dfb1f457-581d-43fd-83d7-6015a8b7b941"
+            "ledger-mac-app"
         ],
-        "created_at": "2016-08-29T11:33:47.145139",
-        "id": "ed4a33c0-977b-4b86-83d7-3c85e951f9a3",
-        "mailchimp_campaign_id": null,
         "media_duration": 1691.04,
         "media_src": "14-Account Tree v2.m4v",
-        "media_version": 2,
-        "name": "S01E14",
         "number": 14,
         "poster_uid": "2016/08/29/12/03/05/4eeb3cda-a6b4-4fb6-bb41-060a62df66af/13-Account Tree.jpg",
         "release_at": "2016-09-02T14:00:00",
@@ -141,29 +84,21 @@
         ],
         "sample_duration": 122.68,
         "sample_src": "14-Account Tree Preview v2.m4v",
-        "sample_version": 2,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We build a tree structure from an array of Ledger account names. We first implement the tree using a class, and then we refactor it to a struct and discuss the differences and tradeoffs involved.",
         "title": "Growing Trees with Classes and Structs",
-        "updated_at": "2017-12-05T13:17:47.321906",
         "video_id": "0902a184-0fbc-4649-bbc1-e7b02b8c3552"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "rick-minnich",
+            "natalye"
         ],
         "collections": [],
-        "created_at": "2016-08-04T15:59:24.747833",
-        "id": "c666772b-2054-483b-8ed6-0b3190b6bf88",
-        "mailchimp_campaign_id": null,
         "media_duration": 834.4,
         "media_src": "09-QA.m4v",
-        "media_version": 1,
-        "name": "S01E09",
         "number": 9,
         "poster_uid": "2016/08/04/16/28/26/f4debdbc-6ae1-4e99-85cc-4386c6e16999/Q&A.jpg",
         "release_at": "2016-08-05T13:00:00",
@@ -177,31 +112,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "In this episode, we answer some of the questions we've received over the past few weeks. We cover networking, table views, stack views, our App class, and testing.",
         "title": "Q&A",
-        "updated_at": "2016-12-13T09:55:36.000145",
         "video_id": "e985bcbf-fbbe-49f8-8394-ca04b9a7782a"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "rick-minnich",
+            "natalye"
         ],
         "collections": [
-            "dfb1f457-581d-43fd-83d7-6015a8b7b941"
+            "ledger-mac-app"
         ],
-        "created_at": "2016-08-17T17:33:12.575721",
-        "id": "4520bf1d-a94c-44e4-955f-b6358c2f3033",
-        "mailchimp_campaign_id": null,
         "media_duration": 1543.44,
         "media_src": "12-Evaluation 2.m4v",
-        "media_version": 1,
-        "name": "S01E12",
         "number": 12,
         "poster_uid": "2016/08/18/06/06/42/d9bec907-0d18-4a5c-9daf-11774122ab21/12-Evaluation 2.jpg",
         "release_at": "2016-08-19T15:00:00",
@@ -215,31 +142,23 @@
         ],
         "sample_duration": 105,
         "sample_src": "12-Evaluation 2 - Preview.m4v",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "Writing the code for evaluating transactions required continuous refactoring to keep our code simple and clean.",
         "title": "Evaluating Transactions",
-        "updated_at": "2017-12-05T13:17:47.285835",
         "video_id": "1af72537-a54c-4b90-a5c3-92e297eaecb1"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "rick-minnich",
+            "natalye"
         ],
         "collections": [
-            "dfb1f457-581d-43fd-83d7-6015a8b7b941"
+            "ledger-mac-app"
         ],
-        "created_at": "2016-08-05T10:40:56.908752",
-        "id": "23f8bae8-f882-48ef-9998-2586d521d28f",
-        "mailchimp_campaign_id": null,
         "media_duration": 1776.24,
         "media_src": "11-Evaluation 1.m4v",
-        "media_version": 1,
-        "name": "S01E11",
         "number": 11,
         "poster_uid": "2016/08/12/08/02/05/bef3634a-593f-4de2-a4bf-0e23214b6b32/11-Evaluation 1.jpg",
         "release_at": "2016-08-12T15:00:00",
@@ -253,32 +172,24 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "Expressions are at the heart of Ledger. We write an evaluator for this expression language in a test-driven way.",
         "title": "Evaluating Expressions",
-        "updated_at": "2017-12-05T13:17:47.265814",
         "video_id": "20f00305-68ee-4230-8d4c-7d51de34f7ad"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "rick-minnich",
+            "natalye"
         ],
         "collections": [
-            "cc4d5956-9405-49a6-8dcf-8a467e35430f",
-            "dfb1f457-581d-43fd-83d7-6015a8b7b941"
+            "functional-programming",
+            "ledger-mac-app"
         ],
-        "created_at": "2016-09-06T12:12:24.791574",
-        "id": "f8505d1b-760d-4d5d-8e79-2bf7dbda47bb",
-        "mailchimp_campaign_id": null,
         "media_duration": 982.32,
         "media_src": "15-Parser Combinators 1.m4v",
-        "media_version": 1,
-        "name": "S01E15",
         "number": 15,
         "poster_uid": "2016/09/06/12/24/31/b0d2e09b-355c-4dde-8012-449aae160e8d/15-Parser Combinators 1.jpg",
         "release_at": "2016-09-09T15:00:00",
@@ -292,31 +203,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "Join us in the functional programming gym to stretch your object-oriented comfort zone while we lay the groundwork for a parser combinator library.",
         "title": "Building Parser Combinators (Part 1)",
-        "updated_at": "2018-03-05T14:41:23.088744",
         "video_id": "3957fab8-dc40-44ff-b021-04238850c5ae"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "rick-minnich",
+            "natalye"
         ],
         "collections": [
-            "dfb1f457-581d-43fd-83d7-6015a8b7b941"
+            "ledger-mac-app"
         ],
-        "created_at": "2016-08-05T10:40:29.369442",
-        "id": "bf3f8f25-d21d-417a-a3a4-94af05ea0b4a",
-        "mailchimp_campaign_id": null,
         "media_duration": 465,
         "media_src": "10-Ledger Introduction.m4v",
-        "media_version": 1,
-        "name": "S01E10",
         "number": 10,
         "poster_uid": "2016/08/12/08/01/34/bda9e6f0-b3e4-40a0-b852-048c95c2c393/10-Ledger Introduction.jpg",
         "release_at": "2016-08-12T14:59:00",
@@ -330,33 +233,25 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We give a quick introduction to Ledger itself and to the Mac app we're going to build.",
         "title": "Introduction",
-        "updated_at": "2018-07-03T11:13:13.726512",
         "video_id": "9a2a862d-1838-4098-a487-622c5ddcf373"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "rick-minnich",
+            "natalye"
         ],
         "collections": [
-            "83b744cc-1eb9-4194-bcbe-60ac7a21059c",
-            "f0861d3a-a419-4a45-82a6-e0e2bbc63a3b",
-            "c84f4bb2-5e85-464c-bc6b-2173ec6dc074"
+            "type-safe-api-wrappers",
+            "libraries",
+            "networking"
         ],
-        "created_at": "2016-06-09T15:17:36.106832",
-        "id": "74398c44-7247-4bb4-8ae3-9c84e0ec742c",
-        "mailchimp_campaign_id": null,
         "media_duration": 1369.68,
         "media_src": "Networking1.m4v",
-        "media_version": 2,
-        "name": "S01E01",
         "number": 1,
         "poster_uid": "2016/06/10/08/59/12/8843919b-8cee-4824-bc1c-d2f78f2bdad1/Networking poster.jpg",
         "release_at": "2016-06-17T15:00:00",
@@ -370,31 +265,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We make use of Swift's generics and structs to build a simple network layer with great testability.",
         "title": "Tiny Networking Library",
-        "updated_at": "2018-05-23T10:14:43.657746",
         "video_id": "9fc9f40b-dea9-4825-a2f2-3862cf74d009"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "rick-minnich",
+            "natalye"
         ],
         "collections": [
-            "c84f4bb2-5e85-464c-bc6b-2173ec6dc074"
+            "networking"
         ],
-        "created_at": "2016-06-24T10:24:50.386452",
-        "id": "1b888bc4-d261-481d-a8ba-28c02b31eaab",
-        "mailchimp_campaign_id": null,
         "media_duration": 1310.32,
         "media_src": "Loading View Controllers - new intro.m4v",
-        "media_version": 1,
-        "name": "S01E03",
         "number": 3,
         "poster_uid": "2016/06/24/10/29/04/844ef427-be14-47b6-9220-21750e51288c/poster.jpg",
         "release_at": "2016-06-24T15:00:00",
@@ -408,31 +295,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We explore different approaches to factor out asynchronous loading code from view controllers, using protocols, container view controllers, and generics.",
         "title": "Loading View Controllers",
-        "updated_at": "2017-12-05T13:17:45.73776",
         "video_id": "00674f97-ab30-4a55-bc53-aa80fbb4ca5c"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "rick-minnich",
+            "natalye"
         ],
         "collections": [
-            "201eefb9-38c5-4921-991e-3e46ba747069"
+            "architecture"
         ],
-        "created_at": "2016-07-13T16:51:48.781253",
-        "id": "c50beb27-cef0-4cb6-ab2b-bf142e6df142",
-        "mailchimp_campaign_id": null,
         "media_duration": 1303,
         "media_src": "Stack Views with Enums.m4v",
-        "media_version": 1,
-        "name": "S01E07",
         "number": 7,
         "poster_uid": "2016/07/13/16/51/48/5f3cecc8-c6da-4b83-81e8-d29943cd7bcc/Stack Views with Enums.jpg",
         "release_at": "2016-07-22T14:00:00",
@@ -446,32 +325,24 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We create an abstraction around stack views using enums to specify UI elements in a declarative style.",
         "title": "Stack Views with Enums",
-        "updated_at": "2018-06-26T12:50:13.767726",
         "video_id": "1655988b-fa92-4b7b-8edb-88089c115fac"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "rick-minnich",
+            "natalye"
         ],
         "collections": [
-            "83b744cc-1eb9-4194-bcbe-60ac7a21059c",
-            "c84f4bb2-5e85-464c-bc6b-2173ec6dc074"
+            "type-safe-api-wrappers",
+            "networking"
         ],
-        "created_at": "2016-07-15T12:17:33.796779",
-        "id": "323c0763-eca5-4f67-99d5-5bb56e2f3ccd",
-        "mailchimp_campaign_id": null,
         "media_duration": 1120.8,
         "media_src": "Networking POST Requests-1.m4v",
-        "media_version": 2,
-        "name": "S01E08",
         "number": 8,
         "poster_uid": "2016/07/15/12/19/09/06d2c7db-7ad4-4f45-9e03-8872e19a0cf4/Networking POST Requests.jpg",
         "release_at": "2016-07-29T14:00:00",
@@ -485,31 +356,23 @@
         ],
         "sample_duration": 87.12,
         "sample_src": "Networking POST Requests-1 Preview.m4v",
-        "sample_version": 2,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We add POST support to a simple networking layer, using Swift's enums with associated values and generics.",
         "title": "Adding POST Requests",
-        "updated_at": "2018-01-23T15:37:48.634281",
         "video_id": "f292aec0-4003-49af-b8cb-055b5e658766"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "rick-minnich",
+            "natalye"
         ],
         "collections": [
-            "201eefb9-38c5-4921-991e-3e46ba747069"
+            "architecture"
         ],
-        "created_at": "2016-07-06T09:04:12.072118",
-        "id": "344a3a1e-a026-454c-9567-d3562254b075",
-        "mailchimp_campaign_id": null,
         "media_duration": 1214.528,
         "media_src": "Connecting View Controllers.m4v",
-        "media_version": 1,
-        "name": "S01E05",
         "number": 5,
         "poster_uid": "2016/07/07/13/31/56/9d9b51f5-7546-4aba-a702-892decc7e15d/Connecting View Controllers.jpg",
         "release_at": "2016-07-08T13:00:00",
@@ -523,31 +386,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We refactor our code by moving the app's flow from the storyboard into a separate coordinator class. This avoids view controllers having implicit knowledge of their context.",
         "title": "Connecting View Controllers",
-        "updated_at": "2018-06-26T12:50:13.782081",
         "video_id": "831c191e-568f-42f6-9925-b9327606e139"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "rick-minnich",
+            "natalye"
         ],
         "collections": [
-            "cc4d5956-9405-49a6-8dcf-8a467e35430f"
+            "functional-programming"
         ],
-        "created_at": "2016-06-09T16:05:25.516534",
-        "id": "cc7bd019-a5c5-4ae4-aec8-388bc8c55f56",
-        "mailchimp_campaign_id": null,
         "media_duration": 1395.92,
         "media_src": "Rendering CommonMark1.m4v",
-        "media_version": 2,
-        "name": "S01E02",
         "number": 2,
         "poster_uid": "2016/06/09/16/35/27/4b9552d4-2386-4e59-b27d-c24d2b796d48/Rendering CommonMark poster.jpg",
         "release_at": "2016-06-17T15:00:00",
@@ -561,30 +416,22 @@
         ],
         "sample_duration": 76.76,
         "sample_src": "CommonMark Preview2.m4v",
-        "sample_version": 3,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We create attributed strings from CommonMark. We continually refactor our code to make the central logic short and understandable.",
         "title": "Rendering CommonMark",
-        "updated_at": "2018-03-05T14:41:23.264489",
         "video_id": "7ccc6311-d8e5-4cad-8a09-1bc6f0d14a72"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "natalye"
         ],
         "collections": [
-            "c84f4bb2-5e85-464c-bc6b-2173ec6dc074"
+            "networking"
         ],
-        "created_at": "2016-11-13T09:44:37.582337",
-        "id": "8a9a48fa-46b2-45bb-a7ec-ba2bc620ad58",
-        "mailchimp_campaign_id": null,
         "media_duration": 1413.28,
         "media_src": "25 Network Caching.m4v",
-        "media_version": 1,
-        "name": "S01E25",
         "number": 25,
         "poster_uid": "2016/11/13/09/56/35/6a29d55c-ac8b-4037-a706-3c8964d17db1/25 Network Caching.jpg",
         "release_at": "2016-11-18T15:00:00",
@@ -598,28 +445,20 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We add support for caching network requests without altering our original networking abstraction.",
         "title": "Adding Caching",
-        "updated_at": "2017-12-05T13:17:45.715003",
         "video_id": "29d76e46-dd18-42a1-8d90-4c56df063fff"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "natalye"
         ],
         "collections": [],
-        "created_at": "2016-11-01T15:53:57.30501",
-        "id": "81752a12-40a8-4a08-af08-bef808b212e4",
-        "mailchimp_campaign_id": null,
         "media_duration": 1447.24,
         "media_src": "23 Splitting Arrays.m4v",
-        "media_version": 1,
-        "name": "S01E23",
         "number": 23,
         "poster_uid": "2016/11/01/15/53/56/b0ded07f-6251-41d7-930f-02daef0a066a/23 Splitting Arrays.jpg",
         "release_at": "2016-11-04T15:00:00",
@@ -633,30 +472,22 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We talk about a familiar but surprisingly tricky problem: splitting an array into groups of elements. We discuss the pros and cons of our own solutions along with the solutions people sent us via Twitter!",
         "title": "Splitting Arrays",
-        "updated_at": "2016-12-13T08:56:02.202285",
         "video_id": "e439a18a-b9ef-43d3-a8fe-4aef4b5484c9"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "natalye"
         ],
         "collections": [
-            "ee89af6c-10e7-49de-8660-cf0b84443e19"
+            "swift-the-language"
         ],
-        "created_at": "2016-10-18T11:51:43.457931",
-        "id": "651728f9-33e0-4a66-bd75-171764c82045",
-        "mailchimp_campaign_id": null,
         "media_duration": 967.92,
         "media_src": "21-Structs and Mutation.m4v",
-        "media_version": 1,
-        "name": "S01E21",
         "number": 21,
         "poster_uid": "2016/10/18/11/51/43/fd4bbe35-4e8a-45c1-8d12-3b3d8b2f6415/21-Structs and Mutation.jpg",
         "release_at": "2016-10-21T15:00:00",
@@ -670,31 +501,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We can change structs by mutation, functional chaining, and inout parameters. We discuss how they differ at the call site and why they\u2019re all equivalent.",
         "title": "Structs and Mutation",
-        "updated_at": "2018-03-20T11:40:34.128663",
         "video_id": "a614dcc3-543b-4501-91c2-2bbf6a7e3766"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "rick-minnich",
+            "natalye"
         ],
         "collections": [
-            "dfb1f457-581d-43fd-83d7-6015a8b7b941"
+            "ledger-mac-app"
         ],
-        "created_at": "2016-09-13T11:08:08.439049",
-        "id": "85bdb635-790c-45bf-803e-6a54d4777eeb",
-        "mailchimp_campaign_id": null,
         "media_duration": 1111.84,
         "media_src": "17-Ledger GUI Architecture v2.m4v",
-        "media_version": 2,
-        "name": "S01E17",
         "number": 17,
         "poster_uid": "2016/09/13/11/08/08/189c89ca-66ed-4ce5-84da-a4d6c872c735/17-Ledger GUI Architecture.jpg",
         "release_at": "2016-09-23T15:00:00",
@@ -708,31 +531,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We connect multiple view controllers using a coordinator and callback functions. We simplify the control flow by refactoring the UI state into its own struct.",
         "title": "Architecture",
-        "updated_at": "2017-12-05T13:17:47.382169",
         "video_id": "49731cda-76ad-4f4a-9f2f-4e88bfa637ed"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "rick-minnich",
+            "natalye"
         ],
         "collections": [
-            "cc4d5956-9405-49a6-8dcf-8a467e35430f"
+            "functional-programming"
         ],
-        "created_at": "2016-09-30T21:32:31.75206",
-        "id": "cfc7ecd7-4be8-48b3-ab77-1bf4a95b2763",
-        "mailchimp_campaign_id": null,
         "media_duration": 1385.52,
         "media_src": "19-From Runtime Programming to Functions.m4v",
-        "media_version": 1,
-        "name": "S01E19",
         "number": 19,
         "poster_uid": "2016/09/30/21/32/44/b0cb7188-01b0-48ef-8680-08a5d90dc96d/19-From Runtime Programming to Functions.jpg",
         "release_at": "2016-10-07T15:00:00",
@@ -746,28 +561,20 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We build a flexible sort descriptor abstraction on top of Swift's native sort methods, which is dynamic and type safe.",
         "title": "From Runtime Programming to Functions",
-        "updated_at": "2018-03-05T14:41:23.171847",
         "video_id": "9ad1b3e9-5ca9-47d8-b118-30e4689eb756"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "natalye"
         ],
         "collections": [],
-        "created_at": "2016-12-15T17:32:29.58598",
-        "id": "7a1ed0aa-ef91-49ac-aea7-a7785ef631fd",
-        "mailchimp_campaign_id": "2b64a5ef45",
         "media_duration": 967.08,
         "media_src": "30 Interfaces 3.mp4",
-        "media_version": 2,
-        "name": "S01E30",
         "number": 30,
         "poster_uid": "2016/12/29/14/04/08/c6105219-22cf-480c-8f6f-95d857be9969/30 Interfaces.jpg",
         "release_at": "2016-12-30T15:00:00",
@@ -781,30 +588,22 @@
         ],
         "sample_duration": 98.6,
         "sample_src": "30 Interfaces Preview 3.mp4",
-        "sample_version": 2,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We talk about the importance of types and interfaces as tools to express your intent precisely and to set the proper boundaries.",
         "title": "Interfaces",
-        "updated_at": "2017-01-13T12:58:56.896236",
         "video_id": "d7c7a3f0-fc27-49d2-a62f-b3645bc15d7a"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "natalye"
         ],
         "collections": [
-            "201eefb9-38c5-4921-991e-3e46ba747069"
+            "architecture"
         ],
-        "created_at": "2016-11-04T16:20:45.053655",
-        "id": "2da1c4fd-a343-4021-8ee8-b7aa08d8fe59",
-        "mailchimp_campaign_id": null,
         "media_duration": 929.2,
         "media_src": "24 Delegates and Callbacks.m4v",
-        "media_version": 1,
-        "name": "S01E24",
         "number": 24,
         "poster_uid": "2016/11/04/16/20/44/5c3f1a07-8748-4a00-acb1-15c809e7e2f9/24 Delegates and Callbacks.jpg",
         "release_at": "2016-11-11T15:00:00",
@@ -818,31 +617,23 @@
         ],
         "sample_duration": 75.48,
         "sample_src": "24 Delegates and Callbacks Preview.m4v",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We discuss the pros and cons of delegates versus callback functions and why delegate protocols are always class only.",
         "title": "Delegates & Callbacks",
-        "updated_at": "2018-06-26T12:50:13.75412",
         "video_id": "8716e74c-0a4f-4ce6-8c99-d1b7543546bd"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "rick-minnich",
+            "natalye"
         ],
         "collections": [
-            "dfb1f457-581d-43fd-83d7-6015a8b7b941"
+            "ledger-mac-app"
         ],
-        "created_at": "2016-09-13T12:36:34.972835",
-        "id": "7786f081-4a20-4735-b8a7-704ce6d24544",
-        "mailchimp_campaign_id": null,
         "media_duration": 960.28,
         "media_src": "18-Adding Search to the Ledger GUI App v2.m4v",
-        "media_version": 2,
-        "name": "S01E18",
         "number": 18,
         "poster_uid": "2016/09/13/12/36/34/032df428-62f6-4927-b796-5dad72b7a613/18-Adding Search to the Ledger GUI App.jpg",
         "release_at": "2016-09-30T15:00:00",
@@ -856,28 +647,20 @@
         ],
         "sample_duration": 123.04,
         "sample_src": "18-Adding Search to the Ledger GUI App Preview v3.m4v",
-        "sample_version": 3,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We leverage the existing infrastructure of our app to add a search field with very little code.",
         "title": "Adding Search",
-        "updated_at": "2017-12-05T13:17:47.401875",
         "video_id": "6b1cb0d1-21e8-40e7-aff1-d80cba0fdf31"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "natalye"
         ],
         "collections": [],
-        "created_at": "2016-10-14T10:59:20.704936",
-        "id": "694c1223-6ed9-4633-9a40-145520fbaa7b",
-        "mailchimp_campaign_id": null,
         "media_duration": 1037.24,
         "media_src": "22-Command Line Tools with Swift v2.m4v",
-        "media_version": 1,
-        "name": "S01E22",
         "number": 22,
         "poster_uid": "2016/10/18/12/54/49/46575c4a-1be5-48d3-b36f-cbc8403b7cf3/22-Command Line Tools with Swift.jpg",
         "release_at": "2016-10-28T15:00:00",
@@ -891,30 +674,22 @@
         ],
         "sample_duration": 119.72,
         "sample_src": "22-Command Line Tools with Swift Preview v2.m4v",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We show how we build simple command line tools leveraging the Cocoa frameworks. We use the Swift Package manager to include dependencies in our project.",
         "title": "Command Line Tools with Swift",
-        "updated_at": "2016-12-13T08:56:46.957013",
         "video_id": "559391e3-62ea-45cb-aa67-2e51c568c8eb"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "natalye"
         ],
         "collections": [
-            "d5b08eb0-0d2a-4643-91f7-447199d628d6"
+            "table-views"
         ],
-        "created_at": "2016-11-24T07:16:10.622363",
-        "id": "1a0c2fa2-b063-45e9-ad68-f9ab18563699",
-        "mailchimp_campaign_id": null,
         "media_duration": 1410.48,
         "media_src": "26 Generic Table View Controllers (Part 2).m4v",
-        "media_version": 1,
-        "name": "S01E26",
         "number": 26,
         "poster_uid": "2016/11/24/07/16/06/b0d3097e-fd93-41a9-9168-113ef047fd90/26 Generic Table View Controllers (Part 2).jpg",
         "release_at": "2016-11-25T15:00:00",
@@ -928,30 +703,22 @@
         ],
         "sample_duration": 107.64,
         "sample_src": "26 Generic Table View Controllers (Part 2) Preview.m4v",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We build a generic, type-safe table view controller that can handle multiple cell classes.",
         "title": "Generic Table View Controllers (Part 2)",
-        "updated_at": "2017-12-05T13:17:46.415878",
         "video_id": "151d6fb2-e5e3-4d53-800f-00ea57fd98ef"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "natalye"
         ],
         "collections": [
-            "ee89af6c-10e7-49de-8660-cf0b84443e19"
+            "swift-the-language"
         ],
-        "created_at": "2016-12-15T17:25:20.018034",
-        "id": "60549905-cf71-4d8f-906d-d772e86f8d6f",
-        "mailchimp_campaign_id": null,
         "media_duration": 962.56,
         "media_src": "29 Protocols and Class Hierarchies.mp4",
-        "media_version": 1,
-        "name": "S01E29",
         "number": 29,
         "poster_uid": "2016/12/15/17/25/19/9fac7509-070b-426a-950f-0a4d9c861d99/29 Protocols and Class Hierarchies.jpg",
         "release_at": "2016-12-16T15:00:00",
@@ -965,30 +732,22 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We refactor a class hierarchy using a protocol and discuss the differences between both approaches.",
         "title": "Protocols & Class Hierarchies",
-        "updated_at": "2018-03-20T11:40:34.115833",
         "video_id": "6fa5c702-7bae-4b72-a3d6-fc92e650365c"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "natalye"
         ],
         "collections": [
-            "83b744cc-1eb9-4194-bcbe-60ac7a21059c"
+            "type-safe-api-wrappers"
         ],
-        "created_at": "2016-12-05T09:56:16.065128",
-        "id": "3c51558f-857f-4ac2-bf24-6c0e6fb0d43b",
-        "mailchimp_campaign_id": null,
         "media_duration": 1082.28,
         "media_src": "28 Typed Notifications (Part 2).mp4",
-        "media_version": 1,
-        "name": "S01E28",
         "number": 28,
         "poster_uid": "2016/12/05/09/56/15/50084248-b8e4-4c13-b55f-8afb1ff22464/28 Typed Notifications (Part 2).jpg",
         "release_at": "2016-12-09T15:00:00",
@@ -1002,30 +761,22 @@
         ],
         "sample_duration": 94.12,
         "sample_src": "28 Typed Notifications (Part 2) Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We extend our notification wrapper from episode #27 and discuss an alternative protocol-based approach.",
         "title": "Typed Notifications (Part 2)",
-        "updated_at": "2018-01-23T15:37:48.609279",
         "video_id": "d654507a-b08b-4573-91d9-ad7551c58c69"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "natalye"
         ],
         "collections": [
-            "83b744cc-1eb9-4194-bcbe-60ac7a21059c"
+            "type-safe-api-wrappers"
         ],
-        "created_at": "2016-11-30T14:21:10.29805",
-        "id": "a0f9f452-af78-4e75-9040-f510596bd825",
-        "mailchimp_campaign_id": null,
         "media_duration": 1072.8,
         "media_src": "27 Typed Notifications.m4v",
-        "media_version": 1,
-        "name": "S01E27",
         "number": 27,
         "poster_uid": "2016/11/30/14/21/09/38222652-4e0e-49af-af35-4b3f32da882a/27 Typed Notifications.jpg",
         "release_at": "2016-12-02T15:00:00",
@@ -1039,32 +790,24 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "A lightweight generic wrapper around Foundation's notification API lets us avoid boilerplate code and provides a type-safe API.",
         "title": "Typed Notifications (Part 1)",
-        "updated_at": "2018-01-23T15:37:48.622221",
         "video_id": "da73a1ea-877f-47b1-adf5-7384926d8873"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "rick-minnich",
+            "natalye"
         ],
         "collections": [
-            "cc4d5956-9405-49a6-8dcf-8a467e35430f",
-            "dfb1f457-581d-43fd-83d7-6015a8b7b941"
+            "functional-programming",
+            "ledger-mac-app"
         ],
-        "created_at": "2016-09-08T10:07:44.715703",
-        "id": "ea5e9512-0eaf-4657-a8e7-6cf6376c1122",
-        "mailchimp_campaign_id": null,
         "media_duration": 1290.96,
         "media_src": "16-Parser Combinators 2.m4v",
-        "media_version": 1,
-        "name": "S01E16",
         "number": 16,
         "poster_uid": "2016/09/13/11/20/36/8bbdcf9f-6ca0-4c30-8edf-8910a6850e90/16-Parser Combinators 2.jpg",
         "release_at": "2016-09-16T15:00:00",
@@ -1078,31 +821,23 @@
         ],
         "sample_duration": 96,
         "sample_src": "16-Parser Combinators 2 Preview.m4v",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We implement some of the more challenging parts of parser combinators.",
         "title": "Building Parser Combinators (Part 2)",
-        "updated_at": "2018-03-05T14:41:23.016617",
         "video_id": "8f21b6e4-e6ea-419e-b555-edad3c95a4a5"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "natalye"
         ],
         "collections": [
-            "ee89af6c-10e7-49de-8660-cf0b84443e19"
+            "swift-the-language"
         ],
-        "created_at": "2017-01-05T14:08:24.237868",
-        "id": "42101e1b-a2ff-4ef0-b673-cbd79443e5e0",
-        "mailchimp_campaign_id": "e11345608c",
         "media_duration": 914.304,
         "media_src": "31 Mutating Untyped Dictionaries.mp4",
-        "media_version": 1,
-        "name": "S01E31",
         "number": 31,
         "poster_uid": "2017/01/05/14/16/50/722fdde3-112b-4dc2-b175-71b63facefdc/31 Mutating Untyped Dictionaries.jpg",
         "release_at": "2017-01-06T15:00:00",
@@ -1116,31 +851,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "Mutating a nested untyped dictionary can be a challenge. To solve it we discuss the mutability of value types and the concept of l-values.",
         "title": "Mutating Untyped Dictionaries",
-        "updated_at": "2018-03-20T11:40:34.104603",
         "video_id": "b7395493-534f-461e-aaff-eca9d22329c1"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "natalye"
         ],
         "collections": [
-            "48b5bf42-3a62-46e6-a388-92a7eaf4adbe"
+            "collection-protocols"
         ],
-        "created_at": "2017-01-13T10:31:38.773646",
-        "id": "876bb553-c0b1-437f-a158-5d176806c14b",
-        "mailchimp_campaign_id": "e572188147",
         "media_duration": 916.8,
         "media_src": "32 Generic Collection Extensions 1.mp4",
-        "media_version": 1,
-        "name": "S01E32",
         "number": 32,
         "poster_uid": "2017/01/13/10/34/09/c389c7db-8313-4e0c-81c8-c97aba350fd9/32 Generic Collection Extensions 1.jpg",
         "release_at": "2017-01-13T15:00:00",
@@ -1154,31 +881,23 @@
         ],
         "sample_duration": 127.56,
         "sample_src": "32 Generic Collection Extensions 1 Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We show how to use the Collection protocol to make an extension available not just on array, but on all collections.",
         "title": "Array, ArraySlice & Collection",
-        "updated_at": "2017-12-05T13:17:46.73211",
         "video_id": "2fa148ca-1ff2-4631-ab91-7fdb7410d1a5"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "natalye"
         ],
         "collections": [
-            "7c7fac1f-3f20-475b-9e42-687cb5428e09"
+            "reactive-programming"
         ],
-        "created_at": "2017-01-26T17:43:57.506219",
-        "id": "efca92c8-e53f-47d5-a236-a7acd75ec9a3",
-        "mailchimp_campaign_id": "0de1714acb",
         "media_duration": 1572.28,
         "media_src": "34 Reactive Programming.mp4",
-        "media_version": 1,
-        "name": "S01E34",
         "number": 34,
         "poster_uid": "2017/01/26/18/45/51/8f30f047-8ffe-42e2-9129-fdf57b18a3b3/34 Reactive Programming.jpg",
         "release_at": "2017-01-27T15:00:00",
@@ -1192,31 +911,23 @@
         ],
         "sample_duration": 92.96,
         "sample_src": "34 Reactive Programming Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We take a look at how reactive programming challenges us to think differently.",
         "title": "Reactive Programming",
-        "updated_at": "2017-12-05T13:17:46.120068",
         "video_id": "1119950f-e176-4cad-bc1e-4506a5a0521c"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "natalye"
         ],
         "collections": [
-            "48b5bf42-3a62-46e6-a388-92a7eaf4adbe"
+            "collection-protocols"
         ],
-        "created_at": "2017-02-06T19:15:24.57335",
-        "id": "e2088428-94f3-4633-a408-726707b04cf6",
-        "mailchimp_campaign_id": "6174407def",
         "media_duration": 848.96,
         "media_src": "38 IndexSet 2.mp4",
-        "media_version": 1,
-        "name": "S01E38",
         "number": 38,
         "poster_uid": "2017/02/06/19/15/23/185f71f9-8cf0-40d4-8ffd-b8f99998cb1b/35 Building a Custom Collection 2.jpg",
         "release_at": "2017-02-24T15:00:00",
@@ -1230,32 +941,24 @@
         ],
         "sample_duration": 83.64,
         "sample_src": "38 IndexSet 2 Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "Conforming to the Sequence protocol allows us to efficiently iterate over the elements, and we gain all of its useful functionality.",
         "title": "Conforming IndexSet to Sequence",
-        "updated_at": "2017-12-05T13:17:46.813415",
         "video_id": "62288d60-9d75-48cc-be35-c2e4bc298dec"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "7c7fac1f-3f20-475b-9e42-687cb5428e09"
+            "reactive-programming"
         ],
-        "created_at": "2017-02-27T08:25:09.160057",
-        "id": "ebd83515-90f7-4c19-85d0-d9411bd9a830",
-        "mailchimp_campaign_id": "d98622b39b",
         "media_duration": 988.84,
         "media_src": "40 Signal Ownership and Subscriptions.mp4",
-        "media_version": 1,
-        "name": "S01E40",
         "number": 40,
         "poster_uid": "2017/02/27/08/36/08/616068e6-2701-4eb5-8f29-3a07443d4e53/40 Signal Ownership and Subscriptions.jpg",
         "release_at": "2017-03-10T15:00:00",
@@ -1269,31 +972,23 @@
         ],
         "sample_duration": 103.48,
         "sample_src": "40 Signal Ownership and Subscriptions Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We add the ability to map over signals and control subscriptions in a more fine-grained manner. Along the way, we improve the signal ownership model and implement the concept of disposables.",
         "title": "Signal Ownership and Subscriptions",
-        "updated_at": "2017-12-05T13:17:46.180516",
         "video_id": "8f244bbf-4e0c-4cba-b1be-efd4a2025e5f"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "natalye"
         ],
         "collections": [
-            "7c7fac1f-3f20-475b-9e42-687cb5428e09"
+            "reactive-programming"
         ],
-        "created_at": "2017-02-20T12:18:05.840434",
-        "id": "a093e2bc-0768-44ce-9116-c5610ec99190",
-        "mailchimp_campaign_id": "623d819227",
         "media_duration": 1425.96,
         "media_src": "39 From Futures to Signals v2.mp4",
-        "media_version": 2,
-        "name": "S01E39",
         "number": 39,
         "poster_uid": "2017/02/20/12/18/05/175408a4-80c7-4872-a490-069dc165374c/39 From Futures to Signals.jpg",
         "release_at": "2017-03-03T15:00:00",
@@ -1307,31 +1002,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We extend the Future type of a previous episode to a simple reactive library. Along the way, we dive into debugging a reference cycle in our implementation.",
         "title": "From Futures to Signals",
-        "updated_at": "2017-12-05T13:17:46.159928",
         "video_id": "5481be64-12b8-440c-81ac-09c3456be204"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "natalye"
         ],
         "collections": [
-            "7c7fac1f-3f20-475b-9e42-687cb5428e09"
+            "reactive-programming"
         ],
-        "created_at": "2017-02-06T09:00:24.325539",
-        "id": "5b8ebb1d-3fb6-46cd-b551-f2e56d7422bd",
-        "mailchimp_campaign_id": "a8d56e4113",
         "media_duration": 1050.304,
         "media_src": "36 Futures.mp4",
-        "media_version": 1,
-        "name": "S01E36",
         "number": 36,
         "poster_uid": "2017/02/06/09/02/23/46f1ec5f-198e-4f26-9515-202c73040fcb/36 Futures.jpg",
         "release_at": "2017-02-10T15:00:00",
@@ -1345,31 +1032,23 @@
         ],
         "sample_duration": 122.96,
         "sample_src": "36 Futures Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We implement a Futures type that we can use instead of callbacks as a first step towards a reactive library.",
         "title": "Futures",
-        "updated_at": "2017-12-05T13:17:46.139966",
         "video_id": "81726b21-23ef-43bb-b03f-e6b17d2e0e92"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "db480861-e131-47c5-bc9e-54fd3775d1db"
+            "server-side-swift"
         ],
-        "created_at": "2017-03-23T07:25:06.566771",
-        "id": "0e60cdc9-fc5a-47c0-b673-0f02642b547e",
-        "mailchimp_campaign_id": "6b018dac4d",
         "media_duration": 1473.24,
         "media_src": "44 Setting Up a Swift Server Side Project.mp4",
-        "media_version": 1,
-        "name": "S01E44",
         "number": 44,
         "poster_uid": "2017/03/23/07/48/52/02338038-e019-4d34-8e18-524aad7bb1e0/44 Setting Up a Swift Server Side Project.jpg",
         "release_at": "2017-04-07T15:00:00",
@@ -1383,31 +1062,23 @@
         ],
         "sample_duration": 103.56,
         "sample_src": "44 Setting Up a Swift Server Side Project Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We set up our development environment using the Swift package manager and Docker.",
         "title": "Setting Up a Server-Side Swift Project",
-        "updated_at": "2017-12-05T13:17:46.023626",
         "video_id": "0921c2fa-4230-482c-8311-10f26bbff602"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "natalye"
         ],
         "collections": [
-            "48b5bf42-3a62-46e6-a388-92a7eaf4adbe"
+            "collection-protocols"
         ],
-        "created_at": "2017-02-06T19:13:32.114725",
-        "id": "5d6a74f8-627e-4ffc-80c8-e3b0e9a207a6",
-        "mailchimp_campaign_id": "b25d9f8219",
         "media_duration": 1132,
         "media_src": "37 IndexSet 1.mp4",
-        "media_version": 1,
-        "name": "S01E37",
         "number": 37,
         "poster_uid": "2017/02/06/19/13/31/e9d8bc99-c792-4af0-8b4c-3e42c8fd2e6e/34 Building a Custom Collection 1.jpg",
         "release_at": "2017-02-17T15:00:00",
@@ -1421,31 +1092,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We build the basics for a custom index set collection type.",
         "title": "Building a Custom IndexSet Collection",
-        "updated_at": "2017-12-05T13:17:46.793136",
         "video_id": "1fc8d8a0-6fa8-4516-9ac4-929570f4ce9f"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "7c7fac1f-3f20-475b-9e42-687cb5428e09"
+            "reactive-programming"
         ],
-        "created_at": "2017-03-21T08:36:36.141104",
-        "id": "5a9ccc2a-2d27-4715-b266-a30fdbb42fd5",
-        "mailchimp_campaign_id": "232b41bc80",
         "media_duration": 1416.08,
         "media_src": "42 Thread Safety v2.mp4",
-        "media_version": 2,
-        "name": "S01E42",
         "number": 42,
         "poster_uid": "2017/03/21/08/36/36/3a67c67d-b23a-4ff0-81b3-6b05522df155/42 Thread Safety.jpg",
         "release_at": "2017-03-24T15:00:00",
@@ -1459,31 +1122,23 @@
         ],
         "sample_duration": 114.08,
         "sample_src": "42 Thread Safety Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We make our Signal implementation thread-safe by safeguarding the access to shared resources.",
         "title": "Thread Safety",
-        "updated_at": "2017-12-05T13:17:46.200084",
         "video_id": "fceea7c2-d4e6-4413-8039-3d30aba71895"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "natalye"
         ],
         "collections": [
-            "48b5bf42-3a62-46e6-a388-92a7eaf4adbe"
+            "collection-protocols"
         ],
-        "created_at": "2017-01-26T19:49:58.851861",
-        "id": "c7c5be3a-cfaa-47e0-8d58-20a4e44c5aab",
-        "mailchimp_campaign_id": "2b3f1a9f1d",
         "media_duration": 1002.453333,
         "media_src": "35 Sorted Arrays.mp4",
-        "media_version": 1,
-        "name": "S01E35",
         "number": 35,
         "poster_uid": "2017/01/26/19/49/58/410ef4ee-697c-4b28-9901-9b7a3ff70657/35 Sorted Arrays.jpg",
         "release_at": "2017-02-03T15:00:00",
@@ -1497,32 +1152,24 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We build a sorted array type on top of Swift's native array and make it conform to the Collection protocol.",
         "title": "Sorted Arrays",
-        "updated_at": "2017-12-05T13:17:46.772518",
         "video_id": "5a2d5695-95b0-42e6-ba58-1d16eda4cbbe"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "48b5bf42-3a62-46e6-a388-92a7eaf4adbe"
+            "collection-protocols"
         ],
-        "created_at": "2017-02-28T08:11:14.744864",
-        "id": "b1676585-4d7c-491a-8bcd-aad55f1c6f3b",
-        "mailchimp_campaign_id": "1c745bad89",
         "media_duration": 1011.8,
         "media_src": "IndexSet 3.mp4",
-        "media_version": 1,
-        "name": "S01E41",
         "number": 41,
         "poster_uid": "2017/02/28/08/11/14/a0cf9f10-dfd5-4935-9872-7a83b7f18f59/IndexSet 3.jpg",
         "release_at": "2017-03-17T15:00:00",
@@ -1536,31 +1183,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "To conform IndexSet to the Collection protocol we implement a custom index type along the way.",
         "title": "Conforming IndexSet to Collection",
-        "updated_at": "2017-12-05T13:17:46.833048",
         "video_id": "2ee2fab5-767e-4c62-a416-39e6893ac25a"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "201eefb9-38c5-4921-991e-3e46ba747069"
+            "architecture"
         ],
-        "created_at": "2018-01-15T14:33:51.757566",
-        "id": "4d9c70fd-a7cc-4761-804a-fc8a3418fa97",
-        "mailchimp_campaign_id": "96aa8aac8a",
         "media_duration": 1165.28,
         "media_src": "86 MVC (Part 1)-corrected.mp4",
-        "media_version": 2,
-        "name": "S01E86",
         "number": 86,
         "poster_uid": "2018/02/25/09/45/16/76522d2b-6ae9-4f99-acfc-e43866d05f2d/86 MVC (Part 1)-new.jpg",
         "release_at": "2018-02-02T15:00:00",
@@ -1574,31 +1213,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We add a mini player to the MVC variant of the sample app found in our App Architecture book. We adjust our storyboard and discuss how to adapt the architecture.",
         "title": "Sharing State between View Controllers in MVC (Part 1)",
-        "updated_at": "2018-07-13T06:19:26.603657",
         "video_id": "96c3d20e-de19-4998-9c32-724b39e44f56"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "9a0e9cf5-4f87-4f3b-89f2-9ff5858b1a2f"
+            "building-a-layout-library"
         ],
-        "created_at": "2018-10-05T06:13:42.720725",
-        "id": "6d662ffa-d432-4de5-bcd0-b4b2075f4f93",
-        "mailchimp_campaign_id": null,
         "media_duration": 1428.6,
         "media_src": "122 Responsive Layout 5.mp4",
-        "media_version": 1,
-        "name": "S01E122",
         "number": 122,
         "poster_uid": "2018/10/05/06/13/42/10f61dd7-e5eb-4467-8929-316f9230732e/122 Responsive Layout 5.jpg",
         "release_at": "2018-10-12T14:00:00",
@@ -1612,31 +1243,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We build a feature that allows us to create more complex layouts by nesting layouts within each other.",
         "title": "Nested Layouts",
-        "updated_at": "2018-10-08T09:02:32.654908",
         "video_id": "47ecc156-4b73-4fe4-9a99-4034731473b9"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "natalye"
         ],
         "collections": [
-            "48b5bf42-3a62-46e6-a388-92a7eaf4adbe"
+            "collection-protocols"
         ],
-        "created_at": "2017-01-13T12:05:08.583806",
-        "id": "0389c913-e587-48ad-a391-2e292be750b8",
-        "mailchimp_campaign_id": "5607b9fcb7",
         "media_duration": 1014,
         "media_src": "33 Generic Collection Extensions 2.mp4",
-        "media_version": 1,
-        "name": "S01E33",
         "number": 33,
         "poster_uid": "2017/01/13/12/05/08/738e961f-64c4-4892-b7ca-6796027d251e/33 Generic Collection Extensions 2.jpg",
         "release_at": "2017-01-20T15:00:00",
@@ -1650,31 +1273,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We make our collection extension even more generic by implementing it on the Sequence protocol.",
         "title": "Sequence & Iterator",
-        "updated_at": "2017-12-05T13:17:46.751968",
         "video_id": "69e69606-d652-4a88-af05-5b9e5383687b"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "rick-minnich",
+            "natalye"
         ],
         "collections": [
-            "ee89af6c-10e7-49de-8660-cf0b84443e19"
+            "swift-the-language"
         ],
-        "created_at": "2016-10-12T11:56:53.044557",
-        "id": "fb465ae0-a84e-411a-a9f1-dafea9a25d1d",
-        "mailchimp_campaign_id": null,
         "media_duration": 1131.818667,
         "media_src": "20-Understanding Value Type Performance v2.m4v",
-        "media_version": 1,
-        "name": "S01E20",
         "number": 20,
         "poster_uid": "2016/10/12/11/56/52/8ba1024d-3e85-42e3-a467-fa0e7a84a71f/20-Understanding Value Type Performance.jpg",
         "release_at": "2016-10-14T15:00:00",
@@ -1688,31 +1303,23 @@
         ],
         "sample_duration": 94.165333,
         "sample_src": "20-Understanding Value Type Performance Preview.m4v",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We use copy-on-write to write an efficient struct wrapper around NSMutableData and discuss how the standard library uses the same approach.",
         "title": "Understanding Value Type Performance",
-        "updated_at": "2018-03-20T11:40:34.141968",
         "video_id": "eea5b074-f230-4288-a00b-cac8ecd898f4"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "db480861-e131-47c5-bc9e-54fd3775d1db"
+            "server-side-swift"
         ],
-        "created_at": "2017-04-28T11:07:57.766631",
-        "id": "527637cc-8732-4b4f-8c28-5f7c3fc3c571",
-        "mailchimp_campaign_id": "cd23b6338e",
         "media_duration": 1730.48,
         "media_src": "48 Postgres 1.mp4",
-        "media_version": 1,
-        "name": "S01E48",
         "number": 48,
         "poster_uid": "2017/04/28/11/20/46/ac5b7312-b6d2-47ce-82b5-b286bd9b5d20/48 Postgres 1.jpg",
         "release_at": "2017-05-05T15:00:00",
@@ -1726,31 +1333,23 @@
         ],
         "sample_duration": 182.92,
         "sample_src": "48 Postgres 1 (Preview).mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We implement a lightweight wrapper around the libpq C library.",
         "title": "Interfacing with PostgreSQL",
-        "updated_at": "2017-12-05T13:17:46.064717",
         "video_id": "90332be5-67ca-4cc8-8cfe-75cc13679450"
     },
     {
         "collaborators": [
-            "548caea5-1a5a-46e8-932c-8b6b07b117a6",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "brandon-williams",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "1746b331-be9d-4b1d-befb-2bf503ce537c"
+            "ios-at-kickstarter"
         ],
-        "created_at": "2017-04-28T07:06:28.257129",
-        "id": "ba494663-0aec-43a7-8782-8dbc21a8fa12",
-        "mailchimp_campaign_id": "fddf9d4268",
         "media_duration": 1631.8,
         "media_src": "49 Deeplinking at Kickstarter.mp4",
-        "media_version": 1,
-        "name": "S01E49",
         "number": 49,
         "poster_uid": "2017/04/28/07/06/28/e9a51968-a2a5-4c54-9361-8304b29b084a/49 Deeplinking at Kickstarter.jpg",
         "release_at": "2017-05-12T15:00:00",
@@ -1764,31 +1363,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "Brandon from Kickstarter shows their approach of unifying all potential entry points into an iOS app using a common route enum, both in a simple demo implementaion and in their open source code base.",
         "title": "Deep Linking",
-        "updated_at": "2017-12-05T13:17:46.655773",
         "video_id": "be77e730-777a-4c1e-b2d4-b163ccd7e07a"
     },
     {
         "collaborators": [
-            "548caea5-1a5a-46e8-932c-8b6b07b117a6",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "brandon-williams",
+            "chris",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "1746b331-be9d-4b1d-befb-2bf503ce537c"
+            "ios-at-kickstarter"
         ],
-        "created_at": "2017-04-27T12:01:04.948718",
-        "id": "74679152-9d38-46eb-b29c-19e531b12777",
-        "mailchimp_campaign_id": "874fa888f6",
         "media_duration": 2038.32,
         "media_src": "47 View Models at Kickstarter 2.mp4",
-        "media_version": 2,
-        "name": "S01E47",
         "number": 47,
         "poster_uid": "2017/04/28/07/36/50/986f247e-e58a-4143-983f-8d1d4b04d4fa/47 View Models at Kickstarter.jpg",
         "release_at": "2017-04-28T15:00:00",
@@ -1802,32 +1393,24 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "Brandon from Kickstarter shows us how they write highly testable code with view models. We integrate Apple Pay payments and look at their open-source codebase.",
         "title": "View Models",
-        "updated_at": "2017-12-05T13:17:46.634528",
         "video_id": "480bc61f-3920-4282-b6ec-e0ab77b71cef"
     },
     {
         "collaborators": [
-            "1426a760-cfe1-4c30-90e9-0d7997d3c3da",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "karoly",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "cc4d5956-9405-49a6-8dcf-8a467e35430f",
-            "2c1dfb25-c8b7-4012-8eac-7de68dc78300"
+            "functional-programming",
+            "data-structures"
         ],
-        "created_at": "2017-06-15T14:50:32.31909",
-        "id": "45cae002-fc83-435d-9b5c-d3b7097a272e",
-        "mailchimp_campaign_id": "aef7616103",
         "media_duration": 1620.4,
         "media_src": "56 Binary Search Trees.mp4",
-        "media_version": 1,
-        "name": "S01E56",
         "number": 56,
         "poster_uid": "2017/06/15/14/50/32/fc6720a0-b124-4e2c-bcdf-61defe3a8217/56 Binary Search Trees.jpg",
         "release_at": "2017-06-30T15:00:00",
@@ -1841,32 +1424,24 @@
         ],
         "sample_duration": 103.92,
         "sample_src": "56 Binary Search Trees Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We look at binary search trees as an alternative to last episode's sorted array implementation. We benchmark the performance of insertion and lookup in both data structures, with some surprising results.",
         "title": "Binary Search Trees",
-        "updated_at": "2018-03-05T14:41:22.9123",
         "video_id": "9c31b240-0eee-4f51-b80f-1280f4f23cb7"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "ee89af6c-10e7-49de-8660-cf0b84443e19"
+            "swift-the-language"
         ],
-        "created_at": "2017-05-30T15:31:11.424656",
-        "id": "74773812-638e-4eae-9f7b-a4a0098d09c3",
-        "mailchimp_campaign_id": "faced4b000",
         "media_duration": 709.4,
         "media_src": "52 Deleting Code with Swift 4 v2.mp4",
-        "media_version": 1,
-        "name": "S01E52",
         "number": 52,
         "poster_uid": "2017/05/30/15/31/11/fb9159a9-3371-4437-a28b-20d9761dbb36/52 Deleting Code with Swift 4.jpg",
         "release_at": "2017-06-02T15:00:00",
@@ -1880,29 +1455,21 @@
         ],
         "sample_duration": 100.92,
         "sample_src": "52 Deleting Code with Swift 4 (Preview).mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "Swift 4's new features lets us delete code we've written in previous episodes.",
         "title": "Deleting Code with Swift 4",
-        "updated_at": "2018-03-20T11:40:34.078825",
         "video_id": "4adf6832-7dfa-4b3a-a643-e29f6d7be121"
     },
     {
         "collaborators": [
-            "95ad1b2c-664e-4c74-a411-f6cee9f7bf3b",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "rob-napier",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [],
-        "created_at": "2017-06-20T06:08:17.061423",
-        "id": "8521894c-bd64-4d0c-a1ad-b0c1760141bc",
-        "mailchimp_campaign_id": "0fbbb06da9",
         "media_duration": 1471.36,
         "media_src": "57 Certificate Pinning.mp4",
-        "media_version": 1,
-        "name": "S01E57",
         "number": 57,
         "poster_uid": "2017/06/20/06/08/16/fafc405a-5088-43ad-b3c4-53f473ea2239/Certificate Pinning.jpg",
         "release_at": "2017-07-07T15:00:00",
@@ -1916,31 +1483,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "Today we're joined by Rob Napier, who explains why and how to add certificate pinning to your app.",
         "title": "Certificate Pinning",
-        "updated_at": "2017-12-15T16:43:01.443834",
         "video_id": "f0b2cd26-c054-40b7-9845-9d85e374832b"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "db480861-e131-47c5-bc9e-54fd3775d1db"
+            "server-side-swift"
         ],
-        "created_at": "2017-04-03T07:36:46.743977",
-        "id": "2fe59393-21b1-45a9-8737-bc4b5a6fe46c",
-        "mailchimp_campaign_id": "23e381cd07",
         "media_duration": 1367.72,
         "media_src": "45 Routing.mp4",
-        "media_version": 1,
-        "name": "S01E45",
         "number": 45,
         "poster_uid": "2017/04/07/15/04/26/8baf88c4-d6ab-45f1-a1eb-cd65ec720bf3/45 Routing 3.jpg",
         "release_at": "2017-04-14T15:00:00",
@@ -1954,31 +1513,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We implement a type safe and Swift-like routing infrastructure that's pretty different from the common approach of most web frameworks.",
         "title": "Routing",
-        "updated_at": "2017-12-05T13:17:46.044118",
         "video_id": "709c433c-f77a-4dcf-ab76-4df562400137"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "ee89af6c-10e7-49de-8660-cf0b84443e19"
+            "swift-the-language"
         ],
-        "created_at": "2017-04-11T08:11:13.24585",
-        "id": "9a8e5371-d055-4897-8665-179f9547023b",
-        "mailchimp_campaign_id": "77692a96f6",
         "media_duration": 959.36,
         "media_src": "46 Combined Class and Protocol Requirements.mp4",
-        "media_version": 1,
-        "name": "S01E46",
         "number": 46,
         "poster_uid": "2017/04/11/08/11/13/14d521e7-75da-4f86-a572-ee04cbd5a852/46 Combined Class and Protocol Requirements.jpg",
         "release_at": "2017-04-21T15:00:00",
@@ -1992,32 +1543,24 @@
         ],
         "sample_duration": 121.6,
         "sample_src": "46 Combined Class and Protocol Requirements Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We look at multiple ways to create variables that have a class type but also conform to a protocol.",
         "title": "Combined Class and Protocol Requirements",
-        "updated_at": "2018-03-20T11:40:34.092514",
         "video_id": "d6f9abfd-5343-456d-82fb-0abcb7a76150"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "201eefb9-38c5-4921-991e-3e46ba747069"
+            "architecture"
         ],
-        "created_at": "2017-03-21T10:39:30.976701",
-        "id": "c8d6aeea-73e1-45e8-bbc9-78a47e089b5b",
-        "mailchimp_campaign_id": "85fee5457d",
         "media_duration": 1012.12,
         "media_src": "43 View Controller Refactoring.mp4",
-        "media_version": 1,
-        "name": "S01E43",
         "number": 43,
         "poster_uid": "2017/03/21/10/39/30/ddf20551-e6a3-4b5d-bf10-a8f48767fd9d/43 View Controller Refactoring.jpg",
         "release_at": "2017-03-31T15:00:00",
@@ -2031,32 +1574,24 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "Instead of letting multiple view controllers manage the navigation bar's state individually, we pull this code out and unify the logic in one place.",
         "title": "View Controller Refactoring",
-        "updated_at": "2018-06-26T12:50:13.736421",
         "video_id": "ff7f0b94-e0d1-4cb0-bdb0-24e86b231951"
     },
     {
         "collaborators": [
-            "01398766-c95e-4150-bfa3-c74c2a382d2b",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "lisa-luo",
+            "chris",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "7c7fac1f-3f20-475b-9e42-687cb5428e09",
-            "1746b331-be9d-4b1d-befb-2bf503ce537c"
+            "reactive-programming",
+            "ios-at-kickstarter"
         ],
-        "created_at": "2017-05-19T19:20:32.221578",
-        "id": "8c56f646-fb3f-495d-9e89-7dad5ca80c6e",
-        "mailchimp_campaign_id": "352a5985ba",
         "media_duration": 2327.32,
         "media_src": "53 Test-Driven Reactive Programming at Kickstarter.mp4",
-        "media_version": 1,
-        "name": "S01E53",
         "number": 53,
         "poster_uid": "2017/05/19/19/20/32/0419310f-a111-46fb-b593-349f70502379/53 Test-Driven Reactive Programming at Kickstarter.jpg",
         "release_at": "2017-06-09T15:00:00",
@@ -2070,31 +1605,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "Lisa from Kickstarter shows us their test-driven development process to reactive programming.",
         "title": "Test-Driven Reactive Programming",
-        "updated_at": "2017-12-05T13:17:46.696078",
         "video_id": "faf60c3a-1787-4cfa-99de-fff2c958501b"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "db480861-e131-47c5-bc9e-54fd3775d1db"
+            "server-side-swift"
         ],
-        "created_at": "2017-04-30T12:38:53.951862",
-        "id": "5e79e65d-d4cb-4a03-ac8b-00303fc084e4",
-        "mailchimp_campaign_id": "573145e63c",
         "media_duration": 1514.88,
         "media_src": "50 Postgres 2.mp4",
-        "media_version": 1,
-        "name": "S01E50",
         "number": 50,
         "poster_uid": "2017/04/30/12/38/53/a6b19860-14d7-4fad-b337-b5ad9e12c535/50 Postgres 2.jpg",
         "release_at": "2017-05-19T15:00:00",
@@ -2108,31 +1635,23 @@
         ],
         "sample_duration": 111.52,
         "sample_src": "50 Postgres 2 (Preview).mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We extend our libpq wrapper to handle queries with properly escaped parameters. To achieve this, we have to dive deep into Swift's unsafe pointer APIs.",
         "title": "Interfacing with PostgreSQL (Part 2)",
-        "updated_at": "2017-12-05T13:17:46.084695",
         "video_id": "4f1787fe-aeba-4fc6-8bd4-b9c5ebc87adf"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "201eefb9-38c5-4921-991e-3e46ba747069"
+            "architecture"
         ],
-        "created_at": "2017-06-05T10:09:49.853382",
-        "id": "a947b46d-ba0b-4326-873b-3a6de6760157",
-        "mailchimp_campaign_id": "13b10acc9e",
         "media_duration": 987.76,
         "media_src": "54 UI Elements with Callbacks.mp4",
-        "media_version": 1,
-        "name": "S01E54",
         "number": 54,
         "poster_uid": "2017/06/05/10/09/49/3b0f322f-aaa4-4a01-a63f-9b4fed7cb4f7/54 UI Elements with Callbacks.jpg",
         "release_at": "2017-06-16T15:00:00",
@@ -2146,31 +1665,23 @@
         ],
         "sample_duration": 120.68,
         "sample_src": "54 UI Elements with Callbacks Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We write a dedicated target-action to make it easier to augment existing UI controls with callbacks.",
         "title": "UI Elements with Callbacks",
-        "updated_at": "2018-06-26T12:50:13.722862",
         "video_id": "6b3acf0a-2a12-43f5-bcb7-88ccd4dbd352"
     },
     {
         "collaborators": [
-            "548caea5-1a5a-46e8-932c-8b6b07b117a6",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "brandon-williams",
+            "chris",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "1746b331-be9d-4b1d-befb-2bf503ce537c"
+            "ios-at-kickstarter"
         ],
-        "created_at": "2017-05-19T19:11:51.626594",
-        "id": "e5f52d19-2349-4972-9f88-53d93887c429",
-        "mailchimp_campaign_id": "6c75cc2e2f",
         "media_duration": 1283.88,
         "media_src": "51 Playground-Driven Development at Kickstarter.mp4",
-        "media_version": 1,
-        "name": "S01E51",
         "number": 51,
         "poster_uid": "2017/05/19/19/11/50/dc19b0e9-09ca-4898-b22d-775e8f7bd63e/51 Playground-Driven Development at Kickstarter.jpg",
         "release_at": "2017-05-26T15:00:00",
@@ -2184,31 +1695,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "Brandon from Kickstarter demos how the company uses playgrounds to prototype and style individual view controllers.",
         "title": "Playground-Driven Development",
-        "updated_at": "2017-12-05T13:17:46.675849",
         "video_id": "1e7e2723-36dc-4a11-b81f-02703b7bb305"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "0e381e3a-bdf1-4f0e-bf22-4c2d6102ba77"
+            "experiments"
         ],
-        "created_at": "2017-07-20T11:11:54.95358",
-        "id": "880e52bd-733c-4e0d-99e6-c1dabdc3f4d4",
-        "mailchimp_campaign_id": "aa465cd9ba",
         "media_duration": 1379.64,
         "media_src": "63 Mutable Shared Structs (Part 2).mp4",
-        "media_version": 1,
-        "name": "S01E63",
         "number": 63,
         "poster_uid": "2017/07/21/11/55/32/284f5e77-283e-4b02-a1a1-95568bea081b/63 Mutable Shared Structs (Part 2).jpg",
         "release_at": "2017-08-18T15:00:00",
@@ -2222,31 +1725,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We refine the observation capabilities of our new data type.",
         "title": "Mutable Shared Structs (Part 2)",
-        "updated_at": "2017-12-24T08:06:16.243245",
         "video_id": "8e847019-cbd2-4c80-a96c-1e15c20b64bd"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "d5b08eb0-0d2a-4643-91f7-447199d628d6"
+            "table-views"
         ],
-        "created_at": "2017-07-21T14:48:57.222174",
-        "id": "e58e0bbc-e1e8-4753-ba83-57828330e123",
-        "mailchimp_campaign_id": "d309dd9481",
         "media_duration": 1824.48,
         "media_src": "64 Driving Table View Animations.mp4",
-        "media_version": 1,
-        "name": "S01E64",
         "number": 64,
         "poster_uid": "2017/07/21/14/48/56/61a13216-3d66-46fe-a5b9-c7818d00d1e1/64 Driving Table View Animations.jpg",
         "release_at": "2017-08-25T15:00:00",
@@ -2260,31 +1755,23 @@
         ],
         "sample_duration": 134.36,
         "sample_src": "64 Driving Table View Animations Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We build a component similar to NSFetchedResultsController to decouple our view data and to drive table view animations.",
         "title": "Driving Table View Animations",
-        "updated_at": "2017-12-24T08:06:38.649994",
         "video_id": "12c6f35b-fb19-47ed-a914-7b1bc7c87519"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "0e381e3a-bdf1-4f0e-bf22-4c2d6102ba77"
+            "experiments"
         ],
-        "created_at": "2017-07-20T10:20:02.202381",
-        "id": "053fb388-fd25-49ca-babe-bbe2749a57ff",
-        "mailchimp_campaign_id": "32f5d2a9ff",
         "media_duration": 1810,
         "media_src": "61 Mutable Shared Structs (Part 1).mp4",
-        "media_version": 1,
-        "name": "S01E61",
         "number": 61,
         "poster_uid": "2017/07/20/10/20/02/d5667872-99b4-4455-9aa6-9d456ad8d435/61 Mutable Shared Structs (Part 1).jpg",
         "release_at": "2017-08-04T15:00:00",
@@ -2298,31 +1785,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We recap the tradeoffs between classes and structs and start implementation of our new type, leveraging Swift 4's keypaths.",
         "title": "Mutable Shared Structs (Part 1)",
-        "updated_at": "2017-12-24T08:05:41.828702",
         "video_id": "2289de0f-d4b5-4771-868a-f1875627c597"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "2c1dfb25-c8b7-4012-8eac-7de68dc78300"
+            "data-structures"
         ],
-        "created_at": "2017-08-31T08:31:05.398623",
-        "id": "ce70006c-8f63-4482-8d3d-a2f4ab6d507c",
-        "mailchimp_campaign_id": "8faac33026",
         "media_duration": 1678.12,
         "media_src": "65 Playground Quicklook for Binary Trees.mp4",
-        "media_version": 1,
-        "name": "S01E65",
         "number": 65,
         "poster_uid": "2017/08/31/09/01/40/b468ca2b-a68c-4c66-87c7-44635fde45d1/65 Playground Quicklook for Binary Trees.jpg",
         "release_at": "2017-09-01T15:00:00",
@@ -2336,31 +1815,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We create a custom Quick Look extension to visualize binary tree structures in playgrounds.",
         "title": "Playground QuickLook for Binary Trees",
-        "updated_at": "2017-12-05T13:17:46.931421",
         "video_id": "396af908-2c43-4285-b87b-cb9ee2e639b0"
     },
     {
         "collaborators": [
-            "03534f31-9d9c-477b-9e64-c0010bd063c9",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "brandon-kase",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "ee89af6c-10e7-49de-8660-cf0b84443e19"
+            "swift-the-language"
         ],
-        "created_at": "2017-10-05T09:14:28.048831",
-        "id": "35edc993-595e-4038-b621-e3952b6788c9",
-        "mailchimp_campaign_id": "bdf6f11ec5",
         "media_duration": 1454.08,
         "media_src": "71 Type-Safe File Paths with Phantom Types.mp4",
-        "media_version": 1,
-        "name": "S01E71",
         "number": 71,
         "poster_uid": "2017/10/05/09/14/27/6567dfd0-75b1-4aa5-9394-302f2dcba6e2/71 Type-Safe File Paths with Phantom Types.jpg",
         "release_at": "2017-10-13T15:00:00",
@@ -2374,32 +1845,24 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "Brandon Kase joins us to show how Swift's type system can be leveraged to check file paths at compile time.",
         "title": "Type-Safe File Paths with Phantom Types",
-        "updated_at": "2018-03-20T11:40:34.064508",
         "video_id": "5f071813-65b2-414b-af85-a9c0f2463728"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "fbe15a4e-017f-4837-8222-9e0067a524b3"
+            "tooling"
         ],
-        "created_at": "2017-07-20T06:46:13.707693",
-        "id": "b7385694-84ab-419f-8f4f-a82a461cc506",
-        "mailchimp_campaign_id": "66e11145b9",
         "media_duration": 864.72,
         "media_src": "60 Xcode 9 Productivity Tips.mp4",
-        "media_version": 1,
-        "name": "S01E60",
         "number": 60,
         "poster_uid": "2017/07/20/06/46/13/5c023a78-15ba-4f0b-9f48-2c1d0d073e28/60 Xcode 9 Productivity Tips.jpg",
         "release_at": "2017-07-28T15:00:00",
@@ -2413,32 +1876,24 @@
         ],
         "sample_duration": 103.84,
         "sample_src": "60 Xcode 9 Productivity Tips Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We show some of our favorite new productivity features in Xcode 9.",
         "title": "Xcode 9 Productivity Tips",
-        "updated_at": "2018-06-28T10:37:11.599505",
         "video_id": "d64e2db6-45fb-4a5f-80b9-0a098b6e16a2"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "0e381e3a-bdf1-4f0e-bf22-4c2d6102ba77",
-            "7c7fac1f-3f20-475b-9e42-687cb5428e09"
+            "experiments",
+            "reactive-programming"
         ],
-        "created_at": "2017-09-07T12:11:31.788447",
-        "id": "c27e9e0d-698b-4fd4-b47c-fdb21d571453",
-        "mailchimp_campaign_id": "362c963667",
         "media_duration": 1558.12,
         "media_src": "67 Reactive Data Structures-Linked Lists.mp4",
-        "media_version": 1,
-        "name": "S01E67",
         "number": 67,
         "poster_uid": "2017/09/07/12/12/17/97cdd607-6a16-48e0-8d3c-66d568be549b/67 Reactive Data Structures-Linked Lists.jpg",
         "release_at": "2017-09-15T15:00:00",
@@ -2452,31 +1907,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We build a reactive linked list on top of reactive programming primitives. We implement a reduce method on this type, which does the minimum amount of work when the underlying data changes.",
         "title": "Reactive Data Structures: Linked Lists",
-        "updated_at": "2018-02-01T09:25:03.89589",
         "video_id": "f6600101-b113-4856-8eec-cfda4c05540a"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "9a0e9cf5-4f87-4f3b-89f2-9ff5858b1a2f"
+            "building-a-layout-library"
         ],
-        "created_at": "2018-09-27T09:17:32.846378",
-        "id": "530f8168-0e80-411c-a276-bf47bdb8dd35",
-        "mailchimp_campaign_id": "a0c600cfa5",
         "media_duration": 936.8,
         "media_src": "121 Responsive Layout 4.mp4",
-        "media_version": 1,
-        "name": "S01E121",
         "number": 121,
         "poster_uid": "2018/09/27/09/17/32/460c79ea-6fba-4b1e-b13c-6228e306bf51/121 Responsive Layout 4.jpg",
         "release_at": "2018-10-05T14:00:00",
@@ -2490,31 +1937,23 @@
         ],
         "sample_duration": 18,
         "sample_src": "121 Responsive Layout 4 Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We add flexible spaces to our layout library and show how elements can be shown or hidden depending on the available space.",
         "title": "Flexible Spaces",
-        "updated_at": "2018-10-08T08:55:15.885459",
         "video_id": "98b78117-f6b8-44e7-87c2-4acd6fab14e0"
     },
     {
         "collaborators": [
-            "1426a760-cfe1-4c30-90e9-0d7997d3c3da",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "karoly",
+            "chris",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "2c1dfb25-c8b7-4012-8eac-7de68dc78300"
+            "data-structures"
         ],
-        "created_at": "2017-06-15T06:15:31.107742",
-        "id": "6cf8a691-a2bd-4830-ab4b-556992b45f77",
-        "mailchimp_campaign_id": "fbe66c3be9",
         "media_duration": 1611.08,
         "media_src": "55 Sorted Arrays with Binary Search.mp4",
-        "media_version": 1,
-        "name": "S01E55",
         "number": 55,
         "poster_uid": "2017/06/15/06/20/05/b04ed4ce-4af5-4074-912f-ce6bcc2953f2/Sorted Arrays Binary Search.jpg",
         "release_at": "2017-06-23T15:00:00",
@@ -2528,32 +1967,24 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "Together with K\u00e1roly, we improve our sorted array implementation using binary search. We benchmark both implementations to learn about their real-world performance.",
         "title": "Sorted Arrays with Binary Search",
-        "updated_at": "2017-12-15T16:43:42.171462",
         "video_id": "e31ef6a0-a9c6-4601-bc70-55a43e70becc"
     },
     {
         "collaborators": [
-            "1426a760-cfe1-4c30-90e9-0d7997d3c3da",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "karoly",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "cc4d5956-9405-49a6-8dcf-8a467e35430f",
-            "2c1dfb25-c8b7-4012-8eac-7de68dc78300"
+            "functional-programming",
+            "data-structures"
         ],
-        "created_at": "2017-06-19T10:39:40.984717",
-        "id": "d53df5e8-0319-454a-b2fe-ecb210d1db1c",
-        "mailchimp_campaign_id": "658d7d0aa4",
         "media_duration": 1911.28,
         "media_src": "58 Red Black Trees v2.mp4",
-        "media_version": 2,
-        "name": "S01E58",
         "number": 58,
         "poster_uid": "2017/06/19/10/40/34/d405e17b-8246-4e78-8087-27ac298d9d35/58 Red Black Trees.jpg",
         "release_at": "2017-07-14T15:00:00",
@@ -2567,32 +1998,24 @@
         ],
         "sample_duration": 157,
         "sample_src": "58 Red Black Trees Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "Building on the binary search tree code from episode #56, we implement red-black trees as self-balancing tree data structures and benchmark their performance.",
         "title": "Red-Black Trees",
-        "updated_at": "2018-03-05T14:41:22.842396",
         "video_id": "bcd64b56-e053-4c54-a84a-0151f8601480"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "fbe15a4e-017f-4837-8222-9e0067a524b3"
+            "tooling"
         ],
-        "created_at": "2017-07-18T17:24:17.787655",
-        "id": "d322c13f-37bc-4958-9e16-914ff066b9b9",
-        "mailchimp_campaign_id": "461c532c4d",
         "media_duration": 754.76,
         "media_src": "59 Refactoring with Xcode 9.mp4",
-        "media_version": 1,
-        "name": "S01E59",
         "number": 59,
         "poster_uid": "2017/07/18/17/24/17/d915a034-6302-4663-8c31-468254f8d567/59 Refactoring with Xcode 9.jpg",
         "release_at": "2017-07-21T15:00:00",
@@ -2606,32 +2029,24 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We take a look at features like renaming, extracting expressions, extracting methods, and more.",
         "title": "Refactoring with Xcode 9",
-        "updated_at": "2018-06-28T10:37:11.609366",
         "video_id": "45473d0a-8bf2-4353-8dff-cd2238fea4e8"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "0e381e3a-bdf1-4f0e-bf22-4c2d6102ba77",
-            "7c7fac1f-3f20-475b-9e42-687cb5428e09"
+            "experiments",
+            "reactive-programming"
         ],
-        "created_at": "2017-09-07T15:52:06.422738",
-        "id": "228941f7-3c28-4152-b182-8a484b65f90c",
-        "mailchimp_campaign_id": "962e1c0983",
         "media_duration": 1855.28,
         "media_src": "69 Reactive Data Structures-Arrays.mp4",
-        "media_version": 1,
-        "name": "S01E69",
         "number": 69,
         "poster_uid": "2017/09/07/15/52/06/38fd8bfc-2ed8-4858-bf02-0224b17853ee/69 Reactive Data Structures-Arrays.jpg",
         "release_at": "2017-09-29T15:00:00",
@@ -2645,33 +2060,25 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We build a reactive array type on top of the reactive list from episode #67 and implement a filter method.",
         "title": "Reactive Data Structures: Arrays",
-        "updated_at": "2018-02-01T09:25:24.413707",
         "video_id": "e4b545a9-aaa7-442e-aee8-56825fceddb6"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "201eefb9-38c5-4921-991e-3e46ba747069",
-            "0e381e3a-bdf1-4f0e-bf22-4c2d6102ba77"
+            "architecture",
+            "experiments"
         ],
-        "created_at": "2017-10-19T08:57:51.99022",
-        "id": "3395bc73-9f60-45c6-91c2-dbda9c56b723",
-        "mailchimp_campaign_id": "0d4792dfba",
         "media_duration": 1269.96,
         "media_src": "74 View Bindings in Pure Swift (Part 2).mp4",
-        "media_version": 1,
-        "name": "S01E74",
         "number": 74,
         "poster_uid": "2017/10/19/08/57/51/c2abf006-5ff5-4694-9a10-048b5ca28bae/74 View Bindings in Pure Swift (Part 2).jpg",
         "release_at": "2017-11-03T15:00:00",
@@ -2685,33 +2092,25 @@
         ],
         "sample_duration": 89.76,
         "sample_src": "74 View Bindings in Pure Swift (Part 2) Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We continue to expand our experimental view binding mechanism to implement dark mode in our app.",
         "title": "View Bindings in Pure Swift (Part 2)",
-        "updated_at": "2018-06-26T12:50:13.629098",
         "video_id": "acc39a40-3d0a-44a0-9e7d-30d0c0dbc5b5"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "201eefb9-38c5-4921-991e-3e46ba747069",
-            "0e381e3a-bdf1-4f0e-bf22-4c2d6102ba77"
+            "architecture",
+            "experiments"
         ],
-        "created_at": "2017-10-19T07:54:49.724444",
-        "id": "4a6f16f7-789c-4690-85d4-4a72078d02b2",
-        "mailchimp_campaign_id": "ba2600066a",
         "media_duration": 1332.4,
         "media_src": "73 View Bindings in Pure Swift.mp4",
-        "media_version": 1,
-        "name": "S01E73",
         "number": 73,
         "poster_uid": "2017/10/19/07/54/49/751d55f7-67a3-4703-8308-d1c99e964a33/73 View Bindings in Pure Swift.jpg",
         "release_at": "2017-10-27T15:00:00",
@@ -2725,33 +2124,25 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We experiment with reactive view bindings that don't rely on runtime programming.",
         "title": "View Bindings in Pure Swift",
-        "updated_at": "2018-06-26T12:50:13.642126",
         "video_id": "5769d989-97a5-43a7-b363-a977ec2ee2de"
     },
     {
         "collaborators": [
-            "03534f31-9d9c-477b-9e64-c0010bd063c9",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "brandon-kase",
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "cc4d5956-9405-49a6-8dcf-8a467e35430f",
-            "f0861d3a-a419-4a45-82a6-e0e2bbc63a3b"
+            "functional-programming",
+            "libraries"
         ],
-        "created_at": "2018-02-09T11:48:41.970163",
-        "id": "836b373b-e3da-427d-bbc7-4f005c53e3fa",
-        "mailchimp_campaign_id": "eedd488760",
         "media_duration": 1344.52,
         "media_src": "88 The Expression Problem (Part 1)-corrected.mp4",
-        "media_version": 2,
-        "name": "S01E88",
         "number": 88,
         "poster_uid": "2018/02/25/09/46/08/9bf71b42-6ae5-4127-99fb-e987d45715e9/88 The Expression Problem (Part 1)-new.jpg",
         "release_at": "2018-02-16T15:00:00",
@@ -2765,31 +2156,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We discuss the capabilities and limitations of enums and classes when designing extensible libraries.",
         "title": "Extensible Libraries 1: Enums vs Classes",
-        "updated_at": "2018-05-23T10:14:43.637094",
         "video_id": "83106f84-e837-4656-bdad-2be9d8d0b340"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "201eefb9-38c5-4921-991e-3e46ba747069"
+            "architecture"
         ],
-        "created_at": "2018-01-15T16:27:51.87549",
-        "id": "6bc0fadf-3562-4040-8e58-e21963195cfb",
-        "mailchimp_campaign_id": "fec88ec575",
         "media_duration": 1449.44,
         "media_src": "87 MVC (Part 2)-corrected.mp4",
-        "media_version": 2,
-        "name": "S01E87",
         "number": 87,
         "poster_uid": "2018/02/25/09/45/31/6d5c1017-fd45-47ba-9b7f-c998e0f437f9/87 MVC (Part 2)-new.jpg",
         "release_at": "2018-02-09T15:00:00",
@@ -2803,32 +2186,24 @@
         ],
         "sample_duration": 58.92,
         "sample_src": "87 MVC (Part 2) Preview-corrected.mp4",
-        "sample_version": 2,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We continue implementing a mini player in the MVC variant of the sample app found in our App Architecture book.",
         "title": "Sharing State between View Controllers in MVC (Part 2)",
-        "updated_at": "2018-06-26T12:50:13.581711",
         "video_id": "a1ee9ef7-db7f-4c92-8baa-5c9d70c3798f"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "d5b08eb0-0d2a-4643-91f7-447199d628d6",
-            "7c7fac1f-3f20-475b-9e42-687cb5428e09"
+            "table-views",
+            "reactive-programming"
         ],
-        "created_at": "2017-10-03T11:17:41.591158",
-        "id": "abc7f91f-6356-4a89-a88c-8dd09a27ea89",
-        "mailchimp_campaign_id": "c057ddc4b8",
         "media_duration": 926.76,
         "media_src": "70 Table View Animations with Reactive Arrays.mp4",
-        "media_version": 1,
-        "name": "S01E70",
         "number": 70,
         "poster_uid": "2017/10/03/12/04/18/8da43716-3226-4ad8-a8cf-727ad5063c2e/70 Table View Animations with Reactive Arrays.jpg",
         "release_at": "2017-10-06T15:00:00",
@@ -2842,32 +2217,24 @@
         ],
         "sample_duration": 124.72,
         "sample_src": "70 Table View Animations with Reactive Arrays Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We use the reactive array type from episodes #67 and #69 to back a table view. This allows us to correctly animate changes in the underlying data, even with filter and sort transformations applied.",
         "title": "Table View Animations with Reactive Arrays",
-        "updated_at": "2018-02-09T11:41:37.556272",
         "video_id": "c898d586-76d4-40f2-afd9-8b4e53379c8f"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "7c7fac1f-3f20-475b-9e42-687cb5428e09",
-            "55f24308-83e5-42eb-a7dd-ee1bd6c47ef3"
+            "reactive-programming",
+            "incremental-programming"
         ],
-        "created_at": "2017-12-15T16:28:27.623322",
-        "id": "7acdb685-98d8-46ac-a374-c0614c50ac3b",
-        "mailchimp_campaign_id": "8cfaa32fe3",
         "media_duration": 2147.84,
         "media_src": "81 Reference Cycles and Ownership-corrected.mp4",
-        "media_version": 2,
-        "name": "S01E81",
         "number": 81,
         "poster_uid": "2018/02/25/09/41/25/fac8d3f3-9968-40a3-9893-ff466e3723d8/81 Reference Cycles and Ownership-new.jpg",
         "release_at": "2017-12-22T15:00:00",
@@ -2881,32 +2248,24 @@
         ],
         "sample_duration": 137.84,
         "sample_src": "81 Reference Cycles and Ownership Preview-corrected.mp4",
-        "sample_version": 2,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We use Xcode's memory debugger to resolve all the reference cycles in our glitch-free reactive code and introduce a proper ownership model.",
         "title": "Reference Cycles and Ownership",
-        "updated_at": "2018-02-25T12:52:34.364291",
         "video_id": "b4595b30-be06-47b0-ad9e-acf47658b3ca"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "ole",
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "cc4d5956-9405-49a6-8dcf-8a467e35430f"
+            "functional-programming"
         ],
-        "created_at": "2017-12-18T07:34:44.329558",
-        "id": "e15f60a1-504c-4fca-be77-1d3cf52ac9f5",
-        "mailchimp_campaign_id": "b363e96762",
         "media_duration": 1120.96,
         "media_src": "82 Refactoring Imperative Layout Code-corrected.mp4",
-        "media_version": 3,
-        "name": "S01E82",
         "number": 82,
         "poster_uid": "2018/02/25/09/41/47/f76cb6cb-ff1f-4fb7-b00c-8bc12f0801f0/82 Refactoring Imperative Layout Code-new.jpg",
         "release_at": "2018-01-05T15:00:00",
@@ -2920,32 +2279,24 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We refactor a simple flow layout to have a functional interface, disentangling the layout code from UIKit code.",
         "title": "Refactoring Imperative Layout Code",
-        "updated_at": "2018-03-05T14:41:22.789684",
         "video_id": "e843d40d-7277-48c8-8787-f0bf110b699e"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "7c7fac1f-3f20-475b-9e42-687cb5428e09",
-            "55f24308-83e5-42eb-a7dd-ee1bd6c47ef3"
+            "reactive-programming",
+            "incremental-programming"
         ],
-        "created_at": "2017-11-16T18:20:26.915285",
-        "id": "b5d88783-eb1a-4788-96ea-4add2965da1a",
-        "mailchimp_campaign_id": "62540a24f8",
         "media_duration": 1096,
         "media_src": "76 Understanding Reactive Glitches-corrected.mp4",
-        "media_version": 3,
-        "name": "S01E76",
         "number": 76,
         "poster_uid": "2018/02/25/09/34/49/a74b9ac5-a376-40ab-afd7-b391b407d039/76 Understanding Reactive Glitches-new.jpg",
         "release_at": "2017-11-17T15:00:00",
@@ -2959,32 +2310,24 @@
         ],
         "sample_duration": 91.96,
         "sample_src": "76 Understanding Reactive Glitches Preview-corrected.mp4",
-        "sample_version": 2,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We look at an example of a reactive pipeline with surprising behavior, discuss why it occurs, and how it could be improved.",
         "title": "Understanding Reactive Glitches",
-        "updated_at": "2018-02-25T09:34:49.676837",
         "video_id": "65b22e22-6867-4e2f-8902-4093105c0e80"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "ee89af6c-10e7-49de-8660-cf0b84443e19"
+            "swift-the-language"
         ],
-        "created_at": "2017-11-30T12:08:01.17285",
-        "id": "b3bf7905-a55f-4728-9e23-04c97d9e7548",
-        "mailchimp_campaign_id": "50f537cad1",
         "media_duration": 802.44,
         "media_src": "80 String vs NSString-corrected.mp4",
-        "media_version": 2,
-        "name": "S01E80",
         "number": 80,
         "poster_uid": "2018/02/25/09/40/40/2a9b8434-8db7-4542-a9a5-d8b75f08024f/80 String vs NSString-new.jpg",
         "release_at": "2017-12-15T15:00:00",
@@ -2998,32 +2341,24 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We look at how to work with ranges in a mixed Swift String/NSString environment.",
         "title": "Swift String vs. NSString",
-        "updated_at": "2018-03-20T11:40:34.016519",
         "video_id": "62dc34d8-752a-4eda-829b-90e03d0dbac4"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "ee89af6c-10e7-49de-8660-cf0b84443e19"
+            "swift-the-language"
         ],
-        "created_at": "2017-11-30T11:01:29.690034",
-        "id": "c7279df9-3837-4e85-8ec5-006a0def320d",
-        "mailchimp_campaign_id": "33a059a702",
         "media_duration": 1508.16,
         "media_src": "79 String Parsing Performance-corrected.mp4",
-        "media_version": 2,
-        "name": "S01E79",
         "number": 79,
         "poster_uid": "2018/02/25/09/36/06/5e1732d6-c631-444d-a28d-7a2e8a48cc5a/79 String Parsing Performance-new.jpg",
         "release_at": "2017-12-08T15:00:00",
@@ -3037,31 +2372,23 @@
         ],
         "sample_duration": 78.28,
         "sample_src": "79 String Parsing Performance Preview-corrected.mp4",
-        "sample_version": 2,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We benchmark the CSV parsing code from the previous episode and refactor it to become an order of magnitude faster.",
         "title": "String Parsing Performance",
-        "updated_at": "2018-03-20T11:40:34.029972",
         "video_id": "8b0694fa-beb0-4df8-bbff-50ea70ce5a4f"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "rick-minnich",
+            "natalye"
         ],
         "collections": [
-            "cc4d5956-9405-49a6-8dcf-8a467e35430f"
+            "functional-programming"
         ],
-        "created_at": "2016-06-30T13:12:23.971135",
-        "id": "08311412-c8ef-4292-84f9-8f3381d6b16d",
-        "mailchimp_campaign_id": null,
         "media_duration": 1113.8,
         "media_src": "Rendering CommonMark Part 2.m4v",
-        "media_version": 1,
-        "name": "S01E04",
         "number": 4,
         "poster_uid": "2016/06/30/13/33/21/9e977e9f-72e8-4b29-a2ef-bd139009059e/poster.jpg",
         "release_at": "2016-07-01T13:30:00",
@@ -3075,32 +2402,24 @@
         ],
         "sample_duration": 137.72,
         "sample_src": "Rendering CommonMark Part 2 Preview.m4v",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We add customizable styles to our CommonMark renderer from episode #2.",
         "title": "Rendering CommonMark (Part 2)",
-        "updated_at": "2018-03-05T14:41:23.317925",
         "video_id": "50d64716-7809-407f-87dd-ca6fd8bcfa5a"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "7c7fac1f-3f20-475b-9e42-687cb5428e09",
-            "55f24308-83e5-42eb-a7dd-ee1bd6c47ef3"
+            "reactive-programming",
+            "incremental-programming"
         ],
-        "created_at": "2017-11-23T12:55:59.205717",
-        "id": "487300ce-c2f7-4b39-87c7-19a202f6ca88",
-        "mailchimp_campaign_id": "460ed8e33e",
         "media_duration": 1495.52,
         "media_src": "77 A Technique to Avoid Reactive Glitches-corrected2.mp4",
-        "media_version": 2,
-        "name": "S01E77",
         "number": 77,
         "poster_uid": "2018/02/25/10/19/57/8fda841b-9f7a-4248-a4f7-c7e380af4a28/77 A Technique to Avoid Reactive Glitches-new.jpg",
         "release_at": "2017-11-24T15:00:00",
@@ -3114,32 +2433,24 @@
         ],
         "sample_duration": 101.32,
         "sample_src": "77 A Technique to Avoid Reactive Glitches Preview-corrected2.mp4",
-        "sample_version": 2,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We refactor the simple reactive library from the last episode using topological sorting to avoid any temporarily wrong values.",
         "title": "A Technique to Avoid Reactive Glitches",
-        "updated_at": "2018-02-25T10:19:57.544524",
         "video_id": "9bca87df-10bd-4cae-aeac-8de6f4128351"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "ee89af6c-10e7-49de-8660-cf0b84443e19"
+            "swift-the-language"
         ],
-        "created_at": "2017-11-28T16:45:41.02969",
-        "id": "55637895-3303-4960-a14a-c3d90350ad50",
-        "mailchimp_campaign_id": "44babce802",
         "media_duration": 1708.52,
         "media_src": "78 Swift Strings and Substrings-corrected.mp4",
-        "media_version": 2,
-        "name": "S01E78",
         "number": 78,
         "poster_uid": "2018/02/25/09/36/00/f786e77c-96fe-46f6-b0bc-11fbc27d9452/78 Swift Strings and Substrings-new.jpg",
         "release_at": "2017-12-01T15:00:00",
@@ -3153,34 +2464,26 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We write a simple CSV parser as an example demonstrating how to work with Swift's String and Substring types.",
         "title": "Swift Strings and Substrings",
-        "updated_at": "2018-03-20T11:40:34.041574",
         "video_id": "c6a2b3d9-8352-4641-bc4a-95eb73533526"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "ole",
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "cc4d5956-9405-49a6-8dcf-8a467e35430f",
-            "83b744cc-1eb9-4194-bcbe-60ac7a21059c",
-            "f0861d3a-a419-4a45-82a6-e0e2bbc63a3b"
+            "functional-programming",
+            "type-safe-api-wrappers",
+            "libraries"
         ],
-        "created_at": "2018-01-10T07:47:12.981966",
-        "id": "46042aac-938f-4649-a59c-6cde273e8691",
-        "mailchimp_campaign_id": "c83b98f055",
         "media_duration": 1363.96,
         "media_src": "83 Wrapping Analytics APIs-corrected.mp4",
-        "media_version": 2,
-        "name": "S01E83",
         "number": 83,
         "poster_uid": "2018/02/25/09/42/06/72a83e19-c083-4ec2-92ec-e56a40a4fc32/83 Wrapping Analytics APIs-new.jpg",
         "release_at": "2018-01-12T15:00:00",
@@ -3194,31 +2497,23 @@
         ],
         "sample_duration": 63.84,
         "sample_src": "83 Wrapping Analytics APIs Preview-corrected.mp4",
-        "sample_version": 2,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We look at different techniques for wrapping analytics APIs in Swift and discuss their advantages and disadvantages.",
         "title": "Wrapping Analytics APIs",
-        "updated_at": "2018-05-23T10:14:43.647423",
         "video_id": "dab44b4c-2002-4c5b-be22-37e9673d6104"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "ee89af6c-10e7-49de-8660-cf0b84443e19"
+            "swift-the-language"
         ],
-        "created_at": "2017-10-19T09:58:53.236091",
-        "id": "b3ec3c96-54aa-41b5-9c9a-6ea0f848567f",
-        "mailchimp_campaign_id": "35c165e368",
         "media_duration": 1045.24,
         "media_src": "75 Auto Layout with Key Paths.mp4",
-        "media_version": 1,
-        "name": "S01E75",
         "number": 75,
         "poster_uid": "2017/10/19/09/58/53/80a3f7f1-5507-406b-af6b-a592abd9a05b/75 Auto Layout with Key Paths.jpg",
         "release_at": "2017-11-10T15:00:00",
@@ -3232,32 +2527,24 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We clean up our layout code by introducing helper functions that leverage Swift's key paths.",
         "title": "Auto Layout with Key Paths",
-        "updated_at": "2018-03-20T11:40:34.053079",
         "video_id": "8aa19eff-1703-4377-866b-64660a04c6ee"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "cc4d5956-9405-49a6-8dcf-8a467e35430f",
-            "f0861d3a-a419-4a45-82a6-e0e2bbc63a3b"
+            "functional-programming",
+            "libraries"
         ],
-        "created_at": "2018-03-03T14:32:35.216163",
-        "id": "01e08c4b-c994-4e63-9cb2-1e6a5692ff0b",
-        "mailchimp_campaign_id": "2e4d859839",
         "media_duration": 1424.24,
         "media_src": "91 Syntax Highlighting v3.mp4",
-        "media_version": 3,
-        "name": "S01E91",
         "number": 91,
         "poster_uid": "2018/03/09/06/47/48/91e434f9-b88f-4f89-b5a2-0145744a277e/91 Syntax Highlighting.jpg",
         "release_at": "2018-03-09T15:00:00",
@@ -3271,32 +2558,24 @@
         ],
         "sample_duration": 41.84,
         "sample_src": "91 Syntax Highlighting Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We extend a basic Markdown library using protocol composition to add support for syntax highlighting in Swift code blocks.",
         "title": "Rendering Markdown with Syntax Highlighting",
-        "updated_at": "2018-07-20T06:27:05.4536",
         "video_id": "10d43ce3-c7c8-4464-8086-7315086d07b2"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "f0861d3a-a419-4a45-82a6-e0e2bbc63a3b",
-            "4da02fc4-8e59-4cf6-8c7b-d7615051719f"
+            "libraries",
+            "building-a-form-library"
         ],
-        "created_at": "2018-03-28T07:39:39.305892",
-        "id": "ece27238-c1ac-4b14-b6fa-14a4d60ac7f5",
-        "mailchimp_campaign_id": "7d28037dbd",
         "media_duration": 1312.4,
         "media_src": "95 Forms 2 v2.mp4",
-        "media_version": 2,
-        "name": "S01E95",
         "number": 95,
         "poster_uid": "2018/03/28/07/39/39/e687ae42-ca67-432f-9d69-45f0da38dbb9/95 Forms 2.jpg",
         "release_at": "2018-04-06T14:00:00",
@@ -3310,31 +2589,23 @@
         ],
         "sample_duration": 46.24,
         "sample_src": "Forms 2 Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We begin to refactor the imperative table view code from the last episode, working toward a more declarative approach of defining our form.",
         "title": "Simplifying IndexPath Logic",
-        "updated_at": "2018-09-11T14:38:34.193856",
         "video_id": "dfc5ef7f-0086-446d-9334-e616f5c99f42"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "ee89af6c-10e7-49de-8660-cf0b84443e19"
+            "swift-the-language"
         ],
-        "created_at": "2018-03-08T09:22:46.771453",
-        "id": "6b81bc5e-d031-4ffc-8f87-583f271688ba",
-        "mailchimp_campaign_id": "99e09b41f6",
         "media_duration": 1341.6,
         "media_src": "92 Pointers v4.mp4",
-        "media_version": 3,
-        "name": "S01E92",
         "number": 92,
         "poster_uid": "2018/03/09/07/55/33/b86ea746-0ad8-4bb7-8174-0534b3d76fc2/92 Pointers.jpg",
         "release_at": "2018-03-16T15:00:00",
@@ -3348,32 +2619,24 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We use Swift's pointer APIs to read a text file and split it into lines without using Swift's collection and string types.",
         "title": "Practicing with Pointers",
-        "updated_at": "2018-07-20T06:27:44.614222",
         "video_id": "ae73b590-b93e-44c2-af97-2a67ac5cd3e0"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "f0861d3a-a419-4a45-82a6-e0e2bbc63a3b",
-            "4da02fc4-8e59-4cf6-8c7b-d7615051719f"
+            "libraries",
+            "building-a-form-library"
         ],
-        "created_at": "2018-03-29T07:28:31.163006",
-        "id": "c4c5082d-07f7-4560-a145-32e1649c4310",
-        "mailchimp_campaign_id": "245b09f0e1",
         "media_duration": 1220.36,
         "media_src": "96 Forms 3.mp4",
-        "media_version": 1,
-        "name": "S01E96",
         "number": 96,
         "poster_uid": "2018/03/29/07/28/31/60a0673e-e49b-4f09-8f3e-10b1a7f00cd4/96 Forms 3.jpg",
         "release_at": "2018-04-13T14:00:00",
@@ -3387,31 +2650,23 @@
         ],
         "sample_duration": 40.72,
         "sample_src": "96 Forms Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We continue refactoring our forms code by creating a form table view controller as the first reusable component.",
         "title": "Extracting a Reusable Form View Controller",
-        "updated_at": "2018-09-11T14:39:07.45673",
         "video_id": "deb0666e-9c75-40cf-b2a3-0874aba5ed0b"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "201eefb9-38c5-4921-991e-3e46ba747069"
+            "architecture"
         ],
-        "created_at": "2017-09-05T12:27:03.522863",
-        "id": "b24d4f1d-a853-49b4-8225-4120c8eaaf71",
-        "mailchimp_campaign_id": "1a81df9f91",
         "media_duration": 999.4,
         "media_src": "66 The Elm Architecture (Part 1).mp4",
-        "media_version": 1,
-        "name": "S01E66",
         "number": 66,
         "poster_uid": "2017/09/05/12/27/03/068cece8-97d8-4b57-8250-c49a6ef476b3/66 The Elm Architecture (Part 1).jpg",
         "release_at": "2017-09-08T15:00:00",
@@ -3425,29 +2680,21 @@
         ],
         "sample_duration": 113.56,
         "sample_src": "66 The Elm Architecture (Part 1) Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We refactor our reducer-based project from episode #62 to use The Elm Architecture. Instead of interacting with UIKit directly, we build a virtual view hierarchy and let our Elm framework do the rest.",
         "title": "The Elm Architecture (Part 1)",
-        "updated_at": "2018-06-26T12:50:13.688117",
         "video_id": "40fffe18-d603-48cb-952d-8f7026f39f01"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59"
+            "chris",
+            "florian"
         ],
         "collections": [
-            "201eefb9-38c5-4921-991e-3e46ba747069"
+            "architecture"
         ],
-        "created_at": "2018-01-19T14:07:27.639298",
-        "id": "4c0ef9c3-f5ba-4aad-a5ab-f55665d448ab",
-        "mailchimp_campaign_id": "d1661388e9",
         "media_duration": 281.04,
         "media_src": "84 App Architecture-corrected.mp4",
-        "media_version": 2,
-        "name": "S01E84",
         "number": 84,
         "poster_uid": "2018/02/25/09/44/31/05800d7a-bf1c-4bc5-aac0-47f134611f73/84 App Architecture-new.jpg",
         "release_at": "2018-01-19T17:00:00",
@@ -3461,32 +2708,24 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "Today we're releasing the early access edition of our new App Architecture book. We explain how it came about, what's in it, and how early access works.",
         "title": "Introducing Our New Book: App Architecture",
-        "updated_at": "2018-06-26T12:50:13.613173",
         "video_id": "171ff812-a94e-4b61-b9c0-d2c8d05838b2"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "ee89af6c-10e7-49de-8660-cf0b84443e19",
-            "cc4d5956-9405-49a6-8dcf-8a467e35430f"
+            "swift-the-language",
+            "functional-programming"
         ],
-        "created_at": "2018-02-20T09:13:17.80402",
-        "id": "6edf91ba-ce66-4013-ac06-8c763208a13e",
-        "mailchimp_campaign_id": "edbff21d0d",
         "media_duration": 1319.76,
         "media_src": "90 Concurrent Map-corrected.mp4",
-        "media_version": 2,
-        "name": "S01E90",
         "number": 90,
         "poster_uid": "2018/02/25/09/46/45/c6d6c01f-f191-4375-99ff-e6e239114b2b/90 Concurrent Map-new.jpg",
         "release_at": "2018-03-02T15:00:00",
@@ -3500,32 +2739,24 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We implement a concurrent version of the map method for arrays.",
         "title": "Concurrent Map",
-        "updated_at": "2018-03-20T11:40:34.002813",
         "video_id": "cbdbc623-99ec-431d-8088-cd3fd112e78d"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "ole",
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "83b744cc-1eb9-4194-bcbe-60ac7a21059c"
+            "type-safe-api-wrappers"
         ],
-        "created_at": "2018-01-23T15:37:08.916704",
-        "id": "199b04d1-f3ff-4038-add8-d94f4cef3752",
-        "mailchimp_campaign_id": "782c48d0bd",
         "media_duration": 2011.36,
         "media_src": "85 Wrapping LibGit-corrected.mp4",
-        "media_version": 2,
-        "name": "S01E85",
         "number": 85,
         "poster_uid": "2018/02/25/09/44/48/59013271-ea01-44f8-aacc-1e4a29558fbf/85 Wrapping LibGit-new.jpg",
         "release_at": "2018-01-26T15:00:00",
@@ -3539,32 +2770,24 @@
         ],
         "sample_duration": 64.48,
         "sample_src": "85 Wrapping LibGit Preview-corrected.mp4",
-        "sample_version": 2,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We write a wrapper around the libgit2 C library to work with Git repositories from macOS and iOS apps \u2014 and for the fun of using Swift's pointer APIs!",
         "title": "Wrapping libgit2",
-        "updated_at": "2018-02-25T15:10:52.273553",
         "video_id": "554d5370-1590-4b6f-b871-91411f47b628"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "ole",
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "201eefb9-38c5-4921-991e-3e46ba747069"
+            "architecture"
         ],
-        "created_at": "2017-10-19T06:47:16.538504",
-        "id": "6d64c75c-8ac3-480f-8f18-dbf7b3576fd6",
-        "mailchimp_campaign_id": "cf145ee379",
         "media_duration": 2011.6,
         "media_src": "72 Laufpark Introduction.mp4",
-        "media_version": 1,
-        "name": "S01E72",
         "number": 72,
         "poster_uid": "2017/10/19/06/47/16/57f19d56-8956-442b-9c68-2c52887eec77/72 Laufpark Introduction.jpg",
         "release_at": "2017-10-20T15:00:00",
@@ -3578,32 +2801,24 @@
         ],
         "sample_duration": 124.84,
         "sample_src": "72 Laufpark Introduction Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We introduce a project we're going to work on over a few episodes. To get familiar with the code, we build a new feature using the app's view-state driven approach.",
         "title": "Adding a Custom View to a View-State Driven App",
-        "updated_at": "2018-06-26T12:50:13.659438",
         "video_id": "b52d6364-6de5-4e67-a8d9-098b120b6e82"
     },
     {
         "collaborators": [
-            "a353369d-0897-45d6-99fe-5ccb1d15bccc",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "ole",
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "ee89af6c-10e7-49de-8660-cf0b84443e19"
+            "swift-the-language"
         ],
-        "created_at": "2018-03-19T20:34:41.920445",
-        "id": "a5d13ef6-b601-42b7-98de-50f151b08fb5",
-        "mailchimp_campaign_id": "5a0d6a931c",
         "media_duration": 1363.64,
         "media_src": "93 Optionals.mp4",
-        "media_version": 1,
-        "name": "S01E93",
         "number": 93,
         "poster_uid": "2018/03/19/21/26/22/ff65a601-42c5-42df-96bf-e88276f59f1c/93 Optionals.jpg",
         "release_at": "2018-03-23T15:00:00",
@@ -3617,32 +2832,24 @@
         ],
         "sample_duration": 30.88,
         "sample_src": "93 Optionals Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We discuss many considerations and techniques for working with optionals.",
         "title": "Handling Optionals",
-        "updated_at": "2018-07-23T14:07:52.641808",
         "video_id": "d9efe62c-acfa-428b-a0b2-b5fbb374e4fb"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "f0861d3a-a419-4a45-82a6-e0e2bbc63a3b",
-            "4da02fc4-8e59-4cf6-8c7b-d7615051719f"
+            "libraries",
+            "building-a-form-library"
         ],
-        "created_at": "2018-03-30T07:44:03.633771",
-        "id": "da31771b-9af7-486f-8179-63efdb7f246f",
-        "mailchimp_campaign_id": "ea2946910f",
         "media_duration": 1829.36,
         "media_src": "97 Forms 4.mp4",
-        "media_version": 1,
-        "name": "S01E97",
         "number": 97,
         "poster_uid": "2018/03/30/07/44/03/6b6ca29d-5688-4e47-a11a-b69be088fd3e/97 Forms 4.jpg",
         "release_at": "2018-04-20T14:00:00",
@@ -3656,32 +2863,24 @@
         ],
         "sample_duration": 29.32,
         "sample_src": "97 Forms Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We refactor the form driver class to be reusable and define the entire form in a simple function.",
         "title": "Creating a Reusable Form Driver",
-        "updated_at": "2018-07-23T14:07:57.854321",
         "video_id": "13145ec7-002c-42d3-836e-b602a5eb1af8"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "f0861d3a-a419-4a45-82a6-e0e2bbc63a3b",
-            "4da02fc4-8e59-4cf6-8c7b-d7615051719f"
+            "libraries",
+            "building-a-form-library"
         ],
-        "created_at": "2018-04-26T07:17:10.558165",
-        "id": "87003724-dac0-44f2-8e2f-4d30dfba9264",
-        "mailchimp_campaign_id": "fc5ffd74d5",
         "media_duration": 1742.16,
         "media_src": "99 Forms 6.mp4",
-        "media_version": 1,
-        "name": "S01E99",
         "number": 99,
         "poster_uid": "2018/04/26/07/27/12/5aed5a98-fa35-4d8a-b175-5dd15a138452/99 Forms 6.jpg",
         "release_at": "2018-05-04T14:00:00",
@@ -3695,32 +2894,24 @@
         ],
         "sample_duration": 29.6,
         "sample_src": "99 Forms 6 Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We extract reusable toggle switch and text field components from our forms code and do more cleaning up in the process.",
         "title": "Creating Reusable Components",
-        "updated_at": "2018-07-24T13:00:32.564733",
         "video_id": "86428f9f-f448-410c-9210-50f17e994bf3"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "201eefb9-38c5-4921-991e-3e46ba747069",
-            "3d587174-916d-413f-abf2-26d1a4757b0e"
+            "architecture",
+            "refactoring-large-view-controllers"
         ],
-        "created_at": "2018-05-31T11:24:37.60825",
-        "id": "f891e0c8-b86c-48ac-8d60-a769be012309",
-        "mailchimp_campaign_id": "ad0e48e6f9",
         "media_duration": 1130.4,
         "media_src": "104 Large View Controllers 2.mp4",
-        "media_version": 1,
-        "name": "S01E104",
         "number": 104,
         "poster_uid": "2018/05/31/11/24/37/c059136d-f3ac-40f4-a2f3-6b363244232f/104 Large View Controllers 2.jpg",
         "release_at": "2018-06-08T14:00:00",
@@ -3734,32 +2925,24 @@
         ],
         "sample_duration": 28.24,
         "sample_src": "104 Large View Controllers 2 Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We extract Core Data-related code from the large view controller and move it into the model layer.",
         "title": "Extracting Model Code",
-        "updated_at": "2018-07-27T11:49:46.774656",
         "video_id": "2fa75575-3f32-4f90-8f79-a61c04e424f0"
     },
     {
         "collaborators": [
-            "03534f31-9d9c-477b-9e64-c0010bd063c9",
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "brandon-kase",
+            "chris",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "cc4d5956-9405-49a6-8dcf-8a467e35430f",
-            "f0861d3a-a419-4a45-82a6-e0e2bbc63a3b"
+            "functional-programming",
+            "libraries"
         ],
-        "created_at": "2018-02-09T11:51:16.12556",
-        "id": "bb430bfb-a48e-4b8a-bd47-740f03d9e0ca",
-        "mailchimp_campaign_id": "ce1715bec8",
         "media_duration": 1420.48,
         "media_src": "89 The Expression Problem (Part 2)-corrected 2.mp4",
-        "media_version": 2,
-        "name": "S01E89",
         "number": 89,
         "poster_uid": "2018/02/25/09/46/26/b55a2425-6e25-49d9-b300-77350aae7da4/89 The Expression Problem (Part 2)-new.jpg",
         "release_at": "2018-02-23T15:00:00",
@@ -3773,32 +2956,24 @@
         ],
         "sample_duration": 88.2,
         "sample_src": "89 The Expression Problem (Part 1) Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We show how protocol composition can be used to design extensible libraries, thereby solving the so-called \"Expression Problem.\"",
         "title": "Extensible Libraries 2: Protocol Composition",
-        "updated_at": "2018-07-17T11:42:14.262096",
         "video_id": "d5eff93e-b10c-46dc-9dfc-2b2ea2c06439"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "f0861d3a-a419-4a45-82a6-e0e2bbc63a3b",
-            "4da02fc4-8e59-4cf6-8c7b-d7615051719f"
+            "libraries",
+            "building-a-form-library"
         ],
-        "created_at": "2018-03-27T08:10:06.746418",
-        "id": "25db8d59-11d1-4bf2-8581-acf954987c10",
-        "mailchimp_campaign_id": "d51f13996f",
         "media_duration": 1496.24,
         "media_src": "94 Forms 1.mp4",
-        "media_version": 1,
-        "name": "S01E94",
         "number": 94,
         "poster_uid": "2018/03/27/08/20/25/d5530c5b-15b2-4612-9412-07041f482422/94 Forms 1.jpg",
         "release_at": "2018-03-30T15:00:00",
@@ -3812,32 +2987,24 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "This episode marks the beginning of a new series where we refactor a hand-coded settings form into a reusable, declarative form library. In this episode, we build the base version and discuss the design goals of the library.",
         "title": "Introduction",
-        "updated_at": "2018-07-20T09:39:26.684162",
         "video_id": "9ae62d25-dc0b-4944-bbcf-e88f748e6061"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "f0861d3a-a419-4a45-82a6-e0e2bbc63a3b",
-            "4da02fc4-8e59-4cf6-8c7b-d7615051719f"
+            "libraries",
+            "building-a-form-library"
         ],
-        "created_at": "2018-04-05T06:19:07.149601",
-        "id": "9d4db914-ddfe-4ab2-8ba6-beb81e377d9c",
-        "mailchimp_campaign_id": "565feebe4c",
         "media_duration": 1303.88,
         "media_src": "98 Forms 5.mp4",
-        "media_version": 1,
-        "name": "S01E98",
         "number": 98,
         "poster_uid": "2018/04/05/10/15/43/78677090-be08-423b-9255-4bb8a0d4f45a/98 Forms 5.jpg",
         "release_at": "2018-04-27T14:00:00",
@@ -3851,32 +3018,24 @@
         ],
         "sample_duration": 43.2,
         "sample_src": "98 Forms 5 Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "After refactoring in past episodes, it's time for some housekeeping: we clean up our form code and make it more reusable with generics.",
         "title": "Cleaning Up the Code",
-        "updated_at": "2018-07-24T13:01:52.732225",
         "video_id": "2cfd8319-1676-4911-a7a6-b9581c04f1d7"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "201eefb9-38c5-4921-991e-3e46ba747069",
-            "3d587174-916d-413f-abf2-26d1a4757b0e"
+            "architecture",
+            "refactoring-large-view-controllers"
         ],
-        "created_at": "2018-05-29T17:46:32.195803",
-        "id": "06c024c2-e45d-44b3-b640-b5ba98b8d13d",
-        "mailchimp_campaign_id": "a7c3004085",
         "media_duration": 1571.48,
         "media_src": "103 Large View Controllers 1 v2.mp4",
-        "media_version": 2,
-        "name": "S01E103",
         "number": 103,
         "poster_uid": "2018/05/29/17/54/40/b10a9cb3-4774-44a1-bfbc-7d638890269d/103 Large View Controllers 1.jpg",
         "release_at": "2018-06-01T14:00:00",
@@ -3890,32 +3049,24 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We begin refactoring a large view controller from the Wikipedia iOS app by pulling pieces of helper code out as pure functions.",
         "title": "Extracting Pure Functions",
-        "updated_at": "2018-07-27T11:50:46.482912",
         "video_id": "096e74fa-d0c6-437d-a717-0025e77f66ef"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "201eefb9-38c5-4921-991e-3e46ba747069",
-            "3d587174-916d-413f-abf2-26d1a4757b0e"
+            "architecture",
+            "refactoring-large-view-controllers"
         ],
-        "created_at": "2018-06-08T14:13:46.300944",
-        "id": "44293637-4130-482f-9033-86173f25f95f",
-        "mailchimp_campaign_id": "af2d4c4b89",
         "media_duration": 1586.76,
         "media_src": "106 Large View Controllers 4.mp4",
-        "media_version": 1,
-        "name": "S01E106",
         "number": 106,
         "poster_uid": "2018/06/08/14/13/46/8c9128fb-0188-476e-ad50-ac66025f705b/106 Large View Controllers 4.jpg",
         "release_at": "2018-06-22T14:00:00",
@@ -3929,32 +3080,24 @@
         ],
         "sample_duration": 25.52,
         "sample_src": "106 Large View Controllers 4 Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We extract a child view controller to further slim down our large view controller, making sure the code keeps compiling throughout the process.",
         "title": "Child View Controllers",
-        "updated_at": "2018-07-27T11:49:13.039412",
         "video_id": "2aff491d-c50e-450b-a774-243525be1efd"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "f0861d3a-a419-4a45-82a6-e0e2bbc63a3b",
-            "4da02fc4-8e59-4cf6-8c7b-d7615051719f"
+            "libraries",
+            "building-a-form-library"
         ],
-        "created_at": "2018-05-14T06:29:33.636203",
-        "id": "0e94cc39-8534-4e6e-be80-f9c64cc566db",
-        "mailchimp_campaign_id": "18702a0ca8",
         "media_duration": 1622.48,
         "media_src": "101 Forms 7.mp4",
-        "media_version": 1,
-        "name": "S01E101",
         "number": 101,
         "poster_uid": "2018/05/14/06/29/33/1b4de1a2-8d61-4f42-b3df-c2f884b045be/101 Forms 7.jpg",
         "release_at": "2018-05-18T14:00:00",
@@ -3968,32 +3111,24 @@
         ],
         "sample_duration": 32.28,
         "sample_src": "101 Forms 7 Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We create helper functions for form cells and sections, which simplify managing references and propagating updates.",
         "title": "Cell and Section Helpers",
-        "updated_at": "2018-06-22T11:16:04.289262",
         "video_id": "d802a228-b825-492f-afe2-42c3e98e3533"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "f0861d3a-a419-4a45-82a6-e0e2bbc63a3b",
-            "4da02fc4-8e59-4cf6-8c7b-d7615051719f"
+            "libraries",
+            "building-a-form-library"
         ],
-        "created_at": "2018-05-18T10:47:01.559721",
-        "id": "11204f28-6ffd-40ad-a65e-ae11ab85c9a2",
-        "mailchimp_campaign_id": "462df4d419",
         "media_duration": 1468.2,
         "media_src": "102 Forms 8.mp4",
-        "media_version": 1,
-        "name": "S01E102",
         "number": 102,
         "poster_uid": "2018/05/18/10/49/20/1f7afccc-9bee-4542-a27a-93cac673b389/102 Forms 8.jpg",
         "release_at": "2018-05-25T14:00:00",
@@ -4007,32 +3142,24 @@
         ],
         "sample_duration": 26.36,
         "sample_src": "102 Forms 8 Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "After finishing the cleanup from the last episode, we refactor our forms API to be even more succinct and declarative.",
         "title": "Declarative Syntax",
-        "updated_at": "2018-07-27T11:51:41.108687",
         "video_id": "118ec0d2-e259-42a9-9a18-71bb88e066ff"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "201eefb9-38c5-4921-991e-3e46ba747069",
-            "3d587174-916d-413f-abf2-26d1a4757b0e"
+            "architecture",
+            "refactoring-large-view-controllers"
         ],
-        "created_at": "2018-06-08T13:29:55.488543",
-        "id": "ccfb4c32-eb6e-47ba-8d58-443b18713715",
-        "mailchimp_campaign_id": "2c44472f30",
         "media_duration": 1672.6,
         "media_src": "105 Large View Controllers 3 v2.mp4",
-        "media_version": 1,
-        "name": "S01E105",
         "number": 105,
         "poster_uid": "2018/06/08/14/12/39/0580333b-5180-48b7-be7d-61ba581a5eb8/105 Large View Controllers 3.jpg",
         "release_at": "2018-06-15T14:00:00",
@@ -4046,29 +3173,21 @@
         ],
         "sample_duration": 30.08,
         "sample_src": "105 Large View Controllers 3 Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We refactor networking-related code out of the view controller, separating networking and data transformation logic from UI code in the process.",
         "title": "Extracting Networking Code",
-        "updated_at": "2018-07-27T11:49:29.415717",
         "video_id": "b6a6e2ab-46f0-4267-8031-d49aef390236"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59"
+            "chris",
+            "florian"
         ],
         "collections": [
-            "0e381e3a-bdf1-4f0e-bf22-4c2d6102ba77"
+            "experiments"
         ],
-        "created_at": "2018-05-12T08:05:08.189248",
-        "id": "7c2e9efa-a9a1-485c-8e6a-a7379e5fe630",
-        "mailchimp_campaign_id": null,
         "media_duration": 2920.6,
         "media_src": "100th Anniversary Live Q&A.mp4",
-        "media_version": 1,
-        "name": "S01E100",
         "number": 100,
         "poster_uid": "2018/05/12/08/05/07/2c2cbb1b-1135-444f-ba93-f9d2b82e98c5/100th Anniversary Live Q&A.jpg",
         "release_at": "2018-05-12T10:31:00",
@@ -4082,31 +3201,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "In our 100th episode we take questions from our viewers!",
         "title": "100th Episode Live Q&A",
-        "updated_at": "2018-07-24T12:59:56.847161",
         "video_id": "8a1b5e05-ee0d-4416-880a-0d92c4381a20"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "fbe15a4e-017f-4837-8222-9e0067a524b3"
+            "tooling"
         ],
-        "created_at": "2018-06-14T10:01:42.187522",
-        "id": "4a24a26a-fd5a-44df-8c3e-9a7a45951642",
-        "mailchimp_campaign_id": "92e8db3ebc",
         "media_duration": 1775.2,
         "media_src": "111 Debugger 3.mp4",
-        "media_version": 1,
-        "name": "S01E111",
         "number": 111,
         "poster_uid": "2018/06/14/10/01/41/b45677ad-44e1-47a5-b946-aaa96b9619c8/111 Debugger 3.jpg",
         "release_at": "2018-07-27T14:00:00",
@@ -4120,31 +3231,23 @@
         ],
         "sample_duration": 27.08,
         "sample_src": "111 Debugger 3 Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We implement a JSON over TCP decoder to enable the debug client to receive data from the Mac app.",
         "title": "iOS Remote Debugger: Receiving Data",
-        "updated_at": "2018-08-28T05:00:36.490647",
         "video_id": "eda044b8-82d4-45f0-97a1-4fd0744b68ef"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "fbe15a4e-017f-4837-8222-9e0067a524b3"
+            "tooling"
         ],
-        "created_at": "2018-06-12T10:01:02.783003",
-        "id": "2342329c-c5e4-452d-8c60-45b89321183b",
-        "mailchimp_campaign_id": "0cae14b3e4",
         "media_duration": 1710.52,
         "media_src": "109 Debugger 1.mp4",
-        "media_version": 1,
-        "name": "S01E109",
         "number": 109,
         "poster_uid": "2018/06/12/10/01/02/b75e55af-2426-43bc-8dc4-f639073ccc62/109 Debugger 1.jpg",
         "release_at": "2018-07-13T14:00:00",
@@ -4158,32 +3261,24 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We're building a remote view state debugger, starting with the networking code on the client.",
         "title": "iOS Remote Debugger: Connecting with Bonjour",
-        "updated_at": "2018-07-27T11:48:08.153887",
         "video_id": "11fdf93d-afe7-4caa-a2be-2d51f9400a02"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "db480861-e131-47c5-bc9e-54fd3775d1db",
-            "ee89af6c-10e7-49de-8660-cf0b84443e19"
+            "server-side-swift",
+            "swift-the-language"
         ],
-        "created_at": "2018-08-21T07:39:06.601812",
-        "id": "66eeb889-00af-40de-8832-5e90ea9b01d6",
-        "mailchimp_campaign_id": "d5c9c9f829",
         "media_duration": 1486.32,
         "media_src": "115 XML Decoding 1 v2.mp4",
-        "media_version": 2,
-        "name": "S01E115",
         "number": 115,
         "poster_uid": "2018/08/21/07/39/06/29621019-ae85-414d-ae36-558c2413e124/115 XML Decoding 1.jpg",
         "release_at": "2018-08-24T14:00:00",
@@ -4197,32 +3292,24 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We implement a custom XML decoder that allows us to decode responses from an XML API using Decodable.",
         "title": "Building a Custom XML Decoder",
-        "updated_at": "2018-09-04T08:41:54.52848",
         "video_id": "c25ca9de-ece3-453b-ace4-e43ca4662e4b"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "201eefb9-38c5-4921-991e-3e46ba747069",
-            "3d587174-916d-413f-abf2-26d1a4757b0e"
+            "architecture",
+            "refactoring-large-view-controllers"
         ],
-        "created_at": "2018-06-12T07:52:48.115384",
-        "id": "e802bd58-70c4-4e45-81e4-22b8879bf72c",
-        "mailchimp_campaign_id": "2a2f2ba595",
         "media_duration": 1791.92,
         "media_src": "107 Large View Controllers 5.mp4",
-        "media_version": 1,
-        "name": "S01E107",
         "number": 107,
         "poster_uid": "2018/06/12/07/52/48/af4ed51b-3379-478f-9b13-7ef41222e1ad/107 Large View Controllers 5.jpg",
         "release_at": "2018-06-29T14:00:00",
@@ -4236,31 +3323,23 @@
         ],
         "sample_duration": 32.12,
         "sample_src": "107 Large View Controllers 5 Preview.m4v",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We use the child view controller we created last time to factor out more code from the large view controller.",
         "title": "Child View Controllers (2)",
-        "updated_at": "2018-07-27T11:48:43.405473",
         "video_id": "1fab21c7-b5c4-42b7-90d7-99ac2e9d5d81"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "9a0e9cf5-4f87-4f3b-89f2-9ff5858b1a2f"
+            "building-a-layout-library"
         ],
-        "created_at": "2018-09-04T15:35:26.266036",
-        "id": "096a479d-d8f1-4b2e-bae5-dc74d8a6c0f0",
-        "mailchimp_campaign_id": "9a30510bdc",
         "media_duration": 1878.68,
         "media_src": "118 Responsive Layout 1 v2.mp4",
-        "media_version": 2,
-        "name": "S01E118",
         "number": 118,
         "poster_uid": "2018/09/11/11/09/38/eb942da8-63a1-40ec-b843-6c094f8ffebe/118 Responsive Layout 1.jpg",
         "release_at": "2018-09-14T14:00:00",
@@ -4274,31 +3353,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We start building a responsive layout library that makes it easy to create layouts for all screen and font sizes.",
         "title": "Introduction & Prototype",
-        "updated_at": "2018-09-14T14:01:01.333032",
         "video_id": "f157ecb6-8f9e-4efb-8fbe-6290cee9fea7"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "201eefb9-38c5-4921-991e-3e46ba747069"
+            "architecture"
         ],
-        "created_at": "2017-09-07T09:50:25.894171",
-        "id": "d25c591d-b967-4fc9-87f3-31605a7becce",
-        "mailchimp_campaign_id": "36867cb0a8",
         "media_duration": 1499.52,
         "media_src": "68 The Elm Architecture (Part 2).mp4",
-        "media_version": 1,
-        "name": "S01E68",
         "number": 68,
         "poster_uid": "2017/09/07/10/44/38/4241392d-6fc7-4e18-98b0-26ab74077f6c/68 The Elm Architecture (Part 2).jpg",
         "release_at": "2017-09-22T15:00:00",
@@ -4312,31 +3383,23 @@
         ],
         "sample_duration": 112.84,
         "sample_src": "68 The Elm Architecture (Part 2) Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We extend our Elm-style app with a more dynamic view hierarchy by adding a navigation controller and a table view.",
         "title": "The Elm Architecture (Part 2)",
-        "updated_at": "2018-06-26T12:50:13.673688",
         "video_id": "dcb3593e-d3ee-4ad2-a165-686ae10e5c2a"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "9953dba4-305e-41c3-8a45-4931c848fc93",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb"
+            "chris",
+            "florian",
+            "juul",
+            "natalye"
         ],
         "collections": [
-            "201eefb9-38c5-4921-991e-3e46ba747069"
+            "architecture"
         ],
-        "created_at": "2017-07-21T11:51:34.105023",
-        "id": "ec3ecdbf-4174-43dc-ade4-d866dbc61788",
-        "mailchimp_campaign_id": "0065800cc4",
         "media_duration": 1860.6,
         "media_src": "62 Testable View Controllers with Reducers.mp4",
-        "media_version": 1,
-        "name": "S01E62",
         "number": 62,
         "poster_uid": "2017/07/21/11/51/33/29465100-9eab-4074-9bd9-8172bd03bce5/62 Testable View Controllers with Reducers.jpg",
         "release_at": "2017-08-11T15:00:00",
@@ -4350,31 +3413,23 @@
         ],
         "sample_duration": 160.28,
         "sample_src": "62 Testable View Controllers with Reducers Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We show the reducer pattern to simplify state management and to make typical view controller code more testable.",
         "title": "Testable View Controllers with Reducers",
-        "updated_at": "2018-06-26T12:50:13.706454",
         "video_id": "d6b768fc-2224-4b26-a3e8-50682fcf8607"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "fbe15a4e-017f-4837-8222-9e0067a524b3"
+            "tooling"
         ],
-        "created_at": "2018-06-28T10:35:12.118358",
-        "id": "6ccdc1db-6f55-49fc-8ef6-6303a9510fd2",
-        "mailchimp_campaign_id": "93b3b920f0",
         "media_duration": 1558.68,
         "media_src": "112 Debugger 4.mp4",
-        "media_version": 1,
-        "name": "S01E112",
         "number": 112,
         "poster_uid": "2018/06/28/10/35/11/2e9a5ee8-1174-4132-8249-cc7765ec9210/112 Debugger 4.jpg",
         "release_at": "2018-08-03T14:00:00",
@@ -4388,31 +3443,23 @@
         ],
         "sample_duration": 21.32,
         "sample_src": "112 Debugger 4 Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We use Apple's new Network framework to simplify our own code.",
         "title": "iOS Remote Debugger: The Network Framework",
-        "updated_at": "2018-08-28T05:00:58.528282",
         "video_id": "be3cc2ea-b1c2-4c01-a80b-ba3dd8e4f94d"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "4da02fc4-8e59-4cf6-8c7b-d7615051719f"
+            "building-a-form-library"
         ],
-        "created_at": "2018-06-22T15:27:35.162982",
-        "id": "a72d5df0-8535-4092-b1d5-1a0df8b02bbc",
-        "mailchimp_campaign_id": "666f06658d",
         "media_duration": 1665.4,
         "media_src": "113 Forms 9.mp4",
-        "media_version": 1,
-        "name": "S01E113",
         "number": 113,
         "poster_uid": "2018/06/22/15/27/34/18b43741-dcbc-4441-8866-9137ab7d7e3b/113 Forms 9.jpg",
         "release_at": "2018-08-10T14:00:00",
@@ -4426,31 +3473,23 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "We return to the form library project and add several features to simplify common tasks.",
         "title": "Text Fields, Multi-Select, and Nested Forms",
-        "updated_at": "2018-09-04T08:41:15.828006",
         "video_id": "85e62bb5-058f-48d5-a1e6-968dd0dc1a50"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "4da02fc4-8e59-4cf6-8c7b-d7615051719f"
+            "building-a-form-library"
         ],
-        "created_at": "2018-08-21T08:59:36.242493",
-        "id": "5e29a95d-30bd-4bdb-bf31-7fb0fa6fc993",
-        "mailchimp_campaign_id": "8117921dc8",
         "media_duration": 895.72,
         "media_src": "117 Forms 10 v2.mp4",
-        "media_version": 2,
-        "name": "S01E117",
         "number": 117,
         "poster_uid": "2018/08/21/09/27/22/aa92e06c-be78-48d3-b811-aca9ff545f05/117 Forms 10.jpg",
         "release_at": "2018-09-07T14:00:00",
@@ -4464,32 +3503,24 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": false,
         "synopsis": "Using a simple key path API, we add the ability to control the visibility of sections by any condition.",
         "title": "Showing & Hiding Sections",
-        "updated_at": "2018-09-13T16:22:57.58831",
         "video_id": "cab4003a-00c2-4fda-aba3-ee58893fed9a"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "db480861-e131-47c5-bc9e-54fd3775d1db",
-            "ee89af6c-10e7-49de-8660-cf0b84443e19"
+            "server-side-swift",
+            "swift-the-language"
         ],
-        "created_at": "2018-08-14T15:42:24.469923",
-        "id": "e5643b19-461d-49cb-92e9-01005ce922ff",
-        "mailchimp_campaign_id": "673c9f9b22",
         "media_duration": 1408.88,
         "media_src": "114 Reflection.mp4",
-        "media_version": 1,
-        "name": "S01E114",
         "number": 114,
         "poster_uid": "2018/08/14/15/45/02/8c9404d6-ca7f-48ca-adf6-506a234861a6/114 Reflection.jpg",
         "release_at": "2018-08-17T14:00:00",
@@ -4503,32 +3534,24 @@
         ],
         "sample_duration": 29.56,
         "sample_src": "114 Reflection Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We're using Swift's Mirror and Decodable APIs to generate database queries for structs in our Swift Talk backend project.",
         "title": "Reflection with Mirror and Decodable",
-        "updated_at": "2018-09-04T08:41:33.795098",
         "video_id": "9ba4f7ad-3ddf-4fcb-8eca-094b0a28ebb5"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "201eefb9-38c5-4921-991e-3e46ba747069",
-            "3d587174-916d-413f-abf2-26d1a4757b0e"
+            "architecture",
+            "refactoring-large-view-controllers"
         ],
-        "created_at": "2018-06-26T12:49:32.438538",
-        "id": "9f362c8d-987e-444d-8b59-969cc1510287",
-        "mailchimp_campaign_id": "b7bc67da73",
         "media_duration": 1646.6,
         "media_src": "108 Large View Controllers 6.mp4",
-        "media_version": 1,
-        "name": "S01E108",
         "number": 108,
         "poster_uid": "2018/06/26/12/49/32/e22330bd-ccf3-464a-afaf-8d537142829d/108 Large View Controllers 6.jpg",
         "release_at": "2018-07-06T14:00:00",
@@ -4542,31 +3565,23 @@
         ],
         "sample_duration": 30.88,
         "sample_src": "108 Large View Controllers 6 Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "In the last episode of this series, we factor out view code from the large view controller into a custom view class.",
         "title": "Extracting View Code",
-        "updated_at": "2018-07-06T14:00:52.874441",
         "video_id": "d8f7b7bb-bd9b-4f22-a144-1171ec187bfe"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "9a0e9cf5-4f87-4f3b-89f2-9ff5858b1a2f"
+            "building-a-layout-library"
         ],
-        "created_at": "2018-09-07T10:51:39.82293",
-        "id": "be14d03f-9427-4628-a629-00806cca4c19",
-        "mailchimp_campaign_id": "b4909631ec",
         "media_duration": 1465.4,
         "media_src": "119 Responsive Layout 2 v2.mp4",
-        "media_version": 2,
-        "name": "S01E119",
         "number": 119,
         "poster_uid": "2018/09/11/11/10/14/97951f14-fea0-4b64-87f3-d043a3518e6e/119 Responsive Layout 2.jpg",
         "release_at": "2018-09-21T14:00:00",
@@ -4580,31 +3595,23 @@
         ],
         "sample_duration": 20.88,
         "sample_src": "119 Responsive Layout 2 Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We add some features to our layout library \u2014 starting with horizontal and vertical spacing \u2014 along with a better syntax to define layouts.",
         "title": "Spacing & Better Syntax",
-        "updated_at": "2018-09-21T14:01:27.316525",
         "video_id": "276d08c9-62cc-4f63-9c1e-0d38c401306b"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "fbe15a4e-017f-4837-8222-9e0067a524b3"
+            "tooling"
         ],
-        "created_at": "2018-06-14T08:01:44.343955",
-        "id": "1aa834d3-0900-4b1d-a1a2-1c29da46d65d",
-        "mailchimp_campaign_id": "d2fd74caef",
         "media_duration": 1358.36,
         "media_src": "110 Debugger 2.mp4",
-        "media_version": 1,
-        "name": "S01E110",
         "number": 110,
         "poster_uid": "2018/06/14/08/01/44/2ee7afa5-b4f5-43ef-9af1-9463f69bc4b4/110 Debugger 2.jpg",
         "release_at": "2018-07-20T14:00:00",
@@ -4618,32 +3625,24 @@
         ],
         "sample_duration": 32.12,
         "sample_src": "110 Debugger 2 Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We create a class that encapsulates the complexities of sending data via an output stream.",
         "title": "iOS Remote Debugger: Sending Data",
-        "updated_at": "2018-08-28T05:00:15.803731",
         "video_id": "5dbf3160-fb5b-4e5a-88da-3163ea09883b"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "db480861-e131-47c5-bc9e-54fd3775d1db",
-            "ee89af6c-10e7-49de-8660-cf0b84443e19"
+            "server-side-swift",
+            "swift-the-language"
         ],
-        "created_at": "2018-08-21T07:45:05.620724",
-        "id": "3a8c59a0-6b65-4068-83ea-e7802722cb66",
-        "mailchimp_campaign_id": "78667a6a08",
         "media_duration": 1338.56,
         "media_src": "116 XML Decoding 2 v2.mp4",
-        "media_version": 2,
-        "name": "S01E116",
         "number": 116,
         "poster_uid": "2018/08/21/08/40/49/d98ebdbe-688a-467b-9370-7bdf3ada2e41/116 XML Decoding 2.jpg",
         "release_at": "2018-08-31T14:00:00",
@@ -4657,31 +3656,23 @@
         ],
         "sample_duration": 22.92,
         "sample_src": "116 XML Decoding 2 Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We add support for arrays by implementing an unkeyed decoding container and use custom decoding logic for dates and URLs.",
         "title": "Building a Custom XML Decoder (Part 2)",
-        "updated_at": "2018-09-11T05:33:03.173867",
         "video_id": "84dfd6a0-cd37-4d4d-9b80-b3252ecd59e8"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "9a0e9cf5-4f87-4f3b-89f2-9ff5858b1a2f"
+            "building-a-layout-library"
         ],
-        "created_at": "2018-09-14T12:51:35.564578",
-        "id": "58305f45-0928-46ab-9e42-a9322ff56b72",
-        "mailchimp_campaign_id": "d5bd942faa",
         "media_duration": 1495.84,
         "media_src": "120 Responsive Layout 3.mp4",
-        "media_version": 1,
-        "name": "S01E120",
         "number": 120,
         "poster_uid": "2018/09/14/12/51/35/e9c53b03-e8a4-418d-958c-182589079a65/120 Responsive Layout 3.jpg",
         "release_at": "2018-09-28T14:00:00",
@@ -4695,31 +3686,23 @@
         ],
         "sample_duration": 22.24,
         "sample_src": "120 Responsive Layout 3 Preview.mp4",
-        "sample_version": 1,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We refactor our code to remove duplication, improve efficiency, and enable features like flexible spacing.",
         "title": "Refactoring for Efficiency & Upcoming Features",
-        "updated_at": "2018-09-28T14:01:09.020731",
         "video_id": "fc682394-04ff-4994-a97b-d6e96f3a1caf"
     },
     {
         "collaborators": [
-            "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
-            "dd365d0c-ab49-4df4-b353-5dba13622a59",
-            "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
-            "9953dba4-305e-41c3-8a45-4931c848fc93"
+            "chris",
+            "florian",
+            "natalye",
+            "juul"
         ],
         "collections": [
-            "9a0e9cf5-4f87-4f3b-89f2-9ff5858b1a2f"
+            "building-a-layout-library"
         ],
-        "created_at": "2018-10-08T10:33:11.252244",
-        "id": "511d82f6-dcf6-4541-84cc-456ded5a83c4",
-        "mailchimp_campaign_id": null,
         "media_duration": 1211.48,
         "media_src": "123 Responsive Layout 6 v3.mp4",
-        "media_version": 1,
-        "name": "S01E123",
         "number": 123,
         "poster_uid": "2018/10/08/10/33/11/f354d985-884c-46fb-8404-2e1c0bbce7ef/123 Responsive Layout 6.jpg",
         "release_at": "2018-10-19T14:00:00",
@@ -4733,12 +3716,9 @@
         ],
         "sample_duration": null,
         "sample_src": null,
-        "sample_version": 0,
-        "season": 1,
         "subscription_only": true,
         "synopsis": "We build upon the nested layout feature from last time to support layout margins, backgrounds, and more.",
         "title": "Margins and Backgrounds",
-        "updated_at": "2018-10-08T11:05:51.206644",
         "video_id": "224ddbda-af37-481e-a45b-51014b8cb299"
     }
 ]

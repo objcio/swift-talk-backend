@@ -68,7 +68,7 @@ extension Episode {
         
         let coll: [Node]
         if options.collection, let collection = primaryCollection {
-            coll = [Node.link(to: Route.collection(collection.slug), [.text(collection.title)], attributes: [
+            coll = [Node.link(to: Route.collection(collection.id), [.text(collection.title)], attributes: [
                 "class": "inline-block no-decoration color-blue hover-underline mb--" + (options.featured ? "" : " ms-1")
                 ])]
         } else { coll = [] }
@@ -86,7 +86,7 @@ extension Episode {
         
         return Node.article(classes: classes, [
             Node.div(classes: pictureClasses, [
-                .link(to: .episode(slug), [
+                .link(to: .episode(id), [
                     Node.div(attributes: ["class": "ratio__container bg-center bg-cover", "style": "background-image: url('\(poster_url!)')"]),
                     Node.div(attributes: ["class": "absolute position-stretch opacity-60 blend-darken gradient-episode-black"]),
                     Node.div(classes: "absolute position-stretch flex flex-column", [
@@ -98,7 +98,7 @@ extension Episode {
                 ]),
             Node.div(classes: contentClasses, [
                 Node.header(coll + ([
-                    Node.h3([Node.link(to: .episode(slug), [Node.text(title + (released ? "" : " (unreleased)"))], classes: titleClasses)])
+                    Node.h3([Node.link(to: .episode(id), [Node.text(title + (released ? "" : " (unreleased)"))], classes: titleClasses)])
                     ] as [Node])),
                 ] + synopsisNode + [
                     .p(classes: footerClasses, [
@@ -264,12 +264,12 @@ extension Episode {
         let downloadImage = Node.inlineSvg(path: "icon-resource-download.svg", classes: "block icon-40")
         let download: [[Node]] = [
             [Node.div(classes: "flex-none mr-", [
-                downloadStatus.allowed ? Node.link(to: Route.download(slug), [downloadImage], classes: "block bgcolor-orange radius-5 hover-bgcolor-blue")
+                downloadStatus.allowed ? Node.link(to: Route.download(number), [downloadImage], classes: "block bgcolor-orange radius-5 hover-bgcolor-blue")
                     : Node.span(classes: "block bgcolor-orange radius-5 cursor-not-allowed", [downloadImage])
                 
             ]),
             Node.div(classes: "ms-1 lh-125", [
-                smallH4(.text("Episode Video"), link: downloadStatus.allowed ? Route.download(slug) : nil),
+                smallH4(.text("Episode Video"), link: downloadStatus.allowed ? Route.download(number) : nil),
                 .p(classes: "color-gray-50", [.text(downloadStatus.text)])
             ]),
             ]
@@ -372,7 +372,7 @@ extension Episode {
                 ])
             ])
         
-        let data = StructuredData(title: title, description: synopsis, url: absoluteURL(.episode(slug)), image: poster_url, type: .video(duration: media_duration.map(Int.init), releaseDate: releasedAt))
+        let data = StructuredData(title: title, description: synopsis, url: absoluteURL(.episode(id)), image: poster_url, type: .video(duration: media_duration.map(Int.init), releaseDate: releasedAt))
         return LayoutConfig(context: context, contents: [main, scroller] + (context.session.premiumAccess ? [] : [subscribeBanner()]), footerContent: [Node.raw(transcriptLinks)], structuredData: data).layout
     }
 }

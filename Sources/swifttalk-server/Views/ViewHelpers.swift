@@ -8,12 +8,6 @@
 import Foundation
 
 
-extension Episode {
-    var slug: Slug<Episode> {
-        return Slug(rawValue: "S\(season.padded)E\(number.padded)-\(title.asSlug)")
-    }
-}
-
 extension Optional where Wrapped == Session {
     var premiumAccess: Bool {
         return self?.user.data.premiumAccess ?? false

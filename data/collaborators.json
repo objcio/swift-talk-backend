@@ -1,68 +1,68 @@
 [
     {
-        "id": "a353369d-0897-45d6-99fe-5ccb1d15bccc",
+        "id": "ole",
         "name": "Ole Begemann",
-        "role": 4,
+        "role": "technical-review",
         "url": "https://oleb.net"
     },
     {
-        "id": "548caea5-1a5a-46e8-932c-8b6b07b117a6",
+        "id": "brandon-williams",
         "name": "Brandon Williams",
-        "role": 1,
+        "role": "guest-host",
         "url": "https://github.com/mbrandonw"
     },
     {
-        "id": "01398766-c95e-4150-bfa3-c74c2a382d2b",
+        "id": "lisa-luo",
         "name": "Lisa Luo",
-        "role": 1,
+        "role": "guest-host",
         "url": "https://twitter.com/luoser"
     },
     {
-        "id": "1426a760-cfe1-4c30-90e9-0d7997d3c3da",
+        "id": "karoly",
         "name": "K\u00e1roly L\u0151rentey",
-        "role": 1,
+        "role": "guest-host",
         "url": "https://twitter.com/lorentey"
     },
     {
-        "id": "95ad1b2c-664e-4c74-a411-f6cee9f7bf3b",
+        "id": "rob-napier",
         "name": "Rob Napier",
-        "role": 1,
+        "role": "guest-host",
         "url": "https://twitter.com/cocoaphony"
     },
     {
-        "id": "03534f31-9d9c-477b-9e64-c0010bd063c9",
+        "id": "brandon-kase",
         "name": "Brandon Kase",
-        "role": 1,
+        "role": "guest-host",
         "url": "https://twitter.com/bkase_"
     },
     {
-        "id": "96e745a0-ad08-4f59-bfd1-f78f144d6bcf",
+        "id": "chris",
         "name": "Chris Eidhof",
-        "role": 0,
+        "role": "host",
         "url": "https://twitter.com/chriseidhof"
     },
     {
-        "id": "dd365d0c-ab49-4df4-b353-5dba13622a59",
+        "id": "florian",
         "name": "Florian Kugler",
-        "role": 0,
+        "role": "host",
         "url": "https://twitter.com/floriankugler"
     },
     {
-        "id": "c8c1d637-1598-4ba8-a822-da44a0f4eccb",
+        "id": "natalye",
         "name": "Natalye Childress",
-        "role": 3,
+        "role": "copy-editing",
         "url": "https://twitter.com/deutschbitte"
     },
     {
-        "id": "9953dba4-305e-41c3-8a45-4931c848fc93",
+        "id": "juul",
         "name": "Juul Spee",
-        "role": 2,
+        "role": "transcript",
         "url": "https://twitter.com/juulspee"
     },
     {
-        "id": "d19d509f-13a7-430a-8aca-b41a0ffe72f2",
+        "id": "rick-minnich",
         "name": "Rick Minnich",
-        "role": 5,
+        "role": "shooting",
         "url": "https://twitter.com/rickminnich"
     }
 ]

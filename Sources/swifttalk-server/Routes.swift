@@ -24,9 +24,9 @@ enum Route: Equatable {
     case newSubscription // .subscription(.new)
     case accountBilling // account(.billing)
     case githubCallback(String, origin: String?)
-    case collection(Slug<Collection>)
-    case episode(Slug<Episode>)
-    case download(Slug<Episode>)
+    case collection(Id<Collection>)
+    case episode(Id<Episode>)
+    case download(Int)
     case staticFile(path: [String])
     case external(URL)
     case recurlyWebhook
@@ -35,7 +35,7 @@ enum Route: Equatable {
 extension Route {
     var path: String {
         guard let result = router.print(self)?.prettyPath else {
-            log(error: "Couldn't print path for \(self) \(router.print(self))")
+            log(error: "Couldn't print path for \(self) \(String(describing: router.print(self)))")
             return ""
         }
         return result
@@ -70,12 +70,12 @@ private extension Array where Element == Router<Route> {
     }
 }
 
-private let episode: Router<Route> = (Router<()>.c("episodes") / .string()).transform({ Route.episode(Slug(rawValue: $0)) }, { r in
+private let episode: Router<Route> = (Router<()>.c("episodes") / .string()).transform({ Route.episode(Id(rawValue: $0)) }, { r in
     guard case let .episode(num) = r else { return nil }
     return num.rawValue
 })
 
-private let collection: Router<Route> = (Router<()>.c("collections") / .string()).transform({ Route.collection(Slug(rawValue: $0)) }, { r in
+private let collection: Router<Route> = (Router<()>.c("collections") / .string()).transform({ Route.collection(Id(rawValue: $0)) }, { r in
     guard case let .collection(name) = r else { return nil }
     return name.rawValue
 })

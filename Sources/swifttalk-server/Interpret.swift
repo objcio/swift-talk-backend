@@ -123,7 +123,7 @@ extension Route {
         case .subscribe:
             return try I.write(Plan.all.subscribe(context: context))
         case .collection(let name):
-            guard let c = Collection.all.first(where: { $0.slug == name }) else {
+            guard let c = Collection.all.first(where: { $0.id == name }) else {
                 // todo throw
                 return I.notFound("No such collection")
             }
@@ -174,8 +174,8 @@ extension Route {
                         return I.redirect(path: destination, headers: ["Set-Cookie": "sessionid=\"\(sid.uuidString)\"; HttpOnly; Path=/"]) // TODO secure
                     })
             })
-        case .episode(let s):
-            guard let ep = Episode.scoped(for: session?.user.data).first(where: { $0.slug == s}) else {
+        case .episode(let id):
+            guard let ep = Episode.scoped(for: session?.user.data).first(where: { $0.id == id }) else {
                 return .notFound("No such episode")
             }
             let downloads = try (session?.user.downloads).map { try c.get().execute($0) } ?? []

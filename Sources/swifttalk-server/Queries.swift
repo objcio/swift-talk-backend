@@ -59,11 +59,11 @@ struct SessionData: Codable, Insertable {
 
 struct DownloadData: Codable, Insertable {
     var userId: UUID
-    var episodeId: UUID
+    var episodeNumber: Int
     var createdAt: Date
-    init(user: UUID, episode: UUID) {
+    init(user: UUID, episode: Int) {
         self.userId = user
-        self.episodeId = episode
+        self.episodeNumber = episode
         self.createdAt = Date()
     }
     
@@ -236,7 +236,7 @@ extension Row where Element == UserData {
     
     func downloadStatus(for episode: Episode, downloads: [Row<DownloadData>]) -> Episode.DownloadStatus {
         guard data.subscriber else { return .notSubscribed }
-        if downloads.contains(where: { $0.id.uuidString == episode.id.rawValue }) {
+        if downloads.contains(where: { $0.data.episodeNumber == episode.number }) {
             return .reDownload
         } else if data.downloadCredits - downloads.count > 0 {
             return .canDownload(creditsLeft: data.downloadCredits - downloads.count)

@@ -74,7 +74,7 @@ extension Collection {
                     let title = e.title(in: self)
                     return Node.li(attributes: ["class": "flex items-baseline justify-between ms-1 line-125"], [
                         Node.span(attributes: ["class": "nowrap overflow-hidden text-overflow-ellipsis pv- color-gray-45"], [
-                            Node.link(to: .episode(e.slug), [.text(title + (e.released ? "" : " (unreleased)"))], attributes: ["class": "no-decoration color-inherit hover-underline"])
+                            Node.link(to: .episode(e.id), [.text(title + (e.released ? "" : " (unreleased)"))], attributes: ["class": "no-decoration color-inherit hover-underline"])
                             ]),
                         .span(attributes: ["class": "flex-none pl- pv- color-gray-70"], [.text(e.media_duration?.timeString ?? "")])
                         ])
@@ -83,13 +83,13 @@ extension Collection {
             ] : []
         return [
             Node.article(attributes: [:], [
-                Node.link(to: .collection(slug), [
+                Node.link(to: .collection(id), [
                     Node.figure(attributes: ["class": "mb-", "style": figureStyle], [
                         Node.img(src: artwork, attributes: ["class": "block width-full height-auto"])
                         ]),
                     ]),
                 Node.div(classes: "flex items-center pt--", [
-                    Node.h3([Node.link(to: .collection(slug), [Node.text(title)], attributes: ["class": "inline-block lh-110 no-decoration bold color-black hover-under"])])
+                    Node.h3([Node.link(to: .collection(id), [Node.text(title)], attributes: ["class": "inline-block lh-110 no-decoration bold color-black hover-under"])])
                     ] + (new ? [
                         Node.span(attributes: ["class": "flex-none label smallcaps color-white bgcolor-blue nowrap ml-"], [Node.text("New")])
                         ] : [])),
