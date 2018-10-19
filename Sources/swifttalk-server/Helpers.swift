@@ -28,6 +28,17 @@ func tryOrLog<A>(_ message: String = "", _ f: () throws -> A) -> A? {
     }
 }
 
+func myAssert(_ cond: @autoclosure () -> Bool, _ message: @autoclosure () -> String = "Assertion failure \(#file):\(#line) \(#function)", file: StaticString = #file, line: UInt = #line, method: StaticString = #function) {
+    // todo if production/debug
+    if true {
+        guard !cond() else { return }
+        print(message(), to: &standardError)
+    } else {
+        assert(cond(), message, file: file, line: line)
+    }
+    
+}
+
 
 final class Lazy<A> {
     private let compute: () throws -> A

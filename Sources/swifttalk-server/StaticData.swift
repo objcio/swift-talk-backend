@@ -92,27 +92,12 @@ func flushStaticData() {
 fileprivate let cachedPlanData = StaticJSON<[Plan]>(fileName: "data/plans.json")
 fileprivate let plans: Static<[Plan]> = Static(async: { cb in
     cb(cachedPlanData.read())
-    URLSession.shared.load(recurly.plans, callback: { value in
+    URLSession.shared.load(recurly.plans) { value in
         cb(value)
-        guard let v = value else {
-            print("Could not load plans", to: &standardError)
-            cb(nil)
-            return
-        }
-        try? cachedPlanData.write(v)
-    })
-})
-
-func myAssert(_ cond: @autoclosure () -> Bool, _ message: @autoclosure () -> String = "Assertion failure \(#file):\(#line) \(#function)", file: StaticString = #file, line: UInt = #line, method: StaticString = #function) {
-    // todo if production/debug
-    if true {
-        guard !cond() else { return }
-        print(message(), to: &standardError)
-    } else {
-        assert(cond(), message, file: file, line: line)
+        guard let v = value else { log(error: "Could not load plans"); return }
+        tryOrLog("Couldn't write cached plan data") { try cachedPlanData.write(v) }
     }
-    
-}
+})
 
 func verifyStaticData() {
     myAssert(Plan.all.count >= 2)
