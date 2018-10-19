@@ -23,8 +23,8 @@ struct Github {
     static var clientSecret: String { return env["GITHUB_CLIENT_SECRET"] }
     static var token: String { return env["GITHUB_ACCESS_TOKEN"] }
     static var transcriptsRepo = "episode-transcripts"
-    static let contentType = "application/json"
-
+    static var staticDataRepo = "swift-talk-static-data"
+    
     struct File: Codable {
         var url: URL
     }
@@ -58,11 +58,17 @@ struct Github {
     }
     
     static var transcripts: RemoteEndpoint<[Github.File]> {
-        let url = URL(string: "https://api.github.com/repos/objcio/\(Github.transcriptsRepo)/contents/")!
+        let url = URL(string: "https://api.github.com/repos/objcio/\(transcriptsRepo)/contents/")!
         let query = ["access_token": token, "ref": "master"]
         return RemoteEndpoint<[Github.File]>(get: url, query: query).map { files in
             return files.filter { $0.name.hasPrefix("episode") }
         }
+    }
+    
+    static func staticData<A: StaticLoadable>() -> RemoteEndpoint<[A]> {
+        let url = URL(string: "https://api.github.com/repos/objcio/\(staticDataRepo)/contents/\(A.jsonName)")!
+        let headers = ["Authorization": "token \(token)", "Accept": "application/vnd.github.v3.raw"]
+        return RemoteEndpoint(get: url, headers: headers)
     }
     
     static var loadTranscripts: Promise<[(file: Github.File, contents: String?)]> {

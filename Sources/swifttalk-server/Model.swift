@@ -9,6 +9,10 @@ import Foundation
 import CommonMark
 
 
+protocol StaticLoadable: Codable {
+    static var jsonName: String { get }
+}
+
 struct Session {
     var sessionId: UUID
     var user: Row<UserData>
@@ -31,6 +35,10 @@ struct Collaborator: Codable, Equatable {
     var name: String
     var url: URL
     var role: Role
+}
+
+extension Collaborator: StaticLoadable {
+    static var jsonName: String { return "collaborators.json" }
 }
 
 enum Role: String, Codable, Equatable, Comparable {
@@ -84,6 +92,10 @@ struct Episode: Codable, Equatable {
     var video_id: String?
 //    var guests: [Guest]?
     var resources: PostgresArray<Resource>
+}
+
+extension Episode: StaticLoadable {
+    static var jsonName: String { return "episodes.json" }
 }
 
 struct PostgresArray<A>: Codable, Equatable where A: Codable, A: Equatable {
@@ -178,6 +190,10 @@ struct Collection: Codable, Equatable {
     var position: Int
     var new: Bool
     var use_as_title_prefix: Bool
+}
+
+extension Collection: StaticLoadable {
+    static var jsonName: String { return "collections.json" }
 }
 
 extension Collection {

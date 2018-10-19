@@ -204,6 +204,10 @@ extension Row where Element == FileData {
     static func transcripts() -> Query<[Row<FileData>]> {
         return select(where: [.startsWith(key: "key", value: FileData.keyPrefix(forRepository: Github.transcriptsRepo))])
     }
+    
+    static func staticData(jsonName: String) -> Query<Row<FileData>?> {
+        return selectOne(where: [.equal(key: "key", value: FileData.key(forRepository: Github.staticDataRepo, path: jsonName))])
+    }
 }
 
 extension Row where Element == UserData {

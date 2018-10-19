@@ -59,14 +59,49 @@ struct StaticJSON<A: Codable> {
 
 // todo we could have a struct/func that caches/reads cached JSON data
 
-fileprivate let episodeData = StaticJSON<[Episode]>(fileName: "data/episodes.json", process: { $0.sorted { $0.number > $1.number }})
-fileprivate let episodes: Static<[Episode]> = Static(sync: episodeData.read)
+func loadStaticData<A: StaticLoadable>() -> [A] {
+    return withConnection { connection in
+        guard
+            let c = connection,
+            let row = try? c.execute(Row<FileData>.staticData(jsonName: A.jsonName)),
+            let r = row,
+            let result = try? JSONDecoder().decode([A].self, from: r.data.value.data(using: .utf8)!)
+            else { return [] }
+        return result
+    }
+}
 
-let collectionData = StaticJSON<[Collection]>(fileName: "data/collections.json")
-fileprivate let collections: Static<[Collection]> = Static(sync: collectionData.read)
+func refreshStaticData<A: StaticLoadable>(_ endpoint: RemoteEndpoint<[A]>, onCompletion: @escaping () -> ()) {
+    URLSession.shared.load(endpoint) { result in
+        withConnection { connection in
+            guard
+                let c = connection,
+                let r = result,
+                let data = try? JSONEncoder().encode(r),
+                let json = String(data: data, encoding: .utf8)
+                else { return }
+            let fd = FileData(repository: Github.staticDataRepo, path: A.jsonName, value: json)
+            tryOrLog("Error caching \(A.jsonName)") { try c.execute(fd.insertOrUpdate(uniqueKey: "key")) }
+            onCompletion()
+        }
+    }
+}
 
-fileprivate let collaboratorsData = StaticJSON<[Collaborator]>(fileName: "data/collaborators.json")
-fileprivate let collaborators: Static<[Collaborator]> = Static(sync: collaboratorsData.read)
+extension Static {
+    static func fromStaticRepo<A: StaticLoadable>() -> Static<[A]> {
+        return Static<[A]>(async: { cb in
+            cb(loadStaticData())
+            let ep: RemoteEndpoint<[A]> = Github.staticData()
+            refreshStaticData(ep) {
+                cb(loadStaticData())
+            }
+        })
+    }
+}
+
+fileprivate let episodes: Static<[Episode]> = Static<[Episode]>.fromStaticRepo()
+fileprivate let collections: Static<[Collection]> = Static<[Collection]>.fromStaticRepo()
+fileprivate let collaborators: Static<[Collaborator]> = Static<[Collaborator]>.fromStaticRepo()
 
 
 fileprivate func loadTranscripts() -> [Transcript] {
@@ -133,7 +168,7 @@ extension Plan {
     static var all: [Plan] { return plans.cached ?? [] }
 }
 extension Episode {
-    static var all: [Episode] { return episodes.cached ?? [] }
+    static var all: [Episode] { return (episodes.cached ?? []).sorted { $0.number > $1.number } }
 }
 
 extension Collection {
