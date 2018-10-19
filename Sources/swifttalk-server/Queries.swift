@@ -35,7 +35,11 @@ extension FileData {
     }
     
     static func key(forRepository repository: String, path: String) -> String {
-        return "\(repository)::\(path)"
+        return "\(keyPrefix(forRepository: repository))\(path)"
+    }
+
+    static func keyPrefix(forRepository repository: String) -> String {
+        return "\(repository)::"
     }
 }
 
@@ -195,6 +199,10 @@ extension Row where Element == FileData {
     
     static func select(repository: String, path: String) -> Query<Row<FileData>?> {
         return select(key: FileData.key(forRepository: repository, path: path))
+    }
+    
+    static func transcripts() -> Query<[Row<FileData>]> {
+        return select(where: [.startsWith(key: "key", value: FileData.keyPrefix(forRepository: Github.transcriptsRepo))])
     }
 }
 

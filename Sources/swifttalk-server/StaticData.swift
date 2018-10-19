@@ -68,7 +68,15 @@ fileprivate let collections: Static<[Collection]> = Static(sync: collectionData.
 fileprivate let collaboratorsData = StaticJSON<[Collaborator]>(fileName: "data/collaborators.json")
 fileprivate let collaborators: Static<[Collaborator]> = Static(sync: collaboratorsData.read)
 
-func refreshTranscripts() {
+
+fileprivate func loadTranscripts() -> [Transcript] {
+    return withConnection { connection in
+        guard let c = connection, let rows = try? c.execute(Row<FileData>.transcripts()) else { return [] }
+        return rows.compactMap { f in Transcript(fileName: f.data.key, raw: f.data.value) }
+    }
+}
+
+func refreshTranscripts(onCompletion: @escaping () -> ()) {
     Github.loadTranscripts.run { results in
         withConnection { connection in
             guard let c = connection else { return }
@@ -77,17 +85,17 @@ func refreshTranscripts() {
                 let fd = FileData(repository: f.file.repository, path: f.file.path, value: contents)
                 tryOrLog("Error caching \(f.file.url)") { try c.execute(fd.insertOrUpdate(uniqueKey: "key")) }
             }
+            onCompletion()
         }
     }
 }
 
-func flushStaticData() {
-    episodes.flush()
-    collections.flush()
-    plans.flush()
-    collaborators.flush()
-    verifyStaticData()
-}
+fileprivate let transcripts: Static<[Transcript]> = Static(async: { cb in
+    cb(loadTranscripts())
+    refreshTranscripts {
+        cb(loadTranscripts())
+    }
+})
 
 fileprivate let cachedPlanData = StaticJSON<[Plan]>(fileName: "data/plans.json")
 fileprivate let plans: Static<[Plan]> = Static(async: { cb in
@@ -98,6 +106,16 @@ fileprivate let plans: Static<[Plan]> = Static(async: { cb in
         tryOrLog("Couldn't write cached plan data") { try cachedPlanData.write(v) }
     }
 })
+
+
+func flushStaticData() {
+    episodes.flush()
+    collections.flush()
+    plans.flush()
+    collaborators.flush()
+    transcripts.flush()
+    verifyStaticData()
+}
 
 func verifyStaticData() {
     myAssert(Plan.all.count >= 2)
@@ -126,3 +144,8 @@ extension Collaborator {
     static var all: [Collaborator] { return collaborators.cached ?? [] }
 }
 
+extension Transcript {
+    static func forEpisode(number: Int) -> Transcript? {
+        return (transcripts.cached ?? []).first { $0.number == number }
+    }
+}

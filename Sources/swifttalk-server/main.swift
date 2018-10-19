@@ -8,9 +8,6 @@ let env = Env()
 
 let recurly = Recurly(subdomain: "\(env["RECURLY_SUBDOMAIN"]).recurly.com", apiKey: env["RECURLY_API_KEY"])
 
-refreshTranscripts()
-
-
 struct NoDatabaseConnection: Error { }
 
 let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)

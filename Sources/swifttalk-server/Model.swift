@@ -165,6 +165,17 @@ extension Episode {
         return Episode.all
     }
     
+    var transcript: CommonMark.Node? {
+        return Transcript.forEpisode(number: number)?.contents
+    }
+    
+    var tableOfContents: [(TimeInterval, title: String)] {
+        return Transcript.forEpisode(number: number)?.tableOfContents ?? []
+    }
+
+    func canWatch(session: Session?) -> Bool {
+        return session.premiumAccess || !subscription_only
+    }
 }
 
 struct Collection: Codable, Equatable {
@@ -195,12 +206,6 @@ extension Sequence where Element == Episode {
     }
 }
 
-extension Episode {
-    func canWatch(session: Session?) -> Bool {
-        return session.premiumAccess || !subscription_only
-    }
-}
-
 extension String {
     func scanTimePrefix() -> (minutes: Int, seconds: Int, remainder: String)? {
         let s = Scanner(string: self)
@@ -214,35 +219,33 @@ extension String {
     }
 }
 
-extension Episode {
-    var rawTranscript: String? {
-        return withConnection { connection in
-            guard let c = connection else { return nil }
-            let row = try? c.execute(Row<FileData>.select(repository: Github.transcriptsRepo, path: "episode\(number).md"))
-            return row??.data.value
-        }
-    }
+
+struct Transcript {
+    var number: Int
+    var contents: CommonMark.Node
+    var tableOfContents: [(TimeInterval, title: String)]
     
-    var transcript: CommonMark.Node? {
-        guard let t = rawTranscript, let nodes = CommonMark.Node(markdown: t) else { return nil }
-        return CommonMark.Node(blocks: nodes.elements.deepApply({ (inl: Inline) -> [Inline] in
+    init?(fileName: String, raw: String) {
+        guard let number = Int(fileName.trimmingCharacters(in: CharacterSet.decimalDigits.inverted)) else { return nil }
+        self.number = number
+        
+        // Add timestamp links
+        guard let nodes = CommonMark.Node(markdown: raw) else { return nil }
+        self.contents = CommonMark.Node(blocks: nodes.elements.deepApply({ (inl: Inline) -> [Inline] in
             guard case let .text(t) = inl else { return [inl] }
-            if let (m,s,remainder) = t.scanTimePrefix() {
-                let totalSeconds = m*60 + s
+            if let (m, s, remainder) = t.scanTimePrefix() {
+                let totalSeconds = m * 60 + s
                 let pretty = "\(m.padded):\(s.padded)"
                 return [Inline.link(children: [.text(text: pretty)], title: "", url: "#\(totalSeconds)"), .text(text: remainder)]
             } else {
                 return [inl]
             }
         }))
-    }
-    
-    var tableOfContents: [((TimeInterval), title: String)] {
-        guard let t = rawTranscript, let els = CommonMark.Node(markdown: t)?.elements else { return [] }
         
+        // Extract table of contents
         var result: [(TimeInterval, title: String)] = []
         var currentTitle: String?
-        for el in els {
+        for el in self.contents.elements {
             switch el {
             case let .heading(text: text, _):
                 let strs = text.deep(collect: { (i: Inline) -> [String] in
@@ -251,7 +254,7 @@ extension Episode {
                 })
                 currentTitle = strs.joined(separator: " ")
             case let .paragraph(text: c) where currentTitle != nil:
-                if case let .text(t)? = c.first, let (minutes, seconds, _) = t.scanTimePrefix() {
+                if case let .link(lc, _, _)? = c.first, case let .text(t)? = lc.first, let (minutes, seconds, _) = t.scanTimePrefix() {
                     result.append((TimeInterval(minutes*60 + seconds), title: currentTitle!))
                     currentTitle = nil
                 }
@@ -259,6 +262,7 @@ extension Episode {
                 ()
             }
         }
-        return result
+        self.tableOfContents = result
     }
 }
+
