@@ -143,26 +143,54 @@ extension Row where Element: Insertable {
     }
 }
 
+enum QueryCondition {
+    case equal(key: String, value: NodeRepresentable)
+    case startsWith(key: String, value: NodeRepresentable)
+}
+
+extension QueryCondition {
+    var value: NodeRepresentable {
+        switch self {
+        case let .equal(_, v): return v
+        case let .startsWith(_, v): return v
+        }
+    }
+    
+    func condition(placeholder: Int) -> String {
+        switch self {
+        case let .equal(k, _): return "\(k) = $\(placeholder)"
+        case let .startsWith(k, _): return "\(k) LIKE $\(placeholder) || '%'"
+        }
+    }
+}
+
+extension Sequence where Element == QueryCondition {
+    var conditionsAndValues: (String, [NodeRepresentable]) {
+        let arr = array
+        let values = arr.map { $0.value }
+        let conditions = arr.enumerated().map { idx, c in c.condition(placeholder: idx + 1) }.joined(separator: ",")
+        return (conditions, values)
+    }
+}
+
 extension Row where Element: Insertable {
-    static func select(where conditions: [String: NodeRepresentable]) -> Query<[Row<Element>]> {
+    static func select(where conditions: [QueryCondition] = []) -> Query<[Row<Element>]> {
         let fields = Element.fieldNames.joined(separator: ",")
-        let c = conditions.array
-        let values = c.map { $0.1 }
-        let conditions = c.enumerated().map { idx, p in "\(p.0) = $\(idx + 1)" }.joined(separator: ",")
+        let (conditions, values) = conditions.conditionsAndValues
         let query = "SELECT id,\(fields) FROM \(Element.tableName) WHERE \(conditions);"
         return Query(query: query, values: values, parse: { node in
             return PostgresNodeDecoder.decode([Row<Element>].self, transformKey: { $0.snakeCased }, node: node)
         })
     }
     
-    static func selectOne(where conditions: [String: NodeRepresentable]) -> Query<Row<Element>?> {
+    static func selectOne(where conditions: [QueryCondition] = []) -> Query<Row<Element>?> {
         return select(where: conditions).map { $0.first }
     }
 }
 
 extension Row where Element == FileData {
     static func select(key: String) -> Query<Row<FileData>?> {
-        return selectOne(where: ["key": key])
+        return selectOne(where: [.equal(key: "key", value: key)])
     }
     
     static func select(repository: String, path: String) -> Query<Row<FileData>?> {
