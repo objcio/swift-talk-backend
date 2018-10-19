@@ -14,6 +14,14 @@ struct Query<A> {
     var parse: (PostgreSQL.Node) -> A
 }
 
+extension Query {
+    func map<B>(_ transform: @escaping (A) -> B) -> Query<B> {
+        return Query<B>(query: query, values: values) { node in
+            return transform(self.parse(node))
+        }
+    }
+}
+
 struct FileData: Codable, Insertable {
     var key: String
     var value: String
@@ -136,22 +144,25 @@ extension Row where Element: Insertable {
 }
 
 extension Row where Element: Insertable {
-    static func select(where conditions: [String: NodeRepresentable]) -> Query<Row<Element>?> {
+    static func select(where conditions: [String: NodeRepresentable]) -> Query<[Row<Element>]> {
         let fields = Element.fieldNames.joined(separator: ",")
         let c = conditions.array
         let values = c.map { $0.1 }
         let conditions = c.enumerated().map { idx, p in "\(p.0) = $\(idx + 1)" }.joined(separator: ",")
         let query = "SELECT id,\(fields) FROM \(Element.tableName) WHERE \(conditions);"
         return Query(query: query, values: values, parse: { node in
-            let result = PostgresNodeDecoder.decode([Row<Element>].self, transformKey: { $0.snakeCased }, node: node)
-            return result.first
+            return PostgresNodeDecoder.decode([Row<Element>].self, transformKey: { $0.snakeCased }, node: node)
         })
+    }
+    
+    static func selectOne(where conditions: [String: NodeRepresentable]) -> Query<Row<Element>?> {
+        return select(where: conditions).map { $0.first }
     }
 }
 
 extension Row where Element == FileData {
     static func select(key: String) -> Query<Row<FileData>?> {
-        return select(where: ["key": key])
+        return selectOne(where: ["key": key])
     }
     
     static func select(repository: String, path: String) -> Query<Row<FileData>?> {
