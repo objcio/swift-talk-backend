@@ -59,6 +59,19 @@ struct Context {
     var session: Session?
 }
 
+struct VimeoID: Codable {
+    var id: Int
+    var name: String
+    var number: Int {
+        let exp = try! NSRegularExpression(pattern: "^\\d+", options: [])
+        let result = exp.matches(in: name, options: [], range: NSRange(name.startIndex..<name.endIndex, in: name)).first!
+        return Int(name[Range(result.range, in: name)!])!
+    }
+    var isPreview: Bool {
+        return name.lowercased().contains("preview")
+    }
+}
+
 extension Route {
     func interpret<I: Interpreter>(sessionId: UUID?, connection c: Lazy<Connection>) throws -> I {
         let session: Session?

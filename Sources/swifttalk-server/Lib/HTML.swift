@@ -208,6 +208,12 @@ extension Node {
     static func aside(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         return .node(El(name: "div", classes: classes, attributes: attributes, children: children))
     }
+    
+    static func iframe(_ source: URL, attributes: [String:String] = [:]) -> Node {
+        var attrs = attributes
+        attrs["src"] = source.absoluteString
+        return .node(El(name: "iframe", attributes: attrs))
+    }
         
     static func video(classes: Class? = nil, attributes: [String:String] = [:], _ source: URL, sourceType: String) -> Node {
         return .node(El(name: "video", classes: classes, attributes: attributes, children: [

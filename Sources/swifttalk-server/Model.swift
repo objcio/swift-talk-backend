@@ -78,20 +78,15 @@ struct Episode: Codable, Equatable {
     var collections: [Id<Collection>]
     var collaborators: [Id<Collaborator>]
     var media_duration: TimeInterval?
-    var media_src: String?
     var number: Int
-    var poster_uid: String?
     var release_at: String?
     var released: Bool
-    var sample_src: String?
-    var sample_duration: TimeInterval?
-//    var small_poster_url: URL?
     var subscription_only: Bool
     var synopsis: String
     var title: String
-    var video_id: String?
-//    var guests: [Guest]?
     var resources: PostgresArray<Resource>
+    var vimeo_id: Int
+    var preview_vimeo_id: Int?
 }
 
 extension Episode: StaticLoadable {
@@ -136,6 +131,7 @@ extension Episode {
     
     var poster_url: URL? {
         // todo
+        // vimeo: https://i.vimeocdn.com/video/{video_id}_1920x1080.jpg?r=pad
         return URL(string: "https://d2sazdeahkz1yk.cloudfront.net/assets/media/W1siZiIsIjIwMTgvMDYvMTQvMTAvMDEvNDEvYjQ1Njc3YWQtNDRlMS00N2E1LWI5NDYtYWFhOTZiOTYxOWM4LzExMSBEZWJ1Z2dlciAzLmpwZyJdLFsicCIsInRodW1iIiwiNTkweDI3MCMiXV0?sha=bb0917beee87a929")
     }
     

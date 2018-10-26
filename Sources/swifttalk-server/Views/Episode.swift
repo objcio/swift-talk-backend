@@ -146,31 +146,23 @@ extension Episode {
             }
         }
     }
-    struct Media {
-        var url: URL
-        var type: String
-        var sample: Bool
-    }
-    fileprivate func player(media: Media, canWatch: Bool, playPosition: Int?) -> Node {
-        var attrs = [
-            "class":       "stretch js-video video-js vjs-big-play-centered vjs-default-skin",
-            "id":          "episode-video",
-            "controls":    "true",
-            "preload":     "auto",
-            "playsinline": "true"
-        ]
-        if media.sample {
-            attrs["data-sample"] = "true"
-        } else if let startTime = playPosition {
-            attrs["start_time"] = "\(startTime)"
-        }
+
+    fileprivate func player(canWatch: Bool, playPosition: Int?) -> Node {
+        let startTime = playPosition.map { "#t=\($0)s" } ?? ""
+        let vimeoId = canWatch ? vimeo_id : (preview_vimeo_id ?? 0)
         return .div(classes: "ratio ratio--16/9", [
             .div(classes: "ratio__container", [
                 .figure(attributes: ["class":"stretch relative"], [
-                    Node.video(attributes: attrs, media.url, sourceType: media.type)
-                    ] + (canWatch ? [] : [Node.raw(previewBadge)]))
-                ])
+                    Node.iframe(URL(string: "https://player.vimeo.com/video/\(vimeoId)\(startTime)")!, attributes: [
+                        "width": "100%",
+                        "height": "100%",
+                        "webkitallowfullscreen": "",
+                        "mozallowfullscreen": "",
+                        "allowfullscreen": ""
+                    ])
+                ] + (canWatch ? [] : [Node.raw(previewBadge)]))
             ])
+        ])
     }
     
     fileprivate func toc(canWatch: Bool) -> Node {
@@ -328,8 +320,8 @@ extension Episode {
                         ] + guests_ ),
                     .div(classes: "l+|flex", [
                         .div(classes: "flex-110 order-2", [
-                            player(media: Media(url: media_url!, type: "application/x-mpegURL", sample: true), canWatch: canWatch, playPosition: nil) // todo
-                            ]),
+                            player(canWatch: canWatch, playPosition: nil)
+                        ]),
                         .div(classes: "min-width-5 relative order-1 mt++ l+|mt0 l+|mr++ l+|mb++", [
                             toc(canWatch: canWatch)
                             ])
