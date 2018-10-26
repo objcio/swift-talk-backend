@@ -222,6 +222,10 @@ extension Route {
                 }
                 return I.write("", status: .ok)
             }
+        case .githubWebhook:
+            // This could be done more fine grained, but this works just fine for now
+            flushStaticData()
+            return I.write("", status: .ok)
         }
     }
 }
