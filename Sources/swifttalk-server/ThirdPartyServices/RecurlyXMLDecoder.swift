@@ -92,7 +92,7 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
         }
         
         func decode(_ type: Double.Type, forKey key: Key) throws -> Double {
-            guard let c = try child(key: key)?.nodeValue, let d = Double(c) else {
+            guard let c = child(key: key)?.nodeValue, let d = Double(c) else {
                 throw DecodingError(message: "Expected a string for key: \(key)")
             }
             return d
@@ -100,14 +100,14 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
         }
         
         func decode(_ type: Float.Type, forKey key: Key) throws -> Float {
-            guard let c = try child(key: key)?.nodeValue, let d = Float(c) else {
+            guard let c = child(key: key)?.nodeValue, let d = Float(c) else {
                 throw DecodingError(message: "Expected a string for key: \(key)")
             }
             return d
         }
         
         func decode(_ type: Int.Type, forKey key: Key) throws -> Int {
-            guard let c = try child(key: key)?.nodeValue, let i = Int(c) else {
+            guard let c = child(key: key)?.nodeValue, let i = Int(c) else {
                 throw DecodingError(message: "Expected a string for key: \(key)")
             }
             return i
@@ -305,7 +305,6 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
                 return false
             }
             return true
-//            fatalError("Node: \(node)")
         }
         
         func decode(_ type: Bool.Type) throws -> Bool {
@@ -313,7 +312,7 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
         }
         
         func decode(_ type: String.Type) throws -> String {
-            guard let c = try node.nodeValue else {
+            guard let c = node.nodeValue else {
                 throw DecodingError(message: "Expected a string in \(node)")
             }
             return c
