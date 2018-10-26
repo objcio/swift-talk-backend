@@ -9,14 +9,8 @@ import Foundation
 
 func runMigrations() throws {
     try withConnection { conn in
-        guard let c = conn else {
-            print("Can't connect to database")
-            return
-        }
-        tryOrLog {
-            for m in migrations { // global variable, but we could inject it at some point.
-                try c.execute(m)
-            }
+        for m in migrations { // global variable, but we could inject it at some point.
+            try conn.execute(m)
         }
     }
 }

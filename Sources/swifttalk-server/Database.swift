@@ -18,10 +18,10 @@ let postgresConfig = ConnInfo.params([
 
 let postgreSQL = try! PostgreSQL.Database(connInfo: postgresConfig)
 
-func withConnection<A>(_ x: (Connection?) throws -> A) rethrows -> A {
-    let conn = try? postgreSQL.makeConnection()
+func withConnection<A>(_ x: (Connection) throws -> A) throws -> A {
+    let conn = try postgreSQL.makeConnection()
     let result = try x(conn)
-    try? conn?.close()
+    try conn.close()
     return result
 }
 

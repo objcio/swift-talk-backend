@@ -60,30 +60,27 @@ struct StaticJSON<A: Codable> {
 // todo we could have a struct/func that caches/reads cached JSON data
 
 func loadStaticData<A: StaticLoadable>() -> [A] {
-    return withConnection { connection in
+    return tryOrLog { try withConnection { connection in
         guard
-            let c = connection,
-            let row = try? c.execute(Row<FileData>.staticData(jsonName: A.jsonName)),
-            let r = row,
-            let result = try? JSONDecoder().decode([A].self, from: r.data.value.data(using: .utf8)!)
+            let row = try connection.execute(Row<FileData>.staticData(jsonName: A.jsonName)),
+            let result = try? JSONDecoder().decode([A].self, from: row.data.value.data(using: .utf8)!)
             else { return [] }
         return result
-    }
+    }} ?? []
 }
 
 func refreshStaticData<A: StaticLoadable>(_ endpoint: RemoteEndpoint<[A]>, onCompletion: @escaping () -> ()) {
     URLSession.shared.load(endpoint) { result in
-        withConnection { connection in
+        tryOrLog { try withConnection { connection in
             guard
-                let c = connection,
                 let r = result,
                 let data = try? JSONEncoder().encode(r),
                 let json = String(data: data, encoding: .utf8)
                 else { return }
             let fd = FileData(repository: Github.staticDataRepo, path: A.jsonName, value: json)
-            tryOrLog("Error caching \(A.jsonName)") { try c.execute(fd.insertOrUpdate(uniqueKey: "key")) }
+            tryOrLog("Error caching \(A.jsonName)") { try connection.execute(fd.insertOrUpdate(uniqueKey: "key")) }
             onCompletion()
-        }
+        }}
     }
 }
 
@@ -105,23 +102,22 @@ fileprivate let collaborators: Static<[Collaborator]> = Static<[Collaborator]>.f
 
 
 fileprivate func loadTranscripts() -> [Transcript] {
-    return withConnection { connection in
-        guard let c = connection, let rows = try? c.execute(Row<FileData>.transcripts()) else { return [] }
+    return tryOrLog { try withConnection { connection in
+        let rows = try connection.execute(Row<FileData>.transcripts())
         return rows.compactMap { f in Transcript(fileName: f.data.key, raw: f.data.value) }
-    }
+    }} ?? []
 }
 
 func refreshTranscripts(onCompletion: @escaping () -> ()) {
     Github.loadTranscripts.run { results in
-        withConnection { connection in
-            guard let c = connection else { return }
+        tryOrLog { try withConnection { connection in
             for f in results {
                 guard let contents = f.contents else { continue }
                 let fd = FileData(repository: f.file.repository, path: f.file.path, value: contents)
-                tryOrLog("Error caching \(f.file.url)") { try c.execute(fd.insertOrUpdate(uniqueKey: "key")) }
+                tryOrLog("Error caching \(f.file.url)") { try connection.execute(fd.insertOrUpdate(uniqueKey: "key")) }
             }
             onCompletion()
-        }
+        }}
     }
 }
 
