@@ -185,7 +185,7 @@ extension Route {
         case .episodes:
             return I.write(index(Episode.scoped(for: session?.user.data), context: context))
         case .home:
-            return .write(renderHome(context: context), status: .ok)
+            return .write(renderHome(context: context))
         case .sitemap:
             return .write(Route.siteMap)
         case .download:
@@ -198,6 +198,7 @@ extension Route {
             return .writeFile(path: name)
         case .accountBilling:
             let sess = try requireSession()
+            return .write(renderAccount(context: context))
             return I.onComplete(promise: sess.user.monthsOfActiveSubscription, do: { num in
                 let d = try c.get().execute(sess.user.downloads).count
                 return .write("Number of months of subscription: \(num ?? 0), downloads: \(d)")
