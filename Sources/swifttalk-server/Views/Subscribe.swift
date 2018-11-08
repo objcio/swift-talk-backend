@@ -33,9 +33,6 @@ struct RegisterFormData {
     var name: String
 }
 
-typealias ValidationError = (field: String, message: String)
-
-// todo enforce that we get a context with a non-nil session?
 func registerForm(_ context: Context) -> (form: (RegisterFormData, [ValidationError]) -> Node, parse: ([String:String]) -> RegisterFormData?) {
     func parse(_ dict: [String:String]) -> RegisterFormData? {
         guard let e = dict["email"], let n = dict["name"] else { return nil }
@@ -43,39 +40,18 @@ func registerForm(_ context: Context) -> (form: (RegisterFormData, [ValidationEr
     }
     
     func build(_ data: RegisterFormData, errors: [ValidationError]) -> Node {
-        func field(id: String, description: String, value: String?) -> Node {
-            let isErr = errors.contains { $0.field == id }
-            return Node.fieldset(classes: "input-unit", [
-                .p([
-                    Node.label(classes: "input-label input-label--required" + (isErr ? "color-invalid" : ""), attributes: ["for": id], [.text(description)])
-                ]),
-                .p([
-                    Node.input(classes: "text-input width-full", name: id, attributes: ["required": "required", "value": value ?? ""])
-                ])
-            ])
-        }
+        let fields = [
+            (id: "name", title: "Name", value: data.name),
+            (id: "email", title: "Email", value: data.email)
+        ]
+        let form = Form(fields: fields, submitTitle: "Create Account", action: .register, errors: errors, id: "new_user", classes: "new_user")
         return LayoutConfig(context: context, contents: [
             Node.header([
                 Node.div(classes: "container-h pb+ pt-", [
                     Node.h1(classes: "ms4 color-blue bold", ["Create Your Account"], attributes: [:])
                 ]),
             ]),
-            Node.div(classes: "container", [
-                errors.isEmpty ? .none : Node.ul(classes: "mb++ bgcolor-invalid color-white ms-1 pa radius-3 bold", errors.map { Node.li([Node.text($0.message)]) }), // todo
-                Node.div(classes: "max-width-6", [
-                    Node.form(classes: "new_user", action: Route.register.path, attributes: ["id": "new_user"], [
-                        // todo utf8?
-                        // todo authenticity token (CSRF token)
-                        Node.div(classes: "stack+", [
-                            field(id: "name", description: "Name", value: data.name),
-                            field(id: "email", description: "Email", value: data.email),
-                            .div([
-                                Node.input(classes: "c-button c-button--blue", name: "commit", type: "submit", attributes: ["value": "Create Account", "data-disable-with": "Create Account"], [])
-                            ])
-                        ])
-                    ])
-                ])
-            ])
+            Node.div(classes: "container", form.renderStacked)
     	]).layoutForCheckout
     }
     return (build, parse)
