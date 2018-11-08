@@ -212,8 +212,24 @@ extension Route {
             return .write(renderHome(context: context))
         case .sitemap:
             return .write(Route.siteMap)
-        case .download:
-            return .write("TODO")
+        case .download(let id):
+            let s = try requireSession()
+            guard let ep = Episode.scoped(for: session?.user.data).first(where: { $0.id == id }) else {
+                return .notFound("No such episode")
+            }
+            return .onComplete(promise: URLSession.shared.load(vimeo.downloadURL(for: ep.vimeo_id))) { downloadURL in
+                guard let result = downloadURL, let url = result else { return .redirect(to: .episode(ep.id)) }
+                let downloads = try c.get().execute(s.user.downloads)
+                switch s.user.downloadStatus(for: ep, downloads: downloads) {
+                case .reDownload:
+                    return .redirect(path: url.absoluteString)
+                case .canDownload:
+                    try c.get().execute(DownloadData(user: s.user.id, episode: ep.number).insert)
+                    return .redirect(path: url.absoluteString)
+                default:
+                    return .redirect(to: .episode(ep.id)) // just redirect back to episode page if somebody tries this without download credits
+                }
+            }
         case let .staticFile(path: p):
             guard inWhitelist(p) else {
                 return .write("forbidden", status: .forbidden)
@@ -269,6 +285,8 @@ extension Route {
             // This could be done more fine grained, but this works just fine for now
             flushStaticData()
             return I.write("", status: .ok)
+        case .error:
+            return I.write("TODO")
         }
     }
 }

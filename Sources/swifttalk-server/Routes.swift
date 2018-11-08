@@ -79,7 +79,6 @@ private let episode: Router<Route> = (Router<()>.c("episodes") / .string()).tran
     return num.rawValue
 })
 
-
 private let episodeDownload: Router<Route> = (Router<()>.c("episodes") / .string() / Router<()>.c("download")).transform({ Route.download(Id(rawValue: $0.0)) }, { r in
     guard case let .download(num) = r else { return nil }
     return (num.rawValue, ())
