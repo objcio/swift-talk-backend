@@ -331,7 +331,7 @@ extension Episode {
                 ]),
             .div(classes: "bgcolor-white l+|pt++", [
                 .div(classes: "container", canWatch ? [
-                    .raw(subscriptionPitch),
+                    context.session.premiumAccess ? .raw("") : .raw(subscriptionPitch),
                     .div(classes: "l+|flex l-|stack+++ m-cols", [
                         .div(classes: "p-col l+|flex-auto l+|width-2/3 xl+|width-7/10 flex flex-column", [
                             Node.div(classes: "text-wrapper", [
