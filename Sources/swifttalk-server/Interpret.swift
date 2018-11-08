@@ -73,7 +73,6 @@ struct Context {
     var session: Session?
 }
 
-
 extension Route {
     func interpret<I: Interpreter>(sessionId: UUID?, connection c: Lazy<Connection>) throws -> I {
         let session: Session?
@@ -88,6 +87,17 @@ extension Route {
         }
         
         let context = Context(path: path, session: session)
+        
+        // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
+        func form<A>(_ f: Form<A>, initial: A, onPost: @escaping (A) throws -> I) -> I {
+            return I.withPostBody(do: { body in
+                // todo: this is almost the same as the new account logic... can we abstract this?
+                guard let result = f.parse(body) else { throw RenderingError(privateMessage: "Couldn't parse form", publicMessage: "Something went wrong. Please try again.") }
+                return try onPost(result)
+            }, or: {
+                return .write(f.render(initial, []))
+            })
+        }
 
         switch self {
         case .books, .issues:
@@ -210,32 +220,30 @@ extension Route {
             }
             let name = p.map { $0.removingPercentEncoding ?? "" }.joined(separator: "/")
             return .writeFile(path: name)
-        case .accountBilling:
+        case .accountProfile:
             let sess = try requireSession()
-            return I.withPostBody(do: { body in
+            var u = sess.user
+            let data = ProfileFormData(email: u.data.email, name: u.data.name)
+            let f = accountForm(context: context)
+            return form(f, initial: data, onPost: { result in
                 // todo: this is almost the same as the new account logic... can we abstract this?
-                let form = accountForm(context: context)
-                guard let result = form.parse(body) else { throw RenderingError(privateMessage: "todo", publicMessage: "todo") }
-                var u = sess.user
                 u.data.email = result.email
                 u.data.name = result.name
                 u.data.confirmedNameAndEmail = true
                 let errors = u.data.validate()
                 if errors.isEmpty {
                     try c.get().execute(u.update())
-                    return I.redirect(to: .accountBilling)
+                    return I.redirect(to: .accountProfile)
                 } else {
-                    return I.write(form.render(result, errors))
+                    return I.write(f.render(result, errors))
                 }
-            }, or: {
-                let data = ProfileFormData(email: sess.user.data.email, name: sess.user.data.name)
-                let form = accountForm(context: context)
-                return .write(form.render(data, []))
+            })
 //                return I.onComplete(promise: sess.user.monthsOfActiveSubscription, do: { num in
 //                    let d = try c.get().execute(sess.user.downloads).count
 //                    return .write("Number of months of subscription: \(num ?? 0), downloads: \(d)")
 //                })
-            })
+        case .accountBilling:
+            return I.write("TODO")
         case .external(let url):
             return I.redirect(path: url.absoluteString) // is this correct?
         case .recurlyWebhook:

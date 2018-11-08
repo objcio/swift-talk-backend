@@ -186,7 +186,7 @@ func userHeader(_ context: Context) -> Node {
             ])
     }
     
-    let account = link(to: .accountBilling, text: "Account")
+    let account = link(to: .accountProfile, text: "Account")
     
     let items: [Node]
     if let s = context.session {

@@ -22,6 +22,7 @@ enum Route: Equatable {
     case thankYou
     case createSubscription // .subscription(.create) (TODO should be a post)
     case newSubscription // .subscription(.new)
+    case accountProfile // account(.profile)
     case accountBilling // account(.billing)
     case githubCallback(String, origin: String?)
     case collection(Id<Collection>)
@@ -115,6 +116,7 @@ private let router: Router<Route> = [
     .c("registration", .register),
     .c("subscription") / .c("new", .newSubscription),
     createSubRoute,
+    .c("account") / .c("profile", .accountProfile),
     .c("account") / .c("billing", .accountBilling),
     loginRoute,
     .c("logout", .logout),
