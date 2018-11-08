@@ -44,9 +44,10 @@ func registerForm(_ context: Context) -> (form: (RegisterFormData, [ValidationEr
     
     func build(_ data: RegisterFormData, errors: [ValidationError]) -> Node {
         func field(id: String, description: String, value: String?) -> Node {
+            let isErr = errors.contains { $0.field == id }
             return Node.fieldset(classes: "input-unit", [
                 .p([
-                    Node.label(classes: "input-label input-label--required", attributes: ["for": id], [.text(description)])
+                    Node.label(classes: "input-label input-label--required" + (isErr ? "color-invalid" : ""), attributes: ["for": id], [.text(description)])
                 ]),
                 .p([
                     Node.input(classes: "text-input width-full", name: id, attributes: ["required": "required", "value": value ?? ""])
@@ -60,7 +61,7 @@ func registerForm(_ context: Context) -> (form: (RegisterFormData, [ValidationEr
                 ]),
             ]),
             Node.div(classes: "container", [
-                Node.p(classes: "mb++ bgcolor-invalid color-white ms-1 pa radius-3 bold", [.text("\(errors)")]), // todo
+                errors.isEmpty ? .none : Node.ul(classes: "mb++ bgcolor-invalid color-white ms-1 pa radius-3 bold", errors.map { Node.li([Node.text($0.message)]) }), // todo
                 Node.div(classes: "max-width-6", [
                     Node.form(classes: "new_user", action: Route.register.path, attributes: ["id": "new_user"], [
                         // todo utf8?

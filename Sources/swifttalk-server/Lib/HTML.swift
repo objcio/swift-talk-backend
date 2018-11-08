@@ -45,6 +45,7 @@ struct Class: ExpressibleByStringLiteral {
 }
 
 enum Node {
+    case none
     case node(El)
     case text(String)
     case raw(String)
@@ -91,6 +92,7 @@ extension El {
 extension Node {
     func render(encodeText: (String) -> String = { $0.addingUnicodeEntities }) -> String {
         switch self {
+        case .none: return ""
         case .text(let s): return encodeText(s)
         case .raw(let s): return s
         case .node(let n): return n.render(encodeText: encodeText)
@@ -148,6 +150,10 @@ extension Node {
         return .node(El(name: "title", block: false, children: [.text(text)]))
     }
 
+    static var br: Node {
+        return .node(El(name: "br", block: false))
+    }
+    
     static func span(classes: Class? = nil, attributes: [String:String] = [:], _ text: [Node]) -> Node {
         return .node(El(name: "span", block: false, classes: classes, attributes: attributes, children: text))
     }
