@@ -87,6 +87,7 @@ struct Episode: Codable, Equatable {
     var resources: PostgresArray<Resource>
     var vimeo_id: Int
     var preview_vimeo_id: Int?
+    var thumbnail_id: Int
 }
 
 extension Episode: StaticLoadable {
@@ -129,16 +130,10 @@ extension Episode {
         return release_at.flatMap { formatter.date(from: $0) }
     }
     
-    var poster_url: URL? {
-        // todo
-        // vimeo: https://i.vimeocdn.com/video/{video_id}_1920x1080.jpg?r=pad
-        return URL(string: "https://d2sazdeahkz1yk.cloudfront.net/assets/media/W1siZiIsIjIwMTgvMDYvMTQvMTAvMDEvNDEvYjQ1Njc3YWQtNDRlMS00N2E1LWI5NDYtYWFhOTZiOTYxOWM4LzExMSBEZWJ1Z2dlciAzLmpwZyJdLFsicCIsInRodW1iIiwiNTkweDI3MCMiXV0?sha=bb0917beee87a929")
+    func posterURL(width: Int, height: Int) -> URL {
+        return URL(string: "https://i.vimeocdn.com/video/\(thumbnail_id)_\(width)x\(height).jpg")!
     }
-    
-    var media_url: URL? {
-        return URL(string: "https://d2sazdeahkz1yk.cloudfront.net/videos/5dbf3160-fb5b-4e5a-88da-3163ea09883b/1/hls.m3u8")
-    }
-    
+
     var theCollections: [Collection] {
         return collections.compactMap { cid in
             Collection.all.first { $0.id ==  cid }

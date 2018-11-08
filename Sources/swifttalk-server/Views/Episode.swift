@@ -82,12 +82,13 @@ extension Episode {
         
         let synopsisNode: [Node] = options.synopsis ? [.p(classes: synopsisClasses, [.text(synopsis)])] : [] // todo widow thing
         
+        let poster = options.featured ? posterURL(width: 1260, height: 630) : posterURL(width: 590, height: 270)
         // TODO sidebar!
         
         return Node.article(classes: classes, [
             Node.div(classes: pictureClasses, [
                 .link(to: .episode(id), [
-                    Node.div(attributes: ["class": "ratio__container bg-center bg-cover", "style": "background-image: url('\(poster_url!)')"]),
+                    Node.div(attributes: ["class": "ratio__container bg-center bg-cover", "style": "background-image: url('\(poster)')"]),
                     Node.div(attributes: ["class": "absolute position-stretch opacity-60 blend-darken gradient-episode-black"]),
                     Node.div(classes: "absolute position-stretch flex flex-column", [
                         Node.div(classes: "mt-auto width-full flex items-center lh-100 ms-1 pa- color-white",
@@ -364,7 +365,7 @@ extension Episode {
                 ])
             ])
         
-        let data = StructuredData(title: title, description: synopsis, url: absoluteURL(.episode(id)), image: poster_url, type: .video(duration: media_duration.map(Int.init), releaseDate: releasedAt))
+        let data = StructuredData(title: title, description: synopsis, url: absoluteURL(.episode(id)), image: posterURL(width: 600, height: 338), type: .video(duration: media_duration.map(Int.init), releaseDate: releasedAt))
         return LayoutConfig(context: context, contents: [main, scroller] + (context.session.premiumAccess ? [] : [subscribeBanner()]), footerContent: [Node.raw(transcriptLinks)], structuredData: data).layout
     }
 }
