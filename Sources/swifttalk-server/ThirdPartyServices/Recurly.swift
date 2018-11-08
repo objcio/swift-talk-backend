@@ -94,6 +94,25 @@ struct Account: Codable {
     var preferred_locale: String?
 }
 
+struct Invoice: Codable {
+    enum State: String {
+        case pending
+        case paid
+        case failed
+        case past_due
+        case open
+        case closed
+        case voided
+        case processing
+    }
+    var invoice_number: Int
+    var state: String
+    var uuid: String
+    var tax_in_cents: Int
+    var total_in_cents: Int
+    var currency: String
+}
+
 extension Account {
     var subscriber: Bool {
         return has_active_subscription || has_canceled_subscription
@@ -179,6 +198,10 @@ struct Recurly {
         return RemoteEndpoint(getXML: base.appendingPathComponent("accounts/\(accountId)/subscriptions"), headers: headers, query: ["per_page": "200"])
     }
     
+    func listInvoices(accountId: String) -> RemoteEndpoint<[Invoice]> {
+        return RemoteEndpoint(getXML: base.appendingPathComponent("accounts/\(accountId)/invoices"), headers: headers, query: ["per_page": "200"])
+    }
+
     func createSubscription(_ x: CreateSubscription) -> RemoteEndpoint<RecurlyResult<Subscription>> {
         let url = base.appendingPathComponent("subscriptions")
         return RemoteEndpoint(postXML: url, value: x, headers: headers, query: [:])

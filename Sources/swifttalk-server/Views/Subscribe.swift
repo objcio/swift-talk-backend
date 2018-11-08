@@ -33,7 +33,7 @@ struct ProfileFormData {
     var name: String
 }
 
-func profile(_ context: Context, submitTitle: String, action: Route) -> Form<ProfileFormData> {
+func profile(submitTitle: String, action: Route) -> Form<ProfileFormData> {
     return Form(parse: { dict in
         guard let e = dict["email"], let n = dict["name"] else { return nil }
         return ProfileFormData(email: e, name: n)
@@ -48,7 +48,7 @@ func profile(_ context: Context, submitTitle: String, action: Route) -> Form<Pro
 }
 
 func registerForm(_ context: Context) -> Form<ProfileFormData> {
-    return profile(context, submitTitle: "Create Account", action: .register).wrap { node in
+    return profile(submitTitle: "Create Account", action: .register).wrap { node in
         LayoutConfig(context: context, contents: [
             Node.header([
                 Node.div(classes: "container-h pb+ pt-", [

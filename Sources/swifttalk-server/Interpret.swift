@@ -8,12 +8,24 @@
 import Foundation
 import PostgreSQL
 
+extension RemoteEndpoint {
+    var promise: Promise<A?> {
+        return Promise { cb in
+            URLSession.shared.load(self, callback: cb)
+        }
+    }
+}
+
 extension Row where Element == UserData {
     var monthsOfActiveSubscription: Promise<UInt?> {
         return recurly.subscriptionStatus(for: self.id).map { status in
             guard let s = status else { log(error: "Couldn't fetch subscription status for user \(self.id) from Recurly"); return nil }
             return s.months
         }
+    }
+
+    var invoices: RemoteEndpoint<[Invoice]> {
+        return recurly.listInvoices(accountId: self.id.uuidString)
     }
 }
 
@@ -70,6 +82,7 @@ func ?!<A>(lhs: A?, rhs: Error) throws -> A {
 
 struct Context {
     var path: String
+    var route: Route
     var session: Session?
 }
 
@@ -86,7 +99,7 @@ extension Route {
             return try session ?! NotLoggedInError()
         }
         
-        let context = Context(path: path, session: session)
+        let context = Context(path: path, route: self, session: session)
         
         // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
         func form<A>(_ f: Form<A>, initial: A, onPost: @escaping (A) throws -> I) -> I {
@@ -100,7 +113,7 @@ extension Route {
         }
 
         switch self {
-        case .books, .issues:
+        case .books, .issues, .error:
             return .notFound()
         case .collections:
             return I.write(index(Collection.all.filter { !$0.episodes(for: session?.user.data).isEmpty }, context: context))
@@ -259,7 +272,11 @@ extension Route {
 //                    return .write("Number of months of subscription: \(num ?? 0), downloads: \(d)")
 //                })
         case .accountBilling:
-            return I.write("TODO")
+            let sess = try requireSession()
+            return I.onComplete(promise: sess.user.invoices.promise, do: { invoices in
+                dump(invoices)
+                return I.write(billing(context: context, user: sess.user))
+            })
         case .external(let url):
             return I.redirect(path: url.absoluteString) // is this correct?
         case .recurlyWebhook:
