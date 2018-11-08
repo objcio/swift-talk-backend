@@ -27,11 +27,12 @@ enum Route: Equatable {
     case githubCallback(String, origin: String?)
     case collection(Id<Collection>)
     case episode(Id<Episode>)
-    case download(Int)
+    case download(Id<Episode>)
     case staticFile(path: [String])
     case external(URL)
     case recurlyWebhook
     case githubWebhook
+    case error
     
 }
 
@@ -76,6 +77,12 @@ private extension Array where Element == Router<Route> {
 private let episode: Router<Route> = (Router<()>.c("episodes") / .string()).transform({ Route.episode(Id(rawValue: $0)) }, { r in
     guard case let .episode(num) = r else { return nil }
     return num.rawValue
+})
+
+
+private let episodeDownload: Router<Route> = (Router<()>.c("episodes") / .string() / Router<()>.c("download")).transform({ Route.download(Id(rawValue: $0.0)) }, { r in
+    guard case let .download(num) = r else { return nil }
+    return (num.rawValue, ())
 })
 
 private let collection: Router<Route> = (Router<()>.c("collections") / .string()).transform({ Route.collection(Id(rawValue: $0)) }, { r in
@@ -123,6 +130,7 @@ private let router: Router<Route> = [
     callbackRoute,
     assetsRoute,
     .c("collections", .collections),
+    episodeDownload,
     episode,
     collection,
     externalRoute,
