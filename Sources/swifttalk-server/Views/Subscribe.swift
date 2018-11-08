@@ -28,33 +28,36 @@ func newSubscriptionBanner() -> Node {
     })
 }
 
-struct RegisterFormData {
+struct ProfileFormData {
     var email: String
     var name: String
 }
 
-func registerForm(_ context: Context) -> (form: (RegisterFormData, [ValidationError]) -> Node, parse: ([String:String]) -> RegisterFormData?) {
-    func parse(_ dict: [String:String]) -> RegisterFormData? {
+func profile(_ context: Context, submitTitle: String, action: Route) -> Form<ProfileFormData> {
+    return Form(parse: { dict in
         guard let e = dict["email"], let n = dict["name"] else { return nil }
-        return RegisterFormData(email: e, name: n)
-    }
-    
-    func build(_ data: RegisterFormData, errors: [ValidationError]) -> Node {
+        return ProfileFormData(email: e, name: n)
+    }, render: { data, errors in
         let fields = [
-            (id: "name", title: "Name", value: data.name),
-            (id: "email", title: "Email", value: data.email)
+        (id: "name", title: "Name", value: data.name),
+        (id: "email", title: "Email", value: data.email)
         ]
-        let form = Form(fields: fields, submitTitle: "Create Account", action: .register, errors: errors, id: "new_user", classes: "new_user")
-        return LayoutConfig(context: context, contents: [
+        let form = FormView(fields: fields, submitTitle: submitTitle, action: action, errors: errors)
+        return .div(form.renderStacked)
+    })
+}
+
+func registerForm(_ context: Context) -> Form<ProfileFormData> {
+    return profile(context, submitTitle: "Create Account", action: .register).wrap { node in
+        LayoutConfig(context: context, contents: [
             Node.header([
                 Node.div(classes: "container-h pb+ pt-", [
                     Node.h1(classes: "ms4 color-blue bold", ["Create Your Account"], attributes: [:])
+                    ]),
                 ]),
-            ]),
-            Node.div(classes: "container", form.renderStacked)
-    	]).layoutForCheckout
+            Node.div(classes: "container", [node])
+        ]).layoutForCheckout
     }
-    return (build, parse)
 }
 
 extension Plan {

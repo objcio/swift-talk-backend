@@ -42,6 +42,20 @@ extension Interpreter {
             return catchAndDisplayError { try cont(dict) }
         }
     }
+    
+    static func withPostBody(do cont: @escaping ([String:String]) throws -> Self, or: @escaping () throws -> Self) -> Self {
+        return .withPostData { data in
+            return catchAndDisplayError {
+                // todo instead of checking whether data is empty, we should check whether it was a post?
+                if !data.isEmpty, let r = String(data: data, encoding: .utf8)?.parseAsQueryPart {
+                    print("not empty data: \(String(data: data, encoding: .utf8)!)")
+                    return try cont(r)
+                } else {
+                    return try or()
+                }
+            }
+        }
+    }
 }
 
 struct NotLoggedInError: Error { }
@@ -97,7 +111,7 @@ extension Route {
                     try c.get().execute(u.update())
                     return I.redirect(to: .newSubscription)
                 } else {
-                    return I.write(registerForm(context).form(result, errors))
+                    return I.write(registerForm(context).render(result, errors))
                 }
             })
         case .createSubscription:
@@ -133,7 +147,7 @@ extension Route {
             let s = try requireSession()
             let u = s.user
             if !u.data.confirmedNameAndEmail {
-                return I.write(registerForm(context).form(RegisterFormData(email: u.data.email, name: u.data.name), []))
+                return I.write(registerForm(context).render(ProfileFormData(email: u.data.email, name: u.data.name), []))
             } else {
                 return try I.write(newSub(context: context, errs: []))
             }
@@ -198,10 +212,29 @@ extension Route {
             return .writeFile(path: name)
         case .accountBilling:
             let sess = try requireSession()
-            return .write(renderAccount(context: context))
-            return I.onComplete(promise: sess.user.monthsOfActiveSubscription, do: { num in
-                let d = try c.get().execute(sess.user.downloads).count
-                return .write("Number of months of subscription: \(num ?? 0), downloads: \(d)")
+            return I.withPostBody(do: { body in
+                // todo: this is almost the same as the new account logic... can we abstract this?
+                let form = accountForm(context: context)
+                guard let result = form.parse(body) else { throw RenderingError(privateMessage: "todo", publicMessage: "todo") }
+                var u = sess.user
+                u.data.email = result.email
+                u.data.name = result.name
+                u.data.confirmedNameAndEmail = true
+                let errors = u.data.validate()
+                if errors.isEmpty {
+                    try c.get().execute(u.update())
+                    return I.redirect(to: .accountBilling)
+                } else {
+                    return I.write(form.render(result, errors))
+                }
+            }, or: {
+                let data = ProfileFormData(email: sess.user.data.email, name: sess.user.data.name)
+                let form = accountForm(context: context)
+                return .write(form.render(data, []))
+//                return I.onComplete(promise: sess.user.monthsOfActiveSubscription, do: { num in
+//                    let d = try c.get().execute(sess.user.downloads).count
+//                    return .write("Number of months of subscription: \(num ?? 0), downloads: \(d)")
+//                })
             })
         case .external(let url):
             return I.redirect(path: url.absoluteString) // is this correct?

@@ -31,6 +31,7 @@ enum Route: Equatable {
     case external(URL)
     case recurlyWebhook
     case githubWebhook
+    
 }
 
 extension Route {
@@ -124,6 +125,7 @@ private let router: Router<Route> = [
     collection,
     externalRoute,
     .c("hooks") / .c("recurly", .recurlyWebhook),
-    .c("hooks") / .c("github", .githubWebhook)
+    .c("hooks") / .c("github", .githubWebhook),
+    .c("thankYou", .thankYou),
 ].choice()
 

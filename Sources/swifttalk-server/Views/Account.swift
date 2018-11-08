@@ -7,13 +7,12 @@
 
 import Foundation
 
-func renderAccount(context: Context) -> Node {
-    return LayoutConfig(context: context, contents: [
-        pageHeader(.link(header: "Account", backlink: .home, label: "")),
-        .div(classes: "container pb0", [
-            .div([
-                .h2([.span(attributes: ["class": "bold"], [.text("\(context.session!.user)")])], attributes: ["class": "inline-block lh-100 mb+"])
-                ]),
-            ])
-    ]).layout
+func accountForm(context: Context) -> Form<ProfileFormData> {
+    let form = profile(context, submitTitle: "Update Profile", action: .accountBilling)
+    return form.wrap { node in
+        LayoutConfig(context: context, contents: [
+            pageHeader(.link(header: "Account", backlink: .home, label: "")),
+            .div(classes: "container pb0", [node]) // todo button color required fields.
+        ]).layout
+    }
 }

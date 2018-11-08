@@ -96,6 +96,17 @@ extension Interpreter {
             return cont(result ?? [:])
         }
     }
+    
+    static func withPostBody(do cont: @escaping ([String:String]) -> Self, or: @escaping () -> Self) -> Self {
+        return .withPostData { data in
+            let result = String(data: data, encoding: .utf8)?.parseAsQueryPart
+            if let r = result {
+                return cont(r)
+            } else {
+                return or()
+            }
+        }
+    }
 }
 
 struct NIOInterpreter: Interpreter {
@@ -118,7 +129,8 @@ struct NIOInterpreter: Interpreter {
 
     static func redirect(path: String, headers: [String: String] = [:]) -> NIOInterpreter {
         return NIOInterpreter { env in
-            var head = HTTPResponseHead(version: env.header.version, status: .temporaryRedirect) // todo should this be temporary?
+            // We're using seeOther (303) because it won't do a POST but always a GET (important for forms)
+            var head = HTTPResponseHead(version: env.header.version, status: .seeOther)
             head.headers.add(name: "Location", value: path)
             for (key, value) in headers {
                 head.headers.add(name: key, value: value)
@@ -262,6 +274,7 @@ final class RouteHandler: ChannelInboundHandler {
         let reqPart = unwrapInboundIn(data)
         switch reqPart {
         case .head(let header):
+            accumData = Data()
             let (path, query) = header.uri.parseQuery
             let cookies = header.headers["Cookie"].first.map {
                 $0.split(separator: ";").compactMap { $0.trimmingCharacters(in: .whitespaces).keyAndValue }
@@ -279,6 +292,8 @@ final class RouteHandler: ChannelInboundHandler {
 
         case .body(var b):
             guard postCont != nil else { return }
+            let amount = b.readableBytes
+            print("got \(amount) bytes")
             if let d = b.readData(length: b.readableBytes) {
                 accumData.append(d)
             }
@@ -286,6 +301,7 @@ final class RouteHandler: ChannelInboundHandler {
             if let (p, header) = postCont {
                 let env = NIOInterpreter.Deps(header: header, ctx: ctx, fileIO: fileIO, handler: self, manager: FileManager.default, resourcePaths: paths)
                 let result = p(accumData).run(env)
+                accumData = Data()
                 assert(result == nil, "Can't read post data twice")
             }
         }

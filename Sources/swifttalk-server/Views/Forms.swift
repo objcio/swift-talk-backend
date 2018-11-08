@@ -9,7 +9,20 @@ import Foundation
 
 typealias ValidationError = (field: String, message: String)
 
-struct Form {
+struct Form<A> {
+    let parse: ([String:String]) -> A?
+    let render: (A, [ValidationError]) -> Node
+}
+
+extension Form {
+    func wrap(_ f: @escaping (Node) -> Node) -> Form<A> {
+        return Form(parse: parse, render: { value, err in
+            f(self.render(value, err))
+        })
+    }
+}
+
+struct FormView {
     typealias Field = (id: String, title: String, value: String)
     var classes: Class? = nil
     var id: String = ""
@@ -27,7 +40,7 @@ struct Form {
     }
 }
 
-extension Form {
+extension FormView {
     var renderStacked: [Node] {
         func field(id: String, description: String, value: String?) -> Node {
             let isErr = errors.contains { $0.field == id }
