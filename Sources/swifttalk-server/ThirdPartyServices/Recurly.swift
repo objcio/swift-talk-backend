@@ -111,6 +111,7 @@ struct Invoice: Codable {
     var tax_in_cents: Int
     var total_in_cents: Int
     var currency: String
+    var created_at: Date
 }
 
 extension Account {

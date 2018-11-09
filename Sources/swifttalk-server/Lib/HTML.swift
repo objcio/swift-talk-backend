@@ -194,6 +194,30 @@ extension Node {
         return .node(El(name: "label", classes: classes, attributes: attributes, children: children))
     }
     
+    static func table(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "table", classes: classes, attributes: attributes, children: children))
+    }
+    
+    static func thead(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "thead", classes: classes, attributes: attributes, children: children))
+    }
+    
+    static func tbody(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "tbody", classes: classes, attributes: attributes, children: children))
+    }
+    
+    static func tr(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "tr", classes: classes, attributes: attributes, children: children))
+    }
+    
+    static func td(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "td", classes: classes, attributes: attributes, children: children))
+    }
+    
+    static func th(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "th", classes: classes, attributes: attributes, children: children))
+    }
+    
     static func input(classes: Class? = nil, name: String, id: String? = nil, type: String = "text",  attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         var a = attributes
         a["type"] = type

@@ -274,8 +274,7 @@ extension Route {
         case .accountBilling:
             let sess = try requireSession()
             return I.onComplete(promise: sess.user.invoices.promise, do: { invoices in
-                dump(invoices)
-                return I.write(billing(context: context, user: sess.user))
+                return I.write(billing(context: context, user: sess.user, invoices: invoices ?? []))
             })
         case .external(let url):
             return I.redirect(path: url.absoluteString) // is this correct?
