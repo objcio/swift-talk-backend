@@ -38,11 +38,10 @@ func profile(submitTitle: String, action: Route) -> Form<ProfileFormData> {
         guard let e = dict["email"], let n = dict["name"] else { return nil }
         return ProfileFormData(email: e, name: n)
     }, render: { data, errors in
-        let fields = [
-        (id: "name", title: "Name", value: data.name),
-        (id: "email", title: "Email", value: data.email)
-        ]
-        let form = FormView(fields: fields, submitTitle: submitTitle, action: action, errors: errors)
+        let form = FormView(fields: [
+            FormView.Field(id: "name", title: "Name", value: data.name, note: nil),
+            FormView.Field(id: "email", title: "Email", value: data.email, note: nil)
+        ], submitTitle: submitTitle, action: action, errors: errors)
         return .div(form.renderStacked)
     })
 }

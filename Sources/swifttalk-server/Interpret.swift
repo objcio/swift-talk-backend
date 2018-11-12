@@ -297,6 +297,9 @@ extension Route {
                 }
             }
             return renderBilling(recurlyToken: t)
+        case .accountTeamMembers:
+            let sess = try requireSession()
+            return I.write(teamMembers(context: context, user: sess.user))
         case .external(let url):
             return I.redirect(path: url.absoluteString) // is this correct?
         case .recurlyWebhook:
@@ -322,8 +325,6 @@ extension Route {
             // This could be done more fine grained, but this works just fine for now
             flushStaticData()
             return I.write("", status: .ok)
-        case .error:
-            return I.write("TODO")
         }
     }
 }
