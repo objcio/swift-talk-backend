@@ -64,3 +64,19 @@ In the Rails app, I think it works like this:
 * When the user signs up, the credit card info never goes to our server, but straight to Recurly. Recurly then sends us a token (in Javascript), which we send back to the server.
 
 * We use this token on the server to create a subscription, and directly create an account as well (in a single request)
+
+
+# Assets
+
+First, make sure to have browserify installed:
+
+```
+npm install -g browserify
+```
+
+Then generate the javascript:
+
+````
+npm install
+browserify assets_source/javascripts/application.js > assets/application.js
+```

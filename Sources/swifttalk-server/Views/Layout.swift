@@ -100,7 +100,7 @@ extension LayoutConfig {
                 .title(pageTitle),
                 // todo rss+atom links
                 .stylesheet(href: "/assets/stylesheets/application.css"),
-                .script(src: "/assets/javascripts/application-411354e402c95a5b5383a167ecd6703285d5fef51012a3fad51f8628ec92e84b.js")
+                .script(src: "/assets/application.js")
                 // todo google analytics
             ] + structured)
         let body: Node = .body(attributes: ["class": "theme-" + theme], [ // todo theming classes?
@@ -145,7 +145,8 @@ extension LayoutConfig {
                 .title(pageTitle),
                 // todo rss+atom links
                 .stylesheet(href: "/assets/stylesheets/application.css"),
-                .script(src: "/assets/javascripts/application-411354e402c95a5b5383a167ecd6703285d5fef51012a3fad51f8628ec92e84b.js")
+                .script(src: "https://js.recurly.com/v4/recurly.js"), // todo not sure if we should include this?
+                .script(src: "/assets/application.js"),
                 // todo google analytics
             ] + structured)
         let linkClasses: Class = "no-decoration color-inherit hover-color-black mr"
