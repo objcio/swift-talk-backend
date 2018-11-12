@@ -299,7 +299,8 @@ extension Route {
             return renderBilling(recurlyToken: t)
         case .accountTeamMembers:
             let sess = try requireSession()
-            return I.write(teamMembers(context: context))
+            let members = try c.get().execute(sess.user.teamMembers)
+            return I.write(teamMembers(context: context, teamMembers: members))
         case .external(let url):
             return I.redirect(path: url.absoluteString) // is this correct?
         case .recurlyWebhook:

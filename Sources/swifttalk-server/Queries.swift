@@ -107,6 +107,13 @@ struct UserData: Codable, Insertable {
     static let tableName: String = "users"
 }
 
+struct TeamMemberData: Codable, Insertable {
+    var userId: UUID
+    var teamMemberId: UUID
+    
+    static let tableName: String = "team_members"
+}
+
 extension UserData {
     var premiumAccess: Bool {
         return admin || collaborator || subscriber
@@ -226,6 +233,15 @@ extension Row where Element == UserData {
     
     var downloads: Query<[Row<DownloadData>]> {
         return Row<DownloadData>.select(where: [.equal(key: "user_id", value: id)])
+    }
+    
+    var teamMembers: Query<[Row<UserData>]> {
+        let fields = UserData.fieldNames.map { "u.\($0)" }.joined(separator: ",")
+        let query = "SELECT u.id,\(fields) FROM \(UserData.tableName) AS u INNER JOIN \(TeamMemberData.tableName) AS t ON t.user_id = u.id WHERE t.user_id = $1"
+        return Query(query: query, values: [id], parse: { node in
+            let result = PostgresNodeDecoder.decode([Row<Element>].self, transformKey: { $0.snakeCased }, node: node)
+            return result
+        })
     }
     
     func downloadStatus(for episode: Episode, downloads: [Row<DownloadData>]) -> Episode.DownloadStatus {

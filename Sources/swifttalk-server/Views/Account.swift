@@ -129,7 +129,7 @@ struct TeamMemberFormData {
     var githubUsername: String
 }
 
-func teamMembers(context: Context) -> Node {
+func teamMembers(context: Context, teamMembers: [Row<UserData>]) -> Node {
     let addForm = Form<TeamMemberFormData>(parse: { dict in
         guard let username = dict["github_username"] else { return nil }
         return TeamMemberFormData(githubUsername: username)
@@ -140,15 +140,33 @@ func teamMembers(context: Context) -> Node {
         return .div(form.renderStacked)
     })
 
+    let currentTeamMembers = teamMembers.isEmpty ? Node.p([.raw("No team members added yet.")]) : Node.div(classes: "table-responsive", [
+        Node.table(classes: "width-full ms-1", [
+            Node.tbody(classes: "color-gray-30", teamMembers.map { tm in
+                Node.tr(classes: "border-top border-1 border-color-gray-90", [
+                    Node.td(classes: "pv ph-", [.text(tm.data.githubLogin)])
+                ])
+            })
+        ])
+    ])
+    
     let content: [Node] = [
-        Node.h2(classes: "color-blue bold ms2 mb-", [.text("Team Members")]),
-        addForm.render(TeamMemberFormData(githubUsername: ""), [])
+        Node.div(classes: "stack++", [
+            Node.div([
+                Node.h2(classes: "color-blue bold ms2 mb-", [.text("Add Team Member")]),
+                addForm.render(TeamMemberFormData(githubUsername: ""), []),
+            ]),
+            Node.div([
+                Node.h2(classes: "color-blue bold ms2 mb-", [.text("Current Team Members")]),
+                currentTeamMembers
+            ])
+        ])
     ]
 
     return LayoutConfig(context: context, contents: [
         pageHeader(HeaderContent.other(header: "Account", blurb: nil, extraClasses: "ms4 pb")),
         accountContainer(Node.div(classes: "stack++", [
             Node.div(content)
-            ]), forRoute: .accountTeamMembers)
-        ]).layout
+        ]), forRoute: .accountTeamMembers)
+    ]).layout
 }

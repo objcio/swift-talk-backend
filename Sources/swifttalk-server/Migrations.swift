@@ -83,6 +83,14 @@ fileprivate let migrations: [String] = [
         DROP COLUMN IF EXISTS episode_id,
         ADD COLUMN IF NOT EXISTS episode_number integer NOT NULL,
         ADD UNIQUE (episode_number, user_id);
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS team_members (
+        id uuid DEFAULT public.uuid_generate_v4() PRIMARY KEY,
+        user_id uuid REFERENCES users NOT NULL,
+        team_member_id uuid REFERENCES users NOT NULL,
+        UNIQUE (user_id, team_member_id)
+    );
     """
 ]
 
