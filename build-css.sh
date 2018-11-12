@@ -1,3 +1,3 @@
 #!/bin/bash
 
-sass assets/stylesheets/application.scss -I node_modules/video.js -I node_modules/ -I . assets/stylesheets/application.css 
+sass assets_source/stylesheets/application.scss assets/stylesheets/application.css

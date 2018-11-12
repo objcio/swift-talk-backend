@@ -1,4 +1,4 @@
-FROM norionomura/swift:41
+FROM norionomura/swift:42
 
 RUN apt-get update
 RUN apt-get install -y postgresql libpq-dev
@@ -22,9 +22,12 @@ RUN apt-get install --yes nodejs npm
 RUN update-alternatives --install /usr/bin/node node /usr/bin/nodejs 10
 
 RUN npm install
-RUN npm install -g sass 
 # TODO use other sass impl?
+RUN npm install -g sass
+RUN npm install -g browserify
+COPY assets_source ./assets_source
 COPY assets ./assets
+RUN browserify assets_source/javascripts/application.js > assets/application.js
 COPY build-css.sh ./
 RUN ./build-css.sh
 
