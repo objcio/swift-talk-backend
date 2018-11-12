@@ -129,21 +129,14 @@ struct TeamMemberFormData {
     var githubUsername: String
 }
 
-func teamMembers(context: Context, user: Row<UserData>) -> Node {
-    let pitch = user.data.subscriber ? .none : Node.div([
-        Node.div(classes: "text-center", [
-            Node.p(classes: "color-gray-30 ms1 mb", [.text("You don't have an active subscription.")]),
-            Node.link(to: .subscribe, [.text("Become a Subscriber")], classes: "c-button")
-            ])
-        ])
-
+func teamMembers(context: Context) -> Node {
     let addForm = Form<TeamMemberFormData>(parse: { dict in
         guard let username = dict["github_username"] else { return nil }
         return TeamMemberFormData(githubUsername: username)
     }, render: { data, errors in
         let form = FormView(fields: [
             FormView.Field(id: "github_username", title: "Github Username", value: data.githubUsername, note: "Your new team member won’t be notified, as we don’t have their email address yet."),
-        ], submitTitle: "Add for TODO Monthly", submitNote: "All prices excluding VAT.", action: .accountTeamMembers, errors: errors)
+        ], submitTitle: "Add for TODO Monthly", submitNote: "Team members cost $10/month or $100/year, depending on your subscription. All prices excluding VAT.", action: .accountTeamMembers, errors: errors)
         return .div(form.renderStacked)
     })
 
@@ -155,7 +148,6 @@ func teamMembers(context: Context, user: Row<UserData>) -> Node {
     return LayoutConfig(context: context, contents: [
         pageHeader(HeaderContent.other(header: "Account", blurb: nil, extraClasses: "ms4 pb")),
         accountContainer(Node.div(classes: "stack++", [
-            pitch,
             Node.div(content)
             ]), forRoute: .accountTeamMembers)
         ]).layout
