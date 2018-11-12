@@ -59,16 +59,14 @@ func screenReader(_ text: String) -> Node {
     return .span(classes: "sr-only", [.text(text)])
 }
 
-func billing(context: Context, user: Row<UserData>, invoices: [(Invoice, pdfURL: URL)]) -> Node {
-    let pitch = user.data.subscriber ? .none : Node.div([
+func invoicesView(context: Context, user: Row<UserData>, invoices: [(Invoice, pdfURL: URL)]) -> [Node] {
+    guard !invoices.isEmpty else { return  [
         Node.div(classes: "text-center", [
-            Node.p(classes: "color-gray-30 ms1 mb", [.text("You don't have an active subscription.")]),
-            Node.link(to: .subscribe, [.text("Become a Subscriber")], classes: "c-button")
-        ])
-    ])
-    let invoices: [Node] = invoices.isEmpty ? [Node.div(classes: "text-center", [
-        Node.p(classes: "color-gray-30 ms1 mb", [.text("No invoices yet.")])
-    ])] : [
+        	Node.p(classes: "color-gray-30 ms1 mb", [.text("No invoices yet.")])
+    	])
+    ] }
+    
+    return [
         Node.h2(classes: "color-blue bold ms2 mb-", [.text("Invoice History")]),
         Node.div(classes: "table-responsive",
                  [Node.table(classes: "width-full ms-1", [
@@ -102,13 +100,86 @@ func billing(context: Context, user: Row<UserData>, invoices: [(Invoice, pdfURL:
                 ])
             ])
     ]
+}
+
+extension Subscription.State {
+    var pretty: String {
+        switch self {
+        case .active:
+            return "Active"
+        case .canceled:
+            return "Canceled"
+        case .future:
+            return "Future"
+        case .expired:
+            return "Expired"
+        }
+    }
+}
+
+extension Subscription {
+    var totalAtRenewal: Int {
+        let beforeTax = unit_amount_in_cents * quantity
+        if let rate = tax_rate {
+            return beforeTax + Int(Double(beforeTax) * rate)
+        }
+        return beforeTax
+    }
+}
+
+func billing(context: Context, user: Row<UserData>, subscriptions: [Subscription], invoices: [(Invoice, pdfURL: URL)]) -> Node {
+    func label(text: String, classes: Class = "") -> Node {
+        return Node.strong(classes: "flex-none width-4 bold color-gray-15" + classes, [.text(text)])
+    }
+    func value(text: String, classes: Class = "") -> Node {
+        return Node.span(classes: "flex-auto color-gray-30" + classes, [.text(text)])
+    }
+    func button(to route: Route, text: String, classes: Class = "") -> Node {
+        return Node.button(to: route, [.text(text)], classes: "bold reset-button border-bottom border-1 hover-color-black" + classes)
+    }
+    let subscriptionInfo: [Node] = user.data.subscriber ? [
+        Node.h2(classes: "color-blue bold ms2 mb", [.text("Subscription")]),
+        Node.div(subscriptions.map { sub in
+            Node.ul(classes: "stack- mb", [
+                Node.li(classes: "flex", [
+                    label(text: "Plan"),
+                    value(text: sub.plan.name)
+                ]),
+                Node.li(classes: "flex", [
+                    label(text: "State"),
+                    value(text: sub.state.pretty)
+                ]),
+                sub.state == .active ? Node.li(classes: "flex", [
+                    label(text: "Next Billing"),
+                    Node.div(classes: "flex-auto color-gray-30 stack-", [
+                        Node.p([
+                            Node.text(dollarAmount(cents: sub.totalAtRenewal)),
+                            Node.text(" on "),
+                            .text(sub.current_period_ends_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "n/a")
+                        ]), // todo team member add-on pricing, VAT
+                        button(to: .cancelSubscription, text: "Cancel Subscription", classes: "color-invalid")
+                    ])
+                ]) : .none,
+                
+                Node.text("TODO upgrade")
+            ])
+        })
+    ] : [
+        Node.div(classes: "text-center", [
+            Node.p(classes: "color-gray-30 ms1 mb", [.text("You don't have an active subscription.")]),
+            Node.link(to: .subscribe, [.text("Become a Subscriber")], classes: "c-button")
+        ])
+    ]
+   
     
      // todo team members?
     return LayoutConfig(context: context, contents: [        
         pageHeader(.link(header: "Account", backlink: .home, label: "")),
         accountContainer(Node.div(classes: "stack++", [
-            pitch,
-            Node.div(invoices)
+            Node.div(
+                subscriptionInfo
+            ),
+            Node.div(invoicesView(context: context, user: user, invoices: invoices))
         ]), forRoute: .accountBilling)
     ]).layout
 }

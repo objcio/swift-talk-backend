@@ -158,6 +158,10 @@ extension Node {
         return .node(El(name: "span", block: false, classes: classes, attributes: attributes, children: text))
     }
 
+    static func strong(classes: Class? = nil, attributes: [String:String] = [:], _ text: [Node]) -> Node {
+        return .node(El(name: "strong", block: false, classes: classes, attributes: attributes, children: text))
+    }
+
     // todo arg order
     static func h1(classes: Class? = nil, _ title: [Node], attributes: [String:String] = [:]) -> Node {
         return .node(El(name: "h1", block: false, classes: classes, attributes: attributes, children: title))

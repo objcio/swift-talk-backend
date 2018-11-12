@@ -10,9 +10,7 @@ import PostgreSQL
 
 extension RemoteEndpoint {
     var promise: Promise<A?> {
-        return Promise { cb in
-            URLSession.shared.load(self, callback: cb)
-        }
+        return URLSession.shared.load(self)
     }
 }
 
@@ -30,6 +28,10 @@ extension Row where Element == UserData {
 
     var invoices: RemoteEndpoint<[Invoice]> {
         return recurly.listInvoices(accountId: self.id.uuidString)
+    }
+    
+    var subscriptions: RemoteEndpoint<[Subscription]> {
+        return recurly.listSubscriptions(accountId: self.id.uuidString)
     }
 }
 
@@ -279,12 +281,18 @@ extension Route {
             let sess = try requireSession()
             var user = sess.user
             func renderBilling(recurlyToken: String) -> I {
-                return I.onComplete(promise: sess.user.invoices.promise, do: { invoices in
-                    let invoicesAndPDFs = (invoices ?? []).map { invoice in
-                        (invoice, recurly.pdfURL(invoice: invoice, hostedLoginToken: recurlyToken))
+                return I.onComplete(promise: sess.user.subscriptions.promise, do: { subs in
+                    guard let s = subs else {
+                        return I.write("Something went wrong loading your subscriptions") // todo nice error page
                     }
-                	return I.write(billing(context: context, user: sess.user, invoices: invoicesAndPDFs))
-            	})
+                    return I.onComplete(promise: sess.user.invoices.promise, do: { invoices in
+                        let invoicesAndPDFs = (invoices ?? []).map { invoice in
+                            (invoice, recurly.pdfURL(invoice: invoice, hostedLoginToken: recurlyToken))
+                        }
+                        return I.write(billing(context: context, user: sess.user, subscriptions: s, invoices: invoicesAndPDFs))
+                    })
+                })
+
             }
             guard let t = sess.user.data.recurlyHostedLoginToken else {
                 return I.onComplete(promise: sess.user.account.promise) { acc in
@@ -297,6 +305,8 @@ extension Route {
                 }
             }
             return renderBilling(recurlyToken: t)
+        case .cancelSubscription:
+            return I.write("TODO")
         case .accountTeamMembers:
             let sess = try requireSession()
             let members = try c.get().execute(sess.user.teamMembers)

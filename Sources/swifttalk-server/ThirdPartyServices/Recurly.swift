@@ -37,10 +37,27 @@ struct Subscription: Codable {
     enum State: String, Codable {
         case active, canceled, future, expired
     }
+    
+    struct Plan: Codable {
+        var plan_code: String
+        var name: String
+    }
+    
+    struct AddOn: Codable {
+        var add_on_code: String
+        var unit_amount_in_cents: Int
+        var quantity: Int
+    }
+    
     var state: State
     var activated_at: Date?
     var expires_at: Date?
     var current_period_ends_at: Date?
+    var plan: Plan
+    var quantity: Int
+    var unit_amount_in_cents: Int
+    var tax_rate: Double?
+    var subscription_add_ons: [AddOn]
 }
 
 extension Subscription {
@@ -230,6 +247,7 @@ extension RemoteEndpoint where A: Decodable {
     init(getXML get: URL, headers: [String:String], query: [String:String]) {
         self.init(get: get, accept: .xml, headers: headers, query: query, parse: { data in
             do {
+                print(String(data: data, encoding: .utf8)!)
                 return try decodeXML(from: data)
             } catch {
                 print("Decoding error: \(error), \(error.localizedDescription)", to: &standardError)
