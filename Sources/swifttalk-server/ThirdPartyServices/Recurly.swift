@@ -95,7 +95,7 @@ struct Account: Codable {
 }
 
 struct Invoice: Codable {
-    enum State: String {
+    enum State: String, Codable {
         case pending
         case paid
         case failed
@@ -106,7 +106,7 @@ struct Invoice: Codable {
         case processing
     }
     var invoice_number: Int
-    var state: String
+    var state: State
     var uuid: String
     var tax_in_cents: Int
     var total_in_cents: Int
@@ -170,6 +170,7 @@ extension RecurlyResult: Decodable where A: Decodable {
 struct Recurly {
     let base: URL
     let apiKey: String
+    let subdomain: String
     var headers: [String:String] {
         return [
             "X-Api-Version": "2.13",
@@ -180,6 +181,7 @@ struct Recurly {
     
     init(subdomain: String, apiKey: String) {
         base = URL(string: "https://\(subdomain)/v2")!
+        self.subdomain = subdomain
         self.apiKey = apiKey
     }    
     
@@ -217,6 +219,10 @@ struct Recurly {
                 }
             }
         }
+    }
+    
+    func pdfURL(invoice: Invoice, hostedLoginToken: String) -> URL {
+        return URL(string: "https://\(subdomain)/account/invoices/\(invoice.invoice_number).pdf?ht=\(hostedLoginToken)")!
     }
 }
 

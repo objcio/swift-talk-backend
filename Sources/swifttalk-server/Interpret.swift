@@ -23,6 +23,10 @@ extension Row where Element == UserData {
             return s.months
         }
     }
+    
+    var account: RemoteEndpoint<Account> {
+        return recurly.account(with: id)
+    }
 
     var invoices: RemoteEndpoint<[Invoice]> {
         return recurly.listInvoices(accountId: self.id.uuidString)
@@ -273,9 +277,26 @@ extension Route {
 //                })
         case .accountBilling:
             let sess = try requireSession()
-            return I.onComplete(promise: sess.user.invoices.promise, do: { invoices in
-                return I.write(billing(context: context, user: sess.user, invoices: invoices ?? []))
-            })
+            var user = sess.user
+            func renderBilling(recurlyToken: String) -> I {
+                return I.onComplete(promise: sess.user.invoices.promise, do: { invoices in
+                    let invoicesAndPDFs = (invoices ?? []).map { invoice in
+                        (invoice, recurly.pdfURL(invoice: invoice, hostedLoginToken: recurlyToken))
+                    }
+                	return I.write(billing(context: context, user: sess.user, invoices: invoicesAndPDFs))
+            	})
+            }
+            guard let t = sess.user.data.recurlyHostedLoginToken else {
+                return I.onComplete(promise: sess.user.account.promise) { acc in
+                    guard let token = acc?.hosted_login_token else {
+                        return I.write("Something went wrong.")
+                    }
+                    user.data.recurlyHostedLoginToken = token
+                    try c.get().execute(user.update())
+                    return renderBilling(recurlyToken: token)
+                }
+            }
+            return renderBilling(recurlyToken: t)
         case .external(let url):
             return I.redirect(path: url.absoluteString) // is this correct?
         case .recurlyWebhook:

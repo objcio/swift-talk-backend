@@ -180,8 +180,13 @@ extension Node {
         a["src"] = src
         a["alt"] = alt
         return .node(El(name: "img", block: false, classes: classes, attributes: a, children: []))
-    }
 
+    }
+    
+    static func i(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(El(name: "i", block: true, classes: classes, attributes: attributes, children: children))
+    }
+    
     static func div(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         return .node(El(name: "div", classes: classes, attributes: attributes, children: children))
     }

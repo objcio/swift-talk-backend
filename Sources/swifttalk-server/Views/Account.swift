@@ -24,7 +24,40 @@ func accountContainer(_ node: Node, forRoute: Route) -> Node {
     ])
 }
 
-func billing(context: Context, user: Row<UserData>, invoices: [Invoice]) -> Node {
+// Icon from font-awesome
+func faIcon(name: String, classes: Class = "") -> Node {
+    let iconName = Class(stringLiteral: "fa-" + name)
+    return Node.i(classes: "fa" + iconName + classes)
+}
+
+extension Invoice.State {
+    var icon: (String, Class) {
+        switch self {
+        case .pending:
+            return ("refresh", "color-gray-50 fa-spin")
+        case .paid:
+            return ("check", "color-blue")
+        case .failed:
+            return ("times", "color-invalid")
+        case .past_due:
+            return ("clock-o", "color-invalid")
+        case .open:
+            return ("ellipsis-h", "color-gray-50")
+        case .closed:
+            return ("times", "color-invalid")
+        case .voided:
+            return ("ban", "color-invalid")
+        case .processing:
+            return ("refresh", "color-gray-50 fa-spin")
+        }
+    }
+}
+
+func screenReader(_ text: String) -> Node {
+    return .span(classes: "sr-only", [.text(text)])
+}
+
+func billing(context: Context, user: Row<UserData>, invoices: [(Invoice, pdfURL: URL)]) -> Node {
     let pitch = user.data.subscriber ? .none : Node.div([
         Node.div(classes: "text-center", [
             Node.p(classes: "color-gray-30 ms1 mb", [.text("You don't have an active subscription.")]),
@@ -42,18 +75,26 @@ func billing(context: Context, user: Row<UserData>, invoices: [Invoice]) -> Node
                             Node.th(classes: "pv ph- text-left", attributes: ["scope": "col"], [.text("Status")]),
                             Node.th(classes: "pv ph- text-left", attributes: ["scope": "col"], [.text("Number")]),
                             Node.th(classes: "pv ph- text-left", attributes: ["scope": "col"], [.text("Date")]),
-                            Node.th(classes: "pv ph- text-left", attributes: ["scope": "col"], [.text("Amount")]),
-                            Node.th(classes: "pv ph- text-left", attributes: ["scope": "col"], [.text("PDF")])
+                            Node.th(classes: "pv ph- text-left text-right", attributes: ["scope": "col"], [.text("Amount")]),
+                            Node.th(classes: "pv ph- text-left text-center", attributes: ["scope": "col"], [.text("PDF")])
                     	])]
                     ),
-                    Node.tbody(classes: "color-gray-30", invoices.map { invoice in
-                        let amount = String(format: "%.2f", Double(invoice.total_in_cents) / 100)
+                    Node.tbody(classes: "color-gray-30", invoices.map { x in
+                        let (invoice, pdfURL) = x
+                        print(pdfURL)
+//                        let (icon, cl) = invoice.state.icon
                         return Node.tr(classes: "border-top border-1 border-color-gray-90", [
-                            Node.td(classes: "pv ph- no-wrap", attributes: ["scope": "col"], [.text(invoice.state)]), // todo icon
-                            Node.td(classes: "pv ph- no-wrap", attributes: ["scope": "col"], [.text("\(invoice.invoice_number)")]),
-                            Node.td(classes: "pv ph- no-wrap", attributes: ["scope": "col"], [.text("\(DateFormatter.fullPretty.string(from: invoice.created_at))")]),
-                            Node.td(classes: "pv ph- no-wrap", attributes: ["scope": "col"], [.text("$ \(amount)")]),
-                            Node.td(classes: "pv ph- no-wrap", attributes: ["scope": "col"], [.text("PDF")]) // todo
+                            Node.td(classes: "pv ph-", [
+//                                faIcon(name: icon, classes: cl),
+//                                screenReader(invoice.state.rawValue)
+                                .text("\(invoice.state.rawValue)")
+                                ]), // todo icon
+                            Node.td(classes: "pv ph- no-wrap", [.text("# \(invoice.invoice_number)")]),
+                            Node.td(classes: "pv ph- no-wrap", [.text("\(DateFormatter.fullPretty.string(from: invoice.created_at))")]),
+                            Node.td(classes: "pv ph- no-wrap type-mono text-right", [.text(dollarAmount(cents: invoice.total_in_cents))]),
+                            Node.td(classes: "pv ph- no-wrap text-center", [
+                                Node.externalLink(to: pdfURL, classes: "", children: [.text("\(invoice.invoice_number).pdf")])
+                            ]) // todo icone
                         ])
                     })
                 ])

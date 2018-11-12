@@ -109,3 +109,7 @@ extension Date {
     }
 }
 
+func dollarAmount(cents: Int) -> String {
+    let amount = String(format: "%.2f", Double(cents) / 100)
+    return "$\(amount)"
+}
