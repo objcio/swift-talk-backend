@@ -212,12 +212,7 @@ extension Row where Element == FileData {
 
 extension Row where Element == UserData {
     static func select(githubId id: Int) -> Query<Row<Element>?> {
-        let fields = UserData.fieldNames.joined(separator: ",")
-        let query = "SELECT id,\(fields) FROM \(UserData.tableName) WHERE github_uid = $1"
-        return Query(query: query, values: [id], parse: { node in
-            let result = PostgresNodeDecoder.decode([Row<Element>].self, transformKey: { $0.snakeCased }, node: node)
-            return result.first
-        })
+        return Row<UserData>.selectOne(where: [.equal(key: "github_uid", value: id)])
     }
     
     static func select(sessionId id: UUID) -> Query<Row<Element>?> {
@@ -230,12 +225,7 @@ extension Row where Element == UserData {
     }
     
     var downloads: Query<[Row<DownloadData>]> {
-        let fields = DownloadData.fieldNames.map { "d.\($0)" }.joined(separator: ", ")
-        let query = "SELECT d.id, \(fields) FROM \(DownloadData.tableName) AS d WHERE d.user_id = $1"
-        return Query(query: query, values: [id], parse: { node in
-            let result = PostgresNodeDecoder.decode([Row<DownloadData>].self, transformKey: { $0.snakeCased }, node: node)
-            return result
-        })
+        return Row<DownloadData>.select(where: [.equal(key: "user_id", value: id)])
     }
     
     func downloadStatus(for episode: Episode, downloads: [Row<DownloadData>]) -> Episode.DownloadStatus {
