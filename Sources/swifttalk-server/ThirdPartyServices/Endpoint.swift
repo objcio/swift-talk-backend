@@ -21,26 +21,25 @@ struct RemoteEndpoint<A> {
         self.parse = parse
     }
     
-    init(get: URL, accept: Accept? = nil, headers: [String:String] = [:], query: [String:String], parse: @escaping (Data) -> A?) {
-        var comps = URLComponents(string: get.absoluteString)!
-        comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
-        request = URLRequest(url: comps.url!)
-        if let a = accept {
-            request.setValue(a.rawValue, forHTTPHeaderField: "Accept")
-        }
-        for (key, value) in headers {
-            request.setValue(value, forHTTPHeaderField: key)
-        }
-        self.parse = parse
+    init(get url: URL, accept: Accept? = nil, headers: [String:String] = [:], query: [String:String], parse: @escaping (Data) -> A?) {
+        self.init(method: "GET", url: url, accept: accept, body: nil, headers: headers, query: query, parse: parse)
     }
     
-    init(post: URL, accept: Accept? = nil, body: Data? = nil, headers: [String:String] = [:], query: [String:String], parse: @escaping (Data) -> A?) {
-        var comps = URLComponents(string: post.absoluteString)!
+    init(post url: URL, accept: Accept? = nil, body: Data? = nil, headers: [String:String] = [:], query: [String:String], parse: @escaping (Data) -> A?) {
+        self.init(method: "POST", url: url, accept: accept, body: body, headers: headers, query: query, parse: parse)
+    }
+
+    init(put url: URL, accept: Accept? = nil, body: Data? = nil, headers: [String:String] = [:], query: [String:String], parse: @escaping (Data) -> A?) {
+        self.init(method: "PUT", url: url, accept: accept, body: body, headers: headers, query: query, parse: parse)
+    }
+    
+    private init(method: String, url: URL, accept: Accept? = nil, body: Data? = nil, headers: [String:String] = [:], query: [String:String], parse: @escaping (Data) -> A?) {
+        var comps = URLComponents(string: url.absoluteString)!
         comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
         request = URLRequest(url: comps.url!)
-        request.httpMethod = "POST"
+        request.httpMethod = method
         request.httpBody = body
-
+        
         if let a = accept {
             request.setValue(a.rawValue, forHTTPHeaderField: "Accept")
         }

@@ -255,25 +255,24 @@ struct Recurly {
 
 extension RemoteEndpoint where A: Decodable {
     init(getXML get: URL, headers: [String:String], query: [String:String]) {
-        self.init(get: get, accept: .xml, headers: headers, query: query, parse: { data in
-            do {
-                print(String(data: data, encoding: .utf8)!)
-                return try decodeXML(from: data)
-            } catch {
-                print("Decoding error: \(error), \(error.localizedDescription)", to: &standardError)
-                return nil
-            }
-        })
+        self.init(get: get, accept: .xml, headers: headers, query: query, parse: parseRecurlyResponse)
     }
     
     init<B: Encodable & RootElement>(postXML url: URL, value: B, headers: [String:String], query: [String:String]) {
-        self.init(post: url, accept: .xml, body: try! encodeXML(value).data(using: .utf8)!, headers: headers, query: query, parse: { data in
-            do {
-                return try decodeXML(from: data)
-            } catch {
-                print("Decoding error: \(error), \(error.localizedDescription)", to: &standardError)
-                return nil
-            }
-        })
+        self.init(post: url, accept: .xml, body: try! encodeXML(value).data(using: .utf8)!, headers: headers, query: query, parse: parseRecurlyResponse)
+    }
+
+    init<B: Encodable & RootElement>(putXML url: URL, value: B, headers: [String:String], query: [String:String]) {
+        self.init(put: url, accept: .xml, body: try! encodeXML(value).data(using: .utf8)!, headers: headers, query: query, parse: parseRecurlyResponse)
+    }
+}
+
+private func parseRecurlyResponse<T: Decodable>(_ data: Data) -> T? {
+    do {
+        print(String(data: data, encoding: .utf8)!)
+        return try decodeXML(from: data)
+    } catch {
+        print("Decoding error: \(error), \(error.localizedDescription)", to: &standardError)
+        return nil
     }
 }
