@@ -36,7 +36,7 @@ enum Route: Equatable {
     case githubWebhook
     case error
     case cancelSubscription
-    
+    case scheduledTask
 }
 
 extension Route {
@@ -150,5 +150,6 @@ private let router: Router<Route> = [
     .c("hooks") / .c("recurly", .recurlyWebhook),
     .c("hooks") / .c("github", .githubWebhook),
     .c("thankYou", .thankYou),
+    .c("process_tasks", .scheduledTask)
 ].choice()
 

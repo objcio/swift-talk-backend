@@ -126,6 +126,16 @@ fileprivate let migrations: [String] = [
         END IF;
     END
     $$;
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS tasks (
+        id uuid DEFAULT public.uuid_generate_v4() PRIMARY KEY,
+        date timestamp NOT NULL,
+        json text NOT NULL
+    );
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS tasks_date ON tasks (date);
     """
 ]
 

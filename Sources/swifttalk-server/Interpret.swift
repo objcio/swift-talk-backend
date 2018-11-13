@@ -329,7 +329,8 @@ extension Route {
                     guard let _ = try? c.get().execute(teamMemberData.insert) else {
                         return try teamMembersResponse(sess, formData, [(field: "github_username", message: "Team member already exists")])
                     }
-                    // TODO add to recurly
+                    let task = try Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: Date().addingTimeInterval(5*60))
+                    try c.get().execute(task)
                     return try teamMembersResponse(sess)
                 }
             }, or: {
@@ -338,7 +339,8 @@ extension Route {
         case .accountDeleteTeamMember(let id):
             let sess = try requireSession()
             try c.get().execute(sess.user.deleteTeamMember(id))
-            // TODO delete from recurly
+            let task = try Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: Date().addingTimeInterval(5*60))
+            try c.get().execute(task)
             return try teamMembersResponse(sess)
         case .external(let url):
             return I.redirect(path: url.absoluteString) // is this correct?
@@ -364,6 +366,12 @@ extension Route {
         case .githubWebhook:
             // This could be done more fine grained, but this works just fine for now
             flushStaticData()
+            return I.write("", status: .ok)
+        case .scheduledTask:
+            let tasks = try c.get().execute(Row<TaskData>.dueTasks)
+            for t in tasks {
+                try t.process(c)
+            }
             return I.write("", status: .ok)
         }
     }

@@ -196,6 +196,10 @@ extension Row where Element: Insertable {
         let query = "DELETE FROM \(Element.tableName) WHERE \(conditions);"
         return Query(query: query, values: values, parse: { _ in })
     }
+    
+    var delete: Query<()> {
+        return Query(query: "DELETE FROM \(Element.tableName) WHERE id=$1", values: [id], parse: { _ in })
+    }
 }
 
 extension Insertable {
@@ -311,6 +315,15 @@ extension Row where Element == UserData {
     
     func deleteTeamMember(_ teamMemberId: UUID) -> Query<()> {
         return Row<TeamMemberData>.delete(where: [.equal(key: "user_id", value: self.id), .equal(key: "team_member_id", value: teamMemberId)])
+    }
+}
+
+extension Row where Element == TaskData {
+    static var dueTasks: Query<[Row<TaskData>]> {
+        let query = "SELECT * FROM \(Element.tableName) WHERE date < LOCALTIMESTAMP ORDER BY date ASC;"
+        return Query(query: query, values: [], parse: { node in
+            return PostgresNodeDecoder.decode([Row<Element>].self, transformKey: { $0.snakeCased }, node: node)
+        })
     }
 }
 
