@@ -309,25 +309,31 @@ extension Route {
         case .accountTeamMembers:
             let sess = try requireSession()
             let form = addTeamMemberForm()
-            let members = try c.get().execute(sess.user.teamMembers)
-            func response(_ data: TeamMemberFormData? = nil, _ errors: [ValidationError] = []) -> I {
+            func response(_ data: TeamMemberFormData? = nil, _ errors: [ValidationError] = []) throws -> I {
                 let renderedForm = form.render(data ?? TeamMemberFormData(githubUsername: ""), errors)
+                let members = try c.get().execute(sess.user.teamMembers)
+                print(members)
                 return I.write(teamMembers(context: context, addForm: renderedForm, teamMembers: members))
             }
             
             return I.withPostBody(do: { params in
-                guard let formData = form.parse(params) else { return response() }
+                guard let formData = form.parse(params) else { return try response() }
                 let promise = URLSession.shared.load(Github.profile(username: formData.githubUsername))
                 return I.onComplete(promise: promise) { profile in
                     guard let p = profile else {
-                        return response(formData, [(field: "github_username", message: "No user with this username exists on GitHub")])
+                        return try response(formData, [(field: "github_username", message: "No user with this username exists on GitHub")])
                     }
-                    // TODO add new team member
+                    let newUserData = UserData(email: p.email ?? "", githubUID: p.id, githubLogin: p.login, avatarURL: p.avatar_url, name: p.name ?? "")
+                    let newUserid = try c.get().execute(newUserData.findOrInsert(uniqueKey: "github_uid", value: p.id))
+                    let teamMemberData = TeamMemberData(userId: sess.user.id, teamMemberId: newUserid)
+                    guard let _ = try? c.get().execute(teamMemberData.insert) else {
+                        return try response(formData, [(field: "github_username", message: "Team member already exists")])
+                    }
                     // TODO add plan addon with recurly
-                    return response()
+                    return try response()
                 }
             }, or: {
-                return response()
+                return try response()
             })
         case .external(let url):
             return I.redirect(path: url.absoluteString) // is this correct?

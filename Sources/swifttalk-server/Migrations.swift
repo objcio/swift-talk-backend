@@ -81,8 +81,7 @@ fileprivate let migrations: [String] = [
     ALTER TABLE downloads
         DROP CONSTRAINT IF EXISTS downloads_user_id_episode_id_key,
         DROP COLUMN IF EXISTS episode_id,
-        ADD COLUMN IF NOT EXISTS episode_number integer NOT NULL,
-        ADD UNIQUE (episode_number, user_id);
+        ADD COLUMN IF NOT EXISTS episode_number integer NOT NULL;
     """,
     """
     CREATE TABLE IF NOT EXISTS team_members (
@@ -91,6 +90,42 @@ fileprivate let migrations: [String] = [
         team_member_id uuid REFERENCES users NOT NULL,
         UNIQUE (user_id, team_member_id)
     );
+    """,
+    """
+    DROP INDEX IF EXISTS users_github_uid;
+    """,
+    """
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT * FROM pg_constraint WHERE conname='users_unique_github_uid') THEN
+            ALTER TABLE users ADD CONSTRAINT users_unique_github_uid UNIQUE (github_uid);
+        END IF;
+        IF NOT EXISTS (SELECT * FROM pg_constraint WHERE conname='users_unique_github_login') THEN
+            ALTER TABLE users ADD CONSTRAINT users_unique_github_login UNIQUE (github_login);
+        END IF;
+    END
+    $$;
+    """,
+    // This one drops a bunch of duplicate constraints on the download table that have been created by a previous faulty migration
+    """
+    DO $body$
+    DECLARE r record;
+    BEGIN
+        FOR r IN (select * from information_schema.constraint_table_usage where table_name='downloads' and constraint_name like 'downloads_episode_number_user_id_%')
+        LOOP
+            EXECUTE 'ALTER TABLE downloads DROP CONSTRAINT ' || quote_ident(r.constraint_name) || ';';
+        END LOOP;
+    END
+    $body$;
+    """,
+    """
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT * FROM pg_constraint WHERE conname='downloads_unique_episode_number_user_id') THEN
+            ALTER TABLE downloads ADD CONSTRAINT downloads_unique_episode_number_user_id UNIQUE (episode_number, user_id);
+        END IF;
+    END
+    $$;
     """
 ]
 

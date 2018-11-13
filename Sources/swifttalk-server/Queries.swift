@@ -74,7 +74,7 @@ struct UserData: Codable, Insertable {
     var email: String
     var githubUID: Int
     var githubLogin: String
-    var githubToken: String
+    var githubToken: String?
     var avatarURL: String
     var admin: Bool = false
     var name: String
@@ -89,7 +89,7 @@ struct UserData: Codable, Insertable {
     var subscriber: Bool = false
     var confirmedNameAndEmail: Bool = false
     
-    init(email: String, githubUID: Int, githubLogin: String, githubToken: String, avatarURL: String, name: String) {
+    init(email: String, githubUID: Int, githubLogin: String, githubToken: String? = nil, avatarURL: String, name: String) {
         self.email = email
         self.githubUID = githubUID
         self.githubLogin = githubLogin
@@ -199,6 +199,53 @@ extension Row where Element: Insertable {
     }
 }
 
+extension Insertable {
+    var insert: Query<UUID> {
+        let fields = fieldNamesAndValues
+        let names = fields.map { $0.0 }.joined(separator: ",")
+        let values = fields.map { $0.1 }
+        let placeholders = (1...fields.count).map { "$\($0)" }.joined(separator: ",")
+        let query = "INSERT INTO \(Self.tableName) (\(names)) VALUES (\(placeholders)) RETURNING id"
+        return Query(query: query, values: values, parse: { node in
+            return UUID(uuidString: node[0, "id"]!.string!)!
+        })
+    }
+    
+    func findOrInsert(uniqueKey: String, value: NodeRepresentable) -> Query<UUID> {
+        let fields = fieldNamesAndValues
+        let names = fields.map { $0.0 }.joined(separator: ",")
+        let values = fields.map { $0.1 }
+        let placeholders = (1...fields.count).map { "$\($0)" }.joined(separator: ",")
+        let query = """
+        WITH inserted AS (
+            INSERT INTO \(Self.tableName) (\(names)) VALUES (\(placeholders))
+            ON CONFLICT DO NOTHING
+            RETURNING id
+        )
+        SELECT id FROM inserted UNION ALL (SELECT id FROM \(Self.tableName) WHERE \(uniqueKey)=$\(fields.count+1) LIMIT 1);
+        """
+        return Query(query: query, values: values + [value], parse: { node in
+            return UUID(uuidString: node[0, "id"]!.string!)!
+        })
+    }
+    
+    func insertOrUpdate(uniqueKey: String) -> Query<UUID> {
+        let fields = fieldNamesAndValues
+        let names = fields.map { $0.0 }.joined(separator: ",")
+        let values = fields.map { $0.1 }
+        let placeholders = (1...fields.count).map { "$\($0)" }.joined(separator: ",")
+        let updates = fields.map { "\($0.0) = EXCLUDED.\($0.0)" }.joined(separator: ",")
+        let query = """
+        INSERT INTO \(Self.tableName) (\(names)) VALUES (\(placeholders))
+        ON CONFLICT (\(uniqueKey)) DO UPDATE SET \(updates)
+        RETURNING id;
+        """
+        return Query(query: query, values: values, parse: { node in
+            return UUID(uuidString: node[0, "id"]!.string!)!
+        })
+    }
+}
+
 extension Row where Element == FileData {
     static func select(key: String) -> Query<Row<FileData>?> {
         return selectOne(where: [.equal(key: "key", value: key)])
@@ -237,7 +284,7 @@ extension Row where Element == UserData {
     
     var teamMembers: Query<[Row<UserData>]> {
         let fields = UserData.fieldNames.map { "u.\($0)" }.joined(separator: ",")
-        let query = "SELECT u.id,\(fields) FROM \(UserData.tableName) AS u INNER JOIN \(TeamMemberData.tableName) AS t ON t.user_id = u.id WHERE t.user_id = $1"
+        let query = "SELECT u.id,\(fields) FROM \(UserData.tableName) AS u INNER JOIN \(TeamMemberData.tableName) AS t ON t.team_member_id = u.id WHERE t.user_id = $1"
         return Query(query: query, values: [id], parse: { node in
             let result = PostgresNodeDecoder.decode([Row<Element>].self, transformKey: { $0.snakeCased }, node: node)
             return result
