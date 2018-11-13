@@ -50,6 +50,7 @@ struct Subscription: Codable {
     }
     
     var state: State
+    var uuid: String
     var activated_at: Date?
     var expires_at: Date?
     var current_period_ends_at: Date?
@@ -171,6 +172,16 @@ struct CreateSubscription: Codable, RootElement {
     var account: CreateAccount
 }
 
+struct UpdateSubscriptionAddOns: Codable, RootElement {
+    static let rootElementName = "subscription"
+    struct AddOn: Codable, RootElement {
+        static let rootElementName: String = "subscription_add_on"
+        var add_on_code = "team_members"
+        var quantity: Int
+    }
+    var subscription_add_ons: [AddOn]
+}
+
 struct RecurlyError: Decodable {
     let field: String
     let symbol: String
@@ -235,6 +246,12 @@ struct Recurly {
     func createSubscription(_ x: CreateSubscription) -> RemoteEndpoint<RecurlyResult<Subscription>> {
         let url = base.appendingPathComponent("subscriptions")
         return RemoteEndpoint(postXML: url, value: x, headers: headers, query: [:])
+    }
+    
+    func updateTeamMembers(quantity: Int, subscriptionId: String) -> RemoteEndpoint<Subscription> {
+        let url = base.appendingPathComponent("subscriptions/\(subscriptionId)")
+        let data = UpdateSubscriptionAddOns(subscription_add_ons: [UpdateSubscriptionAddOns.AddOn(add_on_code: "team_members", quantity: quantity)])
+        return RemoteEndpoint(putXML: url, value: data, headers: headers, query: [:])
     }
     
     func subscriptionStatus(for accountId: UUID) -> Promise<(subscriber: Bool, months: UInt)?> {

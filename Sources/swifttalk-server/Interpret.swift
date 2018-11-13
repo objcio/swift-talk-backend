@@ -33,6 +33,10 @@ extension Row where Element == UserData {
     var subscriptions: RemoteEndpoint<[Subscription]> {
         return recurly.listSubscriptions(accountId: self.id.uuidString)
     }
+    
+    var currentSubscription: RemoteEndpoint<Subscription?> {
+        return subscriptions.map { $0.first { $0.state == .active || $0.state == .canceled } }
+    }
 }
 
 func catchAndDisplayError<I: Interpreter>(_ f: () throws -> I) -> I {
@@ -122,6 +126,14 @@ extension Route {
             let renderedForm = addTeamMemberForm().render(data ?? TeamMemberFormData(githubUsername: ""), errors)
             let members = try c.get().execute(session.user.teamMembers)
             return I.write(teamMembers(context: context, addForm: renderedForm, teamMembers: members))
+        }
+        
+        func processTasks(_ tasks: [Row<TaskData>]) {
+            if let task = tasks.first {
+                try? task.process(c) { _ in
+                    processTasks(Array(tasks.dropFirst()))
+                }
+            }
         }
 
 
@@ -369,9 +381,7 @@ extension Route {
             return I.write("", status: .ok)
         case .scheduledTask:
             let tasks = try c.get().execute(Row<TaskData>.dueTasks)
-            for t in tasks {
-                try t.process(c)
-            }
+            try processTasks(tasks)
             return I.write("", status: .ok)
         }
     }

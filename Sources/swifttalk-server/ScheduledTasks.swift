@@ -33,8 +33,9 @@ extension Task: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         if let id = try? container.decode(UUID.self, forKey: .syncTeamMembersWithRecurly) {
             self = .syncTeamMembersWithRecurly(userId: id)
+        } else {
+            throw TaskError(message: "Unable to decode")
         }
-        throw TaskError(message: "Unable to decode")
     }
 }
 
@@ -53,21 +54,29 @@ extension Task {
         return taskData.insert.map { _ in }
     }
     
-    func interpret(_ c: Lazy<Connection>) throws {
+    func interpret(_ c: Lazy<Connection>, onCompletion: @escaping (Bool) -> ()) throws {
         switch self {
         case .syncTeamMembersWithRecurly(let userId):
             guard let user = try c.get().execute(Row<UserData>.select(userId)) else { return }
             let teamMembers = try c.get().execute(user.teamMembers)
-            let currentCount = teamMembers.count
-            // TODO update addon count with recurly
+            URLSession.shared.load(user.currentSubscription).flatMap { (sub: Subscription??) -> Promise<Subscription?> in
+                guard let su = sub, let s = su else { return Promise { $0(nil) } }
+                return URLSession.shared.load(recurly.updateTeamMembers(quantity: teamMembers.count, subscriptionId: s.uuid))
+            }.run { sub in
+                onCompletion(sub?.subscription_add_ons.first?.quantity == teamMembers.count)
+            }
         }
     }
 }
 
 extension Row where Element == TaskData {
-    func process(_ c: Lazy<Connection>) throws {
+    func process(_ c: Lazy<Connection>, onCompletion: @escaping (Bool) -> ()) throws {
         let task = try JSONDecoder().decode(Task.self, from: self.data.json.data(using: .utf8)!)
-        try task.interpret(c)
-        try c.get().execute(self.delete)
+        try task.interpret(c) { success in
+            if success {
+                try? c.get().execute(self.delete)
+            }
+            onCompletion(success)
+        }
     }
 }
