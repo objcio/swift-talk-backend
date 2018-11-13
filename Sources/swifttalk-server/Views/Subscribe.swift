@@ -77,7 +77,7 @@ extension Array where Element == Plan {
         
         assert(coupon == nil) // todo
         func node(plan: Plan, title: String) -> Node {
-            let amount = Double(plan.unit_amount_in_cents.usd) / 100
+            let amount = Double(plan.unit_amount_in_cents.usdCents) / 100
             let amountStr =  amount.isInt ? "\(Int(amount))" : String(format: "%.2f", amount) // don't use a decimal point for integer numbers
             // todo take coupon into account
             return .div(classes: "pb-", [
@@ -189,7 +189,7 @@ struct NewSubscriptionData: Codable {
         
         init(_ plan: Plan) {
             id = plan.plan_code
-            base_price = plan.unit_amount_in_cents.usd
+            base_price = plan.unit_amount_in_cents.usdCents
             interval = plan.prettyInterval
         }
     }

@@ -15,9 +15,9 @@ extension String {
 
 struct Amount: Codable {
     enum CodingKeys: String, CodingKey {
-        case usd = "USD"
+        case usdCents = "USD"
     }
-    var usd: Int
+    var usdCents: Int
 }
 
 struct Plan: Codable {
@@ -38,7 +38,7 @@ struct Subscription: Codable {
         case active, canceled, future, expired
     }
     
-    struct Plan: Codable {
+    struct PlanInfo: Codable {
         var plan_code: String
         var name: String
     }
@@ -54,7 +54,7 @@ struct Subscription: Codable {
     var activated_at: Date?
     var expires_at: Date?
     var current_period_ends_at: Date?
-    var plan: Plan
+    var plan: PlanInfo
     var quantity: Int
     var unit_amount_in_cents: Int
     var tax_rate: Double?
@@ -76,6 +76,29 @@ extension Subscription {
             return beforeTax + Int(Double(beforeTax) * rate)
         }
         return beforeTax
+    }
+
+    // Returns nil if there aren't any upgrades.
+    var upgrade: Upgrade? {
+        if let m = Plan.monthly, plan.plan_code == m.plan_code, let y = Plan.yearly {
+            // TODO calculate correctly
+            let totalWithoutVat = y.unit_amount_in_cents.usdCents // todo add team members
+            let vat: Int? = tax_rate.map { Int(Double(totalWithoutVat) * $0) }
+            let total = totalWithoutVat + (vat ?? 0)
+            return Upgrade(plan: y, total_without_vat: totalWithoutVat, total_in_cents: total, vat_in_cents: vat, tax_rate: tax_rate, team_members: 0, per_team_member_in_cents: 78)
+        } else {
+            return nil
+        }
+    }
+
+    struct Upgrade {
+        let plan: Plan
+        let total_without_vat: Int
+        let total_in_cents: Int
+        let vat_in_cents: Int?
+        let tax_rate: Double?
+        let team_members: Int
+        let per_team_member_in_cents: Int
     }
 }
 

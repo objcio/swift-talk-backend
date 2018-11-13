@@ -117,16 +117,52 @@ extension Subscription.State {
     }
 }
 
+
+extension Subscription.Upgrade {
+    var pretty: [Node] {
+        let priceBreakdown: String
+        // todo team members
+        if let v = vat_in_cents {
+            let vatText = " + \(dollarAmount(cents: v)) VAT"
+            let subTotal = dollarAmount(cents: total_without_vat)
+            priceBreakdown = " (\(subTotal)\(vatText))"
+        } else {
+            priceBreakdown = ""
+        }
+        let teamMemberText: String
+        if team_members == 1 {
+            teamMemberText = ". This includes your team member"
+        } else if team_members > 1 {
+            teamMemberText = ". This includes your \(team_members) team members"
+        } else {
+            teamMemberText = ""
+        }
+        return [
+                Node.p([.text("Upgrade to the \(plan.name) plan.")]),
+                Node.p([.text(
+                    "Your new plan will cost \(dollarAmount(cents: total_in_cents)) \(plan.prettyInterval)" +
+                        priceBreakdown +
+                        teamMemberText +
+                    "."
+                    )])
+
+            ]
+    }
+}
+
 func billing(context: Context, user: Row<UserData>, subscriptions: [Subscription], invoices: [(Invoice, pdfURL: URL)]) -> Node {
     func label(text: String, classes: Class = "") -> Node {
         return Node.strong(classes: "flex-none width-4 bold color-gray-15" + classes, [.text(text)])
     }
+
+
     func value(text: String, classes: Class = "") -> Node {
         return Node.span(classes: "flex-auto color-gray-30" + classes, [.text(text)])
     }
     func button(to route: Route, text: String, classes: Class = "") -> Node {
         return Node.button(to: route, [.text(text)], classes: "bold reset-button border-bottom border-1 hover-color-black" + classes)
     }
+
     let subscriptionInfo: [Node] = user.data.subscriber ? [
         Node.h2(classes: "color-blue bold ms2 mb", [.text("Subscription")]),
         Node.div(subscriptions.map { sub in
@@ -150,8 +186,12 @@ func billing(context: Context, user: Row<UserData>, subscriptions: [Subscription
                         button(to: .cancelSubscription, text: "Cancel Subscription", classes: "color-invalid")
                     ])
                 ]) : .none,
-                (sub.plan.plan_code == Plan.monthly!.plan_code) ? Node.text("TODO upgrade") : .none
-                
+			sub.upgrade.map { upgrade in
+                    Node.li(classes: "flex", [
+                        label(text: "Upgrade"),
+                        Node.div(classes: "flex-auto color-gray-30 stack--", upgrade.pretty)
+                    ])
+                } ?? .none
             ])
         })
     ] : [
