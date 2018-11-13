@@ -200,17 +200,19 @@ struct TeamMemberFormData {
     var githubUsername: String
 }
 
-func teamMembers(context: Context, teamMembers: [Row<UserData>]) -> Node {
-    let addForm = Form<TeamMemberFormData>(parse: { dict in
+func addTeamMemberForm() -> Form<TeamMemberFormData> {
+    return Form<TeamMemberFormData>(parse: { dict in
         guard let username = dict["github_username"] else { return nil }
         return TeamMemberFormData(githubUsername: username)
     }, render: { data, errors in
         let form = FormView(fields: [
             FormView.Field(id: "github_username", title: "Github Username", value: data.githubUsername, note: "Your new team member won’t be notified, as we don’t have their email address yet."),
-        ], submitTitle: "Add for TODO Monthly", submitNote: "Team members cost $10/month or $100/year, depending on your subscription. All prices excluding VAT.", action: .accountTeamMembers, errors: errors)
+            ], submitTitle: "Add Team Member", submitNote: "Team members cost $10/month or $100/year, depending on your subscription. All prices excluding VAT.", action: .accountTeamMembers, errors: errors)
         return .div(form.renderStacked)
     })
+}
 
+func teamMembers(context: Context, addForm: Node, teamMembers: [Row<UserData>]) -> Node {
     let currentTeamMembers = teamMembers.isEmpty ? Node.p([.raw("No team members added yet.")]) : Node.div(classes: "table-responsive", [
         Node.table(classes: "width-full ms-1", [
             Node.tbody(classes: "color-gray-30", teamMembers.map { tm in
@@ -225,7 +227,7 @@ func teamMembers(context: Context, teamMembers: [Row<UserData>]) -> Node {
         Node.div(classes: "stack++", [
             Node.div([
                 Node.h2(classes: "color-blue bold ms2 mb-", [.text("Add Team Member")]),
-                addForm.render(TeamMemberFormData(githubUsername: ""), []),
+                addForm,
             ]),
             Node.div([
                 Node.h2(classes: "color-blue bold ms2 mb-", [.text("Current Team Members")]),

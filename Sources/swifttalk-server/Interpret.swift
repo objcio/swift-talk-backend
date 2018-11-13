@@ -110,7 +110,6 @@ extension Route {
         // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
         func form<A>(_ f: Form<A>, initial: A, onPost: @escaping (A) throws -> I) -> I {
             return I.withPostBody(do: { body in
-                // todo: this is almost the same as the new account logic... can we abstract this?
                 guard let result = f.parse(body) else { throw RenderingError(privateMessage: "Couldn't parse form", publicMessage: "Something went wrong. Please try again.") }
                 return try onPost(result)
             }, or: {
@@ -309,8 +308,27 @@ extension Route {
             return I.write("TODO")
         case .accountTeamMembers:
             let sess = try requireSession()
+            let form = addTeamMemberForm()
             let members = try c.get().execute(sess.user.teamMembers)
-            return I.write(teamMembers(context: context, teamMembers: members))
+            func response(_ data: TeamMemberFormData? = nil, _ errors: [ValidationError] = []) -> I {
+                let renderedForm = form.render(data ?? TeamMemberFormData(githubUsername: ""), errors)
+                return I.write(teamMembers(context: context, addForm: renderedForm, teamMembers: members))
+            }
+            
+            return I.withPostBody(do: { params in
+                guard let formData = form.parse(params) else { return response() }
+                let promise = URLSession.shared.load(Github.profile(username: formData.githubUsername))
+                return I.onComplete(promise: promise) { profile in
+                    guard let p = profile else {
+                        return response(formData, [(field: "github_username", message: "No user with this username exists on GitHub")])
+                    }
+                    // TODO add new team member
+                    // TODO add plan addon with recurly
+                    return response()
+                }
+            }, or: {
+                return response()
+            })
         case .external(let url):
             return I.redirect(path: url.absoluteString) // is this correct?
         case .recurlyWebhook:

@@ -57,6 +57,12 @@ struct Github {
         return RemoteEndpoint(get: url, query: query)
     }
     
+    static func profile(username: String) -> RemoteEndpoint<GithubProfile> {
+        let url = URL(string: "https://api.github.com/users/\(username)")!
+        let query = ["access_token": token]
+        return RemoteEndpoint(get: url, query: query)
+    }
+    
     static var transcripts: RemoteEndpoint<[Github.File]> {
         let url = URL(string: "https://api.github.com/repos/objcio/\(transcriptsRepo)/contents/")!
         let query = ["access_token": token, "ref": "master"]
