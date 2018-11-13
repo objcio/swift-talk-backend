@@ -440,7 +440,7 @@ final class RecurlyXMLEncoder: Encoder {
         }
         
         mutating func encode(_ value: Int, forKey key: Key) throws {
-            fatalError("TODO")
+            encoder.add(child: El(key.stringValue, contents: String(value)))
         }
         
         mutating func encode(_ value: Int8, forKey key: Key) throws {
@@ -509,8 +509,102 @@ final class RecurlyXMLEncoder: Encoder {
     }
     
     
+    struct UEC: UnkeyedEncodingContainer {
+        var codingPath: [CodingKey] = []
+        var count: Int = 0
+
+        let encoder: RecurlyXMLEncoder
+        init(_ encoder: RecurlyXMLEncoder) {
+            self.encoder = encoder
+        }
+
+        mutating func encode(_ value: String) throws {
+            fatalError()
+        }
+        
+        mutating func encode(_ value: Double) throws {
+            fatalError()
+        }
+        
+        mutating func encode(_ value: Float) throws {
+            fatalError()
+        }
+        
+        mutating func encode(_ value: Int) throws {
+            fatalError()
+        }
+        
+        mutating func encode(_ value: Int8) throws {
+            fatalError()
+        }
+        
+        mutating func encode(_ value: Int16) throws {
+            fatalError()
+        }
+        
+        mutating func encode(_ value: Int32) throws {
+            fatalError()
+        }
+        
+        mutating func encode(_ value: Int64) throws {
+            fatalError()
+        }
+        
+        mutating func encode(_ value: UInt) throws {
+            fatalError()
+        }
+        
+        mutating func encode(_ value: UInt8) throws {
+            fatalError()
+        }
+        
+        mutating func encode(_ value: UInt16) throws {
+            fatalError()
+        }
+        
+        mutating func encode(_ value: UInt32) throws {
+            fatalError()
+        }
+        
+        mutating func encode(_ value: UInt64) throws {
+            fatalError()
+        }
+        
+        mutating func encode<T>(_ value: T) throws where T : Encodable {
+            if let v = value as? RootElement {
+                let childEncoder = RecurlyXMLEncoder(type(of: v).rootElementName)
+                try value.encode(to: childEncoder)
+                encoder.add(child: childEncoder.rootElement)
+            } else {
+                fatalError()
+            }
+        }
+        
+        mutating func encode(_ value: Bool) throws {
+            fatalError()
+        }
+
+        mutating func encodeNil() throws {
+            fatalError()
+        }
+        
+        mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
+            fatalError()
+        }
+        
+        mutating func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
+            fatalError()
+        }
+        
+        mutating func superEncoder() -> Encoder {
+            fatalError()
+        }
+        
+        
+    }
+    
     func unkeyedContainer() -> UnkeyedEncodingContainer {
-        fatalError("TODO")
+        return UEC(self)
     }
     
     func singleValueContainer() -> SingleValueEncodingContainer {
