@@ -67,7 +67,17 @@ extension Subscription {
         let components = Calendar.current.dateComponents([.month], from: act, to: toMinusOneDay)
         return UInt(components.month!) + 1
     }
+
+    // Todo: this should include the team members as well.
+    var totalAtRenewal: Int {
+        let beforeTax = unit_amount_in_cents * quantity
+        if let rate = tax_rate {
+            return beforeTax + Int(Double(beforeTax) * rate)
+        }
+        return beforeTax
+    }
 }
+
 
 extension Sequence where Element == Subscription {
     var activeMonths: UInt {

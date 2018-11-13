@@ -117,16 +117,6 @@ extension Subscription.State {
     }
 }
 
-extension Subscription {
-    var totalAtRenewal: Int {
-        let beforeTax = unit_amount_in_cents * quantity
-        if let rate = tax_rate {
-            return beforeTax + Int(Double(beforeTax) * rate)
-        }
-        return beforeTax
-    }
-}
-
 func billing(context: Context, user: Row<UserData>, subscriptions: [Subscription], invoices: [(Invoice, pdfURL: URL)]) -> Node {
     func label(text: String, classes: Class = "") -> Node {
         return Node.strong(classes: "flex-none width-4 bold color-gray-15" + classes, [.text(text)])
@@ -160,8 +150,8 @@ func billing(context: Context, user: Row<UserData>, subscriptions: [Subscription
                         button(to: .cancelSubscription, text: "Cancel Subscription", classes: "color-invalid")
                     ])
                 ]) : .none,
+                (sub.plan.plan_code == Plan.monthly!.plan_code) ? Node.text("TODO upgrade") : .none
                 
-                Node.text("TODO upgrade")
             ])
         })
     ] : [
