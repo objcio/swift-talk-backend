@@ -10,7 +10,7 @@ import Foundation
 
 extension Optional where Wrapped == Session {
     var premiumAccess: Bool {
-        return self?.user.data.premiumAccess ?? false
+        return self?.premiumAccess ?? false
     }
 }
 

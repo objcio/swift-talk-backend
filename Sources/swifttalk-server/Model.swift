@@ -16,7 +16,14 @@ protocol StaticLoadable: Codable {
 struct Session {
     var sessionId: UUID
     var user: Row<UserData>
+    var masterTeamUser: Row<UserData>?
     var csrfToken: String = "TODO" // todo
+}
+
+extension Session {
+    var premiumAccess: Bool {
+        return user.data.premiumAccess || masterTeamUser?.data.premiumAccess == true
+    }
 }
 
 let teamDiscount = 30
