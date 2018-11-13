@@ -203,15 +203,19 @@ func addTeamMemberForm() -> Form<TeamMemberFormData> {
 }
 
 func teamMembers(context: Context, addForm: Node, teamMembers: [Row<UserData>]) -> Node {
-    let currentTeamMembers = teamMembers.isEmpty ? Node.p([.raw("No team members added yet.")]) : Node.div(classes: "table-responsive", [
-        Node.table(classes: "width-full ms-1", [
-            Node.tbody(classes: "color-gray-30", teamMembers.map { tm in
-                Node.tr(classes: "border-top border-1 border-color-gray-90", [
-                    Node.td(classes: "pv ph-", [.text(tm.data.githubLogin)])
+    let currentTeamMembers = teamMembers.isEmpty ? Node.p([.raw("No team members added yet.")]) : Node.div(teamMembers.map { tm in
+        .div(classes: "flex items-center pv- border-top border-1 border-color-gray-90", [
+            .div(classes: "block radius-full ms-2 width-2 mr", [
+                .img(src: tm.data.avatarURL, classes: "block radius-full ms-2 width-2 mr")
+            ]),
+            .div(classes: "flex-grow type-mono", [
+                .externalLink(to: URL(string: "https://github.com/\(tm.data.githubLogin)")!, classes: "color-gray-30 no-decoration hover-color-blue", children: [
+                    .text(tm.data.githubLogin)
                 ])
-            })
+            ]),
+            Node.button(to: .accountDeleteTeamMember(tm.id), [.raw("&times;")], classes: "button-input ms-1")
         ])
-    ])
+    })
     
     let content: [Node] = [
         Node.div(classes: "stack++", [

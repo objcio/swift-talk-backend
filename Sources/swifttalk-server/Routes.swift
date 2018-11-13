@@ -25,6 +25,7 @@ enum Route: Equatable {
     case accountProfile // account(.profile)
     case accountBilling // account(.billing)
     case accountTeamMembers
+    case accountDeleteTeamMember(UUID)
     case githubCallback(String, origin: String?)
     case collection(Id<Collection>)
     case episode(Id<Episode>)
@@ -106,6 +107,14 @@ private let loginRoute: Router<Route> = (.c("users") / .c("auth") / .c("github")
     return x
 })
 
+private let deleteTeamMember: Router<Route> = (Router<()>.c("team_members") / .c("delete") / .string()).transform({
+    let id = UUID(uuidString: $0)
+    return id.map { Route.accountDeleteTeamMember($0) }
+}, { r in
+    guard case let .accountDeleteTeamMember(id) = r else { return nil }
+    return id.uuidString
+})
+
 private let createSubRoute: Router<Route> = .c("subscription", .createSubscription)
 
 private let externalRoute: Router<Route> = Router.external.transform({ Route.external($0) }, { r in
@@ -127,6 +136,7 @@ private let router: Router<Route> = [
     createSubRoute,
     .c("account") / .c("profile", .accountProfile),
     .c("account") / .c("billing", .accountBilling),
+    deleteTeamMember,
     .c("account") / .c("team_members", .accountTeamMembers),
     loginRoute,
     .c("logout", .logout),

@@ -92,6 +92,7 @@ struct Context {
     var session: Session?
 }
 
+
 extension Route {
     func interpret<I: Interpreter>(sessionId: UUID?, connection c: Lazy<Connection>) throws -> I {
         let session: Session?
@@ -116,6 +117,13 @@ extension Route {
                 return .write(f.render(initial, []))
             })
         }
+        
+        func teamMembersResponse(_ session: Session, _ data: TeamMemberFormData? = nil, _ errors: [ValidationError] = []) throws -> I {
+            let renderedForm = addTeamMemberForm().render(data ?? TeamMemberFormData(githubUsername: ""), errors)
+            let members = try c.get().execute(session.user.teamMembers)
+            return I.write(teamMembers(context: context, addForm: renderedForm, teamMembers: members))
+        }
+
 
         switch self {
         case .books, .issues, .error:
@@ -308,33 +316,30 @@ extension Route {
             return I.write("TODO")
         case .accountTeamMembers:
             let sess = try requireSession()
-            let form = addTeamMemberForm()
-            func response(_ data: TeamMemberFormData? = nil, _ errors: [ValidationError] = []) throws -> I {
-                let renderedForm = form.render(data ?? TeamMemberFormData(githubUsername: ""), errors)
-                let members = try c.get().execute(sess.user.teamMembers)
-                print(members)
-                return I.write(teamMembers(context: context, addForm: renderedForm, teamMembers: members))
-            }
-            
             return I.withPostBody(do: { params in
-                guard let formData = form.parse(params) else { return try response() }
+                guard let formData = addTeamMemberForm().parse(params) else { return try teamMembersResponse(sess) }
                 let promise = URLSession.shared.load(Github.profile(username: formData.githubUsername))
                 return I.onComplete(promise: promise) { profile in
                     guard let p = profile else {
-                        return try response(formData, [(field: "github_username", message: "No user with this username exists on GitHub")])
+                        return try teamMembersResponse(sess, formData, [(field: "github_username", message: "No user with this username exists on GitHub")])
                     }
                     let newUserData = UserData(email: p.email ?? "", githubUID: p.id, githubLogin: p.login, avatarURL: p.avatar_url, name: p.name ?? "")
                     let newUserid = try c.get().execute(newUserData.findOrInsert(uniqueKey: "github_uid", value: p.id))
                     let teamMemberData = TeamMemberData(userId: sess.user.id, teamMemberId: newUserid)
                     guard let _ = try? c.get().execute(teamMemberData.insert) else {
-                        return try response(formData, [(field: "github_username", message: "Team member already exists")])
+                        return try teamMembersResponse(sess, formData, [(field: "github_username", message: "Team member already exists")])
                     }
-                    // TODO add plan addon with recurly
-                    return try response()
+                    // TODO add to recurly
+                    return try teamMembersResponse(sess)
                 }
             }, or: {
-                return try response()
+                return try teamMembersResponse(sess)
             })
+        case .accountDeleteTeamMember(let id):
+            let sess = try requireSession()
+            try c.get().execute(sess.user.deleteTeamMember(id))
+            // TODO delete from recurly
+            return try teamMembersResponse(sess)
         case .external(let url):
             return I.redirect(path: url.absoluteString) // is this correct?
         case .recurlyWebhook:

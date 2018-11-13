@@ -143,17 +143,6 @@ struct Row<Element: Codable>: Codable {
     }
 }
 
-extension Row where Element: Insertable {
-    static func select(_ id: UUID) -> Query<Row<Element>?> {
-        let fields = Element.fieldNames.joined(separator: ",")
-        let query = "SELECT id,\(fields) FROM \(Element.tableName) WHERE id = $1"
-        return Query(query: query, values: [id], parse: { node in
-            let result = PostgresNodeDecoder.decode([Row<Element>].self, transformKey: { $0.snakeCased }, node: node)
-            return result.first
-        })
-    }
-}
-
 enum QueryCondition {
     case equal(key: String, value: NodeRepresentable)
     case startsWith(key: String, value: NodeRepresentable)
@@ -179,12 +168,16 @@ extension Sequence where Element == QueryCondition {
     var conditionsAndValues: (String, [NodeRepresentable]) {
         let arr = array
         let values = arr.map { $0.value }
-        let conditions = arr.enumerated().map { idx, c in c.condition(placeholder: idx + 1) }.joined(separator: ",")
+        let conditions = arr.enumerated().map { idx, c in c.condition(placeholder: idx + 1) }.joined(separator: " AND ")
         return (conditions, values)
     }
 }
 
 extension Row where Element: Insertable {
+    static func select(_ id: UUID) -> Query<Row<Element>?> {
+        return selectOne(where: [.equal(key: "id", value: id)])
+    }
+
     static func select(where conditions: [QueryCondition] = []) -> Query<[Row<Element>]> {
         let fields = Element.fieldNames.joined(separator: ",")
         let (conditions, values) = conditions.conditionsAndValues
@@ -196,6 +189,12 @@ extension Row where Element: Insertable {
     
     static func selectOne(where conditions: [QueryCondition] = []) -> Query<Row<Element>?> {
         return select(where: conditions).map { $0.first }
+    }
+    
+    static func delete(where conditions: [QueryCondition]) -> Query<()> {
+        let (conditions, values) = conditions.conditionsAndValues
+        let query = "DELETE FROM \(Element.tableName) WHERE \(conditions);"
+        return Query(query: query, values: values, parse: { _ in })
     }
 }
 
@@ -308,6 +307,10 @@ extension Row where Element == UserData {
     
     func changeSubscriptionStatus(_ subscribed: Bool) -> Query<()> {
         return Query(query: "UPDATE users SET subscriber = $1 where id = $2", values: [subscribed, id], parse: { _ in () })
+    }
+    
+    func deleteTeamMember(_ teamMemberId: UUID) -> Query<()> {
+        return Row<TeamMemberData>.delete(where: [.equal(key: "user_id", value: self.id), .equal(key: "team_member_id", value: teamMemberId)])
     }
 }
 
