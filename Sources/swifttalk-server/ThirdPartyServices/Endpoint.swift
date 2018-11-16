@@ -32,7 +32,11 @@ struct RemoteEndpoint<A> {
     init(put url: URL, accept: Accept? = nil, body: Data? = nil, headers: [String:String] = [:], query: [String:String], parse: @escaping (Data) -> A?) {
         self.init(method: "PUT", url: url, accept: accept, body: body, headers: headers, query: query, parse: parse)
     }
-    
+
+    init(patch url: URL, accept: Accept? = nil, body: Data? = nil, headers: [String:String] = [:], query: [String:String], parse: @escaping (Data) -> A?) {
+        self.init(method: "PATCH", url: url, accept: accept, body: body, headers: headers, query: query, parse: parse)
+    }
+
     private init(method: String, url: URL, accept: Accept? = nil, body: Data? = nil, headers: [String:String] = [:], query: [String:String], parse: @escaping (Data) -> A?) {
         var comps = URLComponents(string: url.absoluteString)!
         comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
@@ -68,21 +72,28 @@ extension DateFormatter {
 
 extension RemoteEndpoint where A: Decodable {
     /// Parses the result as JSON
-    init(post: URL, query: [String:String]) {
-        var comps = URLComponents(string: post.absoluteString)!
+    init(postJSON url: URL, query: [String:String]) {
+        self.init(method: "POST", url: url, body: Optional<Bool>.none, query: query)
+    }
+
+    init<B: Codable>(patchJSON url: URL, body: B?, query: [String:String]) {
+        self.init(method: "PATCH", url: url, body: body, query: query)
+    }
+
+    init(getJSON url: URL, headers: [String:String] = [:], query: [String:String] = [:]) {
+        self.init(method: "GET", url: url, body: Optional<Bool>.none, headers: headers, query: query)
+    }
+
+    private init<B: Codable>(method: String, url: URL, body: B?, headers: [String: String] = [:], query: [String: String] = [:]) {
+        var comps = URLComponents(string: url.absoluteString)!
         comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
         request = URLRequest(url: comps.url!)
         request.setValue(Accept.json.rawValue, forHTTPHeaderField: "Accept")
-        request.httpMethod = "POST"
+        request.httpMethod = method
+        request.httpBody = body.map { try! JSONEncoder().encode($0) }
         self.parse = { data in
             return try? JSONDecoder().decode(A.self, from: data)
         }
-    }
-    
-    init(get: URL, headers: [String:String] = [:], query: [String:String] = [:]) {
-        self.init(get: get, accept: .json, headers: headers, query: query, parse: { data in
-            return try? JSONDecoder().decode(A.self, from: data)
-        })
     }
 }
 

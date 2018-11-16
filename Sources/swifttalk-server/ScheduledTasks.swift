@@ -78,7 +78,7 @@ extension Task {
     func interpret(_ c: Lazy<Connection>, onCompletion: @escaping (Bool) -> ()) throws {
         switch self {
         case .syncTeamMembersWithRecurly(let userId):
-            guard let user = try c.get().execute(Row<UserData>.select(userId)) else { return }
+            guard let user = try c.get().execute(Row<UserData>.select(userId)) else { onCompletion(true); return }
             let teamMembers = try c.get().execute(user.teamMembers)
             URLSession.shared.load(user.currentSubscription).flatMap { (sub: Subscription??) -> Promise<Subscription?> in
                 guard let su = sub, let s = su else { return Promise { $0(nil) } }
@@ -86,9 +86,14 @@ extension Task {
             }.run { sub in
                 onCompletion(sub?.subscription_add_ons.first?.quantity == teamMembers.count)
             }
-        case .releaseEpisode:
+        case .releaseEpisode(let number):
+            guard let ep = Episode.all.first(where: { $0.number == number }) else { onCompletion(true); return }
+            let req = Github.changeVisibility(private: false, of: ep.id.rawValue)
+            URLSession.shared.load(req) { success in
+                onCompletion(success == true)
+            }
+            // TODO Circle
             // TODO Mailchimp
-            fatalError()
         }
     }
 }

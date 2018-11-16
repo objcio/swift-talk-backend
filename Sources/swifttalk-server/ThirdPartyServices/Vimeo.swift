@@ -32,7 +32,7 @@ struct Vimeo {
     }
     
     func downloadURL(for videoId: Int) -> RemoteEndpoint<URL?> {
-        return RemoteEndpoint<Vimeo.Video>(get: base.appendingPathComponent("videos/\(videoId)"), headers: headers).map { video in
+        return RemoteEndpoint<Vimeo.Video>(getJSON: base.appendingPathComponent("videos/\(videoId)"), headers: headers).map { video in
             video.download.first { $0.width == 1920 }?.link
         }
     }

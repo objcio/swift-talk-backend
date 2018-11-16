@@ -16,6 +16,11 @@ struct GithubProfile: Codable {
     // todo we get more than this, but should be enough info
 }
 
+struct GithubRepository: Codable {
+    var name: String
+    var `private`: Bool
+}
+
 
 struct Github {
     // todo initialize? We could also have an "AuthenticatedGithub" struct which requires the access token.
@@ -48,25 +53,32 @@ struct Github {
             "code": code,
             "accept": "json"
         ]
-        return RemoteEndpoint(post: url, query: query)
+        return RemoteEndpoint(postJSON: url, query: query)
     }
     
     var profile: RemoteEndpoint<GithubProfile> {
         let url = URL(string: "https://api.github.com/user")!
         let query = ["access_token": accessToken]
-        return RemoteEndpoint(get: url, query: query)
+        return RemoteEndpoint(getJSON: url, query: query)
     }
     
     static func profile(username: String) -> RemoteEndpoint<GithubProfile> {
         let url = URL(string: "https://api.github.com/users/\(username)")!
         let query = ["access_token": token]
-        return RemoteEndpoint(get: url, query: query)
+        return RemoteEndpoint(getJSON: url, query: query)
+    }
+    
+    static func changeVisibility(`private`: Bool, of repository: String) -> RemoteEndpoint<Bool> {
+        let url = URL(string: "https://api.github.com/objcio/\(repository)")!
+        let query = ["access_token": token]
+        let data = GithubRepository(name: repository, private: `private`)
+        return RemoteEndpoint<GithubRepository>(patchJSON: url, body: data, query: query).map { $0.`private` == `private` }
     }
     
     static var transcripts: RemoteEndpoint<[Github.File]> {
         let url = URL(string: "https://api.github.com/repos/objcio/\(transcriptsRepo)/contents/")!
         let query = ["access_token": token, "ref": "master"]
-        return RemoteEndpoint<[Github.File]>(get: url, query: query).map { files in
+        return RemoteEndpoint<[Github.File]>(getJSON: url, query: query).map { files in
             return files.filter { $0.name.hasPrefix("episode") }
         }
     }
@@ -74,7 +86,7 @@ struct Github {
     static func staticData<A: StaticLoadable>() -> RemoteEndpoint<[A]> {
         let url = URL(string: "https://api.github.com/repos/objcio/\(staticDataRepo)/contents/\(A.jsonName)")!
         let headers = ["Authorization": "token \(token)", "Accept": "application/vnd.github.v3.raw"]
-        return RemoteEndpoint(get: url, headers: headers)
+        return RemoteEndpoint(getJSON: url, headers: headers)
     }
     
     static var loadTranscripts: Promise<[(file: Github.File, contents: String?)]> {
