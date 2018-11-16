@@ -124,36 +124,51 @@ private let externalRoute: Router<Route> = Router.external.transform({ Route.ext
     return url
 })
 
-private let router: Router<Route> = [
+private let externalRoutes: [Router<Route>] = [
     Router(.home),
     .c("books", .books), // todo absolute url
     .c("issues", .issues), // todo absolute url
-    .c("episodes", .episodes),
     .c("sitemap", .sitemap),
-    .c("subscribe", .subscribe),
     .c("imprint", .imprint),
+    externalRoute,
+]
+
+private let accountRoutes: [Router<Route>] = [
+    callbackRoute,
+    loginRoute,
+    .c("logout", .logout),
+    .c("account") / .c("profile", .accountProfile),
+    .c("account") / .c("billing", .accountBilling),
+    deleteTeamMember,
+    .c("account") / .c("team_members", .accountTeamMembers),
+]
+
+private let subscriptionRoutes: [Router<Route>] = [
+    .c("subscribe", .subscribe),
     .c("registration", .register),
     .c("subscription") / .c("new", .newSubscription),
     .c("subscription") / .c("cancel", .cancelSubscription),
     .c("subscription") / .c("reactivate", .reactivateSubscription),
     .c("subscription") / .c("upgrade", .upgradeSubscription),
     createSubRoute,
-    .c("account") / .c("profile", .accountProfile),
-    .c("account") / .c("billing", .accountBilling),
-    deleteTeamMember,
-    .c("account") / .c("team_members", .accountTeamMembers),
-    loginRoute,
-    .c("logout", .logout),
-    callbackRoute,
+    .c("thankYou", .thankYou),
+]
+
+private let otherRoutes: [Router<Route>] = [
+    .c("episodes", .episodes),
     assetsRoute,
     .c("collections", .collections),
     episodeDownload,
     episode,
     collection,
-    externalRoute,
+]
+
+private let internalRoutes: [Router<Route>] = [
     .c("hooks") / .c("recurly", .recurlyWebhook),
     .c("hooks") / .c("github", .githubWebhook),
-    .c("thankYou", .thankYou),
     .c("process_tasks", .scheduledTask)
-].choice()
+]
+
+let allRoutes = externalRoutes + accountRoutes + subscriptionRoutes + otherRoutes + internalRoutes
+private let router = allRoutes.choice()
 
