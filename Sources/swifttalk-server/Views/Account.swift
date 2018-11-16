@@ -59,6 +59,55 @@ func screenReader(_ text: String) -> Node {
     return .span(classes: "sr-only", [.text(text)])
 }
 
+struct Column {
+    enum Alignment: String {
+        case left
+        case right
+        case center
+    }
+    var title: String
+    var alignment: Alignment
+    init(title: String, alignment: Alignment = .left) {
+        self.title = title
+        self.alignment = alignment
+    }
+}
+
+struct Cell {
+    var children: [Node]
+    var classes: Class = ""
+    init(_ children: [Node], classes: Class = "") {
+        self.children = children
+        self.classes = classes
+    }
+    
+    init(_ text: String, classes: Class = "") {
+        self.children = [.text(text)]
+        self.classes = classes
+    }
+    
+}
+func table(columns: [Column], cells: [[Cell]]) -> Node {
+    return Node.div(classes: "table-responsive",
+             [Node.table(classes: "width-full ms-1", [
+                Node.thead(classes: "bold color-gray-15",
+                           [Node.tr(
+                            columns.map { column in
+                                let align = Class(stringLiteral: "text-" + column.alignment.rawValue)
+                                return Node.th(classes: "pv ph-" + align, attributes: ["scope": "col"], [.text(column.title)])
+                            }
+                            )]
+                ),
+                Node.tbody(classes: "color-gray-30", cells.map { row in
+                    return Node.tr(classes: "border-top border-1 border-color-gray-90",
+                        row.map { cell in
+                            Node.td(classes: "pv ph- no-wrap" + cell.classes, cell.children)
+                        })
+                })
+                ])
+        ])
+}
+
 func invoicesView(context: Context, user: Row<UserData>, invoices: [(Invoice, pdfURL: URL)]) -> [Node] {
     guard !invoices.isEmpty else { return  [
         Node.div(classes: "text-center", [
@@ -66,35 +115,25 @@ func invoicesView(context: Context, user: Row<UserData>, invoices: [(Invoice, pd
     	])
     ] }
     
+    let columns = [Column(title: "Status"),
+                   Column(title: "Number"),
+                   Column(title: "Date"),
+                   Column(title: "Amount", alignment: .right),
+                   Column(title: "PDF", alignment: .center),
+                  ]
+    let cells: [[Cell]] = invoices.map { x in
+        let (invoice, pdfURL) = x
+        return [
+            Cell(invoice.state.rawValue),
+            Cell("# \(invoice.invoice_number)"),
+            Cell(DateFormatter.fullPretty.string(from: invoice.created_at)),
+            Cell(dollarAmount(cents: invoice.total_in_cents), classes: "type-mono text-right"),
+            Cell([Node.externalLink(to: pdfURL, classes: "", children: [.text("\(invoice.invoice_number).pdf")])], classes: "text-center"),
+        ]
+    }
     return [
         Node.h2(classes: "color-blue bold ms2 mb-", [.text("Invoice History")]),
-        Node.div(classes: "table-responsive",
-                 [Node.table(classes: "width-full ms-1", [
-                    Node.thead(classes: "bold color-gray-15",
-                        [Node.tr([
-                            Node.th(classes: "pv ph- text-left", attributes: ["scope": "col"], [.text("Status")]),
-                            Node.th(classes: "pv ph- text-left", attributes: ["scope": "col"], [.text("Number")]),
-                            Node.th(classes: "pv ph- text-left", attributes: ["scope": "col"], [.text("Date")]),
-                            Node.th(classes: "pv ph- text-left text-right", attributes: ["scope": "col"], [.text("Amount")]),
-                            Node.th(classes: "pv ph- text-left text-center", attributes: ["scope": "col"], [.text("PDF")])
-                    	])]
-                    ),
-                    Node.tbody(classes: "color-gray-30", invoices.map { x in
-                        let (invoice, pdfURL) = x
-                        return Node.tr(classes: "border-top border-1 border-color-gray-90", [
-                            Node.td(classes: "pv ph-", [
-                                .text("\(invoice.state.rawValue)")
-                                ]), // todo icon
-                            Node.td(classes: "pv ph- no-wrap", [.text("# \(invoice.invoice_number)")]),
-                            Node.td(classes: "pv ph- no-wrap", [.text("\(DateFormatter.fullPretty.string(from: invoice.created_at))")]),
-                            Node.td(classes: "pv ph- no-wrap type-mono text-right", [.text(dollarAmount(cents: invoice.total_in_cents))]),
-                            Node.td(classes: "pv ph- no-wrap text-center", [
-                                Node.externalLink(to: pdfURL, classes: "", children: [.text("\(invoice.invoice_number).pdf")])
-                            ]) // todo icone
-                        ])
-                    })
-                ])
-            ])
+        table(columns: columns, cells: cells)
     ]
 }
 
