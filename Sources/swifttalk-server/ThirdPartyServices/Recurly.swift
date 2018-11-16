@@ -217,14 +217,22 @@ struct CreateSubscription: Codable, RootElement {
     var account: CreateAccount
 }
 
-struct UpdateSubscriptionAddOns: Codable, RootElement {
+struct UpdateSubscription: Codable, RootElement {
     static let rootElementName = "subscription"
     struct AddOn: Codable, RootElement {
         static let rootElementName: String = "subscription_add_on"
         var add_on_code = "team_members"
         var quantity: Int
     }
-    var subscription_add_ons: [AddOn]
+    var timeframe: String = "now"
+    var plan_code: String?
+    var subscription_add_ons: [AddOn]?
+
+    init(timeframe: String = "now", plan_code: String? = nil, subscription_add_ons: [AddOn]? = nil) {
+        self.timeframe = timeframe
+        self.plan_code = plan_code
+        self.subscription_add_ons = subscription_add_ons
+    }
 }
 
 struct RecurlyError: Decodable {
@@ -310,12 +318,12 @@ struct Recurly {
         return RemoteEndpoint(putXML: url, headers: headers)
     }
     
-    func updateTeamMembers(quantity: Int, subscriptionId: String) -> RemoteEndpoint<Subscription> {
-        let url = base.appendingPathComponent("subscriptions/\(subscriptionId)")
-        let data = UpdateSubscriptionAddOns(subscription_add_ons: [UpdateSubscriptionAddOns.AddOn(add_on_code: "team_members", quantity: quantity)])
-        return RemoteEndpoint(putXML: url, value: data, headers: headers, query: [:])
+    func updateSubscription(_ subscription: Subscription, plan_code: String? = nil, numberOfTeamMembers: Int? = nil) -> RemoteEndpoint<Subscription> {
+        let addons: [UpdateSubscription.AddOn]? = numberOfTeamMembers.map { [UpdateSubscription.AddOn(add_on_code: "team_members", quantity: $0)] }
+        let url = base.appendingPathComponent("subscriptions/\(subscription.uuid)")
+        return RemoteEndpoint(putXML: url, value: UpdateSubscription(timeframe: "now", plan_code: plan_code, subscription_add_ons: addons), headers: headers, query: [:])
     }
-    
+
     func subscriptionStatus(for accountId: UUID) -> Promise<(subscriber: Bool, months: UInt)?> {
         return Promise { cb in
             URLSession.shared.load(self.account(with: accountId)) { result in
@@ -353,7 +361,7 @@ extension RemoteEndpoint where A: Decodable {
 
 private func parseRecurlyResponse<T: Decodable>(_ data: Data) -> T? {
     do {
-        print(String(data: data, encoding: .utf8)!)
+//        print(String(data: data, encoding: .utf8)!)
         return try decodeXML(from: data)
     } catch {
         print("Decoding error: \(error), \(error.localizedDescription)", to: &standardError)

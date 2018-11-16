@@ -91,7 +91,6 @@ extension Interpreter {
             return catchAndDisplayError {
                 // todo instead of checking whether data is empty, we should check whether it was a post?
                 if !data.isEmpty, let r = String(data: data, encoding: .utf8)?.parseAsQueryPart {
-                    print("not empty data: \(String(data: data, encoding: .utf8)!)")
                     return try cont(r)
                 } else {
                     return try or()
@@ -117,6 +116,9 @@ struct Context {
     var session: Session?
 }
 
+// todo: we should implement this!
+func requirePost() throws -> () {
+}
 
 extension Route {
     func interpret<I: Interpreter>(sessionId: UUID?, connection c: Lazy<Connection>) throws -> I {
@@ -342,6 +344,7 @@ extension Route {
             }
             return renderBilling(recurlyToken: t)
         case .cancelSubscription:
+            try requirePost()
             let sess = try requireSession()
             let user = sess.user
             return I.onSuccess(promise: user.currentSubscription.promise.map(flatten)) { sub in
@@ -357,8 +360,17 @@ extension Route {
                 
             }
         case .upgradeSubscription:
-            return I.write("TODO")
+            try requirePost()
+            let sess = try requireSession()
+            return I.onSuccess(promise: sess.user.currentSubscription.promise.map(flatten), do: { (sub: Subscription) throws -> I in
+                guard let u = sub.upgrade else { throw RenderingError(privateMessage: "no upgrade available \(sub)", publicMessage: "There's no upgrade available.")}
+                let teamMembers = try c.get().execute(sess.user.teamMembers)
+                return I.onSuccess(promise: recurly.updateSubscription(sub, plan_code: u.plan.plan_code, numberOfTeamMembers: teamMembers.count).promise, do: { (result: Subscription) throws -> I in
+                    return I.redirect(to: .accountBilling)
+                })
+            })
         case .reactivateSubscription:
+            try requirePost()
             let sess = try requireSession()
             let user = sess.user
             return I.onSuccess(promise: user.currentSubscription.promise.map(flatten)) { sub in
@@ -396,6 +408,7 @@ extension Route {
                 return try teamMembersResponse(sess)
             })
         case .accountDeleteTeamMember(let id):
+            try requirePost()
             let sess = try requireSession()
             try c.get().execute(sess.user.deleteTeamMember(id))
             let task = try Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: Date().addingTimeInterval(5*60))

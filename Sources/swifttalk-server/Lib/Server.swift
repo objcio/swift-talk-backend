@@ -292,8 +292,6 @@ final class RouteHandler: ChannelInboundHandler {
 
         case .body(var b):
             guard postCont != nil else { return }
-            let amount = b.readableBytes
-            print("got \(amount) bytes")
             if let d = b.readData(length: b.readableBytes) {
                 accumData.append(d)
             }

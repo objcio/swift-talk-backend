@@ -82,7 +82,7 @@ extension Task {
             let teamMembers = try c.get().execute(user.teamMembers)
             URLSession.shared.load(user.currentSubscription).flatMap { (sub: Subscription??) -> Promise<Subscription?> in
                 guard let su = sub, let s = su else { return Promise { $0(nil) } }
-                return URLSession.shared.load(recurly.updateTeamMembers(quantity: teamMembers.count, subscriptionId: s.uuid))
+                return URLSession.shared.load(recurly.updateSubscription(s, numberOfTeamMembers: teamMembers.count))
             }.run { sub in
                 onCompletion(sub?.subscription_add_ons.first?.quantity == teamMembers.count)
             }
