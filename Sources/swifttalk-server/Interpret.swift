@@ -428,7 +428,7 @@ extension Route {
             return I.write("", status: .ok)
         case .scheduledTask:
             let tasks = try c.get().execute(Row<TaskData>.dueTasks)
-            try processTasks(tasks)
+            processTasks(tasks)
             return I.write("", status: .ok)
         }
     }

@@ -10,6 +10,7 @@ import PostgreSQL
 
 enum Task {
     case syncTeamMembersWithRecurly(userId: UUID)
+    case releaseEpisode(number: Int)
 }
 
 struct TaskError: Error {
@@ -19,6 +20,7 @@ struct TaskError: Error {
 extension Task: Codable {
     enum CodingKeys: CodingKey {
         case syncTeamMembersWithRecurly
+        case releaseEpisode
     }
     
     func encode(to encoder: Encoder) throws {
@@ -26,6 +28,8 @@ extension Task: Codable {
         switch self {
         case .syncTeamMembersWithRecurly(let userId):
             try container.encode(userId, forKey: .syncTeamMembersWithRecurly)
+        case .releaseEpisode(let number):
+            try container.encode(number, forKey: .releaseEpisode)
         }
     }
     
@@ -33,8 +37,19 @@ extension Task: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         if let id = try? container.decode(UUID.self, forKey: .syncTeamMembersWithRecurly) {
             self = .syncTeamMembersWithRecurly(userId: id)
+        } else if let number = try? container.decode(Int.self, forKey: .releaseEpisode) {
+            self = .releaseEpisode(number: number)
         } else {
             throw TaskError(message: "Unable to decode")
+        }
+    }
+    
+    func uniqueKey(for date: Date) -> String {
+        switch self {
+        case .syncTeamMembersWithRecurly(let userId):
+            return "\(CodingKeys.syncTeamMembersWithRecurly.stringValue):\(userId.uuidString)"
+        case .releaseEpisode(let number):
+            return "\(CodingKeys.releaseEpisode.stringValue):\(number):\(date.timeIntervalSinceReferenceDate)"
         }
     }
 }
@@ -42,16 +57,22 @@ extension Task: Codable {
 struct TaskData: Insertable {
     var date: Date
     var json: String
+    var key: String
+    
+    init(date: Date, task: Task) {
+        self.date = date
+        let data = try! JSONEncoder().encode(task)
+        self.json = String(data: data, encoding: .utf8)!
+        self.key = task.uniqueKey(for: date)
+    }
 
     static var tableName = "tasks"
 }
 
 extension Task {
     func schedule(at date: Date) throws -> Query<()> {
-        let data = try JSONEncoder().encode(self)
-        let json = String(data: data, encoding: .utf8)!
-        let taskData = TaskData(date: date, json: json)
-        return taskData.insert.map { _ in }
+        let taskData = TaskData(date: date, task: self)
+        return taskData.insertOrUpdate(uniqueKey: "key").map { _ in }
     }
     
     func interpret(_ c: Lazy<Connection>, onCompletion: @escaping (Bool) -> ()) throws {
@@ -65,6 +86,9 @@ extension Task {
             }.run { sub in
                 onCompletion(sub?.subscription_add_ons.first?.quantity == teamMembers.count)
             }
+        case .releaseEpisode:
+            // TODO Mailchimp
+            fatalError()
         }
     }
 }

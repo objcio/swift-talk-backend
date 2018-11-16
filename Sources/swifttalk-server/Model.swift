@@ -81,17 +81,16 @@ enum Role: String, Codable, Equatable, Comparable {
     }
 }
 
-struct Episode: Codable, Equatable {
+struct Episode: Decodable, Equatable {
     var collections: [Id<Collection>]
     var collaborators: [Id<Collaborator>]
-    var media_duration: TimeInterval?
+    var media_duration: TimeInterval
     var number: Int
-    var release_at: String?
-    var released: Bool
+    var release_at: String
     var subscription_only: Bool
     var synopsis: String
     var title: String
-    var resources: PostgresArray<Resource>
+    var resources: [Resource]
     var vimeo_id: Int
     var preview_vimeo_id: Int?
     var thumbnail_id: Int
@@ -99,22 +98,6 @@ struct Episode: Codable, Equatable {
 
 extension Episode: StaticLoadable {
     static var jsonName: String { return "episodes.json" }
-}
-
-struct PostgresArray<A>: Codable, Equatable where A: Codable, A: Equatable {
-    var values: [A]
-    
-    init(from decoder: Decoder) throws {
-        do {
-            values = try .init(from: decoder)
-        } catch {
-        	values = []
-        }
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        try values.encode(to: encoder)
-    }
 }
 
 struct Resource: Codable, Equatable {
@@ -132,9 +115,13 @@ extension Episode {
         guard let p = primaryCollection, p.use_as_title_prefix else { return title }
         return "\(p.title): \(title)"
     }
-    var releasedAt: Date? {
-        let formatter = DateFormatter.iso8601
-        return release_at.flatMap { formatter.date(from: $0) }
+    
+    var releaseAt: Date {
+        return DateFormatter.iso8601.date(from: release_at) ?? Date.distantFuture
+    }
+    
+    var released: Bool {
+        return releaseAt < Date()
     }
     
     func posterURL(width: Int, height: Int) -> URL {
@@ -206,7 +193,7 @@ extension Collection {
 
 extension Sequence where Element == Episode {
     var totalDuration: TimeInterval {
-        return lazy.map { $0.media_duration ?? 0 }.reduce(0, +)
+        return lazy.map { $0.media_duration }.reduce(0, +)
     }
 }
 

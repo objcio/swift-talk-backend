@@ -92,7 +92,7 @@ extension Episode {
                     Node.div(attributes: ["class": "absolute position-stretch opacity-60 blend-darken gradient-episode-black"]),
                     Node.div(classes: "absolute position-stretch flex flex-column", [
                         Node.div(classes: "mt-auto width-full flex items-center lh-100 ms-1 pa- color-white",
-                                 smallIcon + [Node.span(attributes: ["class": "ml-auto bold text-shadow-20"], [.text("\(media_duration!.minutes)")])] // todo format text
+                                 smallIcon + [Node.span(attributes: ["class": "ml-auto bold text-shadow-20"], [.text("\(media_duration.minutes)")])] // todo format text
                         )
                         ])
                     ] + largeIcon, classes: pictureLinkClasses)
@@ -105,7 +105,7 @@ extension Episode {
                     .p(classes: footerClasses, [
                         Node.text("Episode \(number)"),
                         Node.span(attributes: ["class": "ph---"], [.raw("&middot;")]),
-                        Node.text("\(releasedAt?.pretty ?? "Not yet released")") // todo
+                        Node.text(releaseAt.pretty)
                         ])
                 ]),
             
@@ -185,7 +185,7 @@ extension Episode {
         return .div(classes: "l+|absolute l+|position-stretch stretch width-full flex flex-column", [
             Node.h3([
                 .span(attributes: ["class": "smallcaps"], [.text(canWatch ? "In this episode" : "In the full episode")]),
-                .span(attributes: ["class": "ml-auto ms-1 bold"], [.text(media_duration!.timeString)])
+                .span(attributes: ["class": "ml-auto ms-1 bold"], [.text(media_duration.timeString)])
                 ], attributes: ["class": "color-blue border-top border-2 pt mb+ flex-none flex items-baseline"]),
             Node.div(classes: "flex-auto overflow-auto border-color-lighten-10 border-1 border-top", [
                 Node.ol(attributes: ["class": "lh-125 ms-1 color-white"], items.map { entry in
@@ -241,7 +241,7 @@ extension Episode {
                 ])
         }
         
-        let episodeResource: [[Node]] = self.resources.values.map { res in
+        let episodeResource: [[Node]] = self.resources.map { res in
             [
                 Node.div(classes: "flex-none mr-", [
                     Node.a(classes: "block bgcolor-orange radius-5 hover-bgcolor-blue", attributes: linkAttrs, [
@@ -289,7 +289,7 @@ extension Episode {
             ]
         } ?? []
         let detailItems: [(String,String, URL?)] = [
-            ("Released", DateFormatter.fullPretty.string(from: releasedAt ?? Date()), nil)
+            ("Released", DateFormatter.fullPretty.string(from: releaseAt), nil)
             ] + theCollaborators.sorted(by: { $0.role < $1.role }).map { coll in
                 (coll.role.name, coll.name, .some(coll.url))
         }
@@ -365,7 +365,7 @@ extension Episode {
                 ])
             ])
         
-        let data = StructuredData(title: title, description: synopsis, url: absoluteURL(.episode(id)), image: posterURL(width: 600, height: 338), type: .video(duration: media_duration.map(Int.init), releaseDate: releasedAt))
+        let data = StructuredData(title: title, description: synopsis, url: absoluteURL(.episode(id)), image: posterURL(width: 600, height: 338), type: .video(duration: Int(media_duration), releaseDate: releaseAt))
         return LayoutConfig(context: context, contents: [main, scroller] + (context.session.premiumAccess ? [] : [subscribeBanner()]), footerContent: [Node.raw(transcriptLinks)], structuredData: data).layout
     }
 }

@@ -76,7 +76,7 @@ extension Collection {
                         Node.span(attributes: ["class": "nowrap overflow-hidden text-overflow-ellipsis pv- color-gray-45"], [
                             Node.link(to: .episode(e.id), [.text(title + (e.released ? "" : " (unreleased)"))], attributes: ["class": "no-decoration color-inherit hover-underline"])
                             ]),
-                        .span(attributes: ["class": "flex-none pl- pv- color-gray-70"], [.text(e.media_duration?.timeString ?? "")])
+                        .span(attributes: ["class": "flex-none pl- pv- color-gray-70"], [.text(e.media_duration.timeString)])
                         ])
                 }
             )

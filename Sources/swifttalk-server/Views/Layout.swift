@@ -38,7 +38,7 @@ struct StructuredData {
     let type: ItemType
     
     enum ItemType {
-        case video(duration: Int?, releaseDate: Date?)
+        case video(duration: Int, releaseDate: Date)
         case other
     }
     
@@ -66,7 +66,7 @@ struct StructuredData {
             twitter["image"] = i.absoluteString
             og["og:image"] = i.absoluteString
         }
-        if case let .video(duration?, date?) = type {
+        if case let .video(duration, date) = type {
             og["video:release_date"] = DateFormatter.iso8601.string(from: date)
             og["video:duration"] = "\(duration)"
         }

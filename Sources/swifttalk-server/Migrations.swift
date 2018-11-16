@@ -136,6 +136,22 @@ fileprivate let migrations: [String] = [
     """,
     """
     CREATE INDEX IF NOT EXISTS tasks_date ON tasks (date);
+    """,
+    """
+    ALTER TABLE tasks
+        ADD COLUMN IF NOT EXISTS key text DEFAULT '' NOT NULL;
+    """,
+    """
+    DELETE FROM tasks WHERE key = '';
+    """,
+    """
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT * FROM pg_constraint WHERE conname='tasks_unique_key') THEN
+            ALTER TABLE tasks ADD CONSTRAINT tasks_unique_key UNIQUE (key);
+        END IF;
+    END
+    $$;
     """
 ]
 
