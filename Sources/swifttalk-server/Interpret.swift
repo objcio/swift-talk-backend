@@ -37,6 +37,10 @@ extension Row where Element == UserData {
     var currentSubscription: RemoteEndpoint<Subscription?> {
         return subscriptions.map { $0.first { $0.state == .active || $0.state == .canceled } }
     }
+    
+    var billingInfo: RemoteEndpoint<BillingInfo> {
+        return recurly.billingInfo(with: id)
+    }
 }
 
 func catchAndDisplayError<I: Interpreter>(_ f: () throws -> I) -> I {
@@ -311,10 +315,14 @@ extension Route {
                         let invoicesAndPDFs = (invoices ?? []).map { invoice in
                             (invoice, recurly.pdfURL(invoice: invoice, hostedLoginToken: recurlyToken))
                         }
-                        return I.write(billing(context: context, user: sess.user, subscriptions: s, invoices: invoicesAndPDFs))
+                        return I.onComplete(promise: sess.user.billingInfo.promise, do: { billingInfo in
+                            guard let b = billingInfo else {
+                                throw RenderingError(privateMessage: "couldn't fetch billing info \(user.id)", publicMessage: "Something went wrong loading your billing information.")
+                            }
+                            return I.write(billing(context: context, user: sess.user, subscriptions: s, invoices: invoicesAndPDFs, billingInfo: b))
+                        })
                     })
                 })
-
             }
             guard let t = sess.user.data.recurlyHostedLoginToken else {
                 return I.onComplete(promise: sess.user.account.promise) { acc in
@@ -328,6 +336,8 @@ extension Route {
             }
             return renderBilling(recurlyToken: t)
         case .cancelSubscription:
+            return I.write("TODO")
+        case .upgradeSubscription:
             return I.write("TODO")
         case .accountTeamMembers:
             let sess = try requireSession()

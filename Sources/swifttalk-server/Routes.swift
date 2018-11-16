@@ -37,6 +37,7 @@ enum Route: Equatable {
     case error
     case cancelSubscription
     case scheduledTask
+    case upgradeSubscription
 }
 
 extension Route {
@@ -133,6 +134,7 @@ private let router: Router<Route> = [
     .c("registration", .register),
     .c("subscription") / .c("new", .newSubscription),
     .c("subscription") / .c("cancel", .cancelSubscription),
+    .c("subscription") / .c("upgrade", .upgradeSubscription),
     createSubRoute,
     .c("account") / .c("profile", .accountProfile),
     .c("account") / .c("billing", .accountBilling),

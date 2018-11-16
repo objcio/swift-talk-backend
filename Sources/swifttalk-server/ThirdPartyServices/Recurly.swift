@@ -145,6 +145,28 @@ struct Account: Codable {
     var preferred_locale: String?
 }
 
+struct BillingInfo: Codable {
+    var first_name: String?
+    var last_name: String?
+    var company: String?
+    var address: String?
+    var address2: String?
+    var city: String?
+    var state: String?
+    var zip: String?
+    var country: String?
+    var phone: String?
+    var vat_number: String?
+    var ip_address: String
+    var ip_address_country: String
+    var card_type: String
+    var year: Int
+    var month: Int
+    var first_six: String
+    var last_four: String
+    var updated_at: Date
+}
+
 struct Invoice: Codable {
     enum State: String, Codable {
         case pending
@@ -254,6 +276,10 @@ struct Recurly {
         return RemoteEndpoint(getXML: base.appendingPathComponent("accounts"), headers: headers, query: [:])
     }
     
+    func billingInfo(with id: UUID) -> RemoteEndpoint<BillingInfo> {
+        return RemoteEndpoint(getXML: base.appendingPathComponent("accounts/\(id.uuidString)/billing_info"), headers: headers, query: [:])
+    }
+
     func account(with id: UUID) -> RemoteEndpoint<Account> {
         return RemoteEndpoint(getXML: base.appendingPathComponent("accounts/\(id.uuidString)"), headers: headers, query: [:])
     }

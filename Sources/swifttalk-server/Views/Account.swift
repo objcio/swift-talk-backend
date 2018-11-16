@@ -81,12 +81,8 @@ func invoicesView(context: Context, user: Row<UserData>, invoices: [(Invoice, pd
                     ),
                     Node.tbody(classes: "color-gray-30", invoices.map { x in
                         let (invoice, pdfURL) = x
-                        print(pdfURL)
-//                        let (icon, cl) = invoice.state.icon
                         return Node.tr(classes: "border-top border-1 border-color-gray-90", [
                             Node.td(classes: "pv ph-", [
-//                                faIcon(name: icon, classes: cl),
-//                                screenReader(invoice.state.rawValue)
                                 .text("\(invoice.state.rawValue)")
                                 ]), // todo icon
                             Node.td(classes: "pv ph- no-wrap", [.text("# \(invoice.invoice_number)")]),
@@ -138,31 +134,32 @@ extension Subscription.Upgrade {
             teamMemberText = ""
         }
         return [
-                Node.p([.text("Upgrade to the \(plan.name) plan.")]),
-                Node.p([.text(
+                .p([.text("Upgrade to the \(plan.name) plan.")]),
+                .p([.text(
                     "Your new plan will cost \(dollarAmount(cents: total_in_cents)) \(plan.prettyInterval)" +
                         priceBreakdown +
                         teamMemberText +
-                    "."
-                    )])
-
+                    ". You'll be charged immediately, and credited for the remainder of the current billing period."
+                    )]),
+                button(to: .upgradeSubscription, text: "Upgrade Subscription", classes: "color-invalid")
             ]
     }
 }
 
-func billing(context: Context, user: Row<UserData>, subscriptions: [Subscription], invoices: [(Invoice, pdfURL: URL)]) -> Node {
+fileprivate func button(to route: Route, text: String, classes: Class = "") -> Node {
+    return Node.button(to: route, [.text(text)], classes: "bold reset-button border-bottom border-1 hover-color-black" + classes)
+}
+
+func billing(context: Context, user: Row<UserData>, subscriptions: [Subscription], invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo) -> Node {
     func label(text: String, classes: Class = "") -> Node {
         return Node.strong(classes: "flex-none width-4 bold color-gray-15" + classes, [.text(text)])
     }
 
-
     func value(text: String, classes: Class = "") -> Node {
         return Node.span(classes: "flex-auto color-gray-30" + classes, [.text(text)])
     }
-    func button(to route: Route, text: String, classes: Class = "") -> Node {
-        return Node.button(to: route, [.text(text)], classes: "bold reset-button border-bottom border-1 hover-color-black" + classes)
-    }
 
+    // todo: reactivate subscription.
     let subscriptionInfo: [Node] = user.data.subscriber ? [
         Node.h2(classes: "color-blue bold ms2 mb", [.text("Subscription")]),
         Node.div(subscriptions.map { sub in
@@ -208,6 +205,9 @@ func billing(context: Context, user: Row<UserData>, subscriptions: [Subscription
         accountContainer(Node.div(classes: "stack++", [
             Node.div(
                 subscriptionInfo
+            ),
+            Node.div(
+                [.text("\(billingInfo)")]
             ),
             Node.div(invoicesView(context: context, user: user, invoices: invoices))
         ]), forRoute: .accountBilling)
