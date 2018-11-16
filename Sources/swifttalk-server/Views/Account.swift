@@ -132,9 +132,13 @@ func invoicesView(context: Context, user: Row<UserData>, invoices: [(Invoice, pd
         ]
     }
     return [
-        Node.h2(classes: "color-blue bold ms2 mb-", [.text("Invoice History")]),
+        heading("Invoice History"),
         table(columns: columns, cells: cells)
     ]
+}
+
+fileprivate func heading(_ string: String) -> Node {
+    return Node.h2(classes: "color-blue bold ms2 mb", [.text(string)])
 }
 
 extension Subscription.State {
@@ -186,8 +190,30 @@ extension Subscription.Upgrade {
 }
 
 extension BillingInfo {
-    var show: Node {
-        return .text("\(self)")
+    var cardMask: String {
+        return "\(first_six.first!)*** **** **** \(last_four)"
+    }
+    var show: [Node] {
+        return [
+            heading("Payment Method"),
+            Node.div([
+                Node.ul(classes: "stack- mb", [
+                    Node.li(classes: "flex", [
+                        label(text: "Type"),
+                        value(text: self.card_type)
+                    ]),
+                    Node.li(classes: "flex", [
+                        label(text: "Number"),
+                        value(text: cardMask, classes: "type-mono")
+                    ]),
+                    Node.li(classes: "flex", [
+                        label(text: "Expiry"),
+                        value(text: "\(month)/\(year)")
+                        ]),
+                ])
+            ]),
+            Node.link(to: .accountUpdatePayment, [.text("Update Payment Method")], classes: "color-blue no-decoration border-bottom border-1 hover-color-black bold")
+        ]
     }
 }
 
@@ -195,19 +221,20 @@ fileprivate func button(to route: Route, text: String, classes: Class = "") -> N
     return Node.button(to: route, [.text(text)], classes: "bold reset-button border-bottom border-1 hover-color-black" + classes)
 }
 
-func billing(context: Context, user: Row<UserData>, subscription: Subscription?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo) -> Node {
-    func label(text: String, classes: Class = "") -> Node {
-        return Node.strong(classes: "flex-none width-4 bold color-gray-15" + classes, [.text(text)])
-    }
+fileprivate func label(text: String, classes: Class = "") -> Node {
+    return Node.strong(classes: "flex-none width-4 bold color-gray-15" + classes, [.text(text)])
+}
 
-    func value(text: String, classes: Class = "") -> Node {
-        return Node.span(classes: "flex-auto color-gray-30" + classes, [.text(text)])
-    }
+fileprivate func value(text: String, classes: Class = "") -> Node {
+    return Node.span(classes: "flex-auto color-gray-30" + classes, [.text(text)])
+}
+
+func billing(context: Context, user: Row<UserData>, subscription: Subscription?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo) -> Node {
 
     // todo: reactivate subscription.
     let subscriptionInfo: [Node] = subscription.map { sub in
         [
-        Node.h2(classes: "color-blue bold ms2 mb", [.text("Subscription")]),
+        heading("Subscription"),
         Node.div([
             Node.ul(classes: "stack- mb", [
                 Node.li(classes: "flex", [
@@ -261,7 +288,7 @@ func billing(context: Context, user: Row<UserData>, subscription: Subscription?,
                 subscriptionInfo
             ),
             Node.div(
-                [.text("\(billingInfo)")]
+                billingInfo.show
             ),
             Node.div(invoicesView(context: context, user: user, invoices: invoices))
         ]), forRoute: .accountBilling)
@@ -314,11 +341,11 @@ func teamMembers(context: Context, addForm: Node, teamMembers: [Row<UserData>]) 
     let content: [Node] = [
         Node.div(classes: "stack++", [
             Node.div([
-                Node.h2(classes: "color-blue bold ms2 mb-", [.text("Add Team Member")]),
+                heading("Add Team Member"),
                 addForm,
             ]),
             Node.div([
-                Node.h2(classes: "color-blue bold ms2 mb-", [.text("Current Team Members")]),
+                heading("Current Team Members"),
                 currentTeamMembers
             ])
         ])

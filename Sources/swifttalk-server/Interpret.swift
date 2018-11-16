@@ -385,6 +385,8 @@ extension Route {
                 }
                 
             }
+        case .accountUpdatePayment:
+            return I.write("Todo")
         case .accountTeamMembers:
             let sess = try requireSession()
             return I.withPostBody(do: { params in
@@ -407,6 +409,7 @@ extension Route {
             }, or: {
                 return try teamMembersResponse(sess)
             })
+        
         case .accountDeleteTeamMember(let id):
             try requirePost()
             let sess = try requireSession()

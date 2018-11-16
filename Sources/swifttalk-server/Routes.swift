@@ -39,6 +39,7 @@ enum Route: Equatable {
     case reactivateSubscription
     case scheduledTask
     case upgradeSubscription
+    case accountUpdatePayment
 }
 
 extension Route {
@@ -139,6 +140,7 @@ private let accountRoutes: [Router<Route>] = [
     .c("logout", .logout),
     .c("account") / .c("profile", .accountProfile),
     .c("account") / .c("billing", .accountBilling),
+    .c("account") / .c("payment", .accountUpdatePayment),
     deleteTeamMember,
     .c("account") / .c("team_members", .accountTeamMembers),
 ]
