@@ -146,11 +146,17 @@ extension Subscription.Upgrade {
     }
 }
 
+extension BillingInfo {
+    var show: Node {
+        return .text("\(self)")
+    }
+}
+
 fileprivate func button(to route: Route, text: String, classes: Class = "") -> Node {
     return Node.button(to: route, [.text(text)], classes: "bold reset-button border-bottom border-1 hover-color-black" + classes)
 }
 
-func billing(context: Context, user: Row<UserData>, subscriptions: [Subscription], invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo) -> Node {
+func billing(context: Context, user: Row<UserData>, subscription: Subscription?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo) -> Node {
     func label(text: String, classes: Class = "") -> Node {
         return Node.strong(classes: "flex-none width-4 bold color-gray-15" + classes, [.text(text)])
     }
@@ -160,9 +166,10 @@ func billing(context: Context, user: Row<UserData>, subscriptions: [Subscription
     }
 
     // todo: reactivate subscription.
-    let subscriptionInfo: [Node] = user.data.subscriber ? [
+    let subscriptionInfo: [Node] = subscription.map { sub in
+        [
         Node.h2(classes: "color-blue bold ms2 mb", [.text("Subscription")]),
-        Node.div(subscriptions.map { sub in
+        Node.div([
             Node.ul(classes: "stack- mb", [
                 Node.li(classes: "flex", [
                     label(text: "Plan"),
@@ -183,15 +190,23 @@ func billing(context: Context, user: Row<UserData>, subscriptions: [Subscription
                         button(to: .cancelSubscription, text: "Cancel Subscription", classes: "color-invalid")
                     ])
                 ]) : .none,
-			sub.upgrade.map { upgrade in
-                    Node.li(classes: "flex", [
-                        label(text: "Upgrade"),
-                        Node.div(classes: "flex-auto color-gray-30 stack--", upgrade.pretty)
+                sub.upgrade.map { upgrade in
+                        Node.li(classes: "flex", [
+                            label(text: "Upgrade"),
+                            Node.div(classes: "flex-auto color-gray-30 stack--", upgrade.pretty)
+                        ])
+                    } ?? .none,
+                sub.state == .canceled ? Node.li(classes: "flex", [
+                    label(text: "Expires on"),
+                    Node.div(classes: "flex-auto color-gray-30 stack-", [
+                        .text(sub.expires_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "<unknown date>"),
+                        button(to: .reactivateSubscription, text: "Reactivate Subscription", classes: "color-invalid")
                     ])
-                } ?? .none
+                    
+                ]) : .none
             ])
-        })
-    ] : [
+    	])
+    ]} ?? [
         Node.div(classes: "text-center", [
             Node.p(classes: "color-gray-30 ms1 mb", [.text("You don't have an active subscription.")]),
             Node.link(to: .subscribe, [.text("Become a Subscriber")], classes: "c-button")

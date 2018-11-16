@@ -43,6 +43,11 @@ extension Row where Element == UserData {
     }
 }
 
+struct RecurlyErrors: Error {
+    let errs: [RecurlyError]
+    init(_ errs: [RecurlyError]) { self.errs = errs }
+}
+
 func catchAndDisplayError<I: Interpreter>(_ f: () throws -> I) -> I {
     do {
         return try f()
@@ -62,6 +67,18 @@ extension Interpreter {
             catchAndDisplayError { try cont(value) }
         })
     }
+    
+    static func onSuccess<A>(promise: Promise<A?>, file: StaticString = #file, line: UInt = #line, message: String = "Something went wrong.", do cont: @escaping (A) throws -> Self) -> Self {
+        return onComplete(promise: promise, do: { value in
+            catchAndDisplayError {
+                guard let v = value else {
+                    throw RenderingError(privateMessage: "Expected non-nil value, but got nil (\(file):\(line)).", publicMessage: message)
+                }
+                return try cont(v)
+            }
+        })
+    }
+    
     
     static func withPostBody(do cont: @escaping ([String:String]) throws -> Self) -> Self {
         return .withPostBody { dict in
@@ -178,8 +195,7 @@ extension Route {
                 let plan = try Plan.all.first(where: { $0.plan_code == planId }) ?! RenderingError.init(privateMessage: "Illegal plan: \(planId)", publicMessage: "Couldn't find the plan you selected.")
                 let cr = CreateSubscription.init(plan_code: plan.plan_code, currency: "USD", coupon_code: nil, account: .init(account_code: s.user.id, email: s.user.data.email, billing_info: .init(token_id: token)))
                 let req = recurly.createSubscription(cr)
-                return I.onComplete(promise: URLSession.shared.load(req), do: { sub in
-                    let sub_ = try sub ?! RenderingError(privateMessage: "Couldn't load create subscription URL", publicMessage: "Something went wrong, please try again.")
+                return I.onSuccess(promise: URLSession.shared.load(req), message: "Something went wrong, please try again", do: { sub_ in
                     switch sub_ {
                     case .errors(let messages):
                         return try I.write(newSub(context: context, errs: messages.map { $0.message }))
@@ -224,8 +240,7 @@ extension Route {
                 URLSession.shared.load(Github.getAccessToken(code)).map({ $0?.access_token })
                 , do: { token in
                     let t = try token ?! RenderingError(privateMessage: "No github access token", publicMessage: "Couldn't access your Github profile.")
-                    return I.onComplete(promise: URLSession.shared.load(Github(t).profile), do: { profile in
-                        let p = try profile ?! RenderingError(privateMessage: "Couldn't load Github profile", publicMessage: "Couldn't access your Github profile.")
+                    return I.onSuccess(promise: URLSession.shared.load(Github(t).profile), message: "Couldn't access your Github profile", do: { p in
                         // todo ask for email if we don't get it
                         let uid: UUID
                         if let user = try c.get().execute(Row<UserData>.select(githubId: p.id)) {
@@ -307,38 +322,57 @@ extension Route {
             let sess = try requireSession()
             var user = sess.user
             func renderBilling(recurlyToken: String) -> I {
-                return I.onComplete(promise: sess.user.subscriptions.promise, do: { subs in
-                    guard let s = subs else {
-                        return I.write("Something went wrong loading your subscriptions") // todo nice error page
-                    }
-                    return I.onComplete(promise: sess.user.invoices.promise, do: { invoices in
-                        let invoicesAndPDFs = (invoices ?? []).map { invoice in
+                return I.onSuccess(promise: sess.user.currentSubscription.promise, do: { sub in
+                    return I.onSuccess(promise: sess.user.invoices.promise, do: { invoices in
+                        let invoicesAndPDFs = invoices.map { invoice in
                             (invoice, recurly.pdfURL(invoice: invoice, hostedLoginToken: recurlyToken))
                         }
-                        return I.onComplete(promise: sess.user.billingInfo.promise, do: { billingInfo in
-                            guard let b = billingInfo else {
-                                throw RenderingError(privateMessage: "couldn't fetch billing info \(user.id)", publicMessage: "Something went wrong loading your billing information.")
-                            }
-                            return I.write(billing(context: context, user: sess.user, subscriptions: s, invoices: invoicesAndPDFs, billingInfo: b))
+                        return I.onSuccess(promise: sess.user.billingInfo.promise, do: { billingInfo in
+                            return I.write(billing(context: context, user: sess.user, subscription: sub, invoices: invoicesAndPDFs, billingInfo: billingInfo))
                         })
                     })
                 })
             }
             guard let t = sess.user.data.recurlyHostedLoginToken else {
-                return I.onComplete(promise: sess.user.account.promise) { acc in
-                    guard let token = acc?.hosted_login_token else {
-                        return I.write("Something went wrong.")
-                    }
-                    user.data.recurlyHostedLoginToken = token
+                return I.onSuccess(promise: sess.user.account.promise) { acc in
+                    user.data.recurlyHostedLoginToken = acc.hosted_login_token
                     try c.get().execute(user.update())
-                    return renderBilling(recurlyToken: token)
+                    return renderBilling(recurlyToken: acc.hosted_login_token)
                 }
             }
             return renderBilling(recurlyToken: t)
         case .cancelSubscription:
-            return I.write("TODO")
+            let sess = try requireSession()
+            let user = sess.user
+            return I.onSuccess(promise: user.currentSubscription.promise.map(flatten)) { sub in
+                guard sub.state == .active else {
+                    throw RenderingError(privateMessage: "cancel: no active sub \(user) \(sub)", publicMessage: "Can't find an active subscription.")
+                }
+                return I.onSuccess(promise: recurly.cancel(sub).promise) { result in
+                    switch result {
+                    case .success: return I.redirect(to: .accountBilling)
+                    case .errors(let errs): throw RecurlyErrors(errs)
+                    }
+                }
+                
+            }
         case .upgradeSubscription:
             return I.write("TODO")
+        case .reactivateSubscription:
+            let sess = try requireSession()
+            let user = sess.user
+            return I.onSuccess(promise: user.currentSubscription.promise.map(flatten)) { sub in
+                guard sub.state == .canceled else {
+                    throw RenderingError(privateMessage: "cancel: no active sub \(user) \(sub)", publicMessage: "Can't find a cancelled subscription.")
+                }
+                return I.onSuccess(promise: recurly.reactivate(sub).promise) { result in
+                    switch result {
+                    case .success: return I.redirect(to: .accountBilling)
+                    case .errors(let errs): throw RecurlyErrors(errs)
+                    }
+                }
+                
+            }
         case .accountTeamMembers:
             let sess = try requireSession()
             return I.withPostBody(do: { params in

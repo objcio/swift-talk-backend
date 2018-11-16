@@ -10,6 +10,11 @@ import Foundation
 
 var standardError = FileHandle.standardError
 
+func flatten<A>(_ value: A??) -> A? {
+    guard let x = value else { return nil }
+    return x
+}
+
 func log(_ e: Error) {
     print(e.localizedDescription, to: &standardError)
 }

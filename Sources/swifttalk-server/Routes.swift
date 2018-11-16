@@ -36,6 +36,7 @@ enum Route: Equatable {
     case githubWebhook
     case error
     case cancelSubscription
+    case reactivateSubscription
     case scheduledTask
     case upgradeSubscription
 }
@@ -134,6 +135,7 @@ private let router: Router<Route> = [
     .c("registration", .register),
     .c("subscription") / .c("new", .newSubscription),
     .c("subscription") / .c("cancel", .cancelSubscription),
+    .c("subscription") / .c("reactivate", .reactivateSubscription),
     .c("subscription") / .c("upgrade", .upgradeSubscription),
     createSubRoute,
     .c("account") / .c("profile", .accountProfile),

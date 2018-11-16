@@ -80,7 +80,7 @@ extension Subscription {
 
     // Returns nil if there aren't any upgrades.
     var upgrade: Upgrade? {
-        if let m = Plan.monthly, plan.plan_code == m.plan_code, let y = Plan.yearly {
+        if state == .active, let m = Plan.monthly, plan.plan_code == m.plan_code, let y = Plan.yearly {
             // TODO calculate correctly
             let totalWithoutVat = y.unit_amount_in_cents.usdCents // todo add team members
             let vat: Int? = tax_rate.map { Int(Double(totalWithoutVat) * $0) }
@@ -238,6 +238,9 @@ enum RecurlyResult<A> {
     case errors([RecurlyError])
 }
 
+struct RecurlyVoid: Decodable {
+}
+
 extension RecurlyResult: Decodable where A: Decodable {
     init(from decoder: Decoder) throws {
         do {
@@ -297,6 +300,16 @@ struct Recurly {
         return RemoteEndpoint(postXML: url, value: x, headers: headers, query: [:])
     }
     
+    func cancel(_ subscription: Subscription) -> RemoteEndpoint<RecurlyResult<RecurlyVoid>> {
+        let url = base.appendingPathComponent("subscriptions/\(subscription.uuid)/cancel")
+        return RemoteEndpoint(putXML: url, headers: headers)
+    }
+    
+    func reactivate(_ subscription: Subscription) -> RemoteEndpoint<RecurlyResult<RecurlyVoid>> {
+        let url = base.appendingPathComponent("subscriptions/\(subscription.uuid)/reactivate")
+        return RemoteEndpoint(putXML: url, headers: headers)
+    }
+    
     func updateTeamMembers(quantity: Int, subscriptionId: String) -> RemoteEndpoint<Subscription> {
         let url = base.appendingPathComponent("subscriptions/\(subscriptionId)")
         let data = UpdateSubscriptionAddOns(subscription_add_ons: [UpdateSubscriptionAddOns.AddOn(add_on_code: "team_members", quantity: quantity)])
@@ -324,12 +337,17 @@ extension RemoteEndpoint where A: Decodable {
         self.init(get: get, accept: .xml, headers: headers, query: query, parse: parseRecurlyResponse)
     }
     
-    init<B: Encodable & RootElement>(postXML url: URL, value: B, headers: [String:String], query: [String:String]) {
+    init<B: Encodable & RootElement>(postXML url: URL, value: B, headers: [String:String], query: [String:String] = [:]) {
         self.init(post: url, accept: .xml, body: try! encodeXML(value).data(using: .utf8)!, headers: headers, query: query, parse: parseRecurlyResponse)
     }
 
-    init<B: Encodable & RootElement>(putXML url: URL, value: B, headers: [String:String], query: [String:String]) {
-        self.init(put: url, accept: .xml, body: try! encodeXML(value).data(using: .utf8)!, headers: headers, query: query, parse: parseRecurlyResponse)
+    init<B: Encodable & RootElement>(putXML url: URL, value: B, headers: [String:String], query: [String:String] = [:]) {
+        let body = try! encodeXML(value).data(using: .utf8)!
+        self.init(put: url, accept: .xml, body: body, headers: headers, query: query, parse: parseRecurlyResponse)
+    }
+    
+    init(putXML url: URL, headers: [String:String], query: [String:String] = [:]) {
+        self.init(put: url, accept: .xml, body: Data(), headers: headers, query: query, parse: parseRecurlyResponse)
     }
 }
 
