@@ -85,18 +85,30 @@ func refreshStaticData<A: StaticLoadable>(_ endpoint: RemoteEndpoint<[A]>, onCom
 }
 
 extension Static {
-    static func fromStaticRepo<A: StaticLoadable>() -> Static<[A]> {
+    static func fromStaticRepo<A: StaticLoadable>(onRefresh: @escaping ([A]) -> () = { _ in }) -> Static<[A]> {
         return Static<[A]>(async: { cb in
             cb(loadStaticData())
             let ep: RemoteEndpoint<[A]> = Github.staticData()
             refreshStaticData(ep) {
-                cb(loadStaticData())
+                let data: [A] = loadStaticData()
+                cb(data)
+                onRefresh(data)
             }
         })
     }
 }
 
-fileprivate let episodes: Static<[Episode]> = Static<[Episode]>.fromStaticRepo()
+fileprivate let episodes: Static<[Episode]> = Static<[Episode]>.fromStaticRepo() { newEpisodes in
+    let unreleased = newEpisodes.filter { $0.releaseAt > Date() }
+    for ep in unreleased {
+        do {
+            let query = try Task.releaseEpisode(number: ep.number).schedule(at: ep.releaseAt)
+            try lazyConnection().get().execute(query)
+        } catch {
+            log(error: "Failed to schedule release task for episode \(ep.number)")
+        }
+    }
+}
 fileprivate let collections: Static<[Collection]> = Static<[Collection]>.fromStaticRepo()
 fileprivate let collaborators: Static<[Collaborator]> = Static<[Collaborator]>.fromStaticRepo()
 
