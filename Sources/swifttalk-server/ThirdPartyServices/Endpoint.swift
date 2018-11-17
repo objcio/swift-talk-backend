@@ -60,6 +60,33 @@ struct RemoteEndpoint<A> {
     }
 }
 
+extension RemoteEndpoint where A: Decodable {
+    /// Parses the result as JSON
+    init(postJSON url: URL, headers: [String: String] = [:], query: [String:String]) {
+        self.init(postJSON: url, body: Optional<Bool>.none, headers: headers, query: query)
+    }
+    
+    init<B: Codable>(postJSON url: URL, body: B?, headers: [String: String] = [:], query: [String:String]) {
+        self.init(method: "POST", url: url, body: body, headers: headers, query: query)
+    }
+    
+    init<B: Codable>(patchJSON url: URL, body: B?, headers: [String: String] = [:], query: [String:String]) {
+        self.init(method: "PATCH", url: url, body: body, headers: headers, query: query)
+    }
+    
+    init(getJSON url: URL, headers: [String:String] = [:], query: [String:String] = [:]) {
+        self.init(method: "GET", url: url, body: Optional<Bool>.none, headers: headers, query: query)
+    }
+    
+    private init<B: Codable>(method: String, url: URL, body: B?, headers: [String: String] = [:], query: [String: String] = [:]) {
+        let b = body.map { try! JSONEncoder().encode($0) }
+        self.init(method: method, url: url, accept: .json, body: b, headers: headers, query: query) { data in
+            return try? JSONDecoder().decode(A.self, from: data)
+        }
+    }
+}
+
+
 extension DateFormatter {
     static let iso8601WithTimeZone: DateFormatter = {
         let dateFormatter = DateFormatter()
@@ -69,33 +96,6 @@ extension DateFormatter {
     }()
 }
 
-
-extension RemoteEndpoint where A: Decodable {
-    /// Parses the result as JSON
-    init(postJSON url: URL, query: [String:String]) {
-        self.init(method: "POST", url: url, body: Optional<Bool>.none, query: query)
-    }
-
-    init<B: Codable>(patchJSON url: URL, body: B?, query: [String:String]) {
-        self.init(method: "PATCH", url: url, body: body, query: query)
-    }
-
-    init(getJSON url: URL, headers: [String:String] = [:], query: [String:String] = [:]) {
-        self.init(method: "GET", url: url, body: Optional<Bool>.none, headers: headers, query: query)
-    }
-
-    private init<B: Codable>(method: String, url: URL, body: B?, headers: [String: String] = [:], query: [String: String] = [:]) {
-        var comps = URLComponents(string: url.absoluteString)!
-        comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
-        request = URLRequest(url: comps.url!)
-        request.setValue(Accept.json.rawValue, forHTTPHeaderField: "Accept")
-        request.httpMethod = method
-        request.httpBody = body.map { try! JSONEncoder().encode($0) }
-        self.parse = { data in
-            return try? JSONDecoder().decode(A.self, from: data)
-        }
-    }
-}
 
 extension URLSession {
     func load<A>(_ e: RemoteEndpoint<A>, callback: @escaping (A?) -> ()) {
