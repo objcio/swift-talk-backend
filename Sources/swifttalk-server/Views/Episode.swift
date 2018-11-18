@@ -330,42 +330,45 @@ extension Episode {
             ])
         ])
 
+        let transcriptAvailable: [Node] = [
+            context.session.premiumAccess ? .raw("") : .raw(subscriptionPitch),
+            .div(classes: "l+|flex l-|stack+++ m-cols", [
+                .div(classes: "p-col l+|flex-auto l+|width-2/3 xl+|width-7/10 flex flex-column", [
+                    Node.div(classes: "text-wrapper", [
+                        Node.div(classes: "lh-140 color-blue-darkest ms1 bold mb+", [
+                            .markdown(synopsis),
+                            // todo episode.updates
+                        ])
+                    ]),
+                    .div(classes: "flex-auto relative min-height-5", [
+                        .div(attributes: ["class": "js-transcript js-expandable z-0", "data-expandable-collapsed": "absolute position-stretch position-nw overflow-hidden", "id": "transcript"], [
+                            Node.raw(expandTranscript),
+                            Node.div(classes: "c-text c-text--fit-code z-0 js-has-codeblocks", [
+                                .raw(transcript?.html ?? "No transcript yet.")
+                            ])
+                        ])
+                    ])
+                ]),
+                sidebar
+            ])
+        ]
+        let noTranscript: [Node] = [
+            .div(classes: "bgcolor-pale-blue border border-1 border-color-subtle-blue radius-5 ph pv++ flex flex-column justify-center items-center text-center min-height-6", [
+                Node.inlineSvg(path: "icon-blocked.svg"),
+                .div(classes: "mv", [
+                    .h3([.text("This episode is exclusive to Subscribers")], attributes: ["class":"ms1 bold color-blue-darkest"]),
+                    .p(attributes: ["class": "mt- lh-135 color-blue-darkest opacity-60 max-width-8"], [
+                        .text("Become a subscriber to watch future and all \(Episode.subscriberOnly) current subscriber-only episodes, plus enjoy access to episode video downloads and \(teamDiscount)% discount for your team members.")
+                    ])
+                ]),
+                Node.link(to: .subscribe, [Node.text("Become a subscriber")], attributes: ["class": "button button--themed"])
+            ])
+        ]
+        
         let main: Node = Node.div(classes: "js-episode", [
             headerAndPlayer,
             .div(classes: "bgcolor-white l+|pt++", [
-                .div(classes: "container", canWatch ? [
-                    context.session.premiumAccess ? .raw("") : .raw(subscriptionPitch),
-                    .div(classes: "l+|flex l-|stack+++ m-cols", [
-                        .div(classes: "p-col l+|flex-auto l+|width-2/3 xl+|width-7/10 flex flex-column", [
-                            Node.div(classes: "text-wrapper", [
-                                Node.div(classes: "lh-140 color-blue-darkest ms1 bold mb+", [
-                                    .markdown(synopsis),
-                                    // todo episode.updates
-                                ])
-                            ]),
-                            .div(classes: "flex-auto relative min-height-5", [
-                                .div(attributes: ["class": "js-transcript js-expandable z-0", "data-expandable-collapsed": "absolute position-stretch position-nw overflow-hidden", "id": "transcript"], [
-                                    Node.raw(expandTranscript),
-                                    Node.div(classes: "c-text c-text--fit-code z-0 js-has-codeblocks", [
-                                        .raw(transcript?.html ?? "No transcript yet.")
-                                    ])
-                                ])
-                            ])
-                        ]),
-                        sidebar
-                    ])
-                ] : [
-                    .div(classes: "bgcolor-pale-blue border border-1 border-color-subtle-blue radius-5 ph pv++ flex flex-column justify-center items-center text-center min-height-6", [
-                        Node.inlineSvg(path: "icon-blocked.svg"),
-                        .div(classes: "mv", [
-                            .h3([.text("This episode is exclusive to Subscribers")], attributes: ["class":"ms1 bold color-blue-darkest"]),
-                            .p(attributes: ["class": "mt- lh-135 color-blue-darkest opacity-60 max-width-8"], [
-                                .text("Become a subscriber to watch future and all \(Episode.subscriberOnly) current subscriber-only episodes, plus enjoy access to episode video downloads and \(teamDiscount)% discount for your team members.")
-                            ])
-                        ]),
-                        Node.link(to: .subscribe, [Node.text("Become a subscriber")], attributes: ["class": "button button--themed"])
-                    ])
-                ])
+                .div(classes: "container", canWatch ? transcriptAvailable : noTranscript)
             ])
         ])
         

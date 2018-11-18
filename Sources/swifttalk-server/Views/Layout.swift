@@ -86,69 +86,70 @@ let navigationItems: [(Route, String)] = [
 ]
 
 extension LayoutConfig {
+    var csrf: [Node] {
+        return (context.session?.csrfToken).map { [Node.meta(attributes: ["name": "csrf-token", "content": "'\($0)'"])] } ?? []
+    }
+    var structured: [Node] {
+        return structuredData.map { $0.nodes } ?? []
+    }
+    
     var layout: Node {
-        let csrf: String? = context.session?.csrfToken
-        let structured: [Node] = structuredData.map { $0.nodes } ?? []
         let head: Node = .head([
             .meta(attributes: ["charset": "utf-8"]),
             .meta(attributes: ["http-equiv": "X-UA-Compatible", "content": "IE=edge"]),
             .meta(attributes: ["name": "viewport", "content": "'width=device-width, initial-scale=1, user-scalable=no'"]),
-            ] + (csrf == nil ? [] : [
-                .meta(attributes: ["name": "csrf-token", "content": "'\(csrf!)'"])
-                ]) +
-            [
-                .title(pageTitle),
-                // todo rss+atom links
-                .stylesheet(href: "/assets/stylesheets/application.css"),
-                .script(src: "/assets/application.js")
-                // todo google analytics
-            ] + structured)
-        let body: Node = .body(attributes: ["class": "theme-" + theme], [ // todo theming classes?
-            .header(attributes: ["class": "bgcolor-white"], [
-                .div(classes: "height-3 flex scroller js-scroller js-scroller-container", [
-                    .div(classes: "container-h flex-grow flex", [
-                        .link(to: .home, [
-                            .inlineSvg(path: "logo.svg", attributes: ["class": "block logo logo--themed height-auto"]), // todo scaling parameter?
-                            .h1([.text("objc.io")], attributes: ["class":"visuallyhidden"]) // todo class
-                            ] as [Node], attributes: ["class": "flex-none outline-none mr++ flex"]),
-                        .nav(attributes: ["class": "flex flex-grow"], [
-                            .ul(attributes: ["class": "flex flex-auto"], navigationItems.map { l in
-                                .li(attributes: ["class": "flex mr+"], [
-                                    .link(to: l.0, [.span([.text(l.1)])], attributes: [
-                                        "class": "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration"
-                                        ])
-                                    ])
-                            }) // todo: search
-                            ]),
-                        userHeader(context)
-                        ])
+        ] + csrf + [
+            .title(pageTitle),
+            // todo rss+atom links
+            .stylesheet(href: "/assets/stylesheets/application.css"),
+            .script(src: "/assets/application.js")
+            // todo google analytics
+        ] + structured)
+        let logo = Node.link(to: .home, [
+            .inlineSvg(path: "logo.svg", attributes: ["class": "block logo logo--themed height-auto"]), // todo scaling parameter?
+            .h1([.text("objc.io")], attributes: ["class":"visuallyhidden"]) // todo class
+        ] as [Node], attributes: ["class": "flex-none outline-none mr++ flex"])
+        let navigation = Node.nav(attributes: ["class": "flex flex-grow"], [
+            .ul(attributes: ["class": "flex flex-auto"], navigationItems.map { l in
+                .li(attributes: ["class": "flex mr+"], [
+                    .link(to: l.0, [.span([.text(l.1)])], attributes: [
+                        "class": "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration"
                     ])
-                ]),
+                ])
+            }) // todo: search
+        ])
+
+        let header = Node.header(attributes: ["class": "bgcolor-white"], [
+            .div(classes: "height-3 flex scroller js-scroller js-scroller-container", [
+                .div(classes: "container-h flex-grow flex", [
+                    logo,
+                    navigation,
+                    userHeader(context)
+                ])
+            ])
+        ])
+        let body: Node = .body(attributes: ["class": "theme-" + theme], [ // todo theming classes?
+            header,
             .main(contents), // todo sidenav
-            ] + preFooter + [
-                .raw(footer),
-            ] + footerContent)
+        ] + preFooter + [
+            .raw(footer)
+        ] + footerContent)
         return Node.html(attributes: ["lang": "en"], [head, body])
     }
     
     var layoutForCheckout: Node {
-        let csrf: String? = context.session?.csrfToken
-        let structured: [Node] = structuredData.map { $0.nodes } ?? []
         let head: Node = .head([
             .meta(attributes: ["charset": "utf-8"]),
             .meta(attributes: ["http-equiv": "X-UA-Compatible", "content": "IE=edge"]),
             .meta(attributes: ["name": "viewport", "content": "'width=device-width, initial-scale=1, user-scalable=no'"]),
-            ] + (csrf == nil ? [] : [
-                .meta(attributes: ["name": "csrf-token", "content": "'\(csrf!)'"])
-                ]) +
-            [
-                .title(pageTitle),
-                // todo rss+atom links
-                .stylesheet(href: "/assets/stylesheets/application.css"),
-                .script(src: "https://js.recurly.com/v4/recurly.js"), // todo not sure if we should include this?
-                .script(src: "/assets/application.js"),
-                // todo google analytics
-            ] + structured)
+        ] + csrf + [
+            .title(pageTitle),
+            // todo rss+atom links
+            .stylesheet(href: "/assets/stylesheets/application.css"),
+            .script(src: "https://js.recurly.com/v4/recurly.js"), // todo not sure if we should include this?
+            .script(src: "/assets/application.js"),
+            // todo google analytics
+        ] + structured)
         let linkClasses: Class = "no-decoration color-inherit hover-color-black mr"
         let body: Node = .body(attributes: ["class": "theme-" + theme], [ // todo theming classes?
             .header(attributes: ["class": "site-header"], [
