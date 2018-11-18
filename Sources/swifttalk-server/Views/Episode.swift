@@ -309,26 +309,29 @@ extension Episode {
             ])
         ] : []
         let sidebar: Node = Node.aside(classes: "p-col max-width-7 center stack l+|width-1/3 xl+|width-3/10 l+|flex-auto", resources + inCollection + details)
-        let main: Node = Node.div(classes: "js-episode", [
-            .div(classes: "bgcolor-night-blue pattern-shade-darker", [
-                .div(classes: "container l+|pb0 l+|n-mb++", [
-                    .header(attributes: ["class": "mb++ pb"], [
-                        .p(attributes: ["class": "color-orange ms1"], [
-                            .link(to: .home, [.text("Swift Talk")], attributes: ["class": "color-inherit no-decoration bold hover-border-bottom"]),
-                            .text("#" + number.padded)
-                            ]),
-                        .h2([.text(fullTitle + (released ? "" : " (unreleased)"))], attributes: ["class": "ms5 color-white bold mt-- lh-110"])
-                        ] + guests_ ),
-                    .div(classes: "l+|flex", [
-                        .div(classes: "flex-110 order-2", [
-                            player(canWatch: canWatch, playPosition: nil)
-                        ]),
-                        .div(classes: "min-width-5 relative order-1 mt++ l+|mt0 l+|mr++ l+|mb++", [
-                            toc(canWatch: canWatch)
-                            ])
-                        ])
-                    ])
+        let header = Node.header(attributes: ["class": "mb++ pb"], [
+            .p(attributes: ["class": "color-orange ms1"], [
+                .link(to: .home, [.text("Swift Talk")], attributes: ["class": "color-inherit no-decoration bold hover-border-bottom"]),
+                .text("#" + number.padded)
                 ]),
+            .h2([.text(fullTitle + (released ? "" : " (unreleased)"))], attributes: ["class": "ms5 color-white bold mt-- lh-110"])
+        ] + guests_ )
+        let headerAndPlayer = Node.div(classes: "bgcolor-night-blue pattern-shade-darker", [
+            .div(classes: "container l+|pb0 l+|n-mb++", [
+                header,
+                .div(classes: "l+|flex", [
+                    .div(classes: "flex-110 order-2", [
+                        player(canWatch: canWatch, playPosition: nil)
+                    ]),
+                    .div(classes: "min-width-5 relative order-1 mt++ l+|mt0 l+|mr++ l+|mb++", [
+                        toc(canWatch: canWatch)
+                    ])
+                ])
+            ])
+        ])
+
+        let main: Node = Node.div(classes: "js-episode", [
+            headerAndPlayer,
             .div(classes: "bgcolor-white l+|pt++", [
                 .div(classes: "container", canWatch ? [
                     context.session.premiumAccess ? .raw("") : .raw(subscriptionPitch),
@@ -338,32 +341,33 @@ extension Episode {
                                 Node.div(classes: "lh-140 color-blue-darkest ms1 bold mb+", [
                                     .markdown(synopsis),
                                     // todo episode.updates
-                                    ])
-                                ]),
+                                ])
+                            ]),
                             .div(classes: "flex-auto relative min-height-5", [
                                 .div(attributes: ["class": "js-transcript js-expandable z-0", "data-expandable-collapsed": "absolute position-stretch position-nw overflow-hidden", "id": "transcript"], [
                                     Node.raw(expandTranscript),
                                     Node.div(classes: "c-text c-text--fit-code z-0 js-has-codeblocks", [
                                         .raw(transcript?.html ?? "No transcript yet.")
-                                        ])
                                     ])
                                 ])
-                            ]),
-                        	sidebar
-                        ])
-                    ] : [
-                        .div(classes: "bgcolor-pale-blue border border-1 border-color-subtle-blue radius-5 ph pv++ flex flex-column justify-center items-center text-center min-height-6", [
-                            Node.inlineSvg(path: "icon-blocked.svg"),
-                            .div(classes: "mv", [
-                                .h3([.text("This episode is exclusive to Subscribers")], attributes: ["class":"ms1 bold color-blue-darkest"]),
-                                .p(attributes: ["class": "mt- lh-135 color-blue-darkest opacity-60 max-width-8"], [.text("Become a subscriber to watch future and all \(Episode.subscriberOnly) current subscriber-only episodes, plus enjoy access to episode video downloads and \(teamDiscount)% discount for your team members.")])
-                                
-                                ]),
-                            Node.link(to: .subscribe, [Node.text("Become a subscriber")], attributes: ["class": "button button--themed"])
                             ])
+                        ]),
+                        sidebar
+                    ])
+                ] : [
+                    .div(classes: "bgcolor-pale-blue border border-1 border-color-subtle-blue radius-5 ph pv++ flex flex-column justify-center items-center text-center min-height-6", [
+                        Node.inlineSvg(path: "icon-blocked.svg"),
+                        .div(classes: "mv", [
+                            .h3([.text("This episode is exclusive to Subscribers")], attributes: ["class":"ms1 bold color-blue-darkest"]),
+                            .p(attributes: ["class": "mt- lh-135 color-blue-darkest opacity-60 max-width-8"], [
+                                .text("Become a subscriber to watch future and all \(Episode.subscriberOnly) current subscriber-only episodes, plus enjoy access to episode video downloads and \(teamDiscount)% discount for your team members.")
+                            ])
+                        ]),
+                        Node.link(to: .subscribe, [Node.text("Become a subscriber")], attributes: ["class": "button button--themed"])
                     ])
                 ])
             ])
+        ])
         
         let data = StructuredData(title: title, description: synopsis, url: absoluteURL(.episode(id)), image: posterURL(width: 600, height: 338), type: .video(duration: Int(media_duration), releaseDate: releaseAt))
         return LayoutConfig(context: context, contents: [main, scroller] + (context.session.premiumAccess ? [] : [subscribeBanner()]), footerContent: [Node.raw(transcriptLinks)], structuredData: data).layout
