@@ -8,6 +8,19 @@
 import Foundation
 
 
+func catchAndDisplayError<I: Interpreter>(_ f: () throws -> I) -> I {
+    do {
+        return try f()
+    } catch {
+        log(error)
+        if let e = error as? RenderingError {
+            return .write(errorView(e.publicMessage), status: .internalServerError)
+        } else {
+            return .write(errorView("Something went wrong."), status: .internalServerError)
+        }
+    }
+}
+
 extension Optional where Wrapped == Session {
     var premiumAccess: Bool {
         return self?.premiumAccess ?? false

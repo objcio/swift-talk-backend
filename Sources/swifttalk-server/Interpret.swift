@@ -8,19 +8,6 @@
 import Foundation
 import PostgreSQL
 
-func catchAndDisplayError<I: Interpreter>(_ f: () throws -> I) -> I {
-    do {
-        return try f()
-    } catch {
-        log(error)
-        if let e = error as? RenderingError {
-            return .write(errorView(e.publicMessage), status: .internalServerError)
-        } else {
-            return .write(errorView("Something went wrong."), status: .internalServerError)
-        }
-    }
-}
-
 extension Interpreter {
     static func onComplete<A>(promise: Promise<A>, do cont: @escaping (A) throws -> Self) -> Self {
         return onComplete(promise: promise, do: { value in
@@ -38,7 +25,6 @@ extension Interpreter {
             }
         })
     }
-    
     
     static func withPostBody(do cont: @escaping ([String:String]) throws -> Self) -> Self {
         return .withPostBody { dict in
@@ -61,14 +47,6 @@ extension Interpreter {
 }
 
 struct NotLoggedInError: Error { }
-
-infix operator ?!: NilCoalescingPrecedence
-func ?!<A>(lhs: A?, rhs: Error) throws -> A {
-    guard let value = lhs else {
-        throw rhs
-    }
-    return value
-}
 
 struct Context {
     var path: String

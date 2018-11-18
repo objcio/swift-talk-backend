@@ -10,6 +10,14 @@ import Foundation
 
 var standardError = FileHandle.standardError
 
+infix operator ?!: NilCoalescingPrecedence
+func ?!<A>(lhs: A?, rhs: Error) throws -> A {
+    guard let value = lhs else {
+        throw rhs
+    }
+    return value
+}
+
 func flatten<A>(_ value: A??) -> A? {
     guard let x = value else { return nil }
     return x
