@@ -8,46 +8,6 @@
 import Foundation
 import PostgreSQL
 
-extension RemoteEndpoint {
-    var promise: Promise<A?> {
-        return URLSession.shared.load(self)
-    }
-}
-
-extension Row where Element == UserData {
-    var monthsOfActiveSubscription: Promise<UInt?> {
-        return recurly.subscriptionStatus(for: self.id).map { status in
-            guard let s = status else { log(error: "Couldn't fetch subscription status for user \(self.id) from Recurly"); return nil }
-            return s.months
-        }
-    }
-    
-    var account: RemoteEndpoint<Account> {
-        return recurly.account(with: id)
-    }
-
-    var invoices: RemoteEndpoint<[Invoice]> {
-        return recurly.listInvoices(accountId: self.id.uuidString)
-    }
-    
-    var subscriptions: RemoteEndpoint<[Subscription]> {
-        return recurly.listSubscriptions(accountId: self.id.uuidString)
-    }
-    
-    var currentSubscription: RemoteEndpoint<Subscription?> {
-        return subscriptions.map { $0.first { $0.state == .active || $0.state == .canceled } }
-    }
-    
-    var billingInfo: RemoteEndpoint<BillingInfo> {
-        return recurly.billingInfo(with: id)
-    }
-}
-
-struct RecurlyErrors: Error {
-    let errs: [RecurlyError]
-    init(_ errs: [RecurlyError]) { self.errs = errs }
-}
-
 func catchAndDisplayError<I: Interpreter>(_ f: () throws -> I) -> I {
     do {
         return try f()
