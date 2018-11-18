@@ -77,7 +77,7 @@ func refreshStaticData<A: StaticLoadable>(_ endpoint: RemoteEndpoint<[A]>, onCom
                 let data = try? JSONEncoder().encode(r),
                 let json = String(data: data, encoding: .utf8)
                 else { return }
-            let fd = FileData(repository: Github.staticDataRepo, path: A.jsonName, value: json)
+            let fd = FileData(repository: github.staticDataRepo, path: A.jsonName, value: json)
             tryOrLog("Error caching \(A.jsonName)") { try connection.execute(fd.insertOrUpdate(uniqueKey: "key")) }
             onCompletion()
         }}
@@ -88,7 +88,7 @@ extension Static {
     static func fromStaticRepo<A: StaticLoadable>(onRefresh: @escaping ([A]) -> () = { _ in }) -> Static<[A]> {
         return Static<[A]>(async: { cb in
             cb(loadStaticData())
-            let ep: RemoteEndpoint<[A]> = Github.staticData()
+            let ep: RemoteEndpoint<[A]> = github.staticData()
             refreshStaticData(ep) {
                 let data: [A] = loadStaticData()
                 cb(data)
@@ -121,7 +121,7 @@ fileprivate func loadTranscripts() -> [Transcript] {
 }
 
 func refreshTranscripts(onCompletion: @escaping () -> ()) {
-    Github.loadTranscripts.run { results in
+    github.loadTranscripts.run { results in
         tryOrLog { try withConnection { connection in
             for f in results {
                 guard let contents = f.contents else { continue }

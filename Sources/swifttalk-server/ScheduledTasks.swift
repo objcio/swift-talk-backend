@@ -88,7 +88,7 @@ extension Task {
             }
         case .releaseEpisode(let number):
             guard let ep = Episode.all.first(where: { $0.number == number }) else { onCompletion(true); return }
-            let req = Github.changeVisibility(private: false, of: ep.id.rawValue)
+            let req = github.changeVisibility(private: false, of: ep.id.rawValue)
             URLSession.shared.load(req).flatMap { _ in
                 URLSession.shared.load(circle.triggerMainSiteBuild)
             }.run { _ in

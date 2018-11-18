@@ -225,7 +225,7 @@ extension Route {
                 return try I.write(newSub(context: context, errs: []))
             }
         case .login(let cont):
-            var path = "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(Github.clientId)"
+            var path = "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(github.clientId)"
             if let c = cont {
                 let baseURL = env["BASE_URL"]
                 let encoded = baseURL + Route.githubCallback("", origin: c).path
@@ -238,28 +238,28 @@ extension Route {
             try c.get().execute(s.user.deleteSession(s.sessionId))
             return I.redirect(to: .home)
         case .githubCallback(let code, let origin):
-            return I.onComplete(promise:
-                URLSession.shared.load(Github.getAccessToken(code)).map({ $0?.access_token })
-                , do: { token in
-                    let t = try token ?! RenderingError(privateMessage: "No github access token", publicMessage: "Couldn't access your Github profile.")
-                    return I.onSuccess(promise: URLSession.shared.load(Github(t).profile), message: "Couldn't access your Github profile", do: { p in
-                        // todo ask for email if we don't get it
-                        let uid: UUID
-                        if let user = try c.get().execute(Row<UserData>.select(githubId: p.id)) {
-                            uid = user.id
-                        } else {
-                            let userData = UserData(email: p.email ?? "no email", githubUID: p.id, githubLogin: p.login, githubToken: t, avatarURL: p.avatar_url, name: p.name ?? "")
-                            uid = try c.get().execute(userData.insert)
-                        }
-                        let sid = try c.get().execute(SessionData(userId: uid).insert)
-                        let destination: String
-                        if let o = origin?.removingPercentEncoding, o.hasPrefix("/") {
-                            destination = o
-                        } else {
-                            destination = "/"
-                        }
-                        return I.redirect(path: destination, headers: ["Set-Cookie": "sessionid=\"\(sid.uuidString)\"; HttpOnly; Path=/"]) // TODO secure
-                    })
+            let loadToken = URLSession.shared.load(github.getAccessToken(code)).map({ $0?.access_token })
+            return I.onComplete(promise: loadToken, do: { token in
+                let t = try token ?! RenderingError(privateMessage: "No github access token", publicMessage: "Couldn't access your Github profile.")
+                let loadProfile = URLSession.shared.load(Github(accessToken: t).profile)
+                return I.onSuccess(promise: loadProfile, message: "Couldn't access your Github profile", do: { profile in
+                    // todo ask for email if we don't get it
+                    let uid: UUID
+                    if let user = try c.get().execute(Row<UserData>.select(githubId: profile.id)) {
+                        uid = user.id
+                    } else {
+                        let userData = UserData(email: profile.email ?? "no email", githubUID: profile.id, githubLogin: profile.login, githubToken: t, avatarURL: profile.avatar_url, name: profile.name ?? "")
+                        uid = try c.get().execute(userData.insert)
+                    }
+                    let sid = try c.get().execute(SessionData(userId: uid).insert)
+                    let destination: String
+                    if let o = origin?.removingPercentEncoding, o.hasPrefix("/") {
+                        destination = o
+                    } else {
+                        destination = "/"
+                    }
+                    return I.redirect(path: destination, headers: ["Set-Cookie": "sessionid=\"\(sid.uuidString)\"; HttpOnly; Path=/"]) // TODO secure
+                })
             })
         case .episode(let id):
             guard let ep = Episode.scoped(for: session?.user.data).first(where: { $0.id == id }) else {
@@ -391,7 +391,7 @@ extension Route {
             let sess = try requireSession()
             return I.withPostBody(do: { params in
                 guard let formData = addTeamMemberForm().parse(params) else { return try teamMembersResponse(sess) }
-                let promise = URLSession.shared.load(Github.profile(username: formData.githubUsername))
+                let promise = URLSession.shared.load(github.profile(username: formData.githubUsername))
                 return I.onComplete(promise: promise) { profile in
                     guard let p = profile else {
                         return try teamMembersResponse(sess, formData, [(field: "github_username", message: "No user with this username exists on GitHub")])
