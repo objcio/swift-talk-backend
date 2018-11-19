@@ -27,23 +27,26 @@ struct RemoteEndpoint<A> {
         })
     }
 
-    init(_ method: Method, url: URL, accept: Accept? = nil, body: Data? = nil, headers: [String:String] = [:], query: [String:String] = [:], parse: @escaping (Data) -> A?) {
+    public init(_ method: Method, url: URL, accept: Accept? = nil, body: Data? = nil, headers: [String:String] = [:], timeOutInterval: TimeInterval = 10, query: [String:String] = [:], parse: @escaping (Data) -> A?) {
         var comps = URLComponents(string: url.absoluteString)!
         comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
         request = URLRequest(url: comps.url!)
-        request.httpMethod = method.string
-        request.httpBody = body
-        
         if let a = accept {
             request.setValue(a.rawValue, forHTTPHeaderField: "Accept")
         }
         for (key, value) in headers {
             request.setValue(value, forHTTPHeaderField: key)
         }
+        request.timeoutInterval = timeOutInterval
+        request.httpMethod = method.string
+
+        // body *needs* to be the last property that we set, because of this bug: https://bugs.swift.org/browse/SR-6687
+        request.httpBody = body
+
         self.parse = parse
     }
     
-    private init(request: URLRequest, parse: @escaping (Data) -> A?) {
+    public init(request: URLRequest, parse: @escaping (Data) -> A?) {
         self.request = request
         self.parse = parse
     }
@@ -89,8 +92,7 @@ extension RemoteEndpoint where A: Decodable {
 
 extension URLSession {
     func load<A>(_ e: RemoteEndpoint<A>, callback: @escaping (A?) -> ()) {
-        var r = e.request
-        r.timeoutInterval = 10
+        let r = e.request
         dataTask(with: r, completionHandler: { data, resp, err in
             guard let d = data else { callback(nil); return }
             return callback(e.parse(d))

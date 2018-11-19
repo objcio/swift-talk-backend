@@ -233,8 +233,8 @@ struct UpdateSubscription: Codable, RootElement {
 }
 
 struct RecurlyError: Decodable {
-    let field: String
-    let symbol: String
+    let field: String?
+    let symbol: String?
     let message: String
 }
 
@@ -327,7 +327,6 @@ struct Recurly {
     func updatePaymentMethod(for accountId: UUID, token: String) -> RemoteEndpoint<RecurlyResult<BillingInfo>> {
         struct UpdateData: Codable, RootElement {
             var token_id: String
-            
             static let rootElementName = "billing_info"
         }
         return RemoteEndpoint(xml: .put, url: base.appendingPathComponent("accounts/\(accountId.uuidString)/billing_info"), value: UpdateData(token_id: token), headers: headers)
@@ -385,20 +384,21 @@ struct Recurly {
 
 extension RemoteEndpoint where A: Decodable {
     init(xml method: Method, url: URL, headers: [String:String], query: [String:String] = [:]) {
-        self.init(method, url: url, accept: .xml, headers: headers, query: query, parse: parseRecurlyResponse)
+        self.init(method, url: url, accept: .xml, headers: headers, query: query, parse: parseRecurlyResponse(url))
     }
 
     init<B: Encodable & RootElement>(xml method: Method, url: URL, value: B, headers: [String:String], query: [String:String] = [:]) {
-        self.init(method, url: url, accept: .xml, body: try! encodeXML(value).data(using: .utf8)!, headers: headers, query: query, parse: parseRecurlyResponse)
+        self.init(method, url: url, accept: .xml, body: try! encodeXML(value).data(using: .utf8)!, headers: headers, query: query, parse: parseRecurlyResponse(url))
     }
 }
 
-private func parseRecurlyResponse<T: Decodable>(_ data: Data) -> T? {
-    do {
-//        print(String(data: data, encoding: .utf8)!)
-        return try decodeXML(from: data)
-    } catch {
-        print("Decoding error: \(error), \(error.localizedDescription)", to: &standardError)
-        return nil
+private func parseRecurlyResponse<T: Decodable>(_ url: URL) -> (Data) -> T? {
+    return { data in
+        do {
+            return try decodeXML(from: data)
+        } catch {
+            log(error: "Decoding error \(url): \(error), \(error.localizedDescription)")
+            return nil
+        }
     }
 }

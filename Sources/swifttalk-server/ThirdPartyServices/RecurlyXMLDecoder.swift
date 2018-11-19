@@ -173,9 +173,8 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
                 guard let d = DateFormatter.iso8601WithTimeZone.date(from: c) else { throw DecodingError(message: "Malformatted date: \(c)") }
                 return d as! T
             } else if type == RecurlyError.self {
-                guard let field = node.getAttribute(name: "field"), let symbol = node.getAttribute(name: "symbol") else {
-                    throw DecodingError(message: "Expected 'field' and 'symbol' attributes")
-                }
+                let field = node.getAttribute(name: "field")
+                let symbol = node.getAttribute(name: "symbol")
                 return RecurlyError(field: field, symbol: symbol, message: node.nodeValue ?? "") as! T
             }
             let decoder = RecurlyXMLDecoder(node)
@@ -273,9 +272,8 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
           	let node = nodes[currentIndex]
             currentIndex += 1
             if type == RecurlyError.self {
-                guard let field = node.getAttribute(name: "field"), let symbol = node.getAttribute(name: "symbol") else {
-                    throw DecodingError(message: "Expected 'field' and 'symbol' attributes")
-                }
+                let field = node.getAttribute(name: "field")
+                let symbol = node.getAttribute(name: "symbol")
                 return RecurlyError(field: field, symbol: symbol, message: node.nodeValue ?? "") as! T
             } else {
                 let decoder = RecurlyXMLDecoder(node)

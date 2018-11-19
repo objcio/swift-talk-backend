@@ -29,20 +29,20 @@ func flatten<A>(_ value: A??) -> A? {
     return x
 }
 
-func log(_ e: Error) {
-    print(e.localizedDescription, to: &standardError)
+func log(file: StaticString = #file, line: UInt = #line, _ e: Error) {
+    print("\(file):\(line) " + e.localizedDescription, to: &standardError)
 }
 
-func log(error: String) {
-    print(error, to: &standardError)
+func log(file: StaticString = #file, line: UInt = #line, error: String) {
+    print("\(file):\(line): \(error)", to: &standardError)
 }
 
 @discardableResult
-func tryOrLog<A>(_ message: String = "", _ f: () throws -> A) -> A? {
+func tryOrLog<A>(file: StaticString = #file, line: UInt = #line, _ message: String = "", _ f: () throws -> A) -> A? {
     do {
         return try f()
     } catch {
-        log(error: "\(error.localizedDescription) — \(message)")
+        log(error: "\(file):\(line) \(error.localizedDescription) — \(message)")
         return nil
     }
 }
