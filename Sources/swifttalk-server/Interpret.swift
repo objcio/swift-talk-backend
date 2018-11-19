@@ -209,6 +209,9 @@ extension Route {
         case .episodes:
             return I.write(index(Episode.scoped(for: session?.user.data), context: context))
         case .home:
+            try Task.releaseEpisode(number: 123).interpret(c) { success in
+                print("Release task: \(success)")
+            }
             return .write(renderHome(context: context))
         case .sitemap:
             return .write(Route.siteMap)

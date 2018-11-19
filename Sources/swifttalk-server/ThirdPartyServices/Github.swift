@@ -27,11 +27,6 @@ struct Github {
         let name: String?
     }
     
-    struct Repository: Codable {
-        var name: String
-        var `private`: Bool
-    }
-
     struct AccessTokenResponse: Codable, Equatable {
         var access_token: String
         var token_type: String
@@ -66,10 +61,15 @@ struct Github {
     }
     
     func changeVisibility(`private`: Bool, of repository: String) -> RemoteEndpoint<Bool> {
-        let url = URL(string: "https://api.github.com/objcio/\(repository)")!
-        let query = ["access_token": accessToken]
+        struct Repository: Codable {
+            var name: String
+            var `private`: Bool
+        }
+        
+        let url = URL(string: "https://api.github.com/repos/objcio/\(repository)")!
+        let headers = ["Authorization": "token \(accessToken)"]
         let data = Repository(name: repository, private: `private`)
-        return RemoteEndpoint<Repository>(json: .patch, url: url, body: data, query: query).map { $0.`private` == `private` }
+        return RemoteEndpoint<Repository>(json: .patch, url: url, body: data, headers: headers).map { $0.`private` == `private` }
     }
     
     var transcripts: RemoteEndpoint<[Github.File]> {

@@ -91,10 +91,20 @@ extension Task {
             let req = github.changeVisibility(private: false, of: ep.id.rawValue)
             URLSession.shared.load(req).flatMap { _ in
                 URLSession.shared.load(circle.triggerMainSiteBuild)
-            }.run { _ in
+            }.flatMap { _ in
+                URLSession.shared.load(mailchimp.createCampaign(for: ep))
+            }.flatMap { campaignId -> Promise<String?> in
+                guard let id = campaignId else { return Promise { $0(nil) } }
+                return URLSession.shared.load(mailchimp.addContent(for: ep, toCampaign: id))
+            }.flatMap { campaignId -> Promise<String?> in
+                guard let id = campaignId else { return Promise { $0(nil) } }
+                // TODO here we have to actually send the campaign instead of using the test API
+                return URLSession.shared.load(mailchimp.testCampaign(campaignId: id))
+            }.run { campaignId in
+                // TODO store campaign id
+                print(campaignId)
                 onCompletion(true)
             }
-            // TODO Mailchimp
         }
     }
 }
