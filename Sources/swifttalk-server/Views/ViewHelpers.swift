@@ -126,3 +126,19 @@ func dollarAmount(cents: Int) -> String {
     let amount = String(format: "%.2f", Double(cents) / 100)
     return "$\(amount)"
 }
+
+struct ReactComponent<A: Encodable> {
+    var name: String
+    func build(_ value: A) -> Node {
+        return .div(classes: "react-component", attributes: [
+            "data-params": json(value),
+            "data-component": name
+            ], [])
+    }
+}
+
+fileprivate func json<A: Encodable>(_ value: A) -> String {
+    let encoder = JSONEncoder()
+    //    encoder.keyEncodingStrategy = .convertToSnakeCase // TODO doesn't compile on Linux (?)
+    return try! String(data: encoder.encode(value), encoding: .utf8)!
+}

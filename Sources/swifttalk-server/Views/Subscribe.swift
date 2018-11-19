@@ -145,28 +145,23 @@ func newSub(context: Context, errs: [String]) throws -> Node {
     guard let m = Plan.monthly, let y = Plan.yearly else {
         throw RenderingError(privateMessage: "No monthly or yearly plan: \(Plan.all)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
     }
-    let data = NewSubscriptionData(action: Route.createSubscription.path, public_key: env["RECURLY_PUBLIC_KEY"], plans: [
+    let data = NewSubscriptionData(action: Route.createSubscription.path, public_key: env.recurlyPublicKey, plans: [
         .init(m), .init(y)
     ], payment_errors: errs, method: .post, coupon: .init())
-    return LayoutConfig(context: context, contents: [
+    return LayoutConfig(context: context,  contents: [
         .header([
             .div(classes: "container-h pb+ pt+", [
                 .h1(classes: "ms4 color-blue bold", ["Subscribe to Swift Talk"])
                 ])
             ]),
         .div(classes: "container", [
-            .div(classes: "react-component", attributes: [
-                "data-params": json(data),
-                "data-component": "NewSubscription"
-                ], [])
-            ])
-        ]).layoutForCheckout
+            ReactComponent.newSubscription.build(data)
+        ])
+    ], includeRecurlyJS: true).layoutForCheckout
 }
 
-func json<A: Encodable>(_ value: A) -> String {
-    let encoder = JSONEncoder()
-//    encoder.keyEncodingStrategy = .convertToSnakeCase // TODO doesn't compile on Linux (?)
-    return try! String(data: encoder.encode(value), encoding: .utf8)!
+extension ReactComponent where A == NewSubscriptionData {
+    static let newSubscription: ReactComponent<A> = ReactComponent(name: "NewSubscription")
 }
 
 extension Plan {

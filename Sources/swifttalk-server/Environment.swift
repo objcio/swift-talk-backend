@@ -32,6 +32,11 @@ struct Env {
         assert(env["GITHUB_CLIENT_ID"] != nil)
         assert(env["GITHUB_CLIENT_SECRET"] != nil)
         assert(env["GITHUB_ACCESS_TOKEN"] != nil)
+        assert(env["RECURLY_PUBLIC_KEY"] != nil)
+    }
+    
+    var recurlyPublicKey: String {
+        return self["RECURLY_PUBLIC_KEY"]
     }
 }
 

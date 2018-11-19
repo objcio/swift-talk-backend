@@ -189,6 +189,66 @@ extension Subscription.Upgrade {
     }
 }
 
+struct PaymentViewData: Codable {
+    var first_name: String?
+    var last_name: String?
+    var company: String?
+    var address: String?
+    var address2: String?
+    var city: String?
+    var state: String?
+    var zip: String?
+    var country: String?
+    var phone: String?
+    var year: Int
+    var month: Int
+    var action: String
+    var public_key: String
+    var buttonText: String
+    struct Coupon: Codable { }
+    var payment_errors: [String] // TODO verify type
+    var method: HTTPMethod = .post
+    var coupon: Coupon
+    
+    init(_ billingInfo: BillingInfo, action: String, publicKey: String, buttonText: String, paymentErrors: [String]) {
+        first_name = billingInfo.first_name
+        last_name = billingInfo.last_name
+        company = billingInfo.company
+        address = billingInfo.address
+        address2 = billingInfo.address2
+        city = billingInfo.city
+        state = billingInfo.state
+        zip = billingInfo.zip
+        country = billingInfo.country
+        phone = billingInfo.phone
+        year = billingInfo.year
+        month = billingInfo.month
+        self.action = action
+        self.public_key = publicKey
+        self.buttonText = buttonText
+        self.payment_errors = paymentErrors
+        self.method = .post
+        self.coupon = Coupon()
+    }
+}
+
+
+extension ReactComponent where A == PaymentViewData {
+    static let creditCard: ReactComponent<A> = ReactComponent(name: "CreditCard")
+}
+
+func updatePaymentView(context: Context, data: PaymentViewData) -> Node {
+    return LayoutConfig(context: context, contents: [
+        pageHeader(.link(header: "Account", backlink: .home, label: "")),
+        accountContainer(Node.div([
+            heading("Update Payment Method"),
+            .div(classes: "container", [
+               ReactComponent.creditCard.build(data)
+            ])
+        ]), forRoute: .accountUpdatePayment)
+    ], includeRecurlyJS: true).layout
+}
+
 extension BillingInfo {
     var cardMask: String {
         return "\(first_six.first!)*** **** **** \(last_four)"

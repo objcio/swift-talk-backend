@@ -16,8 +16,9 @@ struct LayoutConfig {
     var preFooter: [Node]
     var structuredData: StructuredData?
     var context: Context
+    var includeRecurlyJS: Bool = false
     
-    init(context: Context, pageTitle: String = "objc.io", contents: [Node], theme: String = "default", preFooter: [Node] = [], footerContent: [Node] = [], structuredData: StructuredData? = nil, csrf: String? = nil) {
+    init(context: Context, pageTitle: String = "objc.io", contents: [Node], theme: String = "default", preFooter: [Node] = [], footerContent: [Node] = [], structuredData: StructuredData? = nil, csrf: String? = nil, includeRecurlyJS: Bool = false) {
         self.context = context
         self.pageTitle = pageTitle
         self.contents = contents
@@ -25,6 +26,7 @@ struct LayoutConfig {
         self.footerContent = footerContent
         self.structuredData = structuredData
         self.preFooter = preFooter
+        self.includeRecurlyJS = includeRecurlyJS
     }
 }
 
@@ -102,6 +104,7 @@ extension LayoutConfig {
             .title(pageTitle),
             // todo rss+atom links
             .stylesheet(href: "/assets/stylesheets/application.css"),
+            includeRecurlyJS ? .script(src: "https://js.recurly.com/v4/recurly.js") : .none,
             .script(src: "/assets/application.js")
             // todo google analytics
         ] + structured)
@@ -146,7 +149,7 @@ extension LayoutConfig {
             .title(pageTitle),
             // todo rss+atom links
             .stylesheet(href: "/assets/stylesheets/application.css"),
-            .script(src: "https://js.recurly.com/v4/recurly.js"), // todo not sure if we should include this?
+            includeRecurlyJS ? .script(src: "https://js.recurly.com/v4/recurly.js") : .none,
             .script(src: "/assets/application.js"),
             // todo google analytics
         ] + structured)

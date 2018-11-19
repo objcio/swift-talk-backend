@@ -324,7 +324,10 @@ extension Route {
                 
             }
         case .accountUpdatePayment:
-            return I.write("Todo")
+            let sess = try requireSession()
+            return I.onSuccess(promise: sess.user.billingInfo.promise, do: { billingInfo in
+                return I.write(updatePaymentView(context: context, data: PaymentViewData(billingInfo, action: Route.accountUpdatePayment.path, publicKey: env.recurlyPublicKey, buttonText: "Update", paymentErrors: [])))
+            })
         case .accountTeamMembers:
             let sess = try requireSession()
             return I.withPostBody(do: { params in
