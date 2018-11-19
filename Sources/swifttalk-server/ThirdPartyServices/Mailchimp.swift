@@ -15,6 +15,13 @@ struct Mailchimp {
     var listId: String { return env["MAILCHIMP_LIST_ID"] }
     var authHeader: [String: String] { return ["Authorization": "Basic " + "anystring:\(apiKey)".base64Encoded] }
     
+    struct CampaignSettings: Codable {
+        var subject_line: String
+        var title: String
+        var from_name: String
+        var reply_to: String
+    }
+
     func createCampaign(for episode: Episode) -> RemoteEndpoint<String> {
         struct Response: Codable {
             var id: String
@@ -23,15 +30,9 @@ struct Mailchimp {
             struct Recipients: Codable {
                 var list_id: String
             }
-            struct Settings: Codable {
-                var subject_line: String
-                var title: String
-                var from_name: String
-                var reply_to: String
-            }
             var type: String
             var recipients: Recipients
-            var settings: Settings
+            var settings: CampaignSettings
         }
         let url = base.appendingPathComponent("campaigns")
         let body = Create(
@@ -39,7 +40,7 @@ struct Mailchimp {
             recipients: .init(list_id: listId),
             settings: .init(
                 subject_line: "New Swift Talk: \(episode.fullTitle)",
-                title: "Swift Talk #\(episode.number)",
+                title: campaignTitle(for: episode),
                 from_name: "Swift Talk by objc.io",
                 reply_to: "mail@objc.io"
             )
@@ -47,24 +48,47 @@ struct Mailchimp {
         return RemoteEndpoint<Response>(json: .post, url: url, body: body, headers: authHeader).map { $0.id }
     }
     
-    func addContent(for episode: Episode, toCampaign campaignId: String) -> RemoteEndpoint<String> {
+    private func campaignTitle(for episode: Episode) -> String {
+        return "Swift Talk #\(episode.number)"
+    }
+    
+    func addContent(for episode: Episode, toCampaign campaignId: String) -> RemoteEndpoint<()> {
         struct Edit: Codable {
             var plain_text: String
             var html: String
         }
         let body = Edit(plain_text: plainText(episode), html: html(episode))
         let url = base.appendingPathComponent("campaigns/\(campaignId)/content")
-        return RemoteEndpoint<()>(json: .put, url: url, body: body, headers: authHeader).map { campaignId }
+        return RemoteEndpoint<()>(json: .put, url: url, body: body, headers: authHeader)
     }
     
-    func testCampaign(campaignId: String) -> RemoteEndpoint<String> {
+    func testCampaign(campaignId: String) -> RemoteEndpoint<()> {
         struct Test: Codable {
             var test_emails: [String]
             var send_type: String
         }
         let url = base.appendingPathComponent("campaigns/\(campaignId)/actions/test")
         let body = Test(test_emails: ["mail@floriankugler.com"], send_type: "html")
-        return RemoteEndpoint<()>(json: .post, url: url, body: body, headers: authHeader).map { campaignId }
+        return RemoteEndpoint<()>(json: .post, url: url, body: body, headers: authHeader)
+    }
+    
+    func existsCampaign(for episode: Episode) -> RemoteEndpoint<Bool> {
+        struct Response: Codable {
+            var campaigns: [Campaign]
+        }
+        struct Campaign: Codable {
+            var settings: CampaignSettings
+            var status: String
+        }
+        let url = base.appendingPathComponent("campaigns")
+        let query: [String: String] = [
+            "list_id": listId,
+            "count": "10000",
+            "since_create_time": DateFormatter.iso8601.string(from: episode.releaseAt)
+        ]
+        return RemoteEndpoint<Response>(json: .get, url: url, headers: authHeader, query: query).map { resp in
+            return resp.campaigns.contains { $0.settings.title == self.campaignTitle(for: episode) }
+        }
     }
 }
 
