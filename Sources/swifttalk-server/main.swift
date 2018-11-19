@@ -3,9 +3,7 @@ import NIO
 import NIOHTTP1
 import PostgreSQL
 
-
 let env = Env()
-
 let recurly = Recurly(subdomain: "\(env["RECURLY_SUBDOMAIN"]).recurly.com", apiKey: env["RECURLY_API_KEY"])
 // The vimeo access token needs to have the "private" and "files" roles enabled to fetch the download urls for private videos
 let vimeo = Vimeo(apiKey: env["VIMEO_ACCESS_TOKEN"])
@@ -17,7 +15,7 @@ let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
 let resourcePaths = [currentDir.appendingPathComponent("assets"), currentDir.appendingPathComponent("node_modules")]
 
 try runMigrations()
-verifyStaticData()
+DispatchQueue.global().async { verifyStaticData() }
 
 let s = MyServer(handle: { request in
     guard let route = Route(request) else { return nil }
@@ -28,6 +26,6 @@ let s = MyServer(handle: { request in
         return try route.interpret(sessionId: sessionId, connection: conn)
     }
 }, resourcePaths: resourcePaths)
-try s.listen()
+try s.listen(port: env.port ?? 8765)
 
 

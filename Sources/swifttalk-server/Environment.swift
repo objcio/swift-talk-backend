@@ -38,5 +38,9 @@ struct Env {
     var recurlyPublicKey: String {
         return self["RECURLY_PUBLIC_KEY"]
     }
+    
+    var port: Int? {
+        return env["PORT"].flatMap(Int.init)
+    }
 }
 

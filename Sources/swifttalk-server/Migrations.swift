@@ -8,9 +8,15 @@
 import Foundation
 
 func runMigrations() throws {
-    try withConnection { conn in
-        for m in migrations { // global variable, but we could inject it at some point.
-            try conn.execute(m)
+    DispatchQueue.global().async {
+        do {
+            _ = try withConnection { conn in
+                for m in migrations { // global variable, but we could inject it at some point.
+                    try conn.execute(m)
+                }
+            }
+        } catch {
+            log(error)
         }
     }
 }
