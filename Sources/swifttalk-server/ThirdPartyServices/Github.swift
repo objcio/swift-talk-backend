@@ -50,40 +50,40 @@ struct Github {
             "code": code,
             "accept": "json"
         ]
-        return RemoteEndpoint(postJSON: url, query: query)
+        return RemoteEndpoint(json: .post, url: url, query: query)
     }
     
     var profile: RemoteEndpoint<Profile> {
         let url = URL(string: "https://api.github.com/user")!
         let query = ["access_token": accessToken]
-        return RemoteEndpoint(getJSON: url, query: query)
+        return RemoteEndpoint<Profile>(json: .get, url: url, query: query)
     }
     
     func profile(username: String) -> RemoteEndpoint<Profile> {
         let url = URL(string: "https://api.github.com/users/\(username)")!
         let query = ["access_token": accessToken]
-        return RemoteEndpoint(getJSON: url, query: query)
+        return RemoteEndpoint(json: .get, url: url, query: query)
     }
     
     func changeVisibility(`private`: Bool, of repository: String) -> RemoteEndpoint<Bool> {
         let url = URL(string: "https://api.github.com/objcio/\(repository)")!
         let query = ["access_token": accessToken]
         let data = Repository(name: repository, private: `private`)
-        return RemoteEndpoint<Repository>(patchJSON: url, body: data, query: query).map { $0.`private` == `private` }
+        return RemoteEndpoint<Repository>(json: .patch, url: url, body: data, query: query).map { $0.`private` == `private` }
     }
     
     var transcripts: RemoteEndpoint<[Github.File]> {
         let url = URL(string: "https://api.github.com/repos/objcio/\(transcriptsRepo)/contents/")!
         let query = ["access_token": accessToken, "ref": "master"]
-        return RemoteEndpoint<[Github.File]>(getJSON: url, query: query).map { files in
+        return RemoteEndpoint<[Github.File]>(json: .get, url: url, query: query).map { files in
             return files.filter { $0.name.hasPrefix("episode") }
         }
     }
     
     func staticData<A: StaticLoadable>() -> RemoteEndpoint<[A]> {
         let url = URL(string: "https://api.github.com/repos/objcio/\(staticDataRepo)/contents/\(A.jsonName)")!
-        let headers = ["Authorization": "token \(accessToken)", "Accept": "application/vnd.github.v3.raw"]
-        return RemoteEndpoint(getJSON: url, headers: headers)
+        let headers = ["Authorization": "token \(accessToken)"]
+        return RemoteEndpoint(json: .get, url: url, accept: .githubRaw, headers: headers)
     }
     
     var loadTranscripts: Promise<[(file: Github.File, contents: String?)]> {
@@ -98,8 +98,8 @@ struct Github {
     }
 
     func contents(_ url: URL) -> RemoteEndpoint<String> {
-        let headers = ["Authorization": "token \(accessToken)", "Accept": "application/vnd.github.v3.raw"]
-        return RemoteEndpoint(get: url, headers: headers, query: [:]) { String(data: $0, encoding: .utf8) }
+        let headers = ["Authorization": "token \(accessToken)"]
+        return RemoteEndpoint(.get, url: url, accept: .githubRaw, headers: headers) { String(data: $0, encoding: .utf8) }
     }
 }
 

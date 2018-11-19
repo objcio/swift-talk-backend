@@ -318,15 +318,15 @@ struct Recurly {
     }    
     
     var plans: RemoteEndpoint<[Plan]> {
-        return RemoteEndpoint<[Plan]>(getXML: base.appendingPathComponent("plans"), headers: headers, query: [:])
+        return RemoteEndpoint(xml: .get, url: base.appendingPathComponent("plans"), headers: headers)
     }
     
     var listAccounts: RemoteEndpoint<[Account]> {
-        return RemoteEndpoint(getXML: base.appendingPathComponent("accounts"), headers: headers, query: [:])
+        return RemoteEndpoint(xml: .get, url: base.appendingPathComponent("accounts"), headers: headers)
     }
     
     func billingInfo(accountId id: UUID) -> RemoteEndpoint<BillingInfo> {
-        return RemoteEndpoint(getXML: base.appendingPathComponent("accounts/\(id.uuidString)/billing_info"), headers: headers, query: [:])
+        return RemoteEndpoint(xml: .get, url: base.appendingPathComponent("accounts/\(id.uuidString)/billing_info"), headers: headers)
     }
     
     func updatePaymentMethod(for accountId: UUID, token: String) -> RemoteEndpoint<RecurlyResult<BillingInfo>> {
@@ -335,40 +335,40 @@ struct Recurly {
             
             static let rootElementName = "billing_info"
         }
-        return RemoteEndpoint(putXML: base.appendingPathComponent("accounts/\(accountId.uuidString)/billing_info"), value: UpdateData(token_id: token), headers: headers, query: [:])
+        return RemoteEndpoint(xml: .put, url: base.appendingPathComponent("accounts/\(accountId.uuidString)/billing_info"), value: UpdateData(token_id: token), headers: headers)
     }
 
     func account(with id: UUID) -> RemoteEndpoint<Account> {
-        return RemoteEndpoint(getXML: base.appendingPathComponent("accounts/\(id.uuidString)"), headers: headers, query: [:])
+        return RemoteEndpoint(xml: .get, url: base.appendingPathComponent("accounts/\(id.uuidString)"), headers: headers)
     }
 
     func listSubscriptions(accountId: String) -> RemoteEndpoint<[Subscription]> {
-        return RemoteEndpoint(getXML: base.appendingPathComponent("accounts/\(accountId)/subscriptions"), headers: headers, query: ["per_page": "200"])
+        return RemoteEndpoint(xml: .get, url: base.appendingPathComponent("accounts/\(accountId)/subscriptions"), headers: headers, query: ["per_page": "200"])
     }
     
     func listInvoices(accountId: String) -> RemoteEndpoint<[Invoice]> {
-        return RemoteEndpoint(getXML: base.appendingPathComponent("accounts/\(accountId)/invoices"), headers: headers, query: ["per_page": "200"])
+        return RemoteEndpoint(xml: .get, url: base.appendingPathComponent("accounts/\(accountId)/invoices"), headers: headers, query: ["per_page": "200"])
     }
 
     func createSubscription(_ x: CreateSubscription) -> RemoteEndpoint<RecurlyResult<Subscription>> {
         let url = base.appendingPathComponent("subscriptions")
-        return RemoteEndpoint(postXML: url, value: x, headers: headers, query: [:])
+        return RemoteEndpoint(xml: .post, url: url, value: x, headers: headers)
     }
     
     func cancel(_ subscription: Subscription) -> RemoteEndpoint<RecurlyResult<RecurlyVoid>> {
         let url = base.appendingPathComponent("subscriptions/\(subscription.uuid)/cancel")
-        return RemoteEndpoint(putXML: url, headers: headers)
+        return RemoteEndpoint(xml: .put, url: url, headers: headers)
     }
     
     func reactivate(_ subscription: Subscription) -> RemoteEndpoint<RecurlyResult<RecurlyVoid>> {
         let url = base.appendingPathComponent("subscriptions/\(subscription.uuid)/reactivate")
-        return RemoteEndpoint(putXML: url, headers: headers)
+        return RemoteEndpoint(xml: .put, url: url, headers: headers)
     }
     
     func updateSubscription(_ subscription: Subscription, plan_code: String? = nil, numberOfTeamMembers: Int? = nil) -> RemoteEndpoint<Subscription> {
         let addons: [UpdateSubscription.AddOn]? = numberOfTeamMembers.map { [UpdateSubscription.AddOn(add_on_code: "team_members", quantity: $0)] }
         let url = base.appendingPathComponent("subscriptions/\(subscription.uuid)")
-        return RemoteEndpoint(putXML: url, value: UpdateSubscription(timeframe: "now", plan_code: plan_code, subscription_add_ons: addons), headers: headers, query: [:])
+        return RemoteEndpoint(xml: .put, url: url, value: UpdateSubscription(timeframe: "now", plan_code: plan_code, subscription_add_ons: addons), headers: headers, query: [:])
     }
 
     func subscriptionStatus(for accountId: UUID) -> Promise<(subscriber: Bool, months: UInt)?> {
@@ -389,21 +389,12 @@ struct Recurly {
 }
 
 extension RemoteEndpoint where A: Decodable {
-    init(getXML get: URL, headers: [String:String], query: [String:String]) {
-        self.init(get: get, accept: .xml, headers: headers, query: query, parse: parseRecurlyResponse)
-    }
-    
-    init<B: Encodable & RootElement>(postXML url: URL, value: B, headers: [String:String], query: [String:String] = [:]) {
-        self.init(post: url, accept: .xml, body: try! encodeXML(value).data(using: .utf8)!, headers: headers, query: query, parse: parseRecurlyResponse)
+    init(xml method: Method, url: URL, headers: [String:String], query: [String:String] = [:]) {
+        self.init(method, url: url, accept: .xml, headers: headers, query: query, parse: parseRecurlyResponse)
     }
 
-    init<B: Encodable & RootElement>(putXML url: URL, value: B, headers: [String:String], query: [String:String] = [:]) {
-        let body = try! encodeXML(value).data(using: .utf8)!
-        self.init(put: url, accept: .xml, body: body, headers: headers, query: query, parse: parseRecurlyResponse)
-    }
-    
-    init(putXML url: URL, headers: [String:String], query: [String:String] = [:]) {
-        self.init(put: url, accept: .xml, body: Data(), headers: headers, query: query, parse: parseRecurlyResponse)
+    init<B: Encodable & RootElement>(xml method: Method, url: URL, value: B, headers: [String:String], query: [String:String] = [:]) {
+        self.init(method, url: url, accept: .xml, body: try! encodeXML(value).data(using: .utf8)!, headers: headers, query: query, parse: parseRecurlyResponse)
     }
 }
 

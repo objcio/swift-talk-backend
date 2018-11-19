@@ -15,6 +15,6 @@ struct Circle {
     
     var triggerMainSiteBuild: RemoteEndpoint<()> {
         let url = base.appendingPathComponent("project/github/objcio/website/tree/master")
-        return RemoteEndpoint(post: url, query: ["circle-token": apiKey]) { _ in () }
+        return RemoteEndpoint<()>(.post, url: url, query: ["circle-token": apiKey])
     }
 }

@@ -10,38 +10,28 @@ import Foundation
 enum Accept: String {
     case json = "application/json"
     case xml = "application/xml"
+    case githubRaw = "application/vnd.github.v3.raw"
 }
 
 struct RemoteEndpoint<A> {
+    enum Method {
+        case get, post, put, patch
+    }
+    
     var request: URLRequest
     var parse: (Data) -> A?
     
-    init(request: URLRequest, parse: @escaping (Data) -> A?) {
-        self.request = request
-        self.parse = parse
-    }
-    
-    init(get url: URL, accept: Accept? = nil, headers: [String:String] = [:], query: [String:String], parse: @escaping (Data) -> A?) {
-        self.init(method: "GET", url: url, accept: accept, body: nil, headers: headers, query: query, parse: parse)
-    }
-    
-    init(post url: URL, accept: Accept? = nil, body: Data? = nil, headers: [String:String] = [:], query: [String:String], parse: @escaping (Data) -> A?) {
-        self.init(method: "POST", url: url, accept: accept, body: body, headers: headers, query: query, parse: parse)
+    func map<B>(_ f: @escaping (A) -> B) -> RemoteEndpoint<B> {
+        return RemoteEndpoint<B>(request: request, parse: { value in
+            self.parse(value).map(f)
+        })
     }
 
-    init(put url: URL, accept: Accept? = nil, body: Data? = nil, headers: [String:String] = [:], query: [String:String], parse: @escaping (Data) -> A?) {
-        self.init(method: "PUT", url: url, accept: accept, body: body, headers: headers, query: query, parse: parse)
-    }
-
-    init(patch url: URL, accept: Accept? = nil, body: Data? = nil, headers: [String:String] = [:], query: [String:String], parse: @escaping (Data) -> A?) {
-        self.init(method: "PATCH", url: url, accept: accept, body: body, headers: headers, query: query, parse: parse)
-    }
-
-    private init(method: String, url: URL, accept: Accept? = nil, body: Data? = nil, headers: [String:String] = [:], query: [String:String], parse: @escaping (Data) -> A?) {
+    init(_ method: Method, url: URL, accept: Accept? = nil, body: Data? = nil, headers: [String:String] = [:], query: [String:String] = [:], parse: @escaping (Data) -> A?) {
         var comps = URLComponents(string: url.absoluteString)!
         comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
         request = URLRequest(url: comps.url!)
-        request.httpMethod = method
+        request.httpMethod = method.string
         request.httpBody = body
         
         if let a = accept {
@@ -53,47 +43,47 @@ struct RemoteEndpoint<A> {
         self.parse = parse
     }
     
-    func map<B>(_ f: @escaping (A) -> B) -> RemoteEndpoint<B> {
-        return RemoteEndpoint<B>(request: request, parse: { value in
-            self.parse(value).map(f)
-        })
+    private init(request: URLRequest, parse: @escaping (Data) -> A?) {
+        self.request = request
+        self.parse = parse
     }
 }
 
-extension RemoteEndpoint where A: Decodable {
-    /// Parses the result as JSON
-    init(postJSON url: URL, headers: [String: String] = [:], query: [String:String]) {
-        self.init(postJSON: url, body: Optional<Bool>.none, headers: headers, query: query)
-    }
-    
-    init<B: Codable>(postJSON url: URL, body: B?, headers: [String: String] = [:], query: [String:String]) {
-        self.init(method: "POST", url: url, body: body, headers: headers, query: query)
-    }
-    
-    init<B: Codable>(patchJSON url: URL, body: B?, headers: [String: String] = [:], query: [String:String]) {
-        self.init(method: "PATCH", url: url, body: body, headers: headers, query: query)
-    }
-    
-    init(getJSON url: URL, headers: [String:String] = [:], query: [String:String] = [:]) {
-        self.init(method: "GET", url: url, body: Optional<Bool>.none, headers: headers, query: query)
-    }
-    
-    private init<B: Codable>(method: String, url: URL, body: B?, headers: [String: String] = [:], query: [String: String] = [:]) {
-        let b = body.map { try! JSONEncoder().encode($0) }
-        self.init(method: method, url: url, accept: .json, body: b, headers: headers, query: query) { data in
-            return try? JSONDecoder().decode(A.self, from: data)
+extension RemoteEndpoint.Method {
+    var string: String {
+        switch self {
+        case .get: return "GET"
+        case .post: return "POST"
+        case .put: return "PUT"
+        case .patch: return "PATCH"
         }
     }
 }
 
+extension RemoteEndpoint where A == () {
+    init(_ method: Method, url: URL, accept: Accept? = nil, headers: [String:String] = [:], query: [String:String] = [:]) {
+        self.init(method, url: url, accept: accept, headers: headers, query: query, parse: { _ in () })
+    }
 
-extension DateFormatter {
-    static let iso8601WithTimeZone: DateFormatter = {
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
-        return dateFormatter
-    }()
+    init<B: Codable>(json method: Method, url: URL, accept: Accept? = .json, body: B, headers: [String:String] = [:], query: [String:String] = [:]) {
+        let b = try! JSONEncoder().encode(body)
+        self.init(method, url: url, accept: accept, body: b, headers: headers, query: query, parse: { _ in () })
+    }
+}
+
+extension RemoteEndpoint where A: Decodable {
+    init(json method: Method, url: URL, accept: Accept = .json, headers: [String: String] = [:], query: [String: String] = [:]) {
+        self.init(method, url: url, accept: accept, body: nil, headers: headers, query: query) { data in
+            return try? JSONDecoder().decode(A.self, from: data)
+        }
+    }
+
+    init<B: Codable>(json method: Method, url: URL, accept: Accept = .json, body: B? = nil, headers: [String: String] = [:], query: [String: String] = [:]) {
+        let b = body.map { try! JSONEncoder().encode($0) }
+        self.init(method, url: url, accept: accept, body: b, headers: headers, query: query) { data in
+            return try? JSONDecoder().decode(A.self, from: data)
+        }
+    }
 }
 
 
