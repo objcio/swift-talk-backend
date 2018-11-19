@@ -90,7 +90,7 @@ extension RemoteEndpoint where A: Decodable {
 extension URLSession {
     func load<A>(_ e: RemoteEndpoint<A>, callback: @escaping (A?) -> ()) {
         var r = e.request
-        r.timeoutInterval = 2 // todo?
+        r.timeoutInterval = 10
         dataTask(with: r, completionHandler: { data, resp, err in
             guard let d = data else { callback(nil); return }
             return callback(e.parse(d))
@@ -99,12 +99,7 @@ extension URLSession {
     
     func load<A>(_ e: RemoteEndpoint<A>) -> Promise<A?> {
         return Promise { [unowned self] cb in
-            var r = e.request
-            r.timeoutInterval = 2 // todo?
-            self.dataTask(with: r, completionHandler: { data, resp, err in
-                guard let d = data else { cb(nil); return }
-                return cb(e.parse(d))
-            }).resume()
+            self.load(e, callback: cb)
         }
     }
 }
