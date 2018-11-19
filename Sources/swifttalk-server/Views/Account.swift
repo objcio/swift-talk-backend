@@ -193,7 +193,7 @@ struct PaymentViewData: Codable {
     var first_name: String?
     var last_name: String?
     var company: String?
-    var address: String?
+    var address1: String?
     var address2: String?
     var city: String?
     var state: String?
@@ -214,7 +214,7 @@ struct PaymentViewData: Codable {
         first_name = billingInfo.first_name
         last_name = billingInfo.last_name
         company = billingInfo.company
-        address = billingInfo.address
+        address1 = billingInfo.address1
         address2 = billingInfo.address2
         city = billingInfo.city
         state = billingInfo.state

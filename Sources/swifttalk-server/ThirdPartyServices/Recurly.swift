@@ -149,7 +149,7 @@ struct BillingInfo: Codable {
     var first_name: String?
     var last_name: String?
     var company: String?
-    var address: String?
+    var address1: String?
     var address2: String?
     var city: String?
     var state: String?
@@ -286,7 +286,11 @@ extension Row where Element == UserData {
     }
     
     var billingInfo: RemoteEndpoint<BillingInfo> {
-        return recurly.billingInfo(with: id)
+        return recurly.billingInfo(accountId: id)
+    }
+    
+    func updateBillingInfo(token: String) -> RemoteEndpoint<RecurlyResult<BillingInfo>> {
+        return recurly.updatePaymentMethod(for: id, token: token)
     }
 }
 
@@ -321,8 +325,17 @@ struct Recurly {
         return RemoteEndpoint(getXML: base.appendingPathComponent("accounts"), headers: headers, query: [:])
     }
     
-    func billingInfo(with id: UUID) -> RemoteEndpoint<BillingInfo> {
+    func billingInfo(accountId id: UUID) -> RemoteEndpoint<BillingInfo> {
         return RemoteEndpoint(getXML: base.appendingPathComponent("accounts/\(id.uuidString)/billing_info"), headers: headers, query: [:])
+    }
+    
+    func updatePaymentMethod(for accountId: UUID, token: String) -> RemoteEndpoint<RecurlyResult<BillingInfo>> {
+        struct UpdateData: Codable, RootElement {
+            var token_id: String
+            
+            static let rootElementName = "billing_info"
+        }
+        return RemoteEndpoint(putXML: base.appendingPathComponent("accounts/\(accountId.uuidString)/billing_info"), value: UpdateData(token_id: token), headers: headers, query: [:])
     }
 
     func account(with id: UUID) -> RemoteEndpoint<Account> {
@@ -368,6 +381,7 @@ struct Recurly {
             }
         }
     }
+
     
     func pdfURL(invoice: Invoice, hostedLoginToken: String) -> URL {
         return URL(string: "https://\(subdomain)/account/invoices/\(invoice.invoice_number).pdf?ht=\(hostedLoginToken)")!

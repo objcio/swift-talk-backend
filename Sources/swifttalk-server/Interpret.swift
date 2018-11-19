@@ -325,9 +325,26 @@ extension Route {
             }
         case .accountUpdatePayment:
             let sess = try requireSession()
-            return I.onSuccess(promise: sess.user.billingInfo.promise, do: { billingInfo in
-                return I.write(updatePaymentView(context: context, data: PaymentViewData(billingInfo, action: Route.accountUpdatePayment.path, publicKey: env.recurlyPublicKey, buttonText: "Update", paymentErrors: [])))
+            func renderForm(errs: [RecurlyError]) -> I {
+                return I.onSuccess(promise: sess.user.billingInfo.promise, do: { billingInfo in
+                    let view = updatePaymentView(context: context, data: PaymentViewData(billingInfo, action: Route.accountUpdatePayment.path, publicKey: env.recurlyPublicKey, buttonText: "Update", paymentErrors: errs.map { $0.message }))
+                    return I.write(view)
+                })
+            }
+            return I.withPostBody(do: { body in
+                guard let token = body["billing_info[token]"] else {
+                    throw RenderingError(privateMessage: "No billing_info[token]", publicMessage: "Something went wrong, please try again.")
+                }
+                return I.onSuccess(promise: sess.user.updateBillingInfo(token: token).promise, do: { (response: RecurlyResult<BillingInfo>) -> I in
+                    switch response {
+                    case .success: return I.redirect(to: .accountUpdatePayment) // todo show message?
+                    case .errors(let errs): return renderForm(errs: errs)
+                    }
+                })
+            }, or: {
+                renderForm(errs: [])
             })
+            
         case .accountTeamMembers:
             let sess = try requireSession()
             return I.withPostBody(do: { params in
