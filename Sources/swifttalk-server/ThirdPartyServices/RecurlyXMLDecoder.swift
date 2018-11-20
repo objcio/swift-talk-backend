@@ -583,7 +583,7 @@ final class RecurlyXMLEncoder: Encoder {
                 try value.encode(to: childEncoder)
                 encoder.add(child: childEncoder.rootElement)
             } else {
-                fatalError()
+                fatalError("Encode: \(value)")
             }
         }
         

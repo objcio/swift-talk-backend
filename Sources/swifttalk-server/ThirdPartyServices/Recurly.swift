@@ -150,6 +150,17 @@ extension Sequence where Element == Subscription {
     }
 }
 
+struct Redemption: Codable {
+    var uuid: String
+    var single_use: Bool
+    var total_discounted_in_cents: Int
+    var currency: String
+    var state: String
+    var coupon_code: String
+    var created_at: Date
+    var updated_at: Date
+}
+
 struct Account: Codable {
     enum State: String, Codable {
         case active, closed, subscriber, non_subscriber, past_due
@@ -357,6 +368,12 @@ extension Row where Element == UserData {
         return recurly.listSubscriptions(accountId: self.id.uuidString)
     }
     
+    var redemptions: RemoteEndpoint<[Redemption]> {
+        return recurly.redemptions(accountId: id.uuidString)
+    }
+    
+    
+    
     var currentSubscription: RemoteEndpoint<Subscription?> {
         return subscriptions.map { $0.first { $0.state == .active || $0.state == .canceled } }
     }
@@ -421,6 +438,10 @@ struct Recurly {
     
     func listInvoices(accountId: String) -> RemoteEndpoint<[Invoice]> {
         return RemoteEndpoint(xml: .get, url: base.appendingPathComponent("accounts/\(accountId)/invoices"), headers: headers, query: ["per_page": "200"])
+    }
+    
+    func redemptions(accountId: String) -> RemoteEndpoint<[Redemption]> {
+        return RemoteEndpoint(xml: .get, url: base.appendingPathComponent("accounts/\(accountId)/redemptions"), headers: headers, query: ["per_page": "200"])
     }
 
     func createSubscription(_ x: CreateSubscription) -> RemoteEndpoint<RecurlyResult<Subscription>> {
