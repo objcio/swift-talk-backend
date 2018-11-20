@@ -131,13 +131,12 @@ extension Router where A == [String] {
 
 extension Router where A == String {
     static func string() -> Router<String> {
-        // todo escape
         return Router<String>(parse: { req in
             guard let f = req.path.first else { return nil }
             req.path.removeFirst()
-            return f
+            return f.removingPercentEncoding ?? ""
         }, print: { (str: String) in
-            return Endpoint(path: [str])
+            return Endpoint(path: [str.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!])
         }, description: .parameter("string"))
     }
     
