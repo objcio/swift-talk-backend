@@ -58,6 +58,13 @@ struct Context {
 func requirePost() throws -> () {
 }
 
+extension ProfileFormData {
+    init(_ data: UserData) {
+        email = data.email
+        name = data.name
+    }
+}
+
 extension Route {
     func interpret<I: Interpreter>(sessionId: UUID?, connection c: Lazy<Connection>) throws -> I {
         let session: Session?
@@ -138,6 +145,10 @@ extension Route {
                 return I.onSuccess(promise: URLSession.shared.load(req), message: "Something went wrong, please try again", do: { sub_ in
                     switch sub_ {
                     case .errors(let messages):
+                        if messages.contains(where: { $0.field == "subscription.account.email" && $0.symbol == "invalid_email" }) {
+                            let response = registerForm(context).render(.init(s.user.data), [ValidationError("email", "Please provide a valid email address.")])
+                            return I.write(response)
+                        }
                         return try I.write(newSub(context: context, errs: messages.map { $0.message }))
                     case .success(let sub):
                         try c.get().execute(s.user.changeSubscriptionStatus(sub.state == .active))
@@ -157,7 +168,7 @@ extension Route {
             let s = try requireSession()
             let u = s.user
             if !u.data.confirmedNameAndEmail {
-                return I.write(registerForm(context).render(ProfileFormData(email: u.data.email, name: u.data.name), []))
+                return I.write(registerForm(context).render(.init(u.data), []))
             } else {
                 return try I.write(newSub(context: context, errs: []))
             }

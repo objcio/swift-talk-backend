@@ -394,6 +394,7 @@ extension RemoteEndpoint where A: Decodable {
 
 private func parseRecurlyResponse<T: Decodable>(_ url: URL) -> (Data) -> T? {
     return { data in
+//        print(String(data: data, encoding: .utf8)!)
         do {
             return try decodeXML(from: data)
         } catch {

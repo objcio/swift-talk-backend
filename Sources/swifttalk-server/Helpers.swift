@@ -46,7 +46,7 @@ func tryOrLog<A>(file: StaticString = #file, line: UInt = #line, _ message: Stri
     do {
         return try f()
     } catch {
-        log(error: "\(file):\(line) \(error.localizedDescription) — \(message)")
+        log(file:file, line: line, error: "\(error.localizedDescription) — \(message)")
         return nil
     }
 }
