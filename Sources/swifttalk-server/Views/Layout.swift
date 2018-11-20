@@ -81,10 +81,10 @@ struct StructuredData {
 }
 
 
-let navigationItems: [(Route, String)] = [
-    (.home, "Swift Talk"), // todo
-    (.books, "Books"),
-    (.issues, "Issues")
+let navigationItems: [(LinkTarget, String)] = [
+    (Route.home, "Swift Talk"), // todo
+    (URL(string: "https://www.objc.io/books")!, "Books"),
+    (URL(string: "https://www.objc.io/issues")!, "Issues")
 ]
 
 extension LayoutConfig {
@@ -108,7 +108,7 @@ extension LayoutConfig {
             .script(src: "/assets/application.js")
             // todo google analytics
         ] + structured)
-        let logo = Node.link(to: .home, attributes: ["class": "flex-none outline-none mr++ flex"], [
+        let logo = Node.link(to: URL(string: "https://www.objc.io")!, attributes: ["class": "flex-none outline-none mr++ flex"], [
             .inlineSvg(path: "logo.svg", attributes: ["class": "block logo logo--themed height-auto"]), // todo scaling parameter?
             .h1(attributes: ["class":"visuallyhidden"], [.text("objc.io")]) // todo class
         ] as [Node])

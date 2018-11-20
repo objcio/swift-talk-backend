@@ -9,8 +9,6 @@ import Foundation
 
 enum Route: Equatable {
     case home
-    case books
-    case issues
     case episodes
     case sitemap
     case subscribe
@@ -120,8 +118,6 @@ private let createSubRoute: Router<Route> = .c("subscription", .createSubscripti
 
 private let externalRoutes: [Router<Route>] = [
     Router(.home),
-    .c("books", .books), // todo absolute url
-    .c("issues", .issues), // todo absolute url
     .c("sitemap", .sitemap)
 ]
 

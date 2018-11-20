@@ -109,7 +109,7 @@ extension Route {
 
 
         switch self {
-        case .books, .issues, .error:
+        case .error:
             return .notFound()
         case .collections:
             return I.write(index(Collection.all.filter { !$0.episodes(for: session?.user.data).isEmpty }, context: context))
