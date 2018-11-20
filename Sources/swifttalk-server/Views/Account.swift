@@ -128,7 +128,7 @@ func invoicesView(context: Context, user: Row<UserData>, invoices: [(Invoice, pd
             Cell("# \(invoice.invoice_number)"),
             Cell(DateFormatter.fullPretty.string(from: invoice.created_at)),
             Cell(dollarAmount(cents: invoice.total_in_cents), classes: "type-mono text-right"),
-            Cell([Node.externalLink(to: pdfURL, classes: "", children: [.text("\(invoice.invoice_number).pdf")])], classes: "text-center"),
+            Cell([Node.externalLink(to: pdfURL, classes: "", [.text("\(invoice.invoice_number).pdf")])], classes: "text-center"),
         ]
     }
     return [
@@ -390,7 +390,7 @@ func teamMembers(context: Context, addForm: Node, teamMembers: [Row<UserData>]) 
                 .img(src: tm.data.avatarURL, classes: "block radius-full ms-2 width-2 mr")
             ]),
             .div(classes: "flex-grow type-mono", [
-                .externalLink(to: URL(string: "https://github.com/\(tm.data.githubLogin)")!, classes: "color-gray-30 no-decoration hover-color-blue", children: [
+                .externalLink(to: URL(string: "https://github.com/\(tm.data.githubLogin)")!, classes: "color-gray-30 no-decoration hover-color-blue", [
                     .text(tm.data.githubLogin)
                 ])
             ]),

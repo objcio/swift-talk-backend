@@ -13,7 +13,6 @@ enum Route: Equatable {
     case issues
     case episodes
     case sitemap
-    case imprint
     case subscribe
     case register
     case collections
@@ -130,7 +129,6 @@ private let externalRoutes: [Router<Route>] = [
     .c("books", .books), // todo absolute url
     .c("issues", .issues), // todo absolute url
     .c("sitemap", .sitemap),
-    .c("imprint", .imprint),
     externalRoute,
 ]
 

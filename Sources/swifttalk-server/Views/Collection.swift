@@ -15,7 +15,7 @@ func index(_ items: [Collection], context: Context) -> Node {
     return LayoutConfig(context: context, contents: [
         pageHeader(HeaderContent.link(header: "All Collections", backlink: .home, label: "Swift Talk")),
         .div(classes: "container pb0", [
-            .h2([Node.text("\(items.count) Collections")], attributes: ["class": "bold lh-100 mb+"]),
+            .h2(attributes: ["class": "bold lh-100 mb+"], [Node.text("\(items.count) Collections")]),
             .ul(attributes: ["class": "cols s+|cols--2n l+|cols--3n"], lis)
             ])
         ]).layout
@@ -34,7 +34,7 @@ extension Collection {
                             .raw("&#8202;"),
                             .link(to: .collections, [.text("Collection")], attributes: ["class": "opacity: 90"])
                             ]),
-                        Node.h2([.text(title)], attributes: ["class": "ms5 bold color-black mt--- lh-110 mb-"]),
+                        Node.h2(attributes: ["class": "ms5 bold color-black mt--- lh-110 mb-"], [.text(title)]),
                         Node.p(attributes: ["class": "ms1 color-gray-40 text-wrapper lh-135"], description.widont),
                         Node.p(attributes: ["class": "color-gray-65 lh-125 mt"], [
                             .text(eps.count.pluralize("Episode")),

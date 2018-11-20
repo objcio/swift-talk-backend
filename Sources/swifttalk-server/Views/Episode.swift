@@ -12,8 +12,12 @@ func index(_ items: [Episode], context: Context) -> Node {
         pageHeader(.link(header: "All Episodes", backlink: .home, label: "Swift Talk")),
         .div(classes: "container pb0", [
             .div([
-                .h2([.span(attributes: ["class": "bold"], [.text("\(items.count) Episodes")])], attributes: ["class": "inline-block lh-100 mb+"])
-                ]),
+                .h2(attributes: ["class": "inline-block lh-100 mb+"], [
+                    .span(attributes: ["class": "bold"], [
+                        .text("\(items.count) Episodes")
+                    ])
+                ])
+            ]),
             .ul(attributes: ["class": "cols s+|cols--2n m+|cols--3n xl+|cols--4n"], items.map { e in
                 Node.li(attributes: ["class": "col mb++ width-full s+|width-1/2 m+|width-1/3 xl+|width-1/4"], [e.render(.init(synopsis: true, canWatch: (context.session.premiumAccess) || !e.subscription_only))])
             })
@@ -115,7 +119,7 @@ extension Episode {
 }
 
 extension Node {
-    static func externalLink(to: URL, classes: Class?, children: [Node]) -> Node {
+    static func externalLink(to: URL, classes: Class?, _ children: [Node]) -> Node {
         return Node.link(to: .external(to), children, classes: classes, attributes: ["target": "_blank", "rel": "external"])
     }
 }
@@ -183,10 +187,10 @@ extension Episode {
         let items = [(6, title: "Introduction")] + tableOfContents
         
         return .div(classes: "l+|absolute l+|position-stretch stretch width-full flex flex-column", [
-            Node.h3([
+            Node.h3(attributes: ["class": "color-blue border-top border-2 pt mb+ flex-none flex items-baseline"], [
                 .span(attributes: ["class": "smallcaps"], [.text(canWatch ? "In this episode" : "In the full episode")]),
                 .span(attributes: ["class": "ml-auto ms-1 bold"], [.text(media_duration.timeString)])
-                ], attributes: ["class": "color-blue border-top border-2 pt mb+ flex-none flex items-baseline"]),
+            ]),
             Node.div(classes: "flex-auto overflow-auto border-color-lighten-10 border-1 border-top", [
                 Node.ol(attributes: ["class": "lh-125 ms-1 color-white"], items.map { entry in
                     Node.li(attributes: ["class": "border-bottom border-1 border-color-lighten-10"], [
@@ -206,7 +210,7 @@ extension Episode {
             Node.aside(attributes: ["class": "bgcolor-pale-gray pt++ js-scroller"], [
                 Node.header(attributes: ["class": "container-h flex items-center justify-between"], [
                     Node.div([
-                        Node.h3([.text("Recent Episodes")], attributes: ["class": "inline-block bold color-black"]),
+                        Node.h3(attributes: ["class": "inline-block bold color-black"], [.text("Recent Episodes")]),
                         Node.link(to: .episodes, [.text("See All")], attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-underline"])
                         ]),
                     Node.div(classes: "js-scroller-buttons flex items-center", [
@@ -301,7 +305,7 @@ extension Episode {
                         Node.dl(classes: "flex justify-between", [
                             Node.dt(classes: "color-gray-60", [.text(key)]),
                             Node.dd(classes: "color-gray-15 text-right", [url.map { u in
-                                Node.externalLink(to: u, classes: "color-gray-15 hover-underline no-decoration", children: [.text(value)])
+                                Node.externalLink(to: u, classes: "color-gray-15 hover-underline no-decoration", [.text(value)])
                             } ?? .text(value)])
                         ])
                     ])
@@ -314,7 +318,7 @@ extension Episode {
                 .link(to: .home, [.text("Swift Talk")], attributes: ["class": "color-inherit no-decoration bold hover-border-bottom"]),
                 .text("#" + number.padded)
                 ]),
-            .h2([.text(fullTitle + (released ? "" : " (unreleased)"))], attributes: ["class": "ms5 color-white bold mt-- lh-110"])
+            .h2(attributes: ["class": "ms5 color-white bold mt-- lh-110"], [.text(fullTitle + (released ? "" : " (unreleased)"))])
         ] + guests_ )
         let headerAndPlayer = Node.div(classes: "bgcolor-night-blue pattern-shade-darker", [
             .div(classes: "container l+|pb0 l+|n-mb++", [
@@ -356,7 +360,7 @@ extension Episode {
             .div(classes: "bgcolor-pale-blue border border-1 border-color-subtle-blue radius-5 ph pv++ flex flex-column justify-center items-center text-center min-height-6", [
                 Node.inlineSvg(path: "icon-blocked.svg"),
                 .div(classes: "mv", [
-                    .h3([.text("This episode is exclusive to Subscribers")], attributes: ["class":"ms1 bold color-blue-darkest"]),
+                    .h3(attributes: ["class":"ms1 bold color-blue-darkest"], [.text("This episode is exclusive to Subscribers")]),
                     .p(attributes: ["class": "mt- lh-135 color-blue-darkest opacity-60 max-width-8"], [
                         .text("Become a subscriber to watch future and all \(Episode.subscriberOnly) current subscriber-only episodes, plus enjoy access to episode video downloads and \(teamDiscount)% discount for your team members.")
                     ])
@@ -454,9 +458,9 @@ func subscribeBanner() -> Node {
                             Node.div(classes: "flag", [
                                 Node.div(classes: "flag__image pr color-orange", [
                                     Node.inlineSvg(path: b.icon, attributes: ["class": "svg-fill-current"])
-                                    ]),
+                                ]),
                                 Node.div(classes: "flag__body", [
-                                    Node.h3([Node.text(b.name)], attributes: ["class": "bold color-white mb---"]),
+                                    Node.h3(attributes: ["class": "bold color-white mb---"], [Node.text(b.name)]),
                                     Node.p(attributes: ["class": "color-blue-darkest lh-125"], [Node.text(b.description)])
                                     ])
                                 ])

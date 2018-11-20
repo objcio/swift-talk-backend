@@ -33,6 +33,7 @@ extension DateFormatter {
     }()
 }
 
+
 fileprivate final class RecurlyXMLDecoder: Decoder {
     var node: XElement
     var codingPath: [CodingKey] = []
@@ -440,11 +441,11 @@ final class RecurlyXMLEncoder: Encoder {
         }
         
         mutating func encode(_ value: Double, forKey key: Key) throws {
-            fatalError("TODO")
+            fatalError()
         }
         
         mutating func encode(_ value: Float, forKey key: Key) throws {
-            fatalError("TODO")
+            fatalError()
         }
         
         mutating func encode(_ value: Int, forKey key: Key) throws {
@@ -452,39 +453,39 @@ final class RecurlyXMLEncoder: Encoder {
         }
         
         mutating func encode(_ value: Int8, forKey key: Key) throws {
-            fatalError("TODO")
+            fatalError()
         }
         
         mutating func encode(_ value: Int16, forKey key: Key) throws {
-            fatalError("TODO")
+            fatalError()
         }
         
         mutating func encode(_ value: Int32, forKey key: Key) throws {
-            fatalError("TODO")
+            fatalError()
         }
         
         mutating func encode(_ value: Int64, forKey key: Key) throws {
-            fatalError("TODO")
+            fatalError()
         }
         
         mutating func encode(_ value: UInt, forKey key: Key) throws {
-            fatalError("TODO")
+            fatalError()
         }
         
         mutating func encode(_ value: UInt8, forKey key: Key) throws {
-            fatalError("TODO")
+            fatalError()
         }
         
         mutating func encode(_ value: UInt16, forKey key: Key) throws {
-            fatalError("TODO")
+            fatalError()
         }
         
         mutating func encode(_ value: UInt32, forKey key: Key) throws {
-            fatalError("TODO")
+            fatalError()
         }
         
         mutating func encode(_ value: UInt64, forKey key: Key) throws {
-            fatalError("TODO")
+            fatalError()
         }
         
         mutating func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
@@ -498,19 +499,19 @@ final class RecurlyXMLEncoder: Encoder {
         }
         
         mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
-            fatalError("TODO")
+            fatalError()
         }
         
         mutating func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
-            fatalError("TODO")
+            fatalError()
         }
         
         mutating func superEncoder() -> Encoder {
-            fatalError("TODO")
+            fatalError()
         }
         
         mutating func superEncoder(forKey key: Key) -> Encoder {
-            fatalError("TODO")
+            fatalError()
         }
         
         
@@ -616,7 +617,7 @@ final class RecurlyXMLEncoder: Encoder {
     }
     
     func singleValueContainer() -> SingleValueEncodingContainer {
-        fatalError("TODO")
+        fatalError()
     }
     
     

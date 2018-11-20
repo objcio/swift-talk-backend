@@ -36,6 +36,7 @@ struct Env {
 
     var baseURL: URL { return URL(string: env["BASE_URL"]!)! }
 
+    var production: Bool { return env["PRODUCTION"].map(Int.init) == 1 }
     var port: Int? { return env["PORT"].flatMap(Int.init) }
     
     var databaseURL: String? { return env["DATABASE_URL"] }

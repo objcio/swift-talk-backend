@@ -115,7 +115,6 @@ public final class PostgresNodeDecoder: Decoder {
         }
         
         func decode<T: NodeInitializable>(_ key: Key) throws -> T {
-            // todo parameterize the snake casing
             guard let value = node[transformKey(key.stringValue)] else { fatalError("key: \(key), container: \(node)") }
             return try value.converted(to: T.self)
         }
@@ -273,7 +272,7 @@ public final class PostgresNodeDecoder: Decoder {
         }
         
         mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
-            let decoder = PostgresNodeDecoder(nodes[currentIndex], transformKey: transformKey) // todo not sure if this is a good idea...
+            let decoder = PostgresNodeDecoder(nodes[currentIndex], transformKey: transformKey)
             currentIndex += 1
             return try T(from: decoder)
         }

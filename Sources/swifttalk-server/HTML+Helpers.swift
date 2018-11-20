@@ -29,7 +29,8 @@ extension Node {
         if let c = classes {
             a["class", default: ""] += c.classes
         }
-        let contents = try! String(contentsOf: name).replacingOccurrences(of: "<svg", with: "<svg " + a.asAttributes) // todo proper xml parsing?
+        // NOTE This has worked fine so far, but could be done with proper xml parsing if necessary
+        let contents = try! String(contentsOf: name).replacingOccurrences(of: "<svg", with: "<svg " + a.asAttributes)
         return .raw(contents)
     }
     

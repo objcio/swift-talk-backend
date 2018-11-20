@@ -110,7 +110,7 @@ extension LayoutConfig {
         ] + structured)
         let logo = Node.link(to: .home, [
             .inlineSvg(path: "logo.svg", attributes: ["class": "block logo logo--themed height-auto"]), // todo scaling parameter?
-            .h1([.text("objc.io")], attributes: ["class":"visuallyhidden"]) // todo class
+            .h1(attributes: ["class":"visuallyhidden"], [.text("objc.io")]) // todo class
         ] as [Node], attributes: ["class": "flex-none outline-none mr++ flex"])
         let navigation = Node.nav(attributes: ["class": "flex flex-grow"], [
             .ul(attributes: ["class": "flex flex-auto"], navigationItems.map { l in
@@ -160,7 +160,7 @@ extension LayoutConfig {
                     .div(classes: "container-h flex-grow flex items-center", [
                         .link(to: .home, [
                             .inlineSvg(path: "logo.svg", attributes: ["class": "logo ms-2"]), // todo scaling parameter?
-                            .h1([.text("objc.io")], attributes: ["class":"visuallyhidden"]) // todo class
+                            .h1(attributes: ["class":"visuallyhidden"], [.text("objc.io")]) // todo class
                         ] as [Node], attributes: ["class": "block flex-none outline-none mr++"]),
                         ])
                     ])
@@ -171,7 +171,7 @@ extension LayoutConfig {
                     Node.div(classes: "container-h pv", [
                         Node.div(classes: "ms-1 color-gray-60", [
                             Node.a(classes: linkClasses, [Node.text("Email")], href: "mailto:mail@objc.io"),
-                            Node.link(to: .imprint, ["Imprint"], classes: linkClasses, attributes: [:])
+                            Node.externalLink(to: URL(string: "https://www.objc.io/imprint")!, classes: linkClasses, ["Imprint"])
                         ])
                     ])
                 ])

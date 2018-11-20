@@ -187,9 +187,7 @@ extension Router {
 
 func +(lhs: Endpoint, rhs: Endpoint) -> Endpoint {
     guard case let .relative(l) = lhs, case let .relative(r) = rhs else {
-        print("Endpoint mismatch: \(lhs) \(rhs)", to: &standardError)
-        // todo should be a fatalError if that wouldn't crash the server
-        return lhs
+        fatalError("Endpoint mismatch: \(lhs) \(rhs)")
     }
     let query = l.query.merging(r.query, uniquingKeysWith: { _, _ in fatalError("Duplicate key") })
     return Endpoint(path: l.path + r.path, query: query)

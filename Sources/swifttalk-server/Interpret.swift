@@ -35,7 +35,7 @@ extension Interpreter {
     static func withPostBody(do cont: @escaping ([String:String]) throws -> Self, or: @escaping () throws -> Self) -> Self {
         return .withPostData { data in
             return catchAndDisplayError {
-                // todo instead of checking whether data is empty, we should check whether it was a post?
+                // TODO instead of checking whether data is empty, we should check whether it was a post?
                 if !data.isEmpty, let r = String(data: data, encoding: .utf8)?.parseAsQueryPart {
                     return try cont(r)
                 } else {
@@ -54,7 +54,7 @@ struct Context {
     var session: Session?
 }
 
-// todo: we should implement this!
+// TODO: we should implement this!
 func requirePost() throws -> () {
 }
 
@@ -106,14 +106,14 @@ extension Route {
             return .notFound()
         case .collections:
             return I.write(index(Collection.all.filter { !$0.episodes(for: session?.user.data).isEmpty }, context: context))
-        case .imprint:
-            return .write("TODO")
         case .thankYou:
             return .write("TODO thanks")
         case .register:
             let s = try requireSession()
             return I.withPostBody(do: { body in
-                guard let result = registerForm(context).parse(body) else { throw RenderingError(privateMessage: "todo", publicMessage: "todo") }
+                guard let result = registerForm(context).parse(body) else {
+                    throw RenderingError(privateMessage: "Failed to parse form data to create an account", publicMessage: "Something went wrong during account creation. Please try again.")
+                }
                 var u = s.user
                 u.data.email = result.email
                 u.data.name = result.name
@@ -150,7 +150,6 @@ extension Route {
             return try I.write(Plan.all.subscribe(context: context))
         case .collection(let name):
             guard let c = Collection.all.first(where: { $0.id == name }) else {
-                // todo throw
                 return I.notFound("No such collection")
             }
             return .write(c.show(context: context))
@@ -179,7 +178,6 @@ extension Route {
                 let t = try token ?! RenderingError(privateMessage: "No github access token", publicMessage: "Couldn't access your Github profile.")
                 let loadProfile = URLSession.shared.load(Github(accessToken: t).profile)
                 return I.onSuccess(promise: loadProfile, message: "Couldn't access your Github profile", do: { profile in
-                    // todo ask for email if we don't get it
                     let uid: UUID
                     if let user = try c.get().execute(Row<UserData>.select(githubId: profile.id)) {
                         uid = user.id

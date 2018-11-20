@@ -55,7 +55,7 @@ extension FormView {
                 Node.label(classes: "input-label input-label--required" + (isErr ? "color-invalid" : ""), attributes: ["for": id], [.text(description)]),
                 Node.input(classes: "text-input block width-full max-width-6", name: id, attributes: ["required": "required", "value": value ?? ""]),
                 note.map { Node.label(classes: "input-note mt-", attributes: ["for": id], [
-                    .span(classes: "bold", attributes: [:], [.raw("Note: ")]),
+                    .span(classes: "bold", [.raw("Note: ")]),
                     .raw($0)
                 ]) } ?? .none
             ])
@@ -72,7 +72,7 @@ extension FormView {
                         } + [
                             .div([
                                 Node.input(classes: "c-button c-button--blue", name: "commit", type: "submit", attributes: ["value": submitTitle, "data-disable-with": submitTitle], []),
-                                submitNote.map { Node.p(classes: "ms-1 color-gray-40 mt", attributes: [:], [.raw($0)]) } ?? .none
+                                submitNote.map { Node.p(classes: "ms-1 color-gray-40 mt", [.raw($0)]) } ?? .none
                             ])
                         ])
                     ])

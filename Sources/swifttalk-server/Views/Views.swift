@@ -32,7 +32,7 @@ enum HeaderContent {
         	])
         case let .link(header, backlink, label): return [
         	.link(to: backlink, [.text(label)], attributes: ["class": "ms1 inline-block no-decoration lh-100 pb- color-white opacity-70 hover-underline"]),
-            .h1([.text(header)], attributes: ["class": "color-white bold ms4 pb"])
+            .h1(attributes: ["class": "color-white bold ms4 pb"], [.text(header)])
         ]
         }
     }

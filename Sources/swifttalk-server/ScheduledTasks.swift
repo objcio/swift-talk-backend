@@ -92,8 +92,12 @@ extension Task {
             let sendCampaign: Promise<Bool> = URLSession.shared.load(mailchimp.createCampaign(for: ep)).flatMap { campaignId in
                 guard let id = campaignId else { return Promise { $0(false) } }
                 return URLSession.shared.load(mailchimp.addContent(for: ep, toCampaign: id)).flatMap { _ in
-                    // TODO here we have to actually send the campaign instead of using the test API
-                    URLSession.shared.load(mailchimp.testCampaign(campaignId: id)).map { $0 != nil }
+                    if env.production {
+                        // TODO here we have to actually send the campaign
+                        return URLSession.shared.load(mailchimp.testCampaign(campaignId: id)).map { $0 != nil }
+                    } else {
+                        return URLSession.shared.load(mailchimp.testCampaign(campaignId: id)).map { $0 != nil }
+                    }
                 }
             }
 

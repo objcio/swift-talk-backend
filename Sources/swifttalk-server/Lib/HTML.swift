@@ -162,20 +162,19 @@ extension Node {
         return .node(El(name: "strong", block: false, classes: classes, attributes: attributes, children: text))
     }
 
-    // todo arg order
-    static func h1(classes: Class? = nil, _ title: [Node], attributes: [String:String] = [:]) -> Node {
+    static func h1(classes: Class? = nil, attributes: [String:String] = [:], _ title: [Node]) -> Node {
         return .node(El(name: "h1", block: false, classes: classes, attributes: attributes, children: title))
     }
     
-    static func h2(classes: Class? = nil, _ title: [Node], attributes: [String:String] = [:]) -> Node {
+    static func h2(classes: Class? = nil, attributes: [String:String] = [:], _ title: [Node]) -> Node {
         return .node(El(name: "h2", block: false, classes: classes, attributes: attributes, children: title))
     }
     
-    static func h3(classes: Class? = nil, _ title: [Node], attributes: [String:String] = [:]) -> Node {
+    static func h3(classes: Class? = nil, attributes: [String:String] = [:], _ title: [Node]) -> Node {
         return .node(El(name: "h3", block: false, classes: classes, attributes: attributes, children: title))
     }
     
-    static func h4(classes: Class? = nil, _ title: [Node], attributes: [String:String] = [:]) -> Node {
+    static func h4(classes: Class? = nil, attributes: [String:String] = [:], _ title: [Node]) -> Node {
         return .node(El(name: "h4", block: false, classes: classes, attributes: attributes, children: title))
     }
     

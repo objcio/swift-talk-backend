@@ -21,11 +21,8 @@ struct Request {
     var query: [String:String]
     var method: HTTPMethod
     var cookies: [(String, String)]
-//    var body: Data?
 }
 
-
-// todo: we could have a method `withBody(cont: (Data) -> Self) -> Self`, and not parse the body in the Request.
 protocol Interpreter {
     static func write(_ string: String, status: HTTPResponseStatus, headers: [String: String]) -> Self
     static func writeFile(path: String) -> Self

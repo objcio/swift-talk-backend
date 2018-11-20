@@ -48,8 +48,7 @@ func tryOrLog<A>(_ message: String = "", _ f: () throws -> A) -> A? {
 }
 
 func myAssert(_ cond: @autoclosure () -> Bool, _ message: @autoclosure () -> String = "Assertion failure \(#file):\(#line) \(#function)", file: StaticString = #file, line: UInt = #line, method: StaticString = #function) {
-    // todo if production/debug
-    if true {
+    if env.production {
         guard !cond() else { return }
         print(message(), to: &standardError)
     } else {
@@ -67,7 +66,7 @@ final class Lazy<A> {
         if cache == nil {
             cache = try compute()
         }
-        return cache! // todo throw an error?
+        return cache!
     }
     init(_ compute: @escaping () throws -> A, cleanup: @escaping (A) -> ()) {
         self.compute = compute
@@ -94,10 +93,13 @@ extension Scanner {
 }
 
 extension String {
-    // todo attribution: copied from swift's standard library
+    // This code is copied from the Swift Standard Library
+    // https://github.com/apple/swift/blob/bd109bec92f52003edff30d458ea5b2a424c9aa0/stdlib/public/SDK/Foundation/JSONEncoder.swift#L148
+    // Copyright (c) 2014 - 2017 Apple Inc. and the Swift project authors
+    // Licensed under Apache License v2.0 with Runtime Library Exception
     var snakeCased: String {
         guard !self.isEmpty else { return self }
-        let stringKey = self // todo inline
+        let stringKey = self
         
         var words : [Range<String.Index>] = []
         // The general idea of this algorithm is to split words on transition from lower to upper case, then on transition of >1 upper case characters to lowercase

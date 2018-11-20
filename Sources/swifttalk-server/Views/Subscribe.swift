@@ -51,9 +51,9 @@ func registerForm(_ context: Context) -> Form<ProfileFormData> {
         LayoutConfig(context: context, contents: [
             Node.header([
                 Node.div(classes: "container-h pb+ pt-", [
-                    Node.h1(classes: "ms4 color-blue bold", ["Create Your Account"], attributes: [:])
-                    ]),
+                    Node.h1(classes: "ms4 color-blue bold", ["Create Your Account"])
                 ]),
+            ]),
             Node.div(classes: "container", [node])
         ]).layoutForCheckout
     }

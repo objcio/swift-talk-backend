@@ -11,7 +11,7 @@ func renderHome(context: Context) -> Node {
     let header = pageHeader(HeaderContent.other(header: "Swift Talk", blurb: "A weekly video series on Swift programming.", extraClasses: "ms4"))
     var recentNodes = [
         Node.header(attributes: ["class": "mb+"], [
-            .h2([.text("Recent Episodes")], attributes: ["class": "inline-block bold color-black"]),
+            .h2(attributes: ["class": "inline-block bold color-black"], [.text("Recent Episodes")]),
             .link(to: .episodes, [.text("See All")], attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-under"])
         ])
     ]
@@ -37,7 +37,7 @@ func renderHome(context: Context) -> Node {
     let recentEpisodes: Node = .section(classes: "container", recentNodes)
     let collections: Node = .section(attributes: ["class": "container"], [
         .header(attributes: ["class": "mb+"], [
-            .h2([.text("Collections")], attributes: ["class": "inline-block bold lh-100 mb---"]),
+            .h2(attributes: ["class": "inline-block bold lh-100 mb---"], [.text("Collections")]),
             .link(to: .collections, [.text("Show Contents")], attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-underline"]),
             .p(attributes: ["class": "lh-125 color-gray-60"], [
                 .text("Browse all Swift Talk episodes by topic.")
