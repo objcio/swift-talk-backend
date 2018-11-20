@@ -19,19 +19,28 @@ struct Env {
     let env: [String:String] = readDotEnv().merging(ProcessInfo.processInfo.environment, uniquingKeysWith: { $1 })
     
     init() {
-        guard
-            let _ = env["BASE_URL"],
-            let _ = env["GITHUB_CLIENT_ID"],
-            let _ = env["GITHUB_CLIENT_SECRET"],
-            let _ = env["GITHUB_ACCESS_TOKEN"],
-            let _ = env["RECURLY_SUBDOMAIN"],
-            let _ = env["RECURLY_PUBLIC_KEY"],
-            let _ = env["RECURLY_API_KEY"],
-            let _ = env["CIRCLE_API_KEY"],
-            let _ = env["MAILCHIMP_API_KEY"],
-            let _ = env["MAILCHIMP_LIST_ID"],
-            let _ = env["VIMEO_ACCESS_TOKEN"]
-        else { fatalError("Missing environment variable") }
+        typealias ErrorMessage = String
+        func verify(_ name: String) -> ErrorMessage? {
+            if env[name] == nil { return name }
+            return nil
+        }
+
+        let messages = [
+		  "BASE_URL",
+          "GITHUB_CLIENT_ID",
+          "GITHUB_CLIENT_SECRET",
+          "GITHUB_ACCESS_TOKEN",
+          "RECURLY_SUBDOMAIN",
+          "RECURLY_PUBLIC_KEY",
+          "RECURLY_API_KEY",
+          "CIRCLE_API_KEY",
+          "MAILCHIMP_API_KEY",
+          "MAILCHIMP_LIST_ID",
+          "VIMEO_ACCESS_TOKEN"
+		].compactMap(verify)
+		guard messages.isEmpty else {
+			fatalError("Missing environment variables: \(messages)")
+		}
     }
 
     var baseURL: URL { return URL(string: env["BASE_URL"]!)! }
