@@ -45,8 +45,7 @@ struct StaticJSON<A: Codable> {
             let e = try JSONDecoder().decode(A.self, from: d)
             return process(e)
         } catch {
-            print(error, to: &standardError)
-            print(error.localizedDescription, to: &standardError)
+            log(error)
             return nil
         }
     }

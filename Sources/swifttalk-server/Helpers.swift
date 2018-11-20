@@ -30,11 +30,15 @@ func flatten<A>(_ value: A??) -> A? {
 }
 
 func log(file: StaticString = #file, line: UInt = #line, _ e: Error) {
-    print("\(file):\(line) " + e.localizedDescription, to: &standardError)
+    print("ERROR \(file):\(line) " + e.localizedDescription, to: &standardError)
 }
 
 func log(file: StaticString = #file, line: UInt = #line, error: String) {
-    print("\(file):\(line): \(error)", to: &standardError)
+    print("ERROR \(file):\(line): \(error)", to: &standardError)
+}
+
+func log(file: StaticString = #file, line: UInt = #line, info: String) {
+    print("INFO \(file):\(line): \(info)")
 }
 
 @discardableResult

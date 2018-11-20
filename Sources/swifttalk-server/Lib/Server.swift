@@ -283,7 +283,7 @@ final class RouteHandler: ChannelInboundHandler {
                     postCont = (c, header)
                 }
             } else {
-                print("Not found: \(header.uri)")
+                log(error: "Not found: \(header.uri)")
                 _ = NIOInterpreter.write("Not found: \(header.uri)").run(env)
             }
 
@@ -338,7 +338,7 @@ struct MyServer {
             .childChannelOption(reuseAddr, value: 1)
             .childChannelOption(ChannelOptions.maxMessagesPerRead,
                                 value: 1)
-        print("Going to start listening on port \(port)")
+        log(info: "Going to start listening on port \(port)")
         let channel = try bootstrap.bind(host: "0.0.0.0", port: port).wait()
         try channel.closeFuture.wait()
     }
