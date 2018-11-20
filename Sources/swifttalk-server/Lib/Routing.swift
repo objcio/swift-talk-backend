@@ -140,6 +140,17 @@ extension Router where A == String {
         }, description: .parameter("string"))
     }
     
+    static func optionalString() -> Router<String?> {
+        // todo mirror whatever florian did to string()
+        return Router<String?>(parse: { req in
+            guard let f = req.path.first else { return .some(nil) }
+            req.path.removeFirst()
+            return f
+        }, print: { (str: String?) in
+            return Endpoint(path: str.map { [$0] } ?? [])
+        }, description: .parameter("string?"))
+    }
+
     static func queryParam(name: String) -> Router<String> {
         return Router<String>(parse: { req in
             guard let x = req.query[name] else { return nil }

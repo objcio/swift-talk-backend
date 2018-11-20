@@ -12,13 +12,13 @@ enum Route: Equatable {
     case episodes
     case sitemap
     case subscribe
-    case register
+    case register(couponCode: String?)
     case collections
     case login(continue: String?)
     case logout
     case thankYou
-    case createSubscription // .subscription(.create) (TODO should be a post)
-    case newSubscription // .subscription(.new)
+    case createSubscription(couponCode: String?) // .subscription(.create) (TODO should be a post)
+    case newSubscription(couponCode: String?) // .subscription(.new)
     case accountProfile // account(.profile)
     case accountBilling // account(.billing)
     case accountTeamMembers
@@ -36,6 +36,7 @@ enum Route: Equatable {
     case scheduledTask
     case upgradeSubscription
     case accountUpdatePayment
+    case promoCode(String)
 }
 
 extension Route {
@@ -114,7 +115,10 @@ private let deleteTeamMember: Router<Route> = (Router<()>.c("team_members") / .c
     return id.uuidString
 })
 
-private let createSubRoute: Router<Route> = .c("subscription", .createSubscription)
+private let createSubRoute: Router<Route> = .c("subscription") / Router.optionalString().transform(Route.createSubscription, { r in
+	guard case let  Route.createSubscription(s) = r else { return nil }
+    return s
+})
 
 private let externalRoutes: [Router<Route>] = [
     Router(.home),
@@ -134,8 +138,14 @@ private let accountRoutes: [Router<Route>] = [
 
 private let subscriptionRoutes: [Router<Route>] = [
     .c("subscribe", .subscribe),
-    .c("registration", .register),
-    .c("subscription") / .c("new", .newSubscription),
+    .c("registration") / Router.optionalString().transform(Route.register, { route in
+        guard case let .register(x) = route else { return nil }
+        return x
+    }),
+    .c("subscription") / .c("new") / Router.optionalString().transform(Route.newSubscription, { route in
+        guard case let .newSubscription(x) = route else { return nil }
+        return x
+    }),
     .c("subscription") / .c("cancel", .cancelSubscription),
     .c("subscription") / .c("reactivate", .reactivateSubscription),
     .c("subscription") / .c("upgrade", .upgradeSubscription),
@@ -150,6 +160,10 @@ private let otherRoutes: [Router<Route>] = [
     episodeDownload,
     episode,
     collection,
+    .c("promo") / (Router.string().transform(Route.promoCode, { r in
+        guard case let .promoCode(s) = r else { return nil }
+        return s
+    }))
 ]
 
 private let internalRoutes: [Router<Route>] = [

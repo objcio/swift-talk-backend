@@ -107,6 +107,15 @@ extension Route {
             }
         }
 
+        func newSubscription(couponCode: String?, errs: [String]) throws -> I {
+            if let c = couponCode {
+                return I.onSuccess(promise: recurly.coupon(code: c).promise, do: { coupon in
+                    return try I.write(newSub(context: context, coupon: coupon, errs: errs))
+                })
+            } else {
+                return try I.write(newSub(context: context, coupon: nil, errs: errs))
+            }
+        }
 
         switch self {
         case .error:
@@ -115,10 +124,10 @@ extension Route {
             return I.write(index(Collection.all.filter { !$0.episodes(for: session?.user.data).isEmpty }, context: context))
         case .thankYou:
             return .write("TODO thanks")
-        case .register:
+        case .register(let couponCode):
             let s = try requireSession()
             return I.withPostBody(do: { body in
-                guard let result = registerForm(context).parse(body) else {
+                guard let result = registerForm(context, couponCode: couponCode).parse(body) else {
                     throw RenderingError(privateMessage: "Failed to parse form data to create an account", publicMessage: "Something went wrong during account creation. Please try again.")
                 }
                 var u = s.user
@@ -128,12 +137,12 @@ extension Route {
                 let errors = u.data.validate()
                 if errors.isEmpty {
                     try c.get().execute(u.update())
-                    return I.redirect(to: .newSubscription)
+                    return I.redirect(to: Route.newSubscription(couponCode: couponCode))
                 } else {
-                    return I.write(registerForm(context).render(result, errors))
+                    return I.write(registerForm(context, couponCode: couponCode).render(result, errors))
                 }
             })
-        case .createSubscription:
+        case .createSubscription(let couponCode):
             let s = try requireSession()
             return I.withPostBody { dict in
                 guard let planId = dict["plan_id"], let token = dict["billing_info[token]"] else {
@@ -146,10 +155,10 @@ extension Route {
                     switch sub_ {
                     case .errors(let messages):
                         if messages.contains(where: { $0.field == "subscription.account.email" && $0.symbol == "invalid_email" }) {
-                            let response = registerForm(context).render(.init(s.user.data), [ValidationError("email", "Please provide a valid email address.")])
+                            let response = registerForm(context, couponCode: couponCode).render(.init(s.user.data), [ValidationError("email", "Please provide a valid email address.")])
                             return I.write(response)
                         }
-                        return try I.write(newSub(context: context, errs: messages.map { $0.message }))
+                        return try newSubscription(couponCode: couponCode, errs: messages.map { $0.message })
                     case .success(let sub):
                         try c.get().execute(s.user.changeSubscriptionStatus(sub.state == .active))
                         // todo flash
@@ -164,13 +173,13 @@ extension Route {
                 return I.notFound("No such collection")
             }
             return .write(c.show(context: context))
-        case .newSubscription:
+        case .newSubscription(let couponCode):
             let s = try requireSession()
             let u = s.user
             if !u.data.confirmedNameAndEmail {
-                return I.write(registerForm(context).render(.init(u.data), []))
+                return I.write(registerForm(context, couponCode: couponCode).render(.init(u.data), []))
             } else {
-                return try I.write(newSub(context: context, errs: []))
+                return try newSubscription(couponCode: couponCode, errs: [])
             }
         case .login(let cont):
             var path = "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(github.clientId)"
@@ -219,6 +228,14 @@ extension Route {
             return .write(renderHome(context: context))
         case .sitemap:
             return .write(Route.siteMap)
+        case .promoCode(let str):
+            // todo what if we can't find a coupon, or if it's not redeemable
+            return I.onSuccess(promise: recurly.coupon(code: str).promise, do: { coupon in
+                guard coupon.state == "redeemable" else {
+                    throw RenderingError(privateMessage: "not redeemable: \(str)", publicMessage: "This coupon is not redeemable anymore.")
+                }
+                return try I.write(Plan.all.subscribe(context: context, coupon: coupon))
+            })
         case .download(let id):
             let s = try requireSession()
             guard let ep = Episode.scoped(for: session?.user.data).first(where: { $0.id == id }) else {

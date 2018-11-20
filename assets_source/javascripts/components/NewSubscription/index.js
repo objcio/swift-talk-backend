@@ -132,11 +132,8 @@ export default class NewSubscription extends Component {
           </div>
           { coupon.discount_type && coupon.discount_type !== "free_trial" && (
             <div className="pa border-bottom border-color-white border-2 flex justify-between items-center">
-              <div className="mb--">
-                <span className="smallcaps-large">Discount</span>
-                <span>{a.formatMoney((base_price - discountedPrice) / 100, '$')}</span>
-              </div>
-              <div className="ms-1 color-gray-50">{coupon.description}</div>
+			  <span className="smallcaps-large">Discount</span>
+			  <span>{a.formatMoney((base_price - discountedPrice) / 100, '$')}</span>
             </div>
           )}
           { coupon.discount_type && coupon.discount_type === "free_trial" && (

@@ -46,8 +46,8 @@ func profile(submitTitle: String, action: Route) -> Form<ProfileFormData> {
     })
 }
 
-func registerForm(_ context: Context) -> Form<ProfileFormData> {
-    return profile(submitTitle: "Create Account", action: .register).wrap { node in
+func registerForm(_ context: Context, couponCode: String?) -> Form<ProfileFormData> {
+    return profile(submitTitle: "Create Account", action: .register(couponCode: couponCode)).wrap { node in
         LayoutConfig(context: context, contents: [
             Node.header([
                 Node.div(classes: "container-h pb+ pt-", [
@@ -59,25 +59,15 @@ func registerForm(_ context: Context) -> Form<ProfileFormData> {
     }
 }
 
-extension Plan {
-    static var monthly: Plan? {
-        return all.first(where: { $0.plan_interval_unit == .months && $0.plan_interval_length == 1 })
-    }
-    static var yearly: Plan? {
-        return all.first(where: { $0.plan_interval_unit == .months && $0.plan_interval_length == 12 })
-    }
-
-}
 extension Array where Element == Plan {
     
-    func subscribe(context: Context, coupon: String? = nil) throws -> Node {
+    func subscribe(context: Context, coupon: Coupon? = nil) throws -> Node {
         guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
             throw RenderingError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
         }
         
-        assert(coupon == nil) // todo
         func node(plan: Plan, title: String) -> Node {
-            let amount = Double(plan.unit_amount_in_cents.usdCents) / 100
+            let amount = Double(plan.discountedPrice(coupon: coupon).usdCents) / 100
             let amountStr =  amount.isInt ? "\(Int(amount))" : String(format: "%.2f", amount) // don't use a decimal point for integer numbers
             // todo take coupon into account
             return .div(classes: "pb-", [
@@ -95,21 +85,20 @@ extension Array where Element == Plan {
             continueLink = Node.link(to: .accountProfile, classes: linkClasses + "c-button--ghost", ["You're already subscribed"])
         } else if context.session?.user != nil {
 //            print(session?.user)
-            continueLink = Node.link(to: .newSubscription, classes: linkClasses, ["Proceed to payment"])
+            continueLink = Node.link(to: .newSubscription(couponCode: coupon?.coupon_code), classes: linkClasses, ["Proceed to payment"])
         } else {
-            // todo continue to .newSubscription
-            continueLink = Node.link(to: .login(continue: Route.newSubscription.path), classes: linkClasses, ["Sign in with Github"])
+            continueLink = Node.link(to: .login(continue: Route.newSubscription(couponCode: coupon?.coupon_code).path), classes: linkClasses, ["Sign in with Github"])
         }
         let contents: [Node] = [
             pageHeader(.other(header: "Subscribe to Swift Talk", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),
             .div(classes: "container pt0", [
-                //                <% if @coupon.present? %>
-                //                <div class="bgcolor-orange-dark text-center color-white pa- lh-125 radius-3">
-                //                <span class="smallcaps inline-block">Special Deal</span>
-                //                <p class="ms-1"><%= @coupon['description'] %></p>
-                //                </div>
-                //                <% end %>
                 .div(classes: "bgcolor-white pa- radius-8 max-width-7 box-sizing-content center stack-", [
+			coupon.map { c in
+                        Node.div(classes: "bgcolor-orange-dark text-center color-white pa- lh-125 radius-3", [
+                            Node.span(classes: "smallcaps inline-block", [.text("Special Deal")]),
+                            Node.p(classes: "ms-1", [.text(c.description)])
+                        ])
+                    } ?? .none,
                     .div(classes: "pattern-gradient pattern-gradient--swifttalk pv++ ph+ radius-5", [
                         .div(classes: "flex items-center justify-around text-center color-white", [
                             node(plan: monthly, title: "Monthly"),
@@ -123,7 +112,7 @@ extension Array where Element == Plan {
                     ]),
                 newSubscriptionBanner(),
                 .div(classes: "ms-1 color-gray-65 text-center pt+", [
-                    .ul(classes: "stack pl", smallPrint(coupon: coupon != nil).map { Node.li([.text($0)])})
+                    .ul(classes: "stack pl", smallPrint(noTeamMemberDiscount: coupon != nil && !coupon!.applies_to_non_plan_charges).map { Node.li([.text($0)])})
                     ])
                 ]),
             ]
@@ -131,9 +120,9 @@ extension Array where Element == Plan {
     }
 }
 
-func smallPrint(coupon: Bool) -> [String] {
+func smallPrint(noTeamMemberDiscount: Bool) -> [String] {
     return
-        (coupon ? ["The discount doesn’t apply to added team members."] : []) +
+        (noTeamMemberDiscount ? ["The discount doesn’t apply to added team members."] : []) +
             [
                 "Subscriptions can be cancelled at any time.",
                 "All prices shown excluding VAT.",
@@ -141,13 +130,13 @@ func smallPrint(coupon: Bool) -> [String] {
     ]
 }
 
-func newSub(context: Context, errs: [String]) throws -> Node {
+func newSub(context: Context, coupon: Coupon?, errs: [String]) throws -> Node {
     guard let m = Plan.monthly, let y = Plan.yearly else {
         throw RenderingError(privateMessage: "No monthly or yearly plan: \(Plan.all)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
     }
-    let data = NewSubscriptionData(action: Route.createSubscription.path, public_key: env.recurlyPublicKey, plans: [
+    let data = NewSubscriptionData(action: Route.createSubscription(couponCode: coupon?.coupon_code).path, public_key: env.recurlyPublicKey, plans: [
         .init(m), .init(y)
-    ], payment_errors: errs, method: .post, coupon: .init())
+        ], payment_errors: errs, method: .post, coupon: coupon.map(NewSubscriptionData.Coupon.init))
     return LayoutConfig(context: context,  contents: [
         .header([
             .div(classes: "container-h pb+ pt+", [
@@ -188,11 +177,32 @@ struct NewSubscriptionData: Codable {
             interval = plan.prettyInterval
         }
     }
-    struct Coupon: Codable { }
+    struct Coupon: Codable {
+        var code: String
+        var discount_type: String
+        var discount_percent: Int?
+        var description: String
+        var discount_in_cents: Amount?
+        var free_trial_amount: Int?
+        var free_trial_unit: String?
+
+    }
     var action: String
     var public_key: String
     var plans: [SubscriptionPlan]
     var payment_errors: [String] // TODO verify type
     var method: HTTPMethod = .post
-    var coupon: Coupon
+    var coupon: Coupon?
+}
+
+extension NewSubscriptionData.Coupon {
+    init(_ coupon: Coupon) {
+        code = coupon.coupon_code
+        discount_type = coupon.discount_type.rawValue
+        description = coupon.description
+        discount_percent = coupon.discount_percent
+        discount_in_cents = coupon.discount_in_cents
+        free_trial_amount = coupon.free_trial_amount
+        free_trial_unit = coupon.free_trial_unit
+    }
 }

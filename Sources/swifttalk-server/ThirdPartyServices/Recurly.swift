@@ -15,6 +15,15 @@ struct Amount: Codable {
         case usdCents = "USD"
     }
     var usdCents: Int
+
+    func discounted(percent: Int) -> Amount {
+        let cents = Int(Float(usdCents) * Float(1-Float(percent)/100))
+        return Amount(usdCents: cents)
+    }
+}
+
+func -(lhs: Amount, rhs: Amount) -> Amount {
+    return Amount(usdCents: lhs.usdCents-rhs.usdCents)
 }
 
 struct Plan: Codable {
@@ -28,6 +37,31 @@ struct Plan: Codable {
     var plan_interval_length: Int
     var plan_interval_unit: IntervalUnit
     var unit_amount_in_cents: Amount
+}
+
+extension Plan {
+    static var monthly: Plan? {
+        return all.first(where: { $0.plan_interval_unit == .months && $0.plan_interval_length == 1 })
+    }
+    static var yearly: Plan? {
+        return all.first(where: { $0.plan_interval_unit == .months && $0.plan_interval_length == 12 })
+    }
+
+    func discountedPrice(coupon: Coupon?) -> Amount {
+        let base = unit_amount_in_cents
+        guard let c = coupon else { return base }
+        guard c.applies_to_all_plans || c.plan_codes.contains(plan_code) else {
+            return base
+        }
+        switch c.discount_type {
+        case .dollars where c.discount_in_cents != nil:
+            return base - c.discount_in_cents!
+        case .percent where c.discount_percent != nil :
+            return base.discounted(percent: c.discount_percent!)
+        case .freeTrial: return base // todo?
+        default: return base
+        }
+    }
 }
 
 struct Subscription: Codable {
@@ -198,6 +232,41 @@ struct WebhookAccount: Codable {
     var account_code: UUID
 }
 
+struct Coupon: Codable {
+    enum DiscountType: String, Codable {
+        case percent
+        case dollars
+        case freeTrial = "free_trial"
+    }
+    var id: Int
+    var coupon_code: String
+    var name: String
+    var state: String
+    var description: String
+    var discount_type: DiscountType
+    var discount_in_cents: Amount?
+    var free_trial_amount: Int?
+    var free_trial_unit: String?
+    var discount_percent: Int?
+    var invoice_description: String?
+    var redeem_by_date: Date?
+    var single_use: Bool
+    var applies_for_months: Int?
+    var max_redemptions: Int?
+    var applies_to_all_plans: Bool
+    var created_at: Date
+    var updated_at: Date
+    var deleted_at: Date?
+    var duration: String
+    var temporal_unit: String?
+    var temporal_amount: String?
+    var applies_to_non_plan_charges: Bool
+    var redemption_resource: String
+    var max_redemptions_per_account: Int?
+    var coupon_type: String
+    var plan_codes: [String]
+}
+
 struct CreateSubscription: Codable, RootElement {
     static let rootElementName: String = "subscription"
     struct CreateBillingInfo: Codable {
@@ -365,6 +434,16 @@ struct Recurly {
         return RemoteEndpoint(xml: .put, url: url, value: UpdateSubscription(timeframe: "now", plan_code: plan_code, subscription_add_ons: addons), headers: headers, query: [:])
     }
 
+    func coupon(code: String) -> RemoteEndpoint<Coupon> {
+        let url = base.appendingPathComponent("coupons/\(code)")
+        return RemoteEndpoint(xml: .get, url: url, headers: headers)
+    }
+
+    func coupons() -> RemoteEndpoint<[Coupon]> {
+        let url = base.appendingPathComponent("coupons")
+        return RemoteEndpoint(xml: .get, url: url, headers: headers)
+    }
+
     func subscriptionStatus(for accountId: UUID) -> Promise<(subscriber: Bool, months: UInt)?> {
         return Promise { cb in
             URLSession.shared.load(self.account(with: accountId)) { result in
@@ -375,11 +454,11 @@ struct Recurly {
             }
         }
     }
-
     
     func pdfURL(invoice: Invoice, hostedLoginToken: String) -> URL {
         return URL(string: "https://\(host)/account/invoices/\(invoice.invoice_number).pdf?ht=\(hostedLoginToken)")!
     }
+
 }
 
 extension RemoteEndpoint where A: Decodable {

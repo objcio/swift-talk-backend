@@ -117,7 +117,7 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
         
         func decode(_ type: Int.Type, forKey key: Key) throws -> Int {
             guard let c = child(key: key)?.nodeValue, let i = Int(c) else {
-                throw DecodingError(message: "Expected a string for key: \(key)")
+                throw DecodingError(message: "Expected an int for key: \(key)")
             }
             return i
         }

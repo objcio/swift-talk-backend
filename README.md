@@ -83,6 +83,12 @@ browserify assets_source/javascripts/application.js > assets/application.js
 
 You can also use `--debug` to include source maps (for better debugging).
 
+To build the stylesheets:
+
+```
+./build-css.sh
+```
+
 # Deployment
 
 A heroku-based docker app (needs postgres as well).
