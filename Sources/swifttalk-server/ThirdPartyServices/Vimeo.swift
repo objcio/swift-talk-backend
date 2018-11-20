@@ -8,31 +8,28 @@
 import Foundation
 
 
-struct Vimeo {
-    struct Video: Codable {
-        struct Download: Codable {
-            var width: Int
-            var height: Int
-            var link: URL
-        }
-        
-        var download: [Download]
-    }
+let vimeo = Vimeo()
 
+struct Vimeo {
     let base = URL(string: "https://api.vimeo.com")!
-    let apiKey: String
+    let apiKey = env.vimeoAccessToken
     var headers: [String:String] {
         return [
             "Authorization": "Bearer \(apiKey)"
         ]
     }
     
-    init(apiKey: String) {
-        self.apiKey = apiKey
-    }
-    
     func downloadURL(for videoId: Int) -> RemoteEndpoint<URL?> {
-        return RemoteEndpoint<Vimeo.Video>(json: .get, url: base.appendingPathComponent("videos/\(videoId)"), headers: headers).map { video in
+        struct Video: Codable {
+            var download: [Download]
+        }
+        struct Download: Codable {
+            var width: Int
+            var height: Int
+            var link: URL
+        }
+
+        return RemoteEndpoint<Video>(json: .get, url: base.appendingPathComponent("videos/\(videoId)"), headers: headers).map { video in
             video.download.first { $0.width == 1920 }?.link
         }
     }

@@ -11,8 +11,8 @@ let mailchimp = Mailchimp()
 
 struct Mailchimp {
     let base = URL(string: "https://us7.api.mailchimp.com/3.0/")!
-    var apiKey: String { return env["MAILCHIMP_API_KEY"] }
-    var listId: String { return env["MAILCHIMP_LIST_ID"] }
+    var apiKey = env.mailchimpApiKey
+    var listId = env.mailchimpListId
     var authHeader: [String: String] { return ["Authorization": "Basic " + "anystring:\(apiKey)".base64Encoded] }
     
     struct CampaignSettings: Codable {
@@ -94,7 +94,7 @@ struct Mailchimp {
 
 
 private func plainText(_ episode: Episode) -> String {
-    let url = env["BASE_URL"] + Route.episode(episode.id).path
+    let url = env.baseURL.absoluteString + Route.episode(episode.id).path
     return """
     Dear Swift Talk Subscribers,
     
@@ -122,7 +122,7 @@ private func plainText(_ episode: Episode) -> String {
 }
 
 private func html(_ episode: Episode) -> String {
-    let url = env["BASE_URL"] + Route.episode(episode.id).path
+    let url = env.baseURL.absoluteString + Route.episode(episode.id).path
     return """
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
     <html xmlns="http://www.w3.org/1999/xhtml">

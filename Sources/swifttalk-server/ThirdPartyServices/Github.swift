@@ -8,9 +8,11 @@
 import Foundation
 
 
+let github = Github(accessToken: env.githubAccessToken)
+
 struct Github {
-    let clientId = env["GITHUB_CLIENT_ID"]
-    let clientSecret = env["GITHUB_CLIENT_SECRET"]
+    let clientId = env.githubClientId
+    let clientSecret = env.githubClientSecret
     let accessToken: String
     let transcriptsRepo = "episode-transcripts"
     let staticDataRepo = "swift-talk-static-data"

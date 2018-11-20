@@ -7,11 +7,8 @@
 
 import Foundation
 
-extension String {
-    var base64Encoded: String {
-        return data(using: .utf8)!.base64EncodedString()
-    }
-}
+
+let recurly = Recurly()
 
 struct Amount: Codable {
     enum CodingKeys: String, CodingKey {
@@ -300,9 +297,9 @@ struct RecurlyErrors: Error {
 }
 
 struct Recurly {
+    let apiKey = env.recurlyApiKey
+    let host = "\(env.recurlySubdomain).recurly.com"
     let base: URL
-    let apiKey: String
-    let subdomain: String
     var headers: [String:String] {
         return [
             "X-Api-Version": "2.13",
@@ -311,11 +308,9 @@ struct Recurly {
         ]
     }
     
-    init(subdomain: String, apiKey: String) {
-        base = URL(string: "https://\(subdomain)/v2")!
-        self.subdomain = subdomain
-        self.apiKey = apiKey
-    }    
+    init() {
+        self.base = URL(string: "https://\(host)/v2")!
+    }
     
     var plans: RemoteEndpoint<[Plan]> {
         return RemoteEndpoint(xml: .get, url: base.appendingPathComponent("plans"), headers: headers)
@@ -384,7 +379,7 @@ struct Recurly {
 
     
     func pdfURL(invoice: Invoice, hostedLoginToken: String) -> URL {
-        return URL(string: "https://\(subdomain)/account/invoices/\(invoice.invoice_number).pdf?ht=\(hostedLoginToken)")!
+        return URL(string: "https://\(host)/account/invoices/\(invoice.invoice_number).pdf?ht=\(hostedLoginToken)")!
     }
 }
 

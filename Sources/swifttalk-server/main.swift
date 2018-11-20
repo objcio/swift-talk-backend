@@ -3,11 +3,6 @@ import NIO
 import NIOHTTP1
 import PostgreSQL
 
-let env = Env()
-let recurly = Recurly(subdomain: "\(env["RECURLY_SUBDOMAIN"]).recurly.com", apiKey: env["RECURLY_API_KEY"])
-// The vimeo access token needs to have the "private" and "files" roles enabled to fetch the download urls for private videos
-let vimeo = Vimeo(apiKey: env["VIMEO_ACCESS_TOKEN"])
-let github = Github(accessToken: env["GITHUB_ACCESS_TOKEN"])
 
 struct NoDatabaseConnection: Error { }
 

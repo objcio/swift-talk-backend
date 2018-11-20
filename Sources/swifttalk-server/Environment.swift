@@ -7,6 +7,9 @@
 
 import Foundation
 
+
+let env = Env()
+
 func readDotEnv() -> [String:String] {
     guard let c = try? String(contentsOfFile: ".env") else { return [:] }
     return Dictionary(c.split(separator: "\n").compactMap { $0.keyAndValue }, uniquingKeysWith: { $1 })
@@ -14,18 +17,6 @@ func readDotEnv() -> [String:String] {
 
 struct Env {
     let env: [String:String] = readDotEnv().merging(ProcessInfo.processInfo.environment, uniquingKeysWith: { $1 })
-    
-    subscript(optional string: String) -> String? {
-        return env[string]
-    }
-    
-    subscript(string: String) -> String {
-        guard let e = env[string] else {
-            print("Forgot to set env variable \(string)", to: &standardError)
-            return ""
-        }
-        return e
-    }
     
     init() {
         guard
@@ -35,19 +26,38 @@ struct Env {
             let _ = env["GITHUB_ACCESS_TOKEN"],
             let _ = env["RECURLY_SUBDOMAIN"],
             let _ = env["RECURLY_PUBLIC_KEY"],
+            let _ = env["RECURLY_API_KEY"],
             let _ = env["CIRCLE_API_KEY"],
             let _ = env["MAILCHIMP_API_KEY"],
             let _ = env["MAILCHIMP_LIST_ID"],
             let _ = env["VIMEO_ACCESS_TOKEN"]
         else { fatalError("Missing environment variable") }
     }
+
+    var baseURL: URL { return URL(string: env["BASE_URL"]!)! }
+
+    var port: Int? { return env["PORT"].flatMap(Int.init) }
     
-    var recurlyPublicKey: String {
-        return self["RECURLY_PUBLIC_KEY"]
-    }
+    var databaseURL: String? { return env["DATABASE_URL"] }
+    var databaseHost: String { return env["RDS_HOSTNAME"] ?? "localhost" }
+    var databaseName: String { return env["RDS_DB_NAME"] ?? "swifttalk_dev" }
+    var databaseUser: String { return env["RDS_DB_USERNAME"] ?? "chris" }
+    var databasePassword: String { return env["RDS_DB_PASSWORD"] ?? "" }
     
-    var port: Int? {
-        return env["PORT"].flatMap(Int.init)
-    }
+    var githubClientId: String { return env["GITHUB_CLIENT_ID"]! }
+    var githubClientSecret: String { return env["GITHUB_CLIENT_SECRET"]! }
+    var githubAccessToken: String { return env["GITHUB_ACCESS_TOKEN"]! }
+    
+    var recurlySubdomain: String { return env["RECURLY_SUBDOMAIN"]! }
+    var recurlyPublicKey: String { return env["RECURLY_PUBLIC_KEY"]! }
+    var recurlyApiKey: String { return env["RECURLY_API_KEY"]! }
+    
+    var circleApiKey: String { return env["CIRCLE_API_KEY"]! }
+    
+    var mailchimpApiKey: String { return env["MAILCHIMP_API_KEY"]! }
+    var mailchimpListId: String { return env["MAILCHIMP_LIST_ID"]! }
+    
+    // The vimeo access token needs to have the "private" and "files" roles enabled to fetch the download urls for private videos
+    var vimeoAccessToken: String { return env["VIMEO_ACCESS_TOKEN"]! }
 }
 

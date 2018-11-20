@@ -11,7 +11,7 @@ let circle = Circle()
 
 struct Circle {
     let base = URL(string: "https://circleci.com/api/v1.1/")!
-    var apiKey: String { return env["CIRCLE_API_KEY"] }
+    var apiKey = env.circleApiKey
     
     var triggerMainSiteBuild: RemoteEndpoint<()> {
         let url = base.appendingPathComponent("project/github/objcio/website/tree/master")

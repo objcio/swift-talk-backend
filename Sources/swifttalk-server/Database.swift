@@ -9,11 +9,11 @@ import Foundation
 import PostgreSQL
 
 
-let postgresConfig = env[optional: "DATABASE_URL"].map { url in ConnInfo.raw(url) } ?? ConnInfo.params([
-    "host": env[optional: "RDS_HOSTNAME"] ?? "localhost",
-    "dbname": env[optional: "RDS_DB_NAME"] ?? "swifttalk_dev",
-    "user": env[optional: "RDS_DB_USERNAME"] ?? "chris",
-    "password": env[optional: "RDS_DB_PASSWORD"] ?? "",
+let postgresConfig = env.databaseURL.map { url in ConnInfo.raw(url) } ?? ConnInfo.params([
+    "host": env.databaseHost,
+    "dbname": env.databaseName,
+    "user": env.databaseUser,
+    "password": env.databasePassword,
     "connect_timeout": "1",
 ])
 
