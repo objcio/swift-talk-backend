@@ -18,7 +18,7 @@ func accountContainer(_ node: Node, forRoute: Route) -> Node {
         .div(classes: "cols m-|stack++", [
             .div(classes: "col width-full m+|width-1/4", [
                 Node.div(classes: "submenu", items.map { item in
-                    Node.link(to: item.0, [.text(item.title)], classes: "submenu__item" + (item.0 == forRoute ? "is-active" : ""), attributes: [:])
+                    Node.link(to: item.0, classes: "submenu__item" + (item.0 == forRoute ? "is-active" : ""), attributes: [:], [.text(item.title)])
                 })
             ]),
             .div(classes: "col width-full m+|width-3/4", [node])
@@ -128,7 +128,7 @@ func invoicesView(context: Context, user: Row<UserData>, invoices: [(Invoice, pd
             Cell("# \(invoice.invoice_number)"),
             Cell(DateFormatter.fullPretty.string(from: invoice.created_at)),
             Cell(dollarAmount(cents: invoice.total_in_cents), classes: "type-mono text-right"),
-            Cell([Node.externalLink(to: pdfURL, classes: "", [.text("\(invoice.invoice_number).pdf")])], classes: "text-center"),
+            Cell([Node.link(to: pdfURL, classes: "", [.text("\(invoice.invoice_number).pdf")])], classes: "text-center"),
         ]
     }
     return [
@@ -272,7 +272,7 @@ extension BillingInfo {
                         ]),
                 ])
             ]),
-            Node.link(to: .accountUpdatePayment, [.text("Update Payment Method")], classes: "color-blue no-decoration border-bottom border-1 hover-color-black bold")
+            Node.link(to: .accountUpdatePayment, classes: "color-blue no-decoration border-bottom border-1 hover-color-black bold", [.text("Update Payment Method")])
         ]
     }
 }
@@ -335,7 +335,7 @@ func billing(context: Context, user: Row<UserData>, subscription: Subscription?,
     ]} ?? [
         Node.div(classes: "text-center", [
             Node.p(classes: "color-gray-30 ms1 mb", [.text("You don't have an active subscription.")]),
-            Node.link(to: .subscribe, [.text("Become a Subscriber")], classes: "c-button")
+            Node.link(to: .subscribe, classes: "c-button", [.text("Become a Subscriber")])
         ])
     ]
    
@@ -390,9 +390,7 @@ func teamMembers(context: Context, addForm: Node, teamMembers: [Row<UserData>]) 
                 .img(src: tm.data.avatarURL, classes: "block radius-full ms-2 width-2 mr")
             ]),
             .div(classes: "flex-grow type-mono", [
-                .externalLink(to: URL(string: "https://github.com/\(tm.data.githubLogin)")!, classes: "color-gray-30 no-decoration hover-color-blue", [
-                    .text(tm.data.githubLogin)
-                ])
+                .link(to: URL(string: "https://github.com/\(tm.data.githubLogin)")!, classes: "color-gray-30 no-decoration hover-color-blue", [.text(tm.data.githubLogin)])
             ]),
             Node.button(to: .accountDeleteTeamMember(tm.id), [.raw("&times;")], classes: "button-input ms-1")
         ])

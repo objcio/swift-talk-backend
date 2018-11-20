@@ -379,8 +379,6 @@ extension Route {
             let task = try Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: Date().addingTimeInterval(5*60))
             try c.get().execute(task)
             return try teamMembersResponse(sess)
-        case .external(let url):
-            return I.redirect(path: url.absoluteString) // is this correct?
         case .recurlyWebhook:
             return I.withPostData { data in
                 guard let webhook: Webhook = try? decodeXML(from: data) else { return I.write("", status: .ok) }

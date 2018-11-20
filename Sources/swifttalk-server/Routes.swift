@@ -30,7 +30,6 @@ enum Route: Equatable {
     case episode(Id<Episode>)
     case download(Id<Episode>)
     case staticFile(path: [String])
-    case external(URL)
     case recurlyWebhook
     case githubWebhook
     case error
@@ -119,17 +118,11 @@ private let deleteTeamMember: Router<Route> = (Router<()>.c("team_members") / .c
 
 private let createSubRoute: Router<Route> = .c("subscription", .createSubscription)
 
-private let externalRoute: Router<Route> = Router.external.transform({ Route.external($0) }, { r in
-    guard case let .external(url) = r else { return nil }
-    return url
-})
-
 private let externalRoutes: [Router<Route>] = [
     Router(.home),
     .c("books", .books), // todo absolute url
     .c("issues", .issues), // todo absolute url
-    .c("sitemap", .sitemap),
-    externalRoute,
+    .c("sitemap", .sitemap)
 ]
 
 private let accountRoutes: [Router<Route>] = [

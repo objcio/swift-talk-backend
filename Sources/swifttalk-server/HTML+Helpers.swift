@@ -8,9 +8,21 @@
 import Foundation
 import CommonMark
 
+protocol LinkTarget {
+    var absoluteString: String { get }
+}
+extension URL: LinkTarget {}
+extension Route: LinkTarget {
+    var absoluteString: String { return path }
+}
+
 extension Node {
-    static func link(to route: Route, _ children: [Node], classes: Class? = nil, attributes: [String:String] = [:]) -> Node {
-        return Node.a(classes: classes, attributes: attributes, children, href: route.path)
+    static func link(to: Route, classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
+        return Node.a(classes: classes, attributes: attributes, children, href: to.path)
+    }
+
+    static func link(to: LinkTarget, classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
+        return Node.a(classes: classes, attributes: attributes, children, href: to.absoluteString)
     }
     
     static func button(to route: Route, _ children: [Node], classes: Class? = nil, attributes: [String:String] = [:], confirm: String? = "Are you sure?") -> Node {

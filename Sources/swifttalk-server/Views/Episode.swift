@@ -72,9 +72,9 @@ extension Episode {
         
         let coll: [Node]
         if options.collection, let collection = primaryCollection {
-            coll = [Node.link(to: Route.collection(collection.id), [.text(collection.title)], attributes: [
+            coll = [Node.link(to: Route.collection(collection.id), attributes: [
                 "class": "inline-block no-decoration color-blue hover-underline mb--" + (options.featured ? "" : " ms-1")
-                ])]
+            ], [.text(collection.title)])]
         } else { coll = [] }
         
         let synopsisClasses: Class = "lh-135 color-gray-40 mv-- text-wrapper" + (
@@ -91,19 +91,19 @@ extension Episode {
         
         return Node.article(classes: classes, [
             Node.div(classes: pictureClasses, [
-                .link(to: .episode(id), [
+                .link(to: .episode(id), classes: pictureLinkClasses, [
                     Node.div(attributes: ["class": "ratio__container bg-center bg-cover", "style": "background-image: url('\(poster)')"]),
                     Node.div(attributes: ["class": "absolute position-stretch opacity-60 blend-darken gradient-episode-black"]),
                     Node.div(classes: "absolute position-stretch flex flex-column", [
                         Node.div(classes: "mt-auto width-full flex items-center lh-100 ms-1 pa- color-white",
                                  smallIcon + [Node.span(attributes: ["class": "ml-auto bold text-shadow-20"], [.text("\(media_duration.minutes)")])] // todo format text
                         )
-                        ])
-                    ] + largeIcon, classes: pictureLinkClasses)
-                ]),
+                    ])
+                ] + largeIcon)
+            ]),
             Node.div(classes: contentClasses, [
                 Node.header(coll + ([
-                    Node.h3([Node.link(to: .episode(id), [Node.text(title + (released ? "" : " (unreleased)"))], classes: titleClasses)])
+                    Node.h3([Node.link(to: .episode(id), classes: titleClasses, [Node.text(title + (released ? "" : " (unreleased)"))])])
                     ] as [Node])),
                 ] + synopsisNode + [
                     .p(classes: footerClasses, [
@@ -116,12 +116,6 @@ extension Episode {
             ])
     }
     
-}
-
-extension Node {
-    static func externalLink(to: URL, classes: Class?, _ children: [Node]) -> Node {
-        return Node.link(to: .external(to), children, classes: classes, attributes: ["target": "_blank", "rel": "external"])
-    }
 }
 
 
@@ -211,7 +205,7 @@ extension Episode {
                 Node.header(attributes: ["class": "container-h flex items-center justify-between"], [
                     Node.div([
                         Node.h3(attributes: ["class": "inline-block bold color-black"], [.text("Recent Episodes")]),
-                        Node.link(to: .episodes, [.text("See All")], attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-underline"])
+                        Node.link(to: .episodes, attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-underline"], [.text("See All")])
                         ]),
                     Node.div(classes: "js-scroller-buttons flex items-center", [
                         Node.button(attributes: ["class": "scroller-button no-js-hide js-scroller-button-left ml-", "label": "Scroll left"], [
@@ -236,13 +230,12 @@ extension Episode {
         let linkAttrs: [String:String] = ["target": "_blank", "rel": "external"]
 
         // nil link displays a "not allowed" span
-        func smallH4(_ text: Node, link: Route?) -> Node {
+        func smallH4(_ text: Node, link: LinkTarget?) -> Node {
             return Node.h4(classes: "mb---", [
                 link.map { l in
-                    Node.link(to: l, [text], classes: "bold color-black hover-underline no-decoration", attributes: linkAttrs)
-                } ??
-                Node.span(classes: "bold color-gray-40 cursor-not-allowed", [text])
-                ])
+                    Node.link(to: l, classes: "bold color-black hover-underline no-decoration", attributes: linkAttrs, [text])
+                } ?? Node.span(classes: "bold color-gray-40 cursor-not-allowed", [text])
+            ])
         }
         
         let episodeResource: [[Node]] = self.resources.map { res in
@@ -253,7 +246,7 @@ extension Episode {
                         ], href: res.url.absoluteString)
                 ]),
                 Node.div(classes: "ms-1 lh-125", [
-                    smallH4(.text(res.title), link: .external(res.url)),
+                    smallH4(.text(res.title), link: res.url),
                     Node.p(classes: "color-gray-50", [.text(res.subtitle)])
                 ])
             ]
@@ -263,7 +256,7 @@ extension Episode {
             [
                 Node.div(classes: "flex-none mr-", [
                     downloadStatus.allowed
-                        ? Node.link(to: Route.download(id), [downloadImage], classes: "block bgcolor-orange radius-5 hover-bgcolor-blue")
+                        ? Node.link(to: Route.download(id), classes: "block bgcolor-orange radius-5 hover-bgcolor-blue", [downloadImage])
                         : Node.span(classes: "block bgcolor-orange radius-5 cursor-not-allowed", [downloadImage])
                 ]),
                 Node.div(classes: "ms-1 lh-125", [
@@ -281,15 +274,18 @@ extension Episode {
         ] : []
         
         let inCollection: [Node] = primaryCollection.map { coll in
-            [Node.section(classes: "pb++", [
-                smallBlueH3("In Collection")
+            [
+                Node.section(classes: "pb++", [
+                    smallBlueH3("In Collection")
                 ] +
                 coll.render(.init(episodes: true), context: context)
-                + [Node.p(classes: "ms-1 mt text-right", [
-                    Node.link(to: .collections, [
-                        Node.span(classes: "hover-cascade__border-bottom", ["See All Collections"]),
-                        Node.span(classes: "bold", [Node.raw("&rarr;")])
-                    ], classes: "no-decoration color-blue hover-cascade")])
+                + [
+                    Node.p(classes: "ms-1 mt text-right", [
+                        Node.link(to: .collections, classes: "no-decoration color-blue hover-cascade", [
+                            Node.span(classes: "hover-cascade__border-bottom", ["See All Collections"]),
+                            Node.span(classes: "bold", [Node.raw("&rarr;")])
+                        ])
+                    ])
                 ])
             ]
         } ?? []
@@ -306,7 +302,7 @@ extension Episode {
                         Node.dl(classes: "flex justify-between", [
                             Node.dt(classes: "color-gray-60", [.text(key)]),
                             Node.dd(classes: "color-gray-15 text-right", [url.map { u in
-                                Node.externalLink(to: u, classes: "color-gray-15 hover-underline no-decoration", [.text(value)])
+                                Node.link(to: u, classes: "color-gray-15 hover-underline no-decoration", [.text(value)])
                             } ?? .text(value)])
                         ])
                     ])
@@ -316,7 +312,7 @@ extension Episode {
         let sidebar: Node = Node.aside(classes: "p-col max-width-7 center stack l+|width-1/3 xl+|width-3/10 l+|flex-auto", resources + inCollection + details)
         let header = Node.header(attributes: ["class": "mb++ pb"], [
             .p(attributes: ["class": "color-orange ms1"], [
-                .link(to: .home, [.text("Swift Talk")], attributes: ["class": "color-inherit no-decoration bold hover-border-bottom"]),
+                .link(to: .home, attributes: ["class": "color-inherit no-decoration bold hover-border-bottom"], [.text("Swift Talk")]),
                 .text("#" + number.padded)
                 ]),
             .h2(attributes: ["class": "ms5 color-white bold mt-- lh-110"], [.text(fullTitle + (released ? "" : " (unreleased)"))])
@@ -366,7 +362,7 @@ extension Episode {
                         .text("Become a subscriber to watch future and all \(Episode.subscriberOnly) current subscriber-only episodes, plus enjoy access to episode video downloads and \(teamDiscount)% discount for your team members.")
                     ])
                 ]),
-                Node.link(to: .subscribe, [Node.text("Become a subscriber")], attributes: ["class": "button button--themed"])
+                Node.link(to: .subscribe, attributes: ["class": "button button--themed"], [.text("Become a subscriber")])
             ])
         ]
         
@@ -469,7 +465,7 @@ func subscribeBanner() -> Node {
                     })
                     ]),
                 Node.div(classes: "s+|absolute s+|position-sw col s+|width-1/2", [
-                    Node.link(to: .subscribe, [.raw("Pricing &amp; Sign Up")], attributes: ["class": "c-button"])
+                    Node.link(to: .subscribe, attributes: ["class": "c-button"], [.raw("Pricing &amp; Sign Up")])
                     ])
                 ])
             ])

@@ -12,7 +12,7 @@ func renderHome(context: Context) -> Node {
     var recentNodes = [
         Node.header(attributes: ["class": "mb+"], [
             .h2(attributes: ["class": "inline-block bold color-black"], [.text("Recent Episodes")]),
-            .link(to: .episodes, [.text("See All")], attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-under"])
+            .link(to: .episodes, attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-under"], [.text("See All")])
         ])
     ]
     let scoped = Episode.scoped(for: context.session?.user.data)
@@ -38,7 +38,7 @@ func renderHome(context: Context) -> Node {
     let collections: Node = .section(attributes: ["class": "container"], [
         .header(attributes: ["class": "mb+"], [
             .h2(attributes: ["class": "inline-block bold lh-100 mb---"], [.text("Collections")]),
-            .link(to: .collections, [.text("Show Contents")], attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-underline"]),
+            .link(to: .collections, attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-underline"], [.text("Show Contents")]),
             .p(attributes: ["class": "lh-125 color-gray-60"], [
                 .text("Browse all Swift Talk episodes by topic.")
                 ])

@@ -92,13 +92,13 @@ extension Array where Element == Plan {
         let continueLink: Node
         let linkClasses: Class = "c-button c-button--big c-button--blue c-button--wide"
         if context.session.premiumAccess {
-            continueLink = Node.link(to: .accountProfile, ["You're already subscribed"], classes: linkClasses + "c-button--ghost")
+            continueLink = Node.link(to: .accountProfile, classes: linkClasses + "c-button--ghost", ["You're already subscribed"])
         } else if context.session?.user != nil {
 //            print(session?.user)
-            continueLink = Node.link(to: .newSubscription, ["Proceed to payment"], classes: linkClasses)
+            continueLink = Node.link(to: .newSubscription, classes: linkClasses, ["Proceed to payment"])
         } else {
             // todo continue to .newSubscription
-            continueLink = Node.link(to: .login(continue: Route.newSubscription.path), ["Sign in with Github"], classes: linkClasses)
+            continueLink = Node.link(to: .login(continue: Route.newSubscription.path), classes: linkClasses, ["Sign in with Github"])
         }
         let contents: [Node] = [
             pageHeader(.other(header: "Subscribe to Swift Talk", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),

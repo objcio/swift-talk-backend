@@ -108,16 +108,16 @@ extension LayoutConfig {
             .script(src: "/assets/application.js")
             // todo google analytics
         ] + structured)
-        let logo = Node.link(to: .home, [
+        let logo = Node.link(to: .home, attributes: ["class": "flex-none outline-none mr++ flex"], [
             .inlineSvg(path: "logo.svg", attributes: ["class": "block logo logo--themed height-auto"]), // todo scaling parameter?
             .h1(attributes: ["class":"visuallyhidden"], [.text("objc.io")]) // todo class
-        ] as [Node], attributes: ["class": "flex-none outline-none mr++ flex"])
+        ] as [Node])
         let navigation = Node.nav(attributes: ["class": "flex flex-grow"], [
             .ul(attributes: ["class": "flex flex-auto"], navigationItems.map { l in
                 .li(attributes: ["class": "flex mr+"], [
-                    .link(to: l.0, [.span([.text(l.1)])], attributes: [
+                    .link(to: l.0, attributes: [
                         "class": "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration"
-                    ])
+                    ], [.span([.text(l.1)])])
                 ])
             }) // todo: search
         ])
@@ -158,20 +158,20 @@ extension LayoutConfig {
             .header(attributes: ["class": "site-header"], [
         		.div(classes: "site-header__nav flex", [
                     .div(classes: "container-h flex-grow flex items-center", [
-                        .link(to: .home, [
+                        .link(to: .home, attributes: ["class": "block flex-none outline-none mr++"], [
                             .inlineSvg(path: "logo.svg", attributes: ["class": "logo ms-2"]), // todo scaling parameter?
                             .h1(attributes: ["class":"visuallyhidden"], [.text("objc.io")]) // todo class
-                        ] as [Node], attributes: ["class": "block flex-none outline-none mr++"]),
-                        ])
+                        ] as [Node]),
                     ])
-                ]),
+                ])
+            ]),
             .main(contents), // todo sidenav
             ] + preFooter + [
                 Node.footer([
                     Node.div(classes: "container-h pv", [
                         Node.div(classes: "ms-1 color-gray-60", [
                             Node.a(classes: linkClasses, [Node.text("Email")], href: "mailto:mail@objc.io"),
-                            Node.externalLink(to: URL(string: "https://www.objc.io/imprint")!, classes: linkClasses, ["Imprint"])
+                            Node.link(to: URL(string: "https://www.objc.io/imprint")!, classes: linkClasses, ["Imprint"])
                         ])
                     ])
                 ])
@@ -182,12 +182,12 @@ extension LayoutConfig {
 
 func userHeader(_ context: Context) -> Node {
     let subscribeButton = Node.li(classes: "flex items-center ml+", [
-        .link(to: .subscribe, [.text("Subscribe")], classes: "button button--tight button--themed fz-nav")
+        .link(to: .subscribe, classes: "button button--tight button--themed fz-nav", [.text("Subscribe")])
         ])
     
     func link(to route: Route, text: String) -> Node {
         return .li(classes: "flex ml+", [
-            .link(to: route, [.text(text)], classes: "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration")
+            .link(to: route, classes: "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration", [.text(text)])
             ])
     }
     
