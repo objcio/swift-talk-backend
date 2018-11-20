@@ -30,6 +30,10 @@
   }
 }
 
+.js-video-badge {
+  transform: translateX(-50%) translateY(-50%) rotate(-45deg);
+}
+
 .admin th {
     width: 200px;
     text-align: left;
