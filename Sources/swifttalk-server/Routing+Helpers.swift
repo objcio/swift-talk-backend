@@ -13,7 +13,3 @@ extension Array where Element == URL {
     }
 }
 
-func absoluteURL(_ route: Route) -> URL? {
-    return URL(string: "https://www.objc.io" + route.path)
-}
-

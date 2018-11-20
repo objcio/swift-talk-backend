@@ -376,7 +376,7 @@ extension Episode {
             ])
         ])
         
-        let data = StructuredData(title: title, description: synopsis, url: absoluteURL(.episode(id)), image: posterURL(width: 600, height: 338), type: .video(duration: Int(media_duration), releaseDate: releaseAt))
+        let data = StructuredData(title: title, description: synopsis, url: Route.episode(id).url, image: posterURL(width: 600, height: 338), type: .video(duration: Int(media_duration), releaseDate: releaseAt))
         return LayoutConfig(context: context, contents: [main, scroller] + (context.session.premiumAccess ? [] : [subscribeBanner()]), footerContent: [Node.raw(transcriptLinks)], structuredData: data).layout
     }
 }

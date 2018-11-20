@@ -50,6 +50,10 @@ extension Route {
         return result
     }
     
+    var url: URL {
+        return env.baseURL.appendingPathComponent(path)
+    }
+    
     static var siteMap: String {
         return router.description.pretty
     }
