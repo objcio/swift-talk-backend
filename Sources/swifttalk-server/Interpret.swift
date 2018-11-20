@@ -238,9 +238,6 @@ extension Route {
                 }
             }
         case let .staticFile(path: p):
-            guard inWhitelist(p) else {
-                return .write("forbidden", status: .forbidden)
-            }
             let name = p.map { $0.removingPercentEncoding ?? "" }.joined(separator: "/")
             return .writeFile(path: name)
         case .accountProfile:

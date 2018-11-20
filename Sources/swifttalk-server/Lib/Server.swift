@@ -143,9 +143,7 @@ struct NIOInterpreter: Interpreter {
     
     static func writeFile(path: String) -> NIOInterpreter {
         return NIOInterpreter { deps in
-            // todo we should check the path for things like ".."
             let fullPath = deps.resourcePaths.resolve(path) ?? URL(fileURLWithPath: "")
-            
             let fileHandleAndRegion = deps.fileIO.openFile(path: fullPath.path, eventLoop: deps.ctx.eventLoop)
             fileHandleAndRegion.whenFailure { _ in
                 _ = write("Error", status: .badRequest).run(deps)

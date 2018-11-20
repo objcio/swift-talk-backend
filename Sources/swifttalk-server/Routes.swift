@@ -71,10 +71,6 @@ extension Route {
     }
 }
 
-func inWhitelist(_ path: [String]) -> Bool {
-    return !path.contains("..")
-}
-
 
 private extension Array where Element == Router<Route> {
     func choice() -> Router<Route> {
