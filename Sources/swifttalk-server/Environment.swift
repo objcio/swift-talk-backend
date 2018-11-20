@@ -28,11 +28,18 @@ struct Env {
     }
     
     init() {
-        // todo a different check than assert (gets compiled out during release)
-        assert(env["GITHUB_CLIENT_ID"] != nil)
-        assert(env["GITHUB_CLIENT_SECRET"] != nil)
-        assert(env["GITHUB_ACCESS_TOKEN"] != nil)
-        assert(env["RECURLY_PUBLIC_KEY"] != nil)
+        guard
+            let _ = env["BASE_URL"],
+            let _ = env["GITHUB_CLIENT_ID"],
+            let _ = env["GITHUB_CLIENT_SECRET"],
+            let _ = env["GITHUB_ACCESS_TOKEN"],
+            let _ = env["RECURLY_SUBDOMAIN"],
+            let _ = env["RECURLY_PUBLIC_KEY"],
+            let _ = env["CIRCLE_API_KEY"],
+            let _ = env["MAILCHIMP_API_KEY"],
+            let _ = env["MAILCHIMP_LIST_ID"],
+            let _ = env["VIMEO_ACCESS_TOKEN"]
+        else { fatalError("Missing environment variable") }
     }
     
     var recurlyPublicKey: String {
