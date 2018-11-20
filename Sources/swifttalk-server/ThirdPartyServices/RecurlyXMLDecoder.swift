@@ -630,3 +630,28 @@ func encodeXML<T: Encodable>(_ value: T) throws -> String where T: RootElement {
     try value.encode(to: encoder)
     return Node.node(encoder.rootElement).xmlDocument
 }
+
+fileprivate extension Node {
+    var xmlDocument: String {
+        return ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>", render(encodeText: { $0.xmlString })].joined(separator: "\n")
+    }
+}
+
+fileprivate extension String {
+    var xmlString: String {
+        var result = ""
+        result.reserveCapacity(count)
+        for c in self {
+            switch c {
+            case "&": result.append("&amp")
+            case "\"": result.append("&quot;")
+            case "'": result.append("&apos;")
+            case "<": result.append("&lt;")
+            case ">": result.append("&gt;")
+            default: result.append(c)
+            }
+        }
+        return result
+    }
+}
+

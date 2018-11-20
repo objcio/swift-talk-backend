@@ -102,23 +102,6 @@ extension Node {
     var htmlDocument: String {
         return ["<!DOCTYPE html>", render()].joined(separator: "\n")
     }
-    
-    var xmlDocument: String {
-        return ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>", render(encodeText: { $0.xmlString })].joined(separator: "\n")
-    }
-}
-
-extension String {
-    var xmlString: String {
-        // todo this is not efficient!
-        var result = self
-        result = result.replacingOccurrences(of: "&", with: "&amp") // this has to happen first to prevent double escaping...
-        let entities = ["\"": "&quot;", "'": "&apos;", "<": "&lt;", ">": "&gt;"]
-        for (key,value) in entities {
-            result = result.replacingOccurrences(of: key, with: value)
-        }
-        return result
-    }
 }
 
 extension Node {
