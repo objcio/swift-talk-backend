@@ -71,7 +71,7 @@ extension Array where Element == Plan {
             let amountStr =  amount.isInt ? "\(Int(amount))" : String(format: "%.2f", amount) // don't use a decimal point for integer numbers
             // todo take coupon into account
             return .div(classes: "pb-", [
-                .div(classes: "smallcaps-large mb-", ["Monthly"]),
+                .div(classes: "smallcaps-large mb-", [.text(plan.prettyInterval)]),
                 .span(classes: "ms7", [
                     .span(classes: "opacity-50", ["$"]),
                     .span(classes: "bold", [.text(amountStr)])

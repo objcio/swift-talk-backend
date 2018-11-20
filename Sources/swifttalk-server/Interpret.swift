@@ -150,8 +150,7 @@ extension Route {
                 }
                 let plan = try Plan.all.first(where: { $0.plan_code == planId }) ?! RenderingError.init(privateMessage: "Illegal plan: \(planId)", publicMessage: "Couldn't find the plan you selected.")
                 let cr = CreateSubscription.init(plan_code: plan.plan_code, currency: "USD", coupon_code: couponCode, account: .init(account_code: s.user.id, email: s.user.data.email, billing_info: .init(token_id: token)))
-                let req = recurly.createSubscription(cr)
-                return I.onSuccess(promise: URLSession.shared.load(req), message: "Something went wrong, please try again", do: { sub_ in
+                return I.onSuccess(promise: recurly.createSubscription(cr).promise, message: "Something went wrong, please try again", do: { sub_ in
                     switch sub_ {
                     case .errors(let messages):
                         if messages.contains(where: { $0.field == "subscription.account.email" && $0.symbol == "invalid_email" }) {

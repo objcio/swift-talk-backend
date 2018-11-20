@@ -22,6 +22,16 @@ struct Amount: Codable {
     }
 }
 
+extension Amount: ExpressibleByIntegerLiteral, Comparable {
+    static func <(lhs: Amount, rhs: Amount) -> Bool {
+        return lhs.usdCents < rhs.usdCents
+    }
+    
+    init(integerLiteral value: Int) {
+        usdCents = value
+    }
+}
+
 func -(lhs: Amount, rhs: Amount) -> Amount {
     return Amount(usdCents: lhs.usdCents-rhs.usdCents)
 }
@@ -55,9 +65,9 @@ extension Plan {
         }
         switch c.discount_type {
         case .dollars where c.discount_in_cents != nil:
-            return base - c.discount_in_cents!
+            return max(0, base - c.discount_in_cents!)
         case .percent where c.discount_percent != nil :
-            return base.discounted(percent: c.discount_percent!)
+            return max(0, base.discounted(percent: c.discount_percent!))
         case .freeTrial: return base // todo?
         default: return base
         }
