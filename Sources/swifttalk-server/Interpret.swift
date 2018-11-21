@@ -216,14 +216,14 @@ extension Route {
                 })
             })
         case .episode(let id):
-            guard let ep = Episode.scoped(for: session?.user.data).first(where: { $0.id == id }) else {
+            guard let ep = Episode.all.scoped(for: session?.user.data).first(where: { $0.id == id }) else {
                 return .notFound("No such episode")
             }
             let downloads = try (session?.user.downloads).map { try c.get().execute($0) } ?? []
             let status = session?.user.downloadStatus(for: ep, downloads: downloads) ?? .notSubscribed
             return .write(ep.show(downloadStatus: status, context: context))
         case .episodes:
-            return I.write(index(Episode.scoped(for: session?.user.data), context: context))
+            return I.write(index(Episode.all.scoped(for: session?.user.data), context: context))
         case .home:
             return .write(renderHome(context: context))
         case .sitemap:
@@ -238,7 +238,7 @@ extension Route {
             })
         case .download(let id):
             let s = try requireSession()
-            guard let ep = Episode.scoped(for: session?.user.data).first(where: { $0.id == id }) else {
+            guard let ep = Episode.all.scoped(for: session?.user.data).first(where: { $0.id == id }) else {
                 return .notFound("No such episode")
             }
             return .onComplete(promise: URLSession.shared.load(vimeo.downloadURL(for: ep.vimeo_id))) { downloadURL in

@@ -15,7 +15,7 @@ func renderHome(context: Context) -> Node {
             .link(to: .episodes, attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-under"], [.text("See All")])
         ])
     ]
-    let scoped = Episode.scoped(for: context.session?.user.data)
+    let scoped = Episode.all.scoped(for: context.session?.user.data)
     if scoped.count >= 5 {
         let episodes = scoped[0..<5]
         let firstEpisode = episodes[0]

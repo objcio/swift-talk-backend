@@ -149,11 +149,6 @@ extension Episode {
         return p.title + ": " + title
     }
     
-    static func scoped(for user: UserData?) -> [Episode] {
-        guard let u = user, u.admin || u.collaborator else { return all.filter { $0.released } }
-        return Episode.all
-    }
-    
     var transcript: CommonMark.Node? {
         return Transcript.forEpisode(number: number)?.contents
     }
@@ -165,6 +160,14 @@ extension Episode {
     func canWatch(session: Session?) -> Bool {
         return session.premiumAccess || !subscription_only
     }
+}
+
+extension Swift.Collection where Element == Episode {
+    func scoped(for user: UserData?) -> [Episode] {
+        guard let u = user, u.admin || u.collaborator else { return filter { $0.released } }
+        return Array(self)
+    }
+
 }
 
 struct Collection: Codable, Equatable {
@@ -188,8 +191,9 @@ extension Collection {
     
     func episodes(for user: UserData?) -> [Episode] {
         // todo: this is inefficient (it shows up in instruments). We should have a dict mapping collection to episodes, lookup, and then filter using scoping.
-        return Episode.scoped(for: user).filter { $0.collections.contains(id) }
-    }    
+        return allEpisodes.scoped(for: user)
+//        return Episode.scoped(for: user).filter { $0.collections.contains(id) }
+    }
 }
 
 extension Sequence where Element == Episode {

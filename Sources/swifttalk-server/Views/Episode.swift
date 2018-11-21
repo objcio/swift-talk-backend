@@ -218,7 +218,7 @@ extension Episode {
                     ]),
                 Node.div(classes: "flex scroller js-scroller-container p-edges pt pb++", [
                     Node.div(classes: "scroller__offset flex-none")
-                    ] + Episode.scoped(for: context.session?.user.data).filter { $0 != self }.prefix(8).map { e in
+                    ] + Episode.all.scoped(for: context.session?.user.data).filter { $0 != self }.prefix(8).map { e in
                         Node.div(classes: "flex-110 pr+ min-width-5", [e.render(.init(synopsis: false, canWatch: canWatch))]) // todo watched
                     })
                 ])
