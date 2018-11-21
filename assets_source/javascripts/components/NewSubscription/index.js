@@ -71,6 +71,7 @@ export default class NewSubscription extends Component {
   }
 
   computeDiscountedPrice (basePrice, coupon) {
+	if (coupon == null) { return basePrice }
     let price = basePrice
     switch (coupon.discount_type) {
       case "dollars":
@@ -99,7 +100,7 @@ export default class NewSubscription extends Component {
                   buttonText='Subscribe'>
 
         <div className="bgcolor-gray-95 color-gray-40 radius-5 overflow-hidden mb">
-          { coupon.discount_type && (
+          { coupon != null && coupon.discount_type && (
             <div className="ph pv- border-bottom border-color-white border-2 bgcolor-blue color-white text-center">
               <span className="ms-1 lh-125">{coupon.description}</span>
             </div>
@@ -130,13 +131,13 @@ export default class NewSubscription extends Component {
             <span className="smallcaps-large">Price</span>
             <span>{a.formatMoney(base_price / 100, '$')}</span>
           </div>
-          { coupon.discount_type && coupon.discount_type !== "free_trial" && (
+          { coupon != null && coupon.discount_type && coupon.discount_type !== "free_trial" && (
             <div className="pa border-bottom border-color-white border-2 flex justify-between items-center">
 			  <span className="smallcaps-large">Discount</span>
 			  <span>{a.formatMoney((base_price - discountedPrice) / 100, '$')}</span>
             </div>
           )}
-          { coupon.discount_type && coupon.discount_type === "free_trial" && (
+          { coupon != null && coupon.discount_type && coupon.discount_type === "free_trial" && (
             <div className="pa border-bottom border-color-white border-2">
               <span className="ms-1">{coupon.description}</span>
             </div>

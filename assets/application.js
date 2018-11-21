@@ -1187,6 +1187,9 @@ var NewSubscription = function (_Component) {
   }, {
     key: 'computeDiscountedPrice',
     value: function computeDiscountedPrice(basePrice, coupon) {
+      if (coupon == null) {
+        return basePrice;
+      }
       var price = basePrice;
       switch (coupon.discount_type) {
         case "dollars":
@@ -1231,7 +1234,7 @@ var NewSubscription = function (_Component) {
         _react2.default.createElement(
           'div',
           { className: 'bgcolor-gray-95 color-gray-40 radius-5 overflow-hidden mb' },
-          coupon.discount_type && _react2.default.createElement(
+          coupon != null && coupon.discount_type && _react2.default.createElement(
             'div',
             { className: 'ph pv- border-bottom border-color-white border-2 bgcolor-blue color-white text-center' },
             _react2.default.createElement(
@@ -1286,7 +1289,7 @@ var NewSubscription = function (_Component) {
               _accountingJs2.default.formatMoney(base_price / 100, '$')
             )
           ),
-          coupon.discount_type && coupon.discount_type !== "free_trial" && _react2.default.createElement(
+          coupon != null && coupon.discount_type && coupon.discount_type !== "free_trial" && _react2.default.createElement(
             'div',
             { className: 'pa border-bottom border-color-white border-2 flex justify-between items-center' },
             _react2.default.createElement(
@@ -1300,7 +1303,7 @@ var NewSubscription = function (_Component) {
               _accountingJs2.default.formatMoney((base_price - discountedPrice) / 100, '$')
             )
           ),
-          coupon.discount_type && coupon.discount_type === "free_trial" && _react2.default.createElement(
+          coupon != null && coupon.discount_type && coupon.discount_type === "free_trial" && _react2.default.createElement(
             'div',
             { className: 'pa border-bottom border-color-white border-2' },
             _react2.default.createElement(

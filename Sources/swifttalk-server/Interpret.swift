@@ -153,8 +153,9 @@ extension Route {
                 return I.onSuccess(promise: recurly.createSubscription(cr).promise, message: "Something went wrong, please try again", do: { sub_ in
                     switch sub_ {
                     case .errors(let messages):
+                        log(RecurlyErrors(messages))
                         if messages.contains(where: { $0.field == "subscription.account.email" && $0.symbol == "invalid_email" }) {
-                            let response = registerForm(context, couponCode: couponCode).render(.init(s.user.data), [ValidationError("email", "Please provide a valid email address.")])
+                            let response = registerForm(context, couponCode: couponCode).render(.init(s.user.data), [ValidationError("email", "Please provide a valid email address and try again.")])
                             return I.write(response)
                         }
                         return try newSubscription(couponCode: couponCode, errs: messages.map { $0.message })
