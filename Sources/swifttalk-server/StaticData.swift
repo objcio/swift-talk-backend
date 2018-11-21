@@ -95,9 +95,21 @@ extension Static {
             }
         })
     }
+    
+    static func fromStaticRepo<A: StaticLoadable, B>(onRefresh: @escaping (B) -> () = { _ in }, transform: @escaping ([A]) -> B) -> Static<B> {
+        return Static<B>(async: { cb in
+            cb(transform(loadStaticData()))
+            let ep: RemoteEndpoint<[A]> = github.staticData()
+            refreshStaticData(ep) {
+                let data: [A] = loadStaticData()
+                cb(transform(data))
+                onRefresh(transform(data))
+            }
+        })
+    }
 }
 
-fileprivate let episodes: Static<[Episode]> = Static<[Episode]>.fromStaticRepo() { newEpisodes in
+fileprivate let episodes: Static<[Episode]> = Static<[Episode]>.fromStaticRepo(onRefresh: { newEpisodes in
     let unreleased = newEpisodes.filter { $0.releaseAt > Date() }
     for ep in unreleased {
         do {
@@ -107,8 +119,15 @@ fileprivate let episodes: Static<[Episode]> = Static<[Episode]>.fromStaticRepo()
             log(error: "Failed to schedule release task for episode \(ep.number)")
         }
     }
-}
-fileprivate let collections: Static<[Collection]> = Static<[Collection]>.fromStaticRepo()
+}, transform: { $0.sorted { $0.number > $1.number }})
+
+fileprivate let collections: Static<[Collection]> = Static<[Collection]>.fromStaticRepo(transform: { (colls: [Collection]) in
+    colls.filter { !$0.episodes(for: nil).isEmpty && $0.public }.sorted(by:  { $0.new && !$1.new || $0.position > $1.position })
+})
+
+fileprivate let collectionsDict = Static<[Id<Collection>:Collection]>.fromStaticRepo(transform: { (colls: [Collection]) in
+    return Dictionary.init(colls.map { ($0.id, $0) }, uniquingKeysWith: { a, b in a })
+})
 fileprivate let collaborators: Static<[Collaborator]> = Static<[Collaborator]>.fromStaticRepo()
 
 
@@ -176,11 +195,13 @@ extension Plan {
     static var all: [Plan] { return plans.cached ?? [] }
 }
 extension Episode {
-    static var all: [Episode] { return (episodes.cached ?? []).sorted { $0.number > $1.number } }
+    static var all: [Episode] { return episodes.cached ?? [] }
 }
 
 extension Collection {
-    static var all: [Collection] { return collections.cached?.filter { !$0.episodes(for: nil).isEmpty && $0.public }.sorted(by:  { $0.new && !$1.new || $0.position > $1.position }) ?? [] }
+    // todo move the transformation into the cached layer...
+    static var all: [Collection] { return collections.cached ?? [] }
+    static var allDict: [Id<Collection>:Collection] { return collectionsDict.cached ?? [:] }
 }
 
 extension Collaborator {

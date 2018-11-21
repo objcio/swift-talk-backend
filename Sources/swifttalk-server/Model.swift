@@ -28,7 +28,7 @@ extension Session {
 
 let teamDiscount = 30
 
-struct Id<A>: RawRepresentable, Codable, Equatable {
+struct Id<A>: RawRepresentable, Codable, Equatable, Hashable {
     var rawValue: String
 }
 
@@ -130,7 +130,7 @@ extension Episode {
 
     var theCollections: [Collection] {
         return collections.compactMap { cid in
-            Collection.all.first { $0.id ==  cid }
+            Collection.allDict[cid]
         }
     }
     
@@ -187,6 +187,7 @@ extension Collection {
     }
     
     func episodes(for user: UserData?) -> [Episode] {
+        // todo: this is inefficient (it shows up in instruments). We should have a dict mapping collection to episodes, lookup, and then filter using scoping.
         return Episode.scoped(for: user).filter { $0.collections.contains(id) }
     }    
 }
