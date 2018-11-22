@@ -10,7 +10,7 @@ let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
 let resourcePaths = [currentDir.appendingPathComponent("assets"), currentDir.appendingPathComponent("node_modules")]
 
 try runMigrations()
-DispatchQueue.global().async { verifyStaticData() }
+DispatchQueue.global().async { flushStaticData() }
 
 let s = MyServer(handle: { request in
     guard let route = Route(request) else { return nil }
