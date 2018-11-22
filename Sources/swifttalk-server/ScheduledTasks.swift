@@ -75,11 +75,11 @@ extension Task {
         return taskData.insertOrUpdate(uniqueKey: "key").map { _ in }
     }
     
-    func interpret(_ c: Lazy<Connection>, onCompletion: @escaping (Bool) -> ()) throws {
+    func interpret(_ c: Connection, onCompletion: @escaping (Bool) -> ()) throws {
         switch self {
         case .syncTeamMembersWithRecurly(let userId):
-            guard let user = try c.get().execute(Row<UserData>.select(userId)) else { onCompletion(true); return }
-            let teamMembers = try c.get().execute(user.teamMembers)
+            guard let user = try c.execute(Row<UserData>.select(userId)) else { onCompletion(true); return }
+            let teamMembers = try c.execute(user.teamMembers)
             URLSession.shared.load(user.currentSubscription).flatMap { (sub: Subscription??) -> Promise<Subscription?> in
                 guard let su = sub, let s = su else { return Promise { $0(nil) } }
                 return URLSession.shared.load(recurly.updateSubscription(s, numberOfTeamMembers: teamMembers.count))
@@ -115,11 +115,11 @@ extension Task {
 }
 
 extension Row where Element == TaskData {
-    func process(_ c: Lazy<Connection>, onCompletion: @escaping (Bool) -> ()) throws {
+    func process(_ c: Connection, onCompletion: @escaping (Bool) -> ()) throws {
         let task = try JSONDecoder().decode(Task.self, from: self.data.json.data(using: .utf8)!)
         try task.interpret(c) { success in
             if success {
-                try? c.get().execute(self.delete)
+                try? c.execute(self.delete)
             }
             onCompletion(success)
         }

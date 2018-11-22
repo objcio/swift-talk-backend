@@ -98,15 +98,7 @@ extension Route {
             let members = try c.get().execute(session.user.teamMembers)
             return I.write(teamMembers(context: context, addForm: renderedForm, teamMembers: members))
         }
-        
-        func processTasks(_ tasks: [Row<TaskData>]) {
-            if let task = tasks.first {
-                try? task.process(c) { _ in
-                    processTasks(Array(tasks.dropFirst()))
-                }
-            }
-        }
-
+    
         func newSubscription(couponCode: String?, errs: [String]) throws -> I {
             if let c = couponCode {
                 return I.onSuccess(promise: recurly.coupon(code: c).promise, do: { coupon in
@@ -418,10 +410,6 @@ extension Route {
         case .githubWebhook:
             // This could be done more fine grained, but this works just fine for now
             flushStaticData()
-            return I.write("", status: .ok)
-        case .scheduledTask:
-            let tasks = try c.get().execute(Row<TaskData>.dueTasks)
-            processTasks(tasks)
             return I.write("", status: .ok)
         }
     }

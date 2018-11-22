@@ -12,6 +12,23 @@ let resourcePaths = [currentDir.appendingPathComponent("assets"), currentDir.app
 try runMigrations()
 DispatchQueue.global().async { flushStaticData() }
 
+let queue = DispatchQueue(label: "com.domain.app.timer")
+let timer = DispatchSource.makeTimerSource(queue: queue)
+timer.schedule(deadline: .now(), repeating: 10.0, leeway: .seconds(1))
+timer.setEventHandler {
+    tryOrLog { try withConnection { conn in
+        func process(_ tasks: ArraySlice<Row<TaskData>>) {
+            guard let task = tasks.first else { return }
+            try? task.process(conn) { _ in
+                process(tasks.dropFirst())
+            }
+        }
+        let tasks = try conn.execute(Row<TaskData>.dueTasks)
+        process(tasks[...])
+    }}
+}
+timer.resume()
+
 let s = MyServer(handle: { request in
     guard let route = Route(request) else { return nil }
     let sessionString = request.cookies.first { $0.0 == "sessionid" }?.1

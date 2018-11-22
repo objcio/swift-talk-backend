@@ -92,10 +92,8 @@ extension Static {
         return Static<[A]>(async: { cb in
             let initial: [A] = loadStaticData()
             cb(initial)
-            print("initial: \(initial.count) - \(A.jsonName)")
             let ep: RemoteEndpoint<[A]> = github.staticData()
             refreshStaticData(ep) {
-                print("got new data: \(A.jsonName)")
                 let data: [A] = loadStaticData()
                 cb(data)
                 onRefresh(data)

@@ -33,7 +33,6 @@ enum Route: Equatable {
     case error
     case cancelSubscription
     case reactivateSubscription
-    case scheduledTask
     case upgradeSubscription
     case accountUpdatePayment
     case promoCode(String)
@@ -169,7 +168,6 @@ private let otherRoutes: [Router<Route>] = [
 private let internalRoutes: [Router<Route>] = [
     .c("hooks") / .c("recurly", .recurlyWebhook),
     .c("hooks") / .c("github", .githubWebhook),
-    .c("process_tasks", .scheduledTask)
 ]
 
 let allRoutes = externalRoutes + accountRoutes + subscriptionRoutes + otherRoutes + internalRoutes
