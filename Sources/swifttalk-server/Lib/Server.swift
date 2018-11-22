@@ -25,10 +25,16 @@ struct Request {
 
 protocol Interpreter {
     static func write(_ string: String, status: HTTPResponseStatus, headers: [String: String]) -> Self
-    static func writeFile(path: String) -> Self
+    static func writeFile(path: String, maxAge: UInt64?) -> Self
     static func redirect(path: String, headers: [String: String]) -> Self
     static func onComplete<A>(promise: Promise<A>, do cont: @escaping (A) -> Self) -> Self
     static func withPostData(do cont: @escaping (Data) -> Self) -> Self
+}
+
+extension Interpreter {
+    static func writeFile(path: String) -> Self {
+        return .writeFile(path: path, maxAge: 60)
+    }
 }
 
 struct Promise<A> {
@@ -141,7 +147,7 @@ struct NIOInterpreter: Interpreter {
         }
     }
     
-    static func writeFile(path: String) -> NIOInterpreter {
+    static func writeFile(path: String, maxAge: UInt64? = 60) -> NIOInterpreter {
         return NIOInterpreter { deps in
             let fullPath = deps.resourcePaths.resolve(path) ?? URL(fileURLWithPath: "")
             let fileHandleAndRegion = deps.fileIO.openFile(path: fullPath.path, eventLoop: deps.ctx.eventLoop)
@@ -159,6 +165,9 @@ struct NIOInterpreter: Interpreter {
                 default: contentType = "text/plain; charset=utf-8"
                 }
                 response.headers.add(name: "Content-Type", value: contentType)
+                if let m = maxAge {
+			response.headers.add(name: "Cache-Control", value: "max-age=\(m)")
+                }
                 deps.ctx.write(deps.handler.wrapOutboundOut(.head(response)), promise: nil)
                 deps.ctx.writeAndFlush(deps.handler.wrapOutboundOut(.body(.fileRegion(region)))).then {
                     let p: EventLoopPromise<Void> = deps.ctx.eventLoop.newPromise()
