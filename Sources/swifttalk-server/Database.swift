@@ -51,6 +51,12 @@ extension Decodable {
     }
 }
 
+extension CSRFToken: NodeRepresentable {
+    func makeNode(in context: PostgreSQL.Context?) throws -> PostgreSQL.Node {
+        return value.makeNode(in: context)
+    }
+}
+
 
 extension Connection {
     @discardableResult
@@ -177,6 +183,10 @@ public final class PostgresNodeDecoder: Decoder {
         
         func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T : Decodable {
             guard let newNode = node[transformKey(key.stringValue)] else { fatalError("\(#function), \(#line)") }
+            if type == UUID.self {
+                let str: String = try! newNode.converted(to: String.self)
+                return UUID(uuidString: str)! as! T
+            }
             let decoder = PostgresNodeDecoder(newNode, transformKey: transformKey)
             return try T(from: decoder)
         }

@@ -223,7 +223,7 @@ func verifyStaticData() {
             assert(colls.contains(where: { $0.id == c }), "\(c) \(e)")
         }
         for c in e.collaborators {
-//            assert(Collaborator.all.contains(where: { $0.id == c}), "\(c) \(e.collaborators) \(Collaborator.all)")
+            assert(Collaborator.all.contains(where: { $0.id == c}), "\(c) \(e.collaborators) \(Collaborator.all)")
         }
     }
     myAssert(transcripts.observable.value != nil)

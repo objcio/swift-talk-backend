@@ -7,11 +7,15 @@
 
 import Foundation
 
-struct RenderingError: Error {
+struct RenderingError: LocalizedError {
     /// Private message for logging
     let privateMessage: String
     /// Message shown to the user
     let publicMessage: String
+
+    var errorDescription: String? {
+        return "RenderingError: \(privateMessage)"
+    }
 }
 
 enum HeaderContent {

@@ -158,7 +158,7 @@ extension Subscription.State {
 
 
 extension Subscription.Upgrade {
-    var pretty: [Node] {
+    func pretty(csrf: CSRFToken) -> [Node] {
         let priceBreakdown: String
         // todo team members
         if let v = vat_in_cents {
@@ -184,7 +184,7 @@ extension Subscription.Upgrade {
                         teamMemberText +
                     ". You'll be charged immediately, and credited for the remainder of the current billing period."
                     )]),
-                button(to: .upgradeSubscription, text: "Upgrade Subscription", classes: "color-invalid")
+                button(to: .upgradeSubscription, csrf: csrf, text: "Upgrade Subscription", classes: "color-invalid")
             ]
     }
 }
@@ -277,8 +277,8 @@ extension BillingInfo {
     }
 }
 
-fileprivate func button(to route: Route, text: String, classes: Class = "") -> Node {
-    return Node.button(to: route, [.text(text)], classes: "bold reset-button border-bottom border-1 hover-color-black" + classes)
+fileprivate func button(to route: Route, csrf: CSRFToken, text: String, classes: Class = "") -> Node {
+    return Node.button(to: route, csrf: csrf, [.text(text)], classes: "bold reset-button border-bottom border-1 hover-color-black" + classes)
 }
 
 fileprivate func label(text: String, classes: Class = "") -> Node {
@@ -313,20 +313,20 @@ func billing(context: Context, user: Row<UserData>, subscription: Subscription?,
                             Node.text(" on "),
                             .text(sub.current_period_ends_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "n/a")
                         ]), // todo team member add-on pricing, VAT
-                        button(to: .cancelSubscription, text: "Cancel Subscription", classes: "color-invalid")
+                        button(to: .cancelSubscription, csrf: user.data.csrf, text: "Cancel Subscription", classes: "color-invalid")
                     ])
                 ]) : .none,
                 sub.upgrade.map { upgrade in
                         Node.li(classes: "flex", [
                             label(text: "Upgrade"),
-                            Node.div(classes: "flex-auto color-gray-30 stack--", upgrade.pretty)
+                            Node.div(classes: "flex-auto color-gray-30 stack--", upgrade.pretty(csrf: user.data.csrf))
                         ])
                     } ?? .none,
                 sub.state == .canceled ? Node.li(classes: "flex", [
                     label(text: "Expires on"),
                     Node.div(classes: "flex-auto color-gray-30 stack-", [
                         .text(sub.expires_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "<unknown date>"),
-                        button(to: .reactivateSubscription, text: "Reactivate Subscription", classes: "color-invalid")
+                        button(to: .reactivateSubscription, csrf: user.data.csrf, text: "Reactivate Subscription", classes: "color-invalid")
                     ])
                     
                 ]) : .none
@@ -375,15 +375,15 @@ func addTeamMemberForm() -> Form<TeamMemberFormData> {
     return Form<TeamMemberFormData>(parse: { dict in
         guard let username = dict["github_username"] else { return nil }
         return TeamMemberFormData(githubUsername: username)
-    }, render: { data, errors in
+    }, render: { data, csrf, errors in
         let form = FormView(fields: [
             FormView.Field(id: "github_username", title: "Github Username", value: data.githubUsername, note: "Your new team member won’t be notified, as we don’t have their email address yet."),
             ], submitTitle: "Add Team Member", submitNote: "Team members cost $10/month or $100/year, depending on your subscription. All prices excluding VAT.", action: .accountTeamMembers, errors: errors)
-        return .div(form.renderStacked)
+        return .div(form.renderStacked(csrf: csrf))
     })
 }
 
-func teamMembers(context: Context, addForm: Node, teamMembers: [Row<UserData>]) -> Node {
+func teamMembers(context: Context, csrf: CSRFToken, addForm: Node, teamMembers: [Row<UserData>]) -> Node {
     let currentTeamMembers = teamMembers.isEmpty ? Node.p([.raw("No team members added yet.")]) : Node.div(teamMembers.map { tm in
         .div(classes: "flex items-center pv- border-top border-1 border-color-gray-90", [
             .div(classes: "block radius-full ms-2 width-2 mr", [
@@ -392,7 +392,7 @@ func teamMembers(context: Context, addForm: Node, teamMembers: [Row<UserData>]) 
             .div(classes: "flex-grow type-mono", [
                 .link(to: URL(string: "https://github.com/\(tm.data.githubLogin)")!, classes: "color-gray-30 no-decoration hover-color-blue", [.text(tm.data.githubLogin)])
             ]),
-            Node.button(to: .accountDeleteTeamMember(tm.id), [.raw("&times;")], classes: "button-input ms-1")
+            Node.button(to: .accountDeleteTeamMember(tm.id), csrf: csrf, [.raw("&times;")], classes: "button-input ms-1")
         ])
     })
     

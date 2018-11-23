@@ -10,14 +10,26 @@ import Foundation
 typealias ValidationError = (field: String, message: String)
 
 struct Form<A> {
-    let parse: ([String:String]) -> A?
-    let render: (A, [ValidationError]) -> Node
+    typealias Render = (A, _ csrf: CSRFToken, [ValidationError]) -> Node
+    typealias Parse = ([String:String]) -> A?
+    let _parse: Parse
+    let render: Render
+    init(parse: @escaping Parse, render: @escaping Render) {
+        self._parse = parse
+        self.render = render
+    }
+
+    //
+    func parse(csrf: CSRFToken, _ data: [String:String]) -> A? {
+        guard data["csrf"] == csrf.stringValue else { return nil } // csrf token failure
+        return _parse(data)
+    }
 }
 
 extension Form {
     func wrap(_ f: @escaping (Node) -> Node) -> Form<A> {
-        return Form(parse: parse, render: { value, err in
-            f(self.render(value, err))
+        return Form(parse: _parse, render: { value, csrf, err in
+            f(self.render(value, csrf, err))
         })
     }
 }
@@ -48,7 +60,7 @@ struct FormView {
 }
 
 extension FormView {
-    var renderStacked: [Node] {
+    func renderStacked(csrf: CSRFToken) -> [Node] {
         func field(id: String, description: String, value: String?, note: String?) -> Node {
             let isErr = errors.contains { $0.field == id }
             return Node.fieldset(classes: "input-unit", [
@@ -66,7 +78,7 @@ extension FormView {
             Node.div(classes: "", [
                 Node.form(classes: classes, action: action.path, attributes: ["id": id], [
                     // todo utf8?
-                    // todo authenticity token (CSRF token)
+                    Node.input(name: "csrf", id: "csrf", type: "hidden", attributes: ["value": csrf.stringValue], []),
                     Node.div(classes: "stack+", fields.map {
                         field(id: $0.id, description: $0.title, value: $0.value, note: $0.note)
                         } + [

@@ -31,6 +31,24 @@ struct Id<A>: RawRepresentable, Codable, Equatable, Hashable {
     var rawValue: String
 }
 
+struct CSRFToken: Codable, Equatable, Hashable {
+    var value: UUID
+    init(_ uuid: UUID) {
+        self.value = uuid
+    }
+    init(from decoder: Decoder) throws {
+        self.init(try UUID(from: decoder))
+    }
+    func encode(to encoder: Encoder) throws {
+	try value.encode(to: encoder)
+    }
+
+    var stringValue: String {
+        return value.uuidString
+    }
+}
+
+
 struct Guest: Codable, Equatable {
     var name: String
     // todo

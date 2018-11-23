@@ -88,7 +88,7 @@ struct UserData: Codable, Insertable {
     var downloadCredits: Int = 0
     var subscriber: Bool = false
     var confirmedNameAndEmail: Bool = false
-    var csrf: UUID
+    var csrf: CSRFToken
     
     init(email: String, githubUID: Int, githubLogin: String, githubToken: String? = nil, avatarURL: String, name: String) {
         self.email = email
@@ -103,7 +103,7 @@ struct UserData: Codable, Insertable {
         createdAt = now
         collaborator = false
         downloadCredits = 0
-        csrf = UUID()
+        csrf = CSRFToken(UUID())
     }
     
     static let tableName: String = "users"

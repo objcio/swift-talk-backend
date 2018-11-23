@@ -124,6 +124,8 @@ public final class PropertyNamesDecoder: Decoder {
             defer { decoder.fields = copy }
             if type == UUID.self {
                 return UUID() as! T
+            } else if type == CSRFToken.self {
+                return CSRFToken(UUID()) as! T
             }
             return try T(from: decoder)
         }
