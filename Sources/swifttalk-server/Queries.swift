@@ -119,13 +119,15 @@ extension UserData {
         return admin || collaborator || subscriber
     }
     
+    static let emailRegex = try! NSRegularExpression(pattern: "^[^@]+@(?:[^@.]+?\\.)+.{2,}$", options: [.caseInsensitive])
+    
     func validate() -> [ValidationError] {
         var result: [(String,String)] = []
-        if !email.contains("@") {
+        if UserData.emailRegex.matches(in: email, options: [], range: NSRange(email.startIndex..<email.endIndex, in: email)).isEmpty {
             result.append(("email", "Invalid email address"))
         }
         if name.isEmpty {
-            result.append(("name", "Name isn't empty"))
+            result.append(("name", "Name cannot be empty"))
         }
         return result
     }
