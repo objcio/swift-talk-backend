@@ -152,3 +152,11 @@ extension String {
     }
 }
 
+import Cryptor
+
+extension Data {
+    var md5: String {
+        let data = Data(Digest(using: .md5).update(data: self)?.final() ?? [])
+        return data.map { String(format: "%02hhx", $0) }.joined()
+    }
+}
