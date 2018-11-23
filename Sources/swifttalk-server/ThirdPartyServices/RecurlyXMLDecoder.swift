@@ -407,8 +407,8 @@ extension El {
 final class RecurlyXMLEncoder: Encoder {
     var codingPath: [CodingKey] = []
     var userInfo: [CodingUserInfoKey : Any] = [:]
-    var rootElement: El
-    func add(child el: El) {
+    var rootElement: El<()>
+    func add(child el: El<()>) {
         rootElement.add(child: el)
     }
     init(_ name: String) {
@@ -628,12 +628,12 @@ protocol RootElement {
 func encodeXML<T: Encodable>(_ value: T) throws -> String where T: RootElement {
     let encoder = RecurlyXMLEncoder(T.rootElementName)
     try value.encode(to: encoder)
-    return Node.node(encoder.rootElement).xmlDocument
+    return ANode<()>.node(encoder.rootElement).xmlDocument
 }
 
-fileprivate extension Node {
+fileprivate extension ANode where I == () {
     var xmlDocument: String {
-        return ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>", render(encodeText: { $0.xmlString })].joined(separator: "\n")
+        return ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>", render(input: (), encodeText: { $0.xmlString })].joined(separator: "\n")
     }
 }
 

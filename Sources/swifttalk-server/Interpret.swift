@@ -65,6 +65,17 @@ extension ProfileFormData {
     }
 }
 
+import NIOHTTP1
+extension Interpreter {
+    static func write(_ html: Node, status: HTTPResponseStatus = .ok) -> Self {
+        return Self.write(html.htmlDocument(input: LayoutDependencies(hashedAssetName: { file in
+            guard let remainder = file.drop(prefix: "/assets/") else { return file }
+            let rep = hashedAssets.observable.value?.fileToHash[remainder]
+            return rep.map { "/assets/" + $0 } ?? file
+        })), status: status)
+    }
+}
+
 extension Route {
     func interpret<I: Interpreter>(sessionId: UUID?, connection c: Lazy<Connection>) throws -> I {
         let session: Session?
@@ -82,6 +93,7 @@ extension Route {
         }
         
         let context = Context(path: path, route: self, session: session)
+        
         
         // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
         func form<A>(_ f: Form<A>, initial: A, onPost: @escaping (A) throws -> I) -> I {
@@ -248,7 +260,11 @@ extension Route {
             }
         case let .staticFile(path: p):
             let name = p.map { $0.removingPercentEncoding ?? "" }.joined(separator: "/")
-            return .writeFile(path: name)
+            if let n = hashedAssets.observable.value?.hashToFile[name] {
+                return I.writeFile(path: n, maxAge: 31536000)
+            } else {
+            	return .writeFile(path: name)
+            }
         case .accountProfile:
             let sess = try requireSession()
             var u = sess.user

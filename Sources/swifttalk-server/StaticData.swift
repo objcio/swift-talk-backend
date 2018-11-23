@@ -135,6 +135,22 @@ fileprivate let collectionsDict: Observable<[Id<Collection>:Collection]> = colle
 
 fileprivate let collaborators: Static<[Collaborator]> = Static<[Collaborator]>.fromStaticRepo()
 
+let hashedAssets: Static<(hashToFile: [String:String], fileToHash: [String:String])> = Static(sync: {
+    // todo should be async...
+    let fm = FileManager.default
+    var hashToFile: [String:String] = [:]
+    let baseURL = URL(fileURLWithPath: fm.currentDirectoryPath).appendingPathComponent("assets")
+    for name in (try? fm.subpathsOfDirectory(atPath: "assets")) ?? [] {
+        let url = baseURL.appendingPathComponent(name)
+        if let d = try? Data(contentsOf: url) {
+            let hashed = d.md5 + "-" + url.lastPathComponent
+        	hashToFile[hashed] = name
+        }
+    }
+    let fileToHash = Dictionary(hashToFile.map { ($0.1, $0.0) }, uniquingKeysWith: { _, x in x })
+    return (hashToFile: hashToFile, fileToHash: fileToHash)
+})
+
 fileprivate var collectionEpisodes: Observable<[Id<Collection>:[Episode]]> =
     collections.flatMap { colls in
         theEpisodes.map { eps in
@@ -189,6 +205,7 @@ fileprivate let plans: Static<[Plan]> = Static(async: { cb in
 
 
 func flushStaticData() {
+    hashedAssets.flush()
     episodesSource.flush()
     collectionsSource.flush()
     plans.flush()

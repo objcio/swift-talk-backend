@@ -152,6 +152,15 @@ extension String {
     }
 }
 
+
+extension String {
+    func drop(prefix: String) -> String? {
+        guard hasPrefix(prefix) else { return nil }
+        let remainderStart = self.index(startIndex, offsetBy: prefix.count)
+        return String(self[remainderStart...])
+    }
+}
+
 import Cryptor
 
 extension Data {

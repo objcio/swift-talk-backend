@@ -81,8 +81,8 @@ extension Interpreter {
         return .write(string, status: status, headers: [:])
     }
 
-    static func write(_ html: Node, status: HTTPResponseStatus = .ok) -> Self {
-        return .write(html.htmlDocument)
+    static func write<I>(_ html: ANode<I>, input: I, status: HTTPResponseStatus = .ok) -> Self {
+        return .write(html.htmlDocument(input: input))
     }
     
     static func redirect(path: String) -> Self {
@@ -166,7 +166,7 @@ struct NIOInterpreter: Interpreter {
                 }
                 response.headers.add(name: "Content-Type", value: contentType)
                 if let m = maxAge {
-			response.headers.add(name: "Cache-Control", value: "max-age=\(m)")
+                	response.headers.add(name: "Cache-Control", value: "max-age=\(m)")
                 }
                 deps.ctx.write(deps.handler.wrapOutboundOut(.head(response)), promise: nil)
                 deps.ctx.writeAndFlush(deps.handler.wrapOutboundOut(.body(.fileRegion(region)))).then {

@@ -7,6 +7,32 @@
 
 import Foundation
 
+// todo: we can move routing in here as well
+struct LayoutDependencies {
+    var hashedAssetName: (String) -> String = { $0 }
+}
+
+extension ANode where I == LayoutDependencies {
+    static func hashedStylesheet(media: String = "all", href: String) -> Node {
+        return ANode.withInput { deps in
+            return Node.stylesheet(media: media, href: deps.hashedAssetName(href))
+        }
+    }
+    
+    static func hashedScript(src: String) -> ANode {
+        return ANode.withInput { deps in
+            return Node.script(src: deps.hashedAssetName(src))
+        }
+    }
+    
+    static func hashedImg(src: String, alt: String = "", classes: Class? = nil, attributes: [String:String] = [:]) -> ANode {
+        return ANode.withInput { deps in
+            return Node.img(src: deps.hashedAssetName(src), alt: alt, classes: classes, attributes: attributes)
+        }
+    }
+}
+
+typealias Node = ANode<LayoutDependencies>
 
 struct LayoutConfig {
     var pageTitle: String
@@ -103,9 +129,9 @@ extension LayoutConfig {
         ] + csrf + [
             .title(pageTitle),
             // todo rss+atom links
-            .stylesheet(href: "/assets/stylesheets/application.css"),
+            .hashedStylesheet(href: "/assets/stylesheets/application.css"),
             includeRecurlyJS ? .script(src: "https://js.recurly.com/v4/recurly.js") : .none,
-            .script(src: "/assets/application.js")
+            .hashedScript(src: "/assets/application.js")
             // todo google analytics
         ] + structured)
         let logo = Node.link(to: URL(string: "https://www.objc.io")!, attributes: ["class": "flex-none outline-none mr++ flex"], [
@@ -148,9 +174,9 @@ extension LayoutConfig {
         ] + csrf + [
             .title(pageTitle),
             // todo rss+atom links
-            .stylesheet(href: "/assets/stylesheets/application.css"),
+            .hashedStylesheet(href: "/assets/stylesheets/application.css"),
             includeRecurlyJS ? .script(src: "https://js.recurly.com/v4/recurly.js") : .none,
-            .script(src: "/assets/application.js"),
+            .hashedScript(src: "/assets/application.js"),
             // todo google analytics
         ] + structured)
         let linkClasses: Class = "no-decoration color-inherit hover-color-black mr"

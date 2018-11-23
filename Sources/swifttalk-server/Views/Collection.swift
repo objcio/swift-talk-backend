@@ -85,7 +85,7 @@ extension Collection {
             Node.article(attributes: [:], [
                 Node.link(to: .collection(id), [
                     Node.figure(attributes: ["class": "mb-", "style": figureStyle], [
-                        Node.img(src: artwork, attributes: ["class": "block width-full height-auto"])
+                        Node.hashedImg(src: artwork, attributes: ["class": "block width-full height-auto"])
                         ]),
                     ]),
                 Node.div(classes: "flex items-center pt--", [

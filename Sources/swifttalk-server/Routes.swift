@@ -171,5 +171,5 @@ private let internalRoutes: [Router<Route>] = [
 ]
 
 let allRoutes = externalRoutes + accountRoutes + subscriptionRoutes + otherRoutes + internalRoutes
-private let router = allRoutes.choice()
+let router = allRoutes.choice()
 
