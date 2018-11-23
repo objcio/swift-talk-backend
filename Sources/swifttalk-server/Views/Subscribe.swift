@@ -131,13 +131,13 @@ func smallPrint(noTeamMemberDiscount: Bool) -> [String] {
     ]
 }
 
-func newSub(context: Context, coupon: Coupon?, errs: [String]) throws -> Node {
+func newSub(context: Context, csrf: CSRFToken, coupon: Coupon?, errs: [String]) throws -> Node {
     guard let m = Plan.monthly, let y = Plan.yearly else {
         throw RenderingError(privateMessage: "No monthly or yearly plan: \(Plan.all)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
     }
     let data = NewSubscriptionData(action: Route.createSubscription(couponCode: coupon?.coupon_code).path, public_key: env.recurlyPublicKey, plans: [
         .init(m), .init(y)
-        ], payment_errors: errs, method: .post, coupon: coupon.map(NewSubscriptionData.Coupon.init))
+        ], payment_errors: errs, method: .post, coupon: coupon.map(NewSubscriptionData.Coupon.init), csrf: csrf)
     return LayoutConfig(context: context,  contents: [
         .header([
             .div(classes: "container-h pb+ pt+", [
@@ -194,6 +194,7 @@ struct NewSubscriptionData: Codable {
     var payment_errors: [String] // TODO verify type
     var method: HTTPMethod = .post
     var coupon: Coupon?
+    var csrf: CSRFToken
 }
 
 extension NewSubscriptionData.Coupon {

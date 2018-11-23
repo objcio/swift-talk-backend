@@ -209,8 +209,9 @@ struct PaymentViewData: Codable {
     var payment_errors: [String] // TODO verify type
     var method: HTTPMethod = .post
     var coupon: Coupon
+    var csrf: CSRFToken
     
-    init(_ billingInfo: BillingInfo, action: String, publicKey: String, buttonText: String, paymentErrors: [String]) {
+    init(_ billingInfo: BillingInfo, action: String, csrf: CSRFToken, publicKey: String, buttonText: String, paymentErrors: [String]) {
         first_name = billingInfo.first_name
         last_name = billingInfo.last_name
         company = billingInfo.company
@@ -229,6 +230,7 @@ struct PaymentViewData: Codable {
         self.payment_errors = paymentErrors
         self.method = .post
         self.coupon = Coupon()
+        self.csrf = csrf
     }
 }
 

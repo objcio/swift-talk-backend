@@ -5,8 +5,7 @@ import ReactDOM from 'react-dom'
 import _merge from 'lodash/merge'
 
 const renderComponent = (components, defaultProps, el) => {
-  const csrf = document.head.querySelector('meta[name=csrf-token]').content
-  const params = _merge({}, defaultProps, JSON.parse(el.dataset.params), {csrf})
+  const params = _merge({}, defaultProps, JSON.parse(el.dataset.params))
   ReactDOM.render(
     React.createElement(components[el.dataset.component], params),
     el

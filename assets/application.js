@@ -1798,8 +1798,7 @@ var _merge3 = _interopRequireDefault(_merge2);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var renderComponent = function renderComponent(components, defaultProps, el) {
-  var csrf = document.head.querySelector('meta[name=csrf-token]').content;
-  var params = (0, _merge3.default)({}, defaultProps, JSON.parse(el.dataset.params), { csrf: csrf });
+  var params = (0, _merge3.default)({}, defaultProps, JSON.parse(el.dataset.params));
   _reactDom2.default.render(_react2.default.createElement(components[el.dataset.component], params), el);
 };
 

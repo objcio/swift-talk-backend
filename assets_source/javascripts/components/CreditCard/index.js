@@ -264,7 +264,7 @@ export default class CreditCard extends Component {
         action={this.props.action} >
 
         <input name="_method" value={this.props.method} type="hidden" />
-        <input name="authenticity_token" value={this.props.csrf} type='hidden' />
+        <input name="csrf" value={this.props.csrf} type='hidden' />
         <input ref='token_field' name="billing_info[token]" value='' type='hidden' />
 
         { React.Children.count(this.props.children) ? (

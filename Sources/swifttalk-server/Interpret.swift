@@ -54,7 +54,6 @@ struct Context {
     var session: Session?
 }
 
-// TODO: we should implement this!
 func requirePost<I: Interpreter>(csrf: CSRFToken, next: @escaping () throws -> I) throws -> I {
     return I.withPostBody(do: { body in
         guard body["csrf"] == csrf.stringValue else {
@@ -62,6 +61,26 @@ func requirePost<I: Interpreter>(csrf: CSRFToken, next: @escaping () throws -> I
         }
         return try next()
     })
+}
+
+extension Interpreter {
+    static func withPostBody(csrf: CSRFToken, do cont: @escaping ([String:String]) throws -> Self, or: @escaping () throws -> Self) -> Self {
+        return .withPostBody(do: { body in
+            guard body["csrf"] == csrf.stringValue else {
+                throw RenderingError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
+            }
+            return try cont(body)
+        }, or: or)
+    }
+    
+    static func withPostBody(csrf: CSRFToken, do cont: @escaping ([String:String]) throws -> Self) -> Self {
+        return .withPostBody(do: { body in
+            guard body["csrf"] == csrf.stringValue else {
+                throw RenderingError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
+            }
+            return try cont(body)
+        })
+    }
 }
 
 extension ProfileFormData {
@@ -117,13 +136,13 @@ extension Route {
             return I.write(teamMembers(context: context, csrf: csrf, addForm: renderedForm, teamMembers: members))
         }
     
-        func newSubscription(couponCode: String?, errs: [String]) throws -> I {
+        func newSubscription(couponCode: String?, csrf: CSRFToken, errs: [String]) throws -> I {
             if let c = couponCode {
                 return I.onSuccess(promise: recurly.coupon(code: c).promise, do: { coupon in
-                    return try I.write(newSub(context: context, coupon: coupon, errs: errs))
+                    return try I.write(newSub(context: context, csrf: csrf, coupon: coupon, errs: errs))
                 })
             } else {
-                return try I.write(newSub(context: context, coupon: nil, errs: errs))
+                return try I.write(newSub(context: context, csrf: csrf, coupon: nil, errs: errs))
             }
         }
 
@@ -155,7 +174,7 @@ extension Route {
             })
         case .createSubscription(let couponCode):
             let s = try requireSession()
-            return I.withPostBody { dict in
+            return I.withPostBody(csrf: s.user.data.csrf) { dict in
                 guard let planId = dict["plan_id"], let token = dict["billing_info[token]"] else {
                     throw RenderingError(privateMessage: "Incorrect post data", publicMessage: "Something went wrong")
                 }
@@ -169,7 +188,7 @@ extension Route {
                             let response = registerForm(context, couponCode: couponCode).render(.init(s.user.data), s.user.data.csrf, [ValidationError("email", "Please provide a valid email address and try again.")])
                             return I.write(response)
                         }
-                        return try newSubscription(couponCode: couponCode, errs: messages.map { $0.message })
+                        return try newSubscription(couponCode: couponCode, csrf: s.user.data.csrf, errs: messages.map { $0.message })
                     case .success(let sub):
                         try c.get().execute(s.user.changeSubscriptionStatus(sub.state == .active))
                         // todo flash
@@ -191,7 +210,7 @@ extension Route {
                 let resp = registerForm(context, couponCode: couponCode).render(.init(u.data), u.data.csrf, [])
                 return I.write(resp)
             } else {
-                return try newSubscription(couponCode: couponCode, errs: [])
+                return try newSubscription(couponCode: couponCode, csrf: u.data.csrf, errs: [])
             }
         case .login(let cont):
             var path = "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(github.clientId)"
@@ -367,11 +386,11 @@ extension Route {
             let sess = try requireSession()
             func renderForm(errs: [RecurlyError]) -> I {
                 return I.onSuccess(promise: sess.user.billingInfo.promise, do: { billingInfo in
-                    let view = updatePaymentView(context: context, data: PaymentViewData(billingInfo, action: Route.accountUpdatePayment.path, publicKey: env.recurlyPublicKey, buttonText: "Update", paymentErrors: errs.map { $0.message }))
+                    let view = updatePaymentView(context: context, data: PaymentViewData(billingInfo, action: Route.accountUpdatePayment.path, csrf: sess.user.data.csrf, publicKey: env.recurlyPublicKey, buttonText: "Update", paymentErrors: errs.map { $0.message }))
                     return I.write(view)
                 })
             }
-            return I.withPostBody(do: { body in
+            return I.withPostBody(csrf: sess.user.data.csrf, do: { body in
                 guard let token = body["billing_info[token]"] else {
                     throw RenderingError(privateMessage: "No billing_info[token]", publicMessage: "Something went wrong, please try again.")
                 }
