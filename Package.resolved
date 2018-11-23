@@ -11,8 +11,17 @@
         }
       },
       {
+        "package": "Cryptor",
+        "repositoryURL": "https://github.com/IBM-Swift/BlueCryptor",
+        "state": {
+          "branch": null,
+          "revision": "3e0179a2f46ad0652a74459dc451d64c128fcbd0",
+          "version": "1.0.20"
+        }
+      },
+      {
         "package": "Ccmark",
-        "repositoryURL": "git@github.com:chriseidhof/Ccmark.git",
+        "repositoryURL": "https://github.com/chriseidhof/Ccmark.git",
         "state": {
           "branch": null,
           "revision": "f1baba3429aeb6fe2acabc92309cb7a756250b30",
@@ -53,15 +62,6 @@
           "branch": null,
           "revision": "fc5a27d6eb236141dc24e5f14eedaa2e035ae7b3",
           "version": "1.1.1"
-        }
-      },
-      {
-        "package": "HTMLString",
-        "repositoryURL": "https://github.com/alexaubry/HTMLString",
-        "state": {
-          "branch": null,
-          "revision": "7fb27bf13771e239c9952507199920dfe1605ca9",
-          "version": "4.0.2"
         }
       },
       {
