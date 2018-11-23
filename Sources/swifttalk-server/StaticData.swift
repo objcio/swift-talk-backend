@@ -233,7 +233,7 @@ extension Plan {
     static var all: [Plan] { return plans.observable.value ?? [] }
 }
 extension Episode {
-    static var all: [Episode] { return theEpisodes.value ?? [] }
+    static var all: [Episode] { return theEpisodes.value }
 }
 
 extension Collection {

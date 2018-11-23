@@ -308,10 +308,7 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
         var codingPath: [CodingKey] = []
         
         func decodeNil() -> Bool {
-            if node.nodeName != nil {
-                return false
-            }
-            return true
+            return false
         }
         
         func decode(_ type: Bool.Type) throws -> Bool {
