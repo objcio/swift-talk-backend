@@ -114,8 +114,9 @@ let navigationItems: [(LinkTarget, String)] = [
 ]
 
 extension LayoutConfig {
+    // todo: we can probably not include the CSRF token, I think it might only be needed in the React components (and we can pass it explicitly there)
     var csrf: [Node] {
-        return (context.session?.csrfToken).map { [Node.meta(attributes: ["name": "csrf-token", "content": "'\($0)'"])] } ?? []
+        return (context.session?.user.data.csrf).map { [Node.meta(attributes: ["name": "csrf-token", "content": "'\($0.uuidString)'"])] } ?? []
     }
     var structured: [Node] {
         return structuredData.map { $0.nodes } ?? []

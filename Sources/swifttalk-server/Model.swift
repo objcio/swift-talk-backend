@@ -17,7 +17,6 @@ struct Session {
     var sessionId: UUID
     var user: Row<UserData>
     var masterTeamUser: Row<UserData>?
-    var csrfToken: String = "TODO" // todo
 }
 
 extension Session {

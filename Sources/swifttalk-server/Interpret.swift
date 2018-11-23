@@ -83,7 +83,7 @@ extension Route {
             let user = try c.get().execute(Row<UserData>.select(sessionId: sId))
             session = try user.map { u in
                 let masterTeamuser = u.data.premiumAccess ? nil : try c.get().execute(u.masterTeamUser)
-                return Session(sessionId: sId, user: u, masterTeamUser: masterTeamuser, csrfToken: "TODO")
+                return Session(sessionId: sId, user: u, masterTeamUser: masterTeamuser)
             }
         } else {
             session = nil

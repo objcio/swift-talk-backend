@@ -22,12 +22,6 @@ func runMigrations() throws {
 }
 
 fileprivate let migrations: [String] = [
-    //    """
-    //    DROP TABLE IF EXusers IF EXISTS
-    //    """,
-    //    """
-    //    DROP TABLE sessions
-    //    """,
     """
     CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
     """,
@@ -158,6 +152,10 @@ fileprivate let migrations: [String] = [
         END IF;
     END
     $$;
+    """,
     """
+    ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS csrf uuid DEFAULT public.uuid_generate_v4() NOT NULL;
+    """,
 ]
 
