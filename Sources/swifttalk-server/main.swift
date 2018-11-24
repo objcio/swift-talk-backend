@@ -16,16 +16,17 @@ let queue = DispatchQueue(label: "com.domain.app.timer")
 let timer = DispatchSource.makeTimerSource(queue: queue)
 timer.schedule(deadline: .now(), repeating: 10.0, leeway: .seconds(1))
 timer.setEventHandler {
-    tryOrLog { try withConnection { conn in
+    tryOrLog {
+        let conn = lazyConnection()
         func process(_ tasks: ArraySlice<Row<TaskData>>) {
             guard let task = tasks.first else { return }
             try? task.process(conn) { _ in
                 process(tasks.dropFirst())
             }
         }
-        let tasks = try conn.execute(Row<TaskData>.dueTasks)
+        let tasks = try conn.get().execute(Row<TaskData>.dueTasks)
         process(tasks[...])
-    }}
+    }
 }
 timer.resume()
 
