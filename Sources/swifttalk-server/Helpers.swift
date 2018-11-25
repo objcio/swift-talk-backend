@@ -169,3 +169,13 @@ extension Data {
         return data.map { String(format: "%02hhx", $0) }.joined()
     }
 }
+
+func measure<A>(message: String, file: StaticString = #file, line: UInt = #line, treshold: TimeInterval = 0.1, _ code: () throws -> A) rethrows -> A {
+    let start = Date()
+    let result = try code()
+    let time = Date().timeIntervalSince(start)
+    if time > treshold {
+        log(file: file, line: line, info: "measure: \(time)s \(message)")
+    }
+    return result
+}
