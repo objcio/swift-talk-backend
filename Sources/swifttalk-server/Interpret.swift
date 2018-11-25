@@ -224,10 +224,10 @@ extension Route {
             try c.get().execute(s.user.deleteSession(s.sessionId))
             return I.redirect(to: .home)
         case .githubCallback(let code, let origin):
-            let loadToken = URLSession.shared.load(github.getAccessToken(code)).map({ $0?.access_token })
+            let loadToken = github.getAccessToken(code).promise.map({ $0?.access_token })
             return I.onComplete(promise: loadToken, do: { token in
                 let t = try token ?! RenderingError(privateMessage: "No github access token", publicMessage: "Couldn't access your Github profile.")
-                let loadProfile = URLSession.shared.load(Github(accessToken: t).profile)
+                let loadProfile = Github(accessToken: t).profile.promise
                 return I.onSuccess(promise: loadProfile, message: "Couldn't access your Github profile", do: { profile in
                     let uid: UUID
                     if let user = try c.get().execute(Row<UserData>.select(githubId: profile.id)) {
@@ -272,7 +272,7 @@ extension Route {
             guard let ep = Episode.all.scoped(for: session?.user.data).first(where: { $0.id == id }) else {
                 return .notFound("No such episode")
             }
-            return .onComplete(promise: URLSession.shared.load(vimeo.downloadURL(for: ep.vimeo_id))) { downloadURL in
+            return .onComplete(promise: vimeo.downloadURL(for: ep.vimeo_id).promise) { downloadURL in
                 guard let result = downloadURL, let url = result else { return .redirect(to: .episode(ep.id)) }
                 let downloads = try c.get().execute(s.user.downloads)
                 switch s.user.downloadStatus(for: ep, downloads: downloads) {
@@ -409,7 +409,7 @@ extension Route {
             let csrf = sess.user.data.csrf
             return I.withPostBody(do: { params in
                 guard let formData = addTeamMemberForm().parse(csrf: csrf, params) else { return try teamMembersResponse(sess, csrf: csrf) }
-                let promise = URLSession.shared.load(github.profile(username: formData.githubUsername))
+                let promise = github.profile(username: formData.githubUsername).promise
                 return I.onComplete(promise: promise) { profile in
                     guard let p = profile else {
                         return try teamMembersResponse(sess, formData, csrf: csrf, [(field: "github_username", message: "No user with this username exists on GitHub")])

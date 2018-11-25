@@ -93,7 +93,7 @@ struct Github {
             let files = transcripts ?? []
             let promises = files
                 .map { (file: $0, endpoint: self.contents($0.url)) }
-                .map { (file: $0.file, promise: URLSession.shared.load($0.endpoint)) }
+                .map { (file: $0.file, promise: $0.endpoint.promise) }
                 .map { t in t.promise.map { (file: t.file, contents: $0) } }
             return sequentially(promises)
         }
