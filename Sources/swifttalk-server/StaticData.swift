@@ -32,56 +32,36 @@ final class Static<A> {
     }  
 }
 
-// Todo we only use this for plans, could do like for the github files (cache it in the db).
-struct StaticJSON<A: Codable> {
-    let fileName: String
-    let process: (A) -> A
-    init(fileName: String, process: @escaping (A) -> A = { $0 }) {
-        self.fileName = fileName
-        self.process = process
-    }
-    
-    func read() -> A? {
-        do {
-            let d = try Data(contentsOf: URL(fileURLWithPath: fileName))
-            let e = try JSONDecoder().decode(A.self, from: d)
-            return process(e)
-        } catch {
-            log(error)
-            return nil
-        }
-    }
-    
-    func write(_ value: A) throws {
-        let d = try JSONEncoder().encode(value)
-        try d.write(to: URL(fileURLWithPath: fileName))
-    }
-}
-
 // todo we could have a struct/func that caches/reads cached JSON data
 
 // todo: chris I think we can make the three functions below a lot simpler...
 
-func loadStaticData<A: StaticLoadable>() -> [A] {
+func loadStaticData<A: Codable>(name: String) -> [A] {
     return tryOrLog { try withConnection { connection in
         guard
-            let row = try connection.execute(Row<FileData>.staticData(jsonName: A.jsonName)),
+            let row = try connection.execute(Row<FileData>.staticData(jsonName: name)),
             let result = try? JSONDecoder().decode([A].self, from: row.data.value.data(using: .utf8)!)
             else { return [] }
         return result
     }} ?? []
 }
 
+func cacheStaticData<A: Codable>(_ data: A, name: String) {
+    tryOrLog { try withConnection { connection in
+        guard
+            let encoded = try? JSONEncoder().encode(data),
+            let json = String(data: encoded, encoding: .utf8)
+            else { log(error: "Unable to encode static data \(name)"); return }
+        let fd = FileData(repository: github.staticDataRepo, path: name, value: json)
+        tryOrLog("Error caching \(name) in database") { try connection.execute(fd.insertOrUpdate(uniqueKey: "key")) }
+    }}
+}
+
 func refreshStaticData<A: StaticLoadable>(_ endpoint: RemoteEndpoint<[A]>, onCompletion: @escaping () -> ()) {
     URLSession.shared.load(endpoint) { result in
         tryOrLog { try withConnection { connection in
-            guard
-                let r = result,
-                let data = try? JSONEncoder().encode(r),
-                let json = String(data: data, encoding: .utf8)
-                else { return }
-            let fd = FileData(repository: github.staticDataRepo, path: A.jsonName, value: json)
-            tryOrLog("Error caching \(A.jsonName)") { try connection.execute(fd.insertOrUpdate(uniqueKey: "key")) }
+            guard let r = result else { log(error: "Failed loading static data \(A.jsonName)"); return }
+            cacheStaticData(r, name: A.jsonName)
             onCompletion()
         }}
     }
@@ -90,11 +70,11 @@ func refreshStaticData<A: StaticLoadable>(_ endpoint: RemoteEndpoint<[A]>, onCom
 extension Static {
     static func fromStaticRepo<A: StaticLoadable>(onRefresh: @escaping ([A]) -> () = { _ in }) -> Static<[A]> {
         return Static<[A]>(async: { cb in
-            let initial: [A] = loadStaticData()
+            let initial: [A] = loadStaticData(name: A.jsonName)
             cb(initial)
             let ep: RemoteEndpoint<[A]> = github.staticData()
             refreshStaticData(ep) {
-                let data: [A] = loadStaticData()
+                let data: [A] = loadStaticData(name: A.jsonName)
                 cb(data)
                 onRefresh(data)
             }
@@ -193,13 +173,14 @@ fileprivate let transcripts: Static<[Transcript]> = Static(async: { cb in
     }
 })
 
-fileprivate let cachedPlanData = StaticJSON<[Plan]>(fileName: "data/plans.json")
 fileprivate let plans: Static<[Plan]> = Static(async: { cb in
-    cb(cachedPlanData.read())
+    let jsonName = "plans.json"
+    let initial: [Plan] = loadStaticData(name: jsonName)
+    cb(initial)
     URLSession.shared.load(recurly.plans) { value in
         cb(value)
-        guard let v = value else { log(error: "Could not load plans"); return }
-        tryOrLog("Couldn't write cached plan data") { try cachedPlanData.write(v) }
+        guard let v = value else { log(error: "Could not load plans from Recurly"); return }
+        cacheStaticData(v, name: jsonName)
     }
 })
 
@@ -215,7 +196,7 @@ func flushStaticData() {
 }
 
 func verifyStaticData() {
-    myAssert(Plan.all.count >= 2)
+//    myAssert(Plan.all.count >= 2)
     let episodes = Episode.all
     let colls = Collection.all
     for e in episodes {
