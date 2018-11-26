@@ -429,7 +429,7 @@ extension Route {
                     guard let _ = try? c.get().execute(teamMemberData.insert) else {
                         return try teamMembersResponse(sess, formData, csrf: csrf, [(field: "github_username", message: "Team member already exists")])
                     }
-                    let task = try Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: Date().addingTimeInterval(5*60))
+                    let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: Date().addingTimeInterval(5*60))
                     try c.get().execute(task)
                     return try teamMembersResponse(sess, csrf: csrf)
                 }
@@ -442,7 +442,7 @@ extension Route {
             let csrf = sess.user.data.csrf
             return try requirePost(csrf: csrf) {
                 try c.get().execute(sess.user.deleteTeamMember(id))
-                let task = try Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: Date().addingTimeInterval(5*60))
+                let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: Date().addingTimeInterval(5*60))
                 try c.get().execute(task)
                 return try teamMembersResponse(sess, csrf: csrf)
             }
