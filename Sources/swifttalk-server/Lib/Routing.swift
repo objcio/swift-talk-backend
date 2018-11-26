@@ -136,18 +136,20 @@ extension Router where A == String {
             req.path.removeFirst()
             return f.removingPercentEncoding ?? ""
         }, print: { (str: String) in
-            return Endpoint(path: [str.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!])
+            guard let encoded = str.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else { return nil }
+            return Endpoint(path: [encoded])
         }, description: .parameter("string"))
     }
     
     static func optionalString() -> Router<String?> {
-        // todo mirror whatever florian did to string()
         return Router<String?>(parse: { req in
             guard let f = req.path.first else { return .some(nil) }
             req.path.removeFirst()
-            return f
+            return f.removingPercentEncoding
         }, print: { (str: String?) in
-            return Endpoint(path: str.map { [$0] } ?? [])
+            return Endpoint(path: str.flatMap {
+                $0.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed).map { [$0] }
+            } ?? [])
         }, description: .parameter("string?"))
     }
 
