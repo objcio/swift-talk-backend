@@ -248,11 +248,11 @@ extension String {
 }
 
 extension HTTPMethod {
-    init(_ value: NIOHTTP1.HTTPMethod) {
+    init?(_ value: NIOHTTP1.HTTPMethod) {
         switch value {
         case .GET: self = .get
         case .POST: self = .post
-        default: fatalError("Unsupported method: \(value)") // todo
+        default: return nil
         }
     }
 }
@@ -283,15 +283,21 @@ final class RouteHandler: ChannelInboundHandler {
             let cookies = header.headers["Cookie"].first.map {
                 $0.split(separator: ";").compactMap { $0.trimmingCharacters(in: .whitespaces).keyAndValue }
             } ?? []
-            let r = Request(path: path.split(separator: "/").map(String.init), query: query, method: .init(header.method), cookies: cookies)
             let env = NIOInterpreter.Deps(header: header, ctx: ctx, fileIO: fileIO, handler: self, manager: FileManager.default, resourcePaths: paths)
+
+            func notFound() {
+                log(error: "Not found: \(header.uri), method: \(header.method)")
+                _ = NIOInterpreter.write("Not found: \(header.uri)").run(env)
+            }
+            
+            guard let method = HTTPMethod(header.method) else { notFound(); return }
+            let r = Request(path: path.split(separator: "/").map(String.init), query: query, method: method, cookies: cookies)
             if let i = handle(r) {
                 if let c = i.run(env) {
                     postCont = (c, header)
                 }
             } else {
-                log(error: "Not found: \(header.uri)")
-                _ = NIOInterpreter.write("Not found: \(header.uri)").run(env)
+                notFound()
             }
 
         case .body(var b):

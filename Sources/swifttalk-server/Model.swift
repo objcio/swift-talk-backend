@@ -207,9 +207,7 @@ extension Collection {
     }
     
     func episodes(for user: UserData?) -> [Episode] {
-        // todo: this is inefficient (it shows up in instruments). We should have a dict mapping collection to episodes, lookup, and then filter using scoping.
         return allEpisodes.scoped(for: user)
-//        return Episode.scoped(for: user).filter { $0.collections.contains(id) }
     }
 }
 

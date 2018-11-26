@@ -17,10 +17,10 @@ enum Route: Equatable {
     case login(continue: String?)
     case logout
     case thankYou
-    case createSubscription(couponCode: String?) // .subscription(.create) (TODO should be a post)
-    case newSubscription(couponCode: String?) // .subscription(.new)
-    case accountProfile // account(.profile)
-    case accountBilling // account(.billing)
+    case createSubscription(couponCode: String?)
+    case newSubscription(couponCode: String?)
+    case accountProfile
+    case accountBilling
     case accountTeamMembers
     case accountDeleteTeamMember(UUID)
     case githubCallback(String, origin: String?)
