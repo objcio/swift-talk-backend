@@ -1,77 +1,19 @@
 //
-//  Database.swift
-//  Bits
+//  File.swift
+//  swifttalk-server
 //
-//  Created by Chris Eidhof on 08.08.18.
+//  Created by Florian Kugler on 26-11-2018.
 //
 
 import Foundation
 import PostgreSQL
 
 
-let postgresConfig = env.databaseURL.map { url in ConnInfo.raw(url) } ?? ConnInfo.params([
-    "host": env.databaseHost,
-    "dbname": env.databaseName,
-    "user": env.databaseUser,
-    "password": env.databasePassword,
-    "connect_timeout": "1",
-])
-
-let postgreSQL = try! PostgreSQL.Database(connInfo: postgresConfig)
-
-func withConnection<A>(_ x: (Connection) throws -> A) throws -> A {
-    let conn = try postgreSQL.makeConnection()
-    let result = try x(conn)
-    try conn.close()
-    return result
-}
-
-func lazyConnection() -> Lazy<Connection> {
-    return Lazy<Connection>({ () throws -> Connection in
-        return try postgreSQL.makeConnection()
-    }, cleanup: { conn in
-        try? conn.close()
-    })
-}
-
-protocol Insertable: Codable {
-    static var tableName: String { get }
-}
-
-extension Encodable {
-    var fieldNamesAndValues: [(String, NodeRepresentable)] {
-        let m = Mirror(reflecting: self)
-        return m.children.map { ($0.label!.snakeCased, $0.value as! NodeRepresentable) }
-    }
-}
-
-extension Decodable {    
-    static var fieldNames: [String] {
-        return try! PropertyNamesDecoder.decode(Self.self).map { $0.snakeCased }
-    }
-}
-
-extension CSRFToken: NodeRepresentable {
-    func makeNode(in context: PostgreSQL.Context?) throws -> PostgreSQL.Node {
-        return value.makeNode(in: context)
-    }
-}
-
-
-extension Connection {
-    @discardableResult
-    func execute<A>(_ query: Query<A>) throws -> A {
-        let node = try measure(message: "query: \(query.query)", { try execute(query.query, query.values) })
-//        print(query.query)
-        return query.parse(node)
-    }
-}
-
 
 public final class PostgresNodeDecoder: Decoder {
     private let node: PostgreSQL.Node
     private let transformKey: (String) -> String
-
+    
     public var codingPath: [CodingKey] { return [] }
     public var userInfo: [CodingUserInfoKey : Any] { return [:] }
     
@@ -88,7 +30,7 @@ public final class PostgresNodeDecoder: Decoder {
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
         return KeyedDecodingContainer(KDC(decoder: self, node: node, transformKey: transformKey))
     }
-
+    
     public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
         return UDC(node.array!, transformKey: transformKey)
     }
@@ -96,7 +38,7 @@ public final class PostgresNodeDecoder: Decoder {
     public func singleValueContainer() throws -> SingleValueDecodingContainer {
         return SVC(decoder: self, node: node)
     }
-
+    
     private struct KDC<Key: CodingKey>: KeyedDecodingContainerProtocol {
         private let decoder: Decoder
         private let node: PostgreSQL.Node
@@ -124,7 +66,7 @@ public final class PostgresNodeDecoder: Decoder {
             guard let value = node[transformKey(key.stringValue)] else { fatalError("key: \(key), container: \(node)") }
             return try value.converted(to: T.self)
         }
-
+        
         func decode(_ type: Bool.Type, forKey key: Key) throws -> Bool {
             return try decode(key)
         }
@@ -215,7 +157,7 @@ public final class PostgresNodeDecoder: Decoder {
         var count: Int? { return nodes.count }
         var isAtEnd: Bool { return currentIndex >= nodes.count }
         var currentIndex: Int = 0
-
+        
         init(_ nodes: [PostgreSQL.Node], transformKey: @escaping (String) -> String) {
             self.nodes = nodes
             self.transformKey = transformKey
@@ -309,11 +251,11 @@ public final class PostgresNodeDecoder: Decoder {
             self.decoder = decoder
             self.node = node
         }
-
+        
         func decode<T: NodeInitializable>() throws -> T {
             return try node.converted(to: T.self)
         }
-    
+        
         func decodeNil() -> Bool {
             return node.isNull
         }

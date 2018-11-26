@@ -44,26 +44,7 @@ extension Interpreter {
             }
         }
     }
-}
 
-struct NotLoggedInError: Error { }
-
-struct Context {
-    var path: String
-    var route: Route
-    var session: Session?
-}
-
-func requirePost<I: Interpreter>(csrf: CSRFToken, next: @escaping () throws -> I) throws -> I {
-    return I.withPostBody(do: { body in
-        guard body["csrf"] == csrf.stringValue else {
-            throw RenderingError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
-        }
-        return try next()
-    })
-}
-
-extension Interpreter {
     static func withPostBody(csrf: CSRFToken, do cont: @escaping ([String:String]) throws -> Self, or: @escaping () throws -> Self) -> Self {
         return .withPostBody(do: { body in
             guard body["csrf"] == csrf.stringValue else {
@@ -81,6 +62,34 @@ extension Interpreter {
             return try cont(body)
         })
     }
+}
+
+struct NotLoggedInError: Error { }
+
+struct Context {
+    var path: String
+    var route: Route
+    var session: Session?
+}
+
+struct Session {
+    var sessionId: UUID
+    var user: Row<UserData>
+    var masterTeamUser: Row<UserData>?
+    
+    var premiumAccess: Bool {
+        return user.data.premiumAccess || masterTeamUser?.data.premiumAccess == true
+    }
+}
+
+
+func requirePost<I: Interpreter>(csrf: CSRFToken, next: @escaping () throws -> I) throws -> I {
+    return I.withPostBody(do: { body in
+        guard body["csrf"] == csrf.stringValue else {
+            throw RenderingError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
+        }
+        return try next()
+    })
 }
 
 extension ProfileFormData {

@@ -70,7 +70,7 @@ struct TaskData: Insertable {
 }
 
 extension Task {
-    func schedule(at date: Date) throws -> Query<()> {
+    func schedule(at date: Date) -> Query<()> {
         let taskData = TaskData(date: date, task: self)
         return taskData.insertOrUpdate(uniqueKey: "key").map { _ in }
     }

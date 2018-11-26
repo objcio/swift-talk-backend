@@ -8,12 +8,6 @@
 import Foundation
 
 
-extension String {
-    var base64Encoded: String {
-        return data(using: .utf8)!.base64EncodedString()
-    }
-}
-
 var standardError = FileHandle.standardError
 
 infix operator ?!: NilCoalescingPrecedence
@@ -28,39 +22,6 @@ func flatten<A>(_ value: A??) -> A? {
     guard let x = value else { return nil }
     return x
 }
-
-func log(file: StaticString = #file, line: UInt = #line, _ e: Error) {
-    print("ERROR \(file):\(line) " + e.localizedDescription, to: &standardError)
-}
-
-func log(file: StaticString = #file, line: UInt = #line, error: String) {
-    print("ERROR \(file):\(line): \(error)", to: &standardError)
-}
-
-func log(file: StaticString = #file, line: UInt = #line, info: String) {
-    print("INFO \(file):\(line): \(info)")
-}
-
-@discardableResult
-func tryOrLog<A>(file: StaticString = #file, line: UInt = #line, _ message: String = "", _ f: () throws -> A) -> A? {
-    do {
-        return try f()
-    } catch {
-        log(file:file, line: line, error: "\(error.localizedDescription) — \(message)")
-        return nil
-    }
-}
-
-func myAssert(_ cond: @autoclosure () -> Bool, _ message: @autoclosure () -> String = "Assertion failure \(#file):\(#line) \(#function)", file: StaticString = #file, line: UInt = #line, method: StaticString = #function) {
-    if env.production {
-        guard !cond() else { return }
-        print(message(), to: &standardError)
-    } else {
-        assert(cond(), message, file: file, line: line)
-    }
-    
-}
-
 
 final class Lazy<A> {
     private let compute: () throws -> A
@@ -150,10 +111,11 @@ extension String {
         }).joined(separator: "_")
         return result
     }
-}
+    
+    var base64Encoded: String {
+        return data(using: .utf8)!.base64EncodedString()
+    }
 
-
-extension String {
     func drop(prefix: String) -> String? {
         guard hasPrefix(prefix) else { return nil }
         let remainderStart = self.index(startIndex, offsetBy: prefix.count)

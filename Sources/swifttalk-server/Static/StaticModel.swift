@@ -9,49 +9,8 @@ import Foundation
 import CommonMark
 
 
-protocol StaticLoadable: Codable {
-    static var jsonName: String { get }
-}
-
-struct Session {
-    var sessionId: UUID
-    var user: Row<UserData>
-    var masterTeamUser: Row<UserData>?
-}
-
-extension Session {
-    var premiumAccess: Bool {
-        return user.data.premiumAccess || masterTeamUser?.data.premiumAccess == true
-    }
-}
-
-let teamDiscount = 30
-
 struct Id<A>: RawRepresentable, Codable, Equatable, Hashable {
     var rawValue: String
-}
-
-struct CSRFToken: Codable, Equatable, Hashable {
-    var value: UUID
-    init(_ uuid: UUID) {
-        self.value = uuid
-    }
-    init(from decoder: Decoder) throws {
-        self.init(try UUID(from: decoder))
-    }
-    func encode(to encoder: Encoder) throws {
-	try value.encode(to: encoder)
-    }
-
-    var stringValue: String {
-        return value.uuidString
-    }
-}
-
-
-struct Guest: Codable, Equatable {
-    var name: String
-    // todo
 }
 
 struct Collaborator: Codable, Equatable {
@@ -59,10 +18,6 @@ struct Collaborator: Codable, Equatable {
     var name: String
     var url: URL
     var role: Role
-}
-
-extension Collaborator: StaticLoadable {
-    static var jsonName: String { return "collaborators.json" }
 }
 
 enum Role: String, Codable, Equatable, Comparable {
@@ -98,7 +53,7 @@ enum Role: String, Codable, Equatable, Comparable {
     }
 }
 
-struct Episode: Decodable, Equatable {
+struct Episode: Codable, Equatable {
     var collections: [Id<Collection>]
     var collaborators: [Id<Collaborator>]
     var media_duration: TimeInterval
@@ -111,10 +66,6 @@ struct Episode: Decodable, Equatable {
     var vimeo_id: Int
     var preview_vimeo_id: Int?
     var thumbnail_id: Int
-}
-
-extension Episode: StaticLoadable {
-    static var jsonName: String { return "episodes.json" }
 }
 
 struct Resource: Codable, Equatable {
@@ -195,10 +146,6 @@ struct Collection: Codable, Equatable {
     var position: Int
     var new: Bool
     var use_as_title_prefix: Bool
-}
-
-extension Collection: StaticLoadable {
-    static var jsonName: String { return "collections.json" }
 }
 
 extension Collection {

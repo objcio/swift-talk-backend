@@ -32,11 +32,29 @@ final class Static<A> {
     }  
 }
 
+protocol StaticLoadable: Codable {
+    static var jsonName: String { get }
+}
+
+extension Collaborator: StaticLoadable {
+    static var jsonName: String { return "collaborators.json" }
+}
+
+extension Episode: StaticLoadable {
+    static var jsonName: String { return "episodes.json" }
+}
+
+extension Collection: StaticLoadable {
+    static var jsonName: String { return "collections.json" }
+}
+
+
+
 // todo we could have a struct/func that caches/reads cached JSON data
 
 // todo: chris I think we can make the three functions below a lot simpler...
 
-func loadStaticData<A: Codable>(name: String) -> [A] {
+fileprivate func loadStaticData<A: Codable>(name: String) -> [A] {
     return tryOrLog { try withConnection { connection in
         guard
             let row = try connection.execute(Row<FileData>.staticData(jsonName: name)),
@@ -46,7 +64,7 @@ func loadStaticData<A: Codable>(name: String) -> [A] {
     }} ?? []
 }
 
-func cacheStaticData<A: Codable>(_ data: A, name: String) {
+fileprivate func cacheStaticData<A: Codable>(_ data: A, name: String) {
     tryOrLog { try withConnection { connection in
         guard
             let encoded = try? JSONEncoder().encode(data),
@@ -57,7 +75,7 @@ func cacheStaticData<A: Codable>(_ data: A, name: String) {
     }}
 }
 
-func refreshStaticData<A: StaticLoadable>(_ endpoint: RemoteEndpoint<[A]>, onCompletion: @escaping () -> ()) {
+fileprivate func refreshStaticData<A: StaticLoadable>(_ endpoint: RemoteEndpoint<[A]>, onCompletion: @escaping () -> ()) {
     URLSession.shared.load(endpoint) { result in
         tryOrLog { try withConnection { connection in
             guard let r = result else { log(error: "Failed loading static data \(A.jsonName)"); return }
@@ -85,23 +103,21 @@ extension Static {
 // Todo: this is a bit of a mess, we could look into this.
 
 
-fileprivate let episodesSource: Static<[Episode]> = .fromStaticRepo(onRefresh: releaseUnreleasedEpisodes)
-
-func releaseUnreleasedEpisodes(newEpisodes: [Episode]) {
-    let unreleased = newEpisodes.filter { $0.releaseAt > Date() }
-    for ep in unreleased {
-        do {
-            let query = try Task.releaseEpisode(number: ep.number).schedule(at: ep.releaseAt)
-            try lazyConnection().get().execute(query)
-        } catch {
-            log(error: "Failed to schedule release task for episode \(ep.number)")
-        }
+fileprivate let episodesSource: Static<[Episode]> = .fromStaticRepo(onRefresh: { newEpisodes in
+    for ep in newEpisodes where ep.releaseAt > Date() {
+        let query = Task.releaseEpisode(number: ep.number).schedule(at: ep.releaseAt)
+        tryOrLog("Failed to schedule release task for episode \(ep.number)") { try lazyConnection().get().execute(query) }
     }
-}
-
-fileprivate let theEpisodes: Observable<[Episode]> = episodesSource.observable.map { ($0 ?? []).sorted { $0.number > $1.number }}
+})
 
 fileprivate let collectionsSource: Static<[Collection]> = .fromStaticRepo()
+
+
+
+fileprivate let episodes: Observable<[Episode]> = episodesSource.observable.map { eps in
+    guard let e = eps else { return [] }
+    return e.sorted { $0.number > $1.number }
+}
 
 fileprivate let collections: Observable<[Collection]> = collectionsSource.observable.map { (colls: [Collection]?) in
     guard let c = colls else { return [] }
@@ -112,8 +128,6 @@ fileprivate let collectionsDict: Observable<[Id<Collection>:Collection]> = colle
     guard let c = colls else { return [:] }
     return Dictionary.init(c.map { ($0.id, $0) }, uniquingKeysWith: { a, b in a })
 }
-
-fileprivate let collaborators: Static<[Collaborator]> = Static<[Collaborator]>.fromStaticRepo()
 
 let hashedAssets: Static<(hashToFile: [String:String], fileToHash: [String:String])> = Static(sync: {
     // todo should be async...
@@ -131,13 +145,12 @@ let hashedAssets: Static<(hashToFile: [String:String], fileToHash: [String:Strin
     return (hashToFile: hashToFile, fileToHash: fileToHash)
 })
 
-fileprivate var collectionEpisodes: Observable<[Id<Collection>:[Episode]]> =
-    collections.flatMap { colls in
-        theEpisodes.map { eps in
-            return Dictionary(colls.map { c in
-                return (c.id, c.expensive_allEpisodes)
-            }, uniquingKeysWith: { x, _ in x })
-        }
+fileprivate var collectionEpisodes: Observable<[Id<Collection>:[Episode]]> = collections.flatMap { colls in
+    episodes.map { eps in
+        return Dictionary(colls.map { c in
+            return (c.id, c.expensive_allEpisodes)
+        }, uniquingKeysWith: { x, _ in x })
+    }
 }
 
 extension Collection {
@@ -145,6 +158,9 @@ extension Collection {
         return (episodesSource.observable.value ?? []).filter { $0.collections.contains(id) }
     }
 }
+
+
+fileprivate let collaborators: Static<[Collaborator]> = Static<[Collaborator]>.fromStaticRepo()
 
 fileprivate func loadTranscripts() -> [Transcript] {
     return tryOrLog { try withConnection { connection in
@@ -213,8 +229,9 @@ func verifyStaticData() {
 extension Plan {
     static var all: [Plan] { return plans.observable.value ?? [] }
 }
+
 extension Episode {
-    static var all: [Episode] { return theEpisodes.value }
+    static var all: [Episode] { return episodes.value }
 }
 
 extension Collection {
