@@ -30,7 +30,7 @@ timer.setEventHandler {
 }
 timer.resume()
 
-let s = MyServer(handle: { request in
+let server = Server(handle: { request in
     guard let route = Route(request) else { return nil }
     let sessionString = request.cookies.first { $0.0 == "sessionid" }?.1
     let sessionId = sessionString.flatMap { UUID(uuidString: $0) }
@@ -39,5 +39,4 @@ let s = MyServer(handle: { request in
         return try route.interpret(sessionId: sessionId, connection: conn)
     }
 }, resourcePaths: resourcePaths)
-try s.listen(port: env.port ?? 8765)
-
+try server.listen(port: env.port ?? 8765)

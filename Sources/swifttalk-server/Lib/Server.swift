@@ -318,7 +318,7 @@ final class RouteHandler: ChannelInboundHandler {
 
 
 
-struct MyServer {
+struct Server {
     let threadPool: BlockingIOThreadPool = {
         let t = BlockingIOThreadPool(numberOfThreads: 1)
         t.start()
