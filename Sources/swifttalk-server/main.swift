@@ -6,8 +6,6 @@ import PostgreSQL
 
 struct NoDatabaseConnection: Error { }
 
-let staticQueue = DispatchQueue(label: "Static data accessor queue")
-
 let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
 let resourcePaths = [currentDir.appendingPathComponent("assets"), currentDir.appendingPathComponent("node_modules")]
 
