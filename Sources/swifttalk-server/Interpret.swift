@@ -104,7 +104,7 @@ extension Interpreter {
     static func write(_ html: Node, status: HTTPResponseStatus = .ok) -> Self {
         return Self.write(html.htmlDocument(input: LayoutDependencies(hashedAssetName: { file in
             guard let remainder = file.drop(prefix: "/assets/") else { return file }
-            let rep = hashedAssets.observable.value?.fileToHash[remainder]
+            let rep = assets.fileToHash[remainder]
             return rep.map { "/assets/" + $0 } ?? file
         })), status: status)
     }
@@ -296,7 +296,7 @@ extension Route {
             }
         case let .staticFile(path: p):
             let name = p.map { $0.removingPercentEncoding ?? "" }.joined(separator: "/")
-            if let n = hashedAssets.observable.value?.hashToFile[name] {
+            if let n = assets.hashToFile[name] {
                 return I.writeFile(path: n, maxAge: 31536000)
             } else {
             	return .writeFile(path: name)
