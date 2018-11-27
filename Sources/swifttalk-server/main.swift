@@ -6,11 +6,13 @@ import PostgreSQL
 
 struct NoDatabaseConnection: Error { }
 
+let staticQueue = DispatchQueue(label: "Static data accessor queue")
+
 let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
 let resourcePaths = [currentDir.appendingPathComponent("assets"), currentDir.appendingPathComponent("node_modules")]
 
 try runMigrations()
-DispatchQueue.global().async { flushStaticData() }
+flushStaticData()
 
 let queue = DispatchQueue(label: "com.domain.app.timer")
 let timer = DispatchSource.makeTimerSource(queue: queue)
@@ -40,5 +42,4 @@ let s = MyServer(handle: { request in
     }
 }, resourcePaths: resourcePaths)
 try s.listen(port: env.port ?? 8765)
-
 

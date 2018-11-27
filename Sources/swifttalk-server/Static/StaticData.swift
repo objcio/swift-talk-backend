@@ -10,7 +10,7 @@ import Foundation
 final class Static<A> {
     typealias Compute = (_ callback: @escaping (A?) -> ()) -> ()
     private var compute: Compute
-    let observable: Observable<A?>
+    fileprivate let observable: Observable<A?>
     
     init(sync: @escaping () -> A?) {
         observable = Observable(sync())
@@ -29,79 +29,11 @@ final class Static<A> {
         compute { [weak self] x in
             self?.observable.send(x)
         }
-    }  
-}
-
-protocol StaticLoadable: Codable {
-    static var jsonName: String { get }
-}
-
-extension Collaborator: StaticLoadable {
-    static var jsonName: String { return "collaborators.json" }
-}
-
-extension Episode: StaticLoadable {
-    static var jsonName: String { return "episodes.json" }
-}
-
-extension Collection: StaticLoadable {
-    static var jsonName: String { return "collections.json" }
-}
-
-
-
-// todo we could have a struct/func that caches/reads cached JSON data
-
-// todo: chris I think we can make the three functions below a lot simpler...
-
-fileprivate func loadStaticData<A: Codable>(name: String) -> [A] {
-    return tryOrLog { try withConnection { connection in
-        guard
-            let row = try connection.execute(Row<FileData>.staticData(jsonName: name)),
-            let result = try? JSONDecoder().decode([A].self, from: row.data.value.data(using: .utf8)!)
-            else { return [] }
-        return result
-    }} ?? []
-}
-
-fileprivate func cacheStaticData<A: Codable>(_ data: A, name: String) {
-    tryOrLog { try withConnection { connection in
-        guard
-            let encoded = try? JSONEncoder().encode(data),
-            let json = String(data: encoded, encoding: .utf8)
-            else { log(error: "Unable to encode static data \(name)"); return }
-        let fd = FileData(repository: github.staticDataRepo, path: name, value: json)
-        tryOrLog("Error caching \(name) in database") { try connection.execute(fd.insertOrUpdate(uniqueKey: "key")) }
-    }}
-}
-
-fileprivate func refreshStaticData<A: StaticLoadable>(_ endpoint: RemoteEndpoint<[A]>, onCompletion: @escaping () -> ()) {
-    URLSession.shared.load(endpoint) { result in
-        tryOrLog { try withConnection { connection in
-            guard let r = result else { log(error: "Failed loading static data \(A.jsonName)"); return }
-            cacheStaticData(r, name: A.jsonName)
-            onCompletion()
-        }}
     }
 }
 
-extension Static {
-    static func fromStaticRepo<A: StaticLoadable>(onRefresh: @escaping ([A]) -> () = { _ in }) -> Static<[A]> {
-        return Static<[A]>(async: { cb in
-            let initial: [A] = loadStaticData(name: A.jsonName)
-            cb(initial)
-            let ep: RemoteEndpoint<[A]> = github.staticData()
-            refreshStaticData(ep) {
-                let data: [A] = loadStaticData(name: A.jsonName)
-                cb(data)
-                onRefresh(data)
-            }
-        })
-    }
-}
 
-// Todo: this is a bit of a mess, we could look into this.
-
+// Re-computable static sources
 
 fileprivate let episodesSource: Static<[Episode]> = .fromStaticRepo(onRefresh: { newEpisodes in
     for ep in newEpisodes where ep.releaseAt > Date() {
@@ -112,68 +44,16 @@ fileprivate let episodesSource: Static<[Episode]> = .fromStaticRepo(onRefresh: {
 
 fileprivate let collectionsSource: Static<[Collection]> = .fromStaticRepo()
 
+fileprivate let collaboratorsSource: Static<[Collaborator]> = Static<[Collaborator]>.fromStaticRepo()
 
-
-fileprivate let episodes: Observable<[Episode]> = episodesSource.observable.map { eps in
-    guard let e = eps else { return [] }
-    return e.sorted { $0.number > $1.number }
-}
-
-fileprivate let collections: Observable<[Collection]> = collectionsSource.observable.map { (colls: [Collection]?) in
-    guard let c = colls else { return [] }
-    return c.filter { !$0.expensive_allEpisodes.isEmpty && $0.public }.sorted(by:  { $0.new && !$1.new || $0.position > $1.position })
-}
-
-fileprivate let collectionsDict: Observable<[Id<Collection>:Collection]> = collections.map { (colls: [Collection]?) in
-    guard let c = colls else { return [:] }
-    return Dictionary.init(c.map { ($0.id, $0) }, uniquingKeysWith: { a, b in a })
-}
-
-fileprivate var collectionEpisodes: Observable<[Id<Collection>:[Episode]]> = collections.flatMap { colls in
-    episodes.map { eps in
-        return Dictionary(colls.map { c in
-            return (c.id, c.expensive_allEpisodes)
-        }, uniquingKeysWith: { x, _ in x })
-    }
-}
-
-extension Collection {
-    fileprivate var expensive_allEpisodes: [Episode] {
-        return (episodesSource.observable.value ?? []).filter { $0.collections.contains(id) }
-    }
-}
-
-
-fileprivate let collaborators: Static<[Collaborator]> = Static<[Collaborator]>.fromStaticRepo()
-
-fileprivate func loadTranscripts() -> [Transcript] {
-    return tryOrLog { try withConnection { connection in
-        let rows = try connection.execute(Row<FileData>.transcripts())
-        return rows.compactMap { f in Transcript(fileName: f.data.key, raw: f.data.value) }
-    }} ?? []
-}
-
-func refreshTranscripts(onCompletion: @escaping () -> ()) {
-    github.loadTranscripts.run { results in
-        tryOrLog { try withConnection { connection in
-            for f in results {
-                guard let contents = f.contents else { continue }
-                let fd = FileData(repository: f.file.repository, path: f.file.path, value: contents)
-                tryOrLog("Error caching \(f.file.url)") { try connection.execute(fd.insertOrUpdate(uniqueKey: "key")) }
-            }
-            onCompletion()
-        }}
-    }
-}
-
-fileprivate let transcripts: Static<[Transcript]> = Static(async: { cb in
+fileprivate let transcriptsSource: Static<[Transcript]> = Static(async: { cb in
     cb(loadTranscripts())
     refreshTranscripts {
         cb(loadTranscripts())
     }
 })
 
-fileprivate let plans: Static<[Plan]> = Static(async: { cb in
+fileprivate let plansSource: Static<[Plan]> = Static(async: { cb in
     let jsonName = "plans.json"
     let initial: [Plan] = loadStaticData(name: jsonName)
     cb(initial)
@@ -184,19 +64,17 @@ fileprivate let plans: Static<[Plan]> = Static(async: { cb in
     }
 })
 
-
 func flushStaticData() {
-    hashedAssets.flush()
     episodesSource.flush()
     collectionsSource.flush()
-    plans.flush()
-    collaborators.flush()
-    transcripts.flush()
+    plansSource.flush()
+    collaboratorsSource.flush()
+    transcriptsSource.flush()
     verifyStaticData()
 }
 
 func verifyStaticData() {
-//    myAssert(Plan.all.count >= 2)
+    //    myAssert(Plan.all.count >= 2)
     let episodes = Episode.all
     let colls = Collection.all
     for e in episodes {
@@ -207,29 +85,94 @@ func verifyStaticData() {
             assert(Collaborator.all.contains(where: { $0.id == c}), "\(c) \(e.collaborators) \(Collaborator.all)")
         }
     }
-    myAssert(transcripts.observable.value != nil)
+    myAssert(transcriptsSource.observable.value != nil)
 }
 
+
+// Observables
+
+fileprivate let sortedEpisodesO: Observable<[Episode]> = episodesSource.observable.map { newEpisodes in
+    guard let e = newEpisodes else { return [] }
+    return e.sorted { $0.number > $1.number }
+}
+
+fileprivate let sortedCollectionsO: Observable<[Collection]> = collectionsSource.observable.map { (colls: [Collection]?) in
+    guard let c = colls else { return [] }
+    return c.filter { !$0.expensive_allEpisodes.isEmpty && $0.public }.sorted(by: { $0.new && !$1.new || $0.position > $1.position })
+}
+
+fileprivate let collectionsDictO: Observable<[Id<Collection>:Collection]> = sortedCollectionsO.map { (colls: [Collection]?) in
+    guard let c = colls else { return [:] }
+    return Dictionary.init(c.map { ($0.id, $0) }, uniquingKeysWith: { a, b in a })
+}
+
+fileprivate var collectionEpisodesO: Observable<[Id<Collection>:[Episode]]> = sortedCollectionsO.flatMap { colls in
+    sortedEpisodesO.map { eps in
+        return Dictionary(colls.map { c in
+            return (c.id, c.expensive_allEpisodes)
+        }, uniquingKeysWith: { x, _ in x })
+    }
+}
+
+fileprivate var collaboratorsO: Observable<[Collaborator]> = collaboratorsSource.observable.map { $0 ?? [] }
+
+fileprivate var transcriptsO: Observable<[Transcript]> = transcriptsSource.observable.map { $0 ?? [] }
+
+fileprivate var plansO: Observable<[Plan]> = plansSource.observable.map { $0 ?? [] }
+
+extension Collection {
+    fileprivate var expensive_allEpisodes: [Episode] {
+        return (episodesSource.observable.value ?? []).filter { $0.collections.contains(id) }
+    }
+}
+
+
+
+// Atomic accessors — only these are used to create the public properties below
+
+extension Observable {
+    fileprivate var atomic: Atomic<A> {
+        let result = Atomic(value)
+        observe { newValue in
+            result.mutate { $0 = newValue }
+        }
+        return result
+    }
+}
+
+fileprivate var sortedEpisodes = sortedEpisodesO.atomic
+fileprivate var sortedCollections = sortedCollectionsO.atomic
+fileprivate var collectionsDict = collectionsDictO.atomic
+fileprivate var collectionEpisodes = collectionEpisodesO.atomic
+fileprivate var collaborators = collaboratorsO.atomic
+fileprivate var transcripts = transcriptsO.atomic
+fileprivate var plans = plansO.atomic
+
+
+
+// Public properties
+
 extension Plan {
-    static var all: [Plan] { return plans.observable.value ?? [] }
+    static var all: [Plan] { return plans.value }
 }
 
 extension Episode {
-    static var all: [Episode] { return episodes.value }
+    static var all: [Episode] { return sortedEpisodes.value }
 }
 
 extension Collection {
-    static var all: [Collection] { return collections.value }
+    static var all: [Collection] { return sortedCollections.value }
     static var allDict: [Id<Collection>:Collection] { return collectionsDict.value }
     var allEpisodes: [Episode] { return collectionEpisodes.value[id] ?? [] }
 }
 
 extension Collaborator {
-    static var all: [Collaborator] { return collaborators.observable.value ?? [] }
+    static var all: [Collaborator] { return collaborators.value }
 }
 
 extension Transcript {
     static func forEpisode(number: Int) -> Transcript? {
-        return (transcripts.observable.value ?? []).first { $0.number == number }
+        return transcripts.value.first { $0.number == number }
     }
 }
+

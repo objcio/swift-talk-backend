@@ -44,6 +44,24 @@ final class Lazy<A> {
     }
 }
 
+final class Atomic<A> {
+    private var queue = DispatchQueue(label: "Atomic serial queue")
+    private var _value: A
+    init(_ value: A) {
+        self._value = value
+    }
+    
+    var value: A {
+        return queue.sync { self._value }
+    }
+    
+    func mutate(_ transform: (inout A) -> ()) {
+        queue.sync {
+            transform(&self._value)
+        }
+    }
+}
+
 extension Foundation.FileHandle : TextOutputStream {
     public func write(_ string: String) {
         guard let data = string.data(using: .utf8) else { return }
