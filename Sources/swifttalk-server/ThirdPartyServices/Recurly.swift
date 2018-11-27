@@ -105,7 +105,7 @@ struct Subscription: Codable {
 extension Subscription {
     var activeMonths: UInt {
         guard let act = activated_at, let end = current_period_ends_at else { return 0 }
-        let toMinusOneDay = Calendar.current.date(byAdding: DateComponents(day: -1), to: end)!
+        let toMinusOneDay = end.addingTimeInterval(-24*60*60) // The above line causes a crash on Linux (2018-11-27)...
         let components = Calendar.current.dateComponents([.month], from: act, to: toMinusOneDay)
         return UInt(components.month!) + 1
     }
