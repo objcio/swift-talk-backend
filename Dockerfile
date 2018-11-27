@@ -1,4 +1,4 @@
-FROM norionomura/swift:42
+FROM norionomura/swift:421
 
 RUN apt-get update
 RUN apt-get install -y postgresql libpq-dev
