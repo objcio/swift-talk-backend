@@ -1040,7 +1040,7 @@ var CreditCard = function (_Component) {
           onSubmit: this.handleSubmit.bind(this),
           action: this.props.action },
         _react2.default.createElement('input', { name: '_method', value: this.props.method, type: 'hidden' }),
-        _react2.default.createElement('input', { name: 'authenticity_token', value: this.props.csrf, type: 'hidden' }),
+        _react2.default.createElement('input', { name: 'csrf', value: this.props.csrf, type: 'hidden' }),
         _react2.default.createElement('input', { ref: 'token_field', name: 'billing_info[token]', value: '', type: 'hidden' }),
         _react2.default.Children.count(this.props.children) ? _react2.default.createElement(
           'div',
