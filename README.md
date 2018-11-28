@@ -92,3 +92,7 @@ To build the stylesheets:
 # Deployment
 
 A heroku-based docker app (needs postgres as well).
+
+# Debugging Linux Bugs
+
+You can run a docker container from one of the intermediate steps. Then install screen and vim, and you have a small linux dev environment.
