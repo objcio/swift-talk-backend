@@ -45,10 +45,12 @@ final class Lazy<A> {
 }
 
 final class Atomic<A> {
-    private var queue = DispatchQueue(label: "Atomic serial queue")
+    private let queue = DispatchQueue(label: "Atomic serial queue")
     private var _value: A
-    init(_ value: A) {
+    private let _didSet: ((A) -> ())?
+    init(_ value: A, didSet: ((A) -> ())? = nil) {
         self._value = value
+        self._didSet = didSet
     }
     
     var value: A {
@@ -58,6 +60,7 @@ final class Atomic<A> {
     func mutate(_ transform: (inout A) -> ()) {
         queue.sync {
             transform(&self._value)
+            _didSet?(self._value)
         }
     }
 }
@@ -73,6 +76,21 @@ extension Scanner {
     var remainder: String {
         return NSString(string: string).substring(from: scanLocation)
     }
+}
+
+func zip<A,B>(_ a: A?, b: B?) -> (A,B)? {
+    guard let x = a, let y = b else { return nil }
+    return (x,y)
+}
+
+func zip<A,B,C>(_ a: A?, b: B?, c: C?) -> (A,B, C)? {
+    guard let x = a, let y = b, let z = c else { return nil }
+    return (x,y,z)
+}
+
+func zip<A,B,C,D>(_ a: A?, b: B?, _ c: C?, _ d: D?) -> (A,B,C,D)? {
+    guard let x = a, let y = b, let z = c, let q = d else { return nil }
+    return (x,y,z,q)
 }
 
 extension String {

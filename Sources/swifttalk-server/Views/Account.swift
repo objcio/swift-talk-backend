@@ -318,7 +318,7 @@ func unsubscribedBilling(context: Context) -> Node {
     ])
 }
 
-func billing(context: Context, user: Row<UserData>, subscription: Subscription?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo) -> Node {
+func billing(context: Context, user: Row<UserData>, subscription: Subscription?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo, redemptions: [Redemption]) -> Node {    
     // todo: reactivate subscription.
     let subscriptionInfo: [Node] = subscription.map { sub in
         [
@@ -339,8 +339,12 @@ func billing(context: Context, user: Row<UserData>, subscription: Subscription?,
                         Node.p([
                             Node.text(dollarAmount(cents: sub.totalAtRenewal)),
                             Node.text(" on "),
-                            .text(sub.current_period_ends_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "n/a")
+                            .text(sub.current_period_ends_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "n/a"),
                         ]), // todo team member add-on pricing, VAT
+                        redemptions.isEmpty ? .none : Node.p(classes: " input-note mt-", [
+                            Node.span(classes: "bold", [.text("Note:")]),
+                             Node.text("this price does not include any active coupons.")
+                        ]),
                         button(to: .cancelSubscription, csrf: user.data.csrf, text: "Cancel Subscription", classes: "color-invalid")
                     ])
                 ]) : .none,

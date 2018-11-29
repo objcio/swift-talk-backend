@@ -276,15 +276,18 @@ extension Route {
             let sess = try requireSession()
             var user = sess.user
             func renderBilling(recurlyToken: String) -> I {
-                return I.onSuccess(promise: sess.user.currentSubscription.promise, do: { sub in
-                    return I.onSuccess(promise: sess.user.invoices.promise, do: { invoices in
-                        let invoicesAndPDFs = invoices.map { invoice in
-                            (invoice, recurly.pdfURL(invoice: invoice, hostedLoginToken: recurlyToken))
-                        }
-                        return I.onSuccess(promise: sess.user.billingInfo.promise, do: { billingInfo in
-                            return I.write(billing(context: context, user: sess.user, subscription: sub, invoices: invoicesAndPDFs, billingInfo: billingInfo))
-                        })
-                    })
+                let invoicesAndPDFs = sess.user.invoices.promise.map { invoices in
+                    return invoices?.map { invoice in
+                        (invoice, recurly.pdfURL(invoice: invoice, hostedLoginToken: recurlyToken))
+                    }
+                }
+                let redemptions = sess.user.redemptions.promise.map { r in
+                    r?.filter { $0.state == "active" }
+                }
+                let promise = zip(sess.user.currentSubscription.promise, invoicesAndPDFs, redemptions, sess.user.billingInfo.promise).map(zip)
+                return I.onSuccess(promise: promise, do: { p in
+                    let (sub, invoicesAndPDFs, redemptions, billingInfo) = p
+                    return I.write(billing(context: context, user: sess.user, subscription: sub, invoices: invoicesAndPDFs, billingInfo: billingInfo, redemptions: redemptions))
                 })
             }
             guard let t = sess.user.data.recurlyHostedLoginToken else {
