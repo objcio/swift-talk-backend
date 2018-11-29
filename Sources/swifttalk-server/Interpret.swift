@@ -412,7 +412,7 @@ extension Route {
             }
         case .githubWebhook:
             // This could be done more fine grained, but this works just fine for now
-            flushStaticData()
+            refreshStaticData()
             return I.write("", status: .ok)
         }
     }

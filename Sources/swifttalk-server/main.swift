@@ -10,7 +10,7 @@ let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
 let resourcePaths = [currentDir.appendingPathComponent("assets"), currentDir.appendingPathComponent("node_modules")]
 
 try runMigrations()
-flushStaticData()
+refreshStaticData()
 
 let queue = DispatchQueue(label: "com.domain.app.timer")
 let timer = DispatchSource.makeTimerSource(queue: queue)

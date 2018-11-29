@@ -22,10 +22,10 @@ final class Static<A> {
     init(async: @escaping Compute) {
         observable = Observable(nil)
         self.compute = async
-        flush()
+        refresh()
     }
     
-    func flush() {
+    func refresh() {
         compute { [weak self] x in
             self?.observable.send(x)
         }
@@ -64,12 +64,12 @@ fileprivate let plansSource: Static<[Plan]> = Static(async: { cb in
     }
 })
 
-func flushStaticData() {
-    episodesSource.flush()
-    collectionsSource.flush()
-    plansSource.flush()
-    collaboratorsSource.flush()
-    transcriptsSource.flush()
+func refreshStaticData() {
+    episodesSource.refresh()
+    collectionsSource.refresh()
+    plansSource.refresh()
+    collaboratorsSource.refresh()
+    transcriptsSource.refresh()
     verifyStaticData()
 }
 
