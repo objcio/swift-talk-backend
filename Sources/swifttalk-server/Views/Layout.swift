@@ -218,18 +218,17 @@ func userHeader(_ context: Context) -> Node {
             ])
     }
     
-    let account = link(to: .accountProfile, text: "Account")
-    
     let items: [Node]
     if let s = context.session {
+        let account = link(to: .accountProfile, text: "Account")
         let logout = link(to: .logout, text: "Log out")
-        items = s.premiumAccess ? [account, logout] : [logout, subscribeButton]
+        items = s.premiumAccess ? [account, logout] : [account, subscribeButton]
     } else {
         items = [link(to: .login(continue: context.path), text: "Log in"), subscribeButton]
     }
     return .nav(classes: "flex-none self-center border-left border-1 border-color-gray-85 flex ml+", [
         .ul(classes: "flex items-stretch", items)
-        ])
+    ])
 }
 
 let footer = """
