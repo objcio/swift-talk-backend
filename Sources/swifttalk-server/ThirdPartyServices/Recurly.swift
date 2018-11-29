@@ -268,11 +268,36 @@ struct WebhookAccount: Codable {
     var account_code: UUID
 }
 
+enum TemporalUnit: String, Codable, Equatable {
+    case day
+    case week
+    case month
+    case year
+    
+    func prettyDuration(units: Int) -> String {
+        switch self {
+        case .day:
+            return units == 1 ? "1 day" : "\(units) days"
+        case .week:
+            return units == 1 ? "1 week" : "\(units) weeks"
+        case .month:
+            return units == 1 ? "1 month" : "\(units) months"
+        case .year:
+            return units == 1 ? "1 year" : "\(units) years"
+        }
+    }
+}
+
 struct Coupon: Codable {
-    enum DiscountType: String, Codable {
+    enum DiscountType: String, Codable, Equatable {
         case percent
         case dollars
         case freeTrial = "free_trial"
+    }
+    enum DurationType: String, Codable, Equatable {
+        case forever
+        case single_use
+        case temporal
     }
     var id: Int
     var coupon_code: String
@@ -282,7 +307,7 @@ struct Coupon: Codable {
     var discount_type: DiscountType
     var discount_in_cents: Amount?
     var free_trial_amount: Int?
-    var free_trial_unit: String?
+    var free_trial_unit: TemporalUnit?
     var discount_percent: Int?
     var invoice_description: String?
     var redeem_by_date: Date?
@@ -293,14 +318,46 @@ struct Coupon: Codable {
     var created_at: Date
     var updated_at: Date
     var deleted_at: Date?
-    var duration: String
-    var temporal_unit: String?
-    var temporal_amount: String?
+    var duration: DurationType
+    var temporal_unit: TemporalUnit?
+    var temporal_amount: Int?
     var applies_to_non_plan_charges: Bool
     var redemption_resource: String
     var max_redemptions_per_account: Int?
     var coupon_type: String
     var plan_codes: [String]
+}
+
+extension Coupon {
+    var billingDescription: String {
+        let prettyDuration: String
+        switch duration {
+        case .forever:
+            prettyDuration = "forever"
+        case .single_use:
+            prettyDuration = "once"
+        case .temporal:
+            guard let u = temporal_unit, let a = temporal_amount else {
+                prettyDuration = "unknown"
+                log(error: "temporal coupon without amount or unit \(self)")
+
+                break
+                
+            }
+            prettyDuration = "for \(u.prettyDuration(units: a))"
+        }
+
+        if discount_type == .percent, let p = discount_percent {
+            return "\(p)% off \(prettyDuration)"
+        } else if discount_type == .dollars, let d = discount_in_cents {
+            let am = dollarAmount(cents: d.usdCents)
+            return "\(am) off \(prettyDuration)"
+        } else if discount_type == .freeTrial, let a = free_trial_amount, let u = free_trial_unit {
+            return "Free trial for \(u.prettyDuration(units: a))"
+        } else {
+            return description
+        }
+    }
 }
 
 struct CreateSubscription: Codable, RootElement {

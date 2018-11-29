@@ -185,7 +185,7 @@ struct NewSubscriptionData: Codable {
         var description: String
         var discount_in_cents: Amount?
         var free_trial_amount: Int?
-        var free_trial_unit: String?
+        var free_trial_unit: TemporalUnit?
 
     }
     var action: String

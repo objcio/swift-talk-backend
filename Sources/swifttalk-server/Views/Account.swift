@@ -342,7 +342,7 @@ func billing(context: Context, user: Row<UserData>, subscription: Subscription?,
                         ]), // todo team member add-on pricing, VAT
                         redemptions.isEmpty ? .none : Node.p(classes: " input-note mt-", [
                             Node.span(classes: "bold", [.text("Note:")]),
-                             Node.text("this price does take into account your active coupons.")
+                             Node.text("this price does not take your active coupons into account.")
                         ]),
                         button(to: .cancelSubscription, csrf: user.data.csrf, text: "Cancel Subscription", classes: "color-invalid")
                     ])
@@ -358,10 +358,9 @@ func billing(context: Context, user: Row<UserData>, subscription: Subscription?,
                     Node.div(classes: "flex-auto color-gray-30 stack-", redemptions.map { x in
                         let (redemption, coupon) = x
                         let start = DateFormatter.fullPretty.string(from: redemption.created_at)
-                        print(x)
-                        return Node.div(classes: "stack--", [
-                            Node.span(classes: "color-blue", [Node.text(coupon.description)]),
-                            Node.p([Node.text("started at \(start)")])
+                        return Node.p([
+                            Node.text(coupon.billingDescription),
+                            Node.span(classes: "color-gray-60", [Node.text("started at \(start)")])
                         ])
                     })
                 ]),
