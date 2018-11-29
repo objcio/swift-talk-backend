@@ -93,6 +93,11 @@ func zip<A,B,C,D>(_ a: A?, b: B?, _ c: C?, _ d: D?) -> (A,B,C,D)? {
     return (x,y,z,q)
 }
 
+func zip<A,B,C,D,E>(_ a: A?, b: B?, _ c: C?, _ d: D?, e: E?) -> (A,B,C,D,E)? {
+    guard let x = a, let y = b, let z = c, let q = d, let r = e else { return nil }
+    return (x,y,z,q,r)
+}
+
 extension String {
     // This code is copied from the Swift Standard Library
     // https://github.com/apple/swift/blob/bd109bec92f52003edff30d458ea5b2a424c9aa0/stdlib/public/SDK/Foundation/JSONEncoder.swift#L148
