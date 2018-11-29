@@ -88,17 +88,6 @@ struct Github {
         return RemoteEndpoint(json: .get, url: url, accept: .githubRaw, headers: headers)
     }
     
-    var loadTranscripts: Promise<[(file: Github.File, contents: String?)]> {
-        return URLSession.shared.load(transcripts).flatMap { transcripts in
-            let files = transcripts ?? []
-            let promises = files
-                .map { (file: $0, endpoint: self.contents($0.url)) }
-                .map { (file: $0.file, promise: $0.endpoint.promise) }
-                .map { t in t.promise.map { (file: t.file, contents: $0) } }
-            return sequentially(promises)
-        }
-    }
-
     func contents(_ url: URL) -> RemoteEndpoint<String> {
         let headers = ["Authorization": "token \(accessToken)"]
         return RemoteEndpoint(.get, url: url, accept: .githubRaw, headers: headers) { String(data: $0, encoding: .utf8) }

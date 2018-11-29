@@ -31,7 +31,7 @@ func loadStaticData<A: Codable>(name: String) -> [A] {
             let result = try? JSONDecoder().decode([A].self, from: row.data.value.data(using: .utf8)!)
             else { return [] }
         return result
-        }} ?? []
+    }} ?? []
 }
 
 func cacheStaticData<A: Codable>(_ data: A, name: String) {
@@ -70,15 +70,26 @@ extension Static {
     }
 }
 
-func loadTranscripts() -> [Transcript] {
+func queryTranscripts() -> [Transcript] {
     return tryOrLog { try withConnection { connection in
         let rows = try connection.execute(Row<FileData>.transcripts())
         return rows.compactMap { f in Transcript(fileName: f.data.key, raw: f.data.value) }
-        }} ?? []
+    }} ?? []
+}
+
+private func loadTranscripts() -> Promise<[(file: Github.File, contents: String?)]> {
+    return URLSession.shared.load(github.transcripts).flatMap { transcripts in
+        let files = transcripts ?? []
+        let promises = files
+            .map { (file: $0, endpoint: github.contents($0.url)) }
+            .map { (file: $0.file, promise: URLSession.shared.load($0.endpoint)) }
+            .map { t in t.promise.map { (file: t.file, contents: $0) } }
+        return sequentially(promises)
+    }
 }
 
 func refreshTranscripts(onCompletion: @escaping () -> ()) {
-    github.loadTranscripts.run { results in
+    loadTranscripts().run { results in
         tryOrLog { try withConnection { connection in
             for f in results {
                 guard let contents = f.contents else { continue }
@@ -86,7 +97,7 @@ func refreshTranscripts(onCompletion: @escaping () -> ()) {
                 tryOrLog("Error caching \(f.file.url)") { try connection.execute(fd.insertOrUpdate(uniqueKey: "key")) }
             }
             onCompletion()
-            }}
+        }}
     }
 }
 
