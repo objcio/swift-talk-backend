@@ -137,7 +137,7 @@ extension LayoutConfig {
         ] + structured)
         let logo = Node.link(to: URL(string: "https://www.objc.io")!, attributes: ["class": "flex-none outline-none mr++ flex"], [
             .inlineSvg(path: "logo.svg", attributes: ["class": "block logo logo--themed height-auto"]), // todo scaling parameter?
-            .h1(attributes: ["class":"visuallyhidden"], [.text("objc.io")]) // todo class
+            .h1(attributes: ["class":"visuallyhidden"], [.text("objc.io")])
         ] as [Node])
         let navigation = Node.nav(attributes: ["class": "flex flex-grow"], [
             .ul(attributes: ["class": "flex flex-auto"], navigationItems.map { l in
@@ -160,7 +160,7 @@ extension LayoutConfig {
         ])
         let body: Node = .body(attributes: ["class": "theme-" + theme], [ // todo theming classes?
             header,
-            .main(contents), // todo sidenav
+            .main(contents),
         ] + preFooter + [
             .raw(footer)
         ] + footerContent)
@@ -184,25 +184,25 @@ extension LayoutConfig {
         let body: Node = .body(attributes: ["class": "theme-" + theme], [ // todo theming classes?
             .header(attributes: ["class": "site-header"], [
         		.div(classes: "site-header__nav flex", [
-                    .div(classes: "container-h flex-grow flex items-center", [
+                    .div(classes: "container-h flex-grow flex items-center height-3", [
                         .link(to: .home, attributes: ["class": "block flex-none outline-none mr++"], [
-                            .inlineSvg(path: "logo.svg", attributes: ["class": "logo ms-2"]), // todo scaling parameter?
-                            .h1(attributes: ["class":"visuallyhidden"], [.text("objc.io")]) // todo class
+                            .inlineSvg(path: "logo.svg", classes: "logo height-auto"),
+                            .h1(classes: "visuallyhidden", [.text("objc.io")])
                         ] as [Node]),
                     ])
                 ])
             ]),
-            .main(contents), // todo sidenav
-            ] + preFooter + [
-                Node.footer([
-                    Node.div(classes: "container-h pv", [
-                        Node.div(classes: "ms-1 color-gray-60", [
-                            Node.a(classes: linkClasses, [Node.text("Email")], href: "mailto:mail@objc.io"),
-                            Node.link(to: URL(string: "https://www.objc.io/imprint")!, classes: linkClasses, ["Imprint"])
-                        ])
+            .main(contents),
+        ] + preFooter + [
+            Node.footer([
+                Node.div(classes: "container-h pv", [
+                    Node.div(classes: "ms-1 color-gray-60", [
+                        Node.a(classes: linkClasses, [Node.text("Email")], href: "mailto:mail@objc.io"),
+                        Node.link(to: URL(string: "https://www.objc.io/imprint")!, classes: linkClasses, ["Imprint"])
                     ])
                 ])
-            ] + footerContent)
+            ])
+        ] + footerContent)
         return Node.html(attributes: ["lang": "en"], [head, body])
     }
 }
