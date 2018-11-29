@@ -7,13 +7,15 @@
 
 import Foundation
 
-func accountContainer(_ node: Node, forRoute: Route) -> Node {
-    let items: [(Route, title: String)] = [
+func accountContainer(context: Context, content: Node, forRoute: Route) -> Node {
+    var items: [(Route, title: String)] = [
         (Route.accountProfile, title: "Profile"),
         (Route.accountBilling, title: "Billing"),
-        (Route.accountTeamMembers, title: "Team Members"),
         (Route.logout, title: "Logout"),
     ]
+    if context.session?.selfPremiumAccess == true {
+        items.insert((Route.accountTeamMembers, title: "Team Members"), at: 2)
+    }
     return .div(classes: "container pb0", [
         .div(classes: "cols m-|stack++", [
             .div(classes: "col width-full m+|width-1/4", [
@@ -21,7 +23,7 @@ func accountContainer(_ node: Node, forRoute: Route) -> Node {
                     Node.link(to: item.0, classes: "submenu__item" + (item.0 == forRoute ? "is-active" : ""), attributes: [:], [.text(item.title)])
                 })
             ]),
-            .div(classes: "col width-full m+|width-3/4", [node])
+            .div(classes: "col width-full m+|width-3/4", [content])
         ])
     ])
 }
@@ -242,7 +244,7 @@ extension ReactComponent where A == PaymentViewData {
 func updatePaymentView(context: Context, data: PaymentViewData) -> Node {
     return LayoutConfig(context: context, contents: [
         pageHeader(.link(header: "Account", backlink: .home, label: "")),
-        accountContainer(Node.div([
+        accountContainer(context: context, content: Node.div([
             heading("Update Payment Method"),
             .div(classes: "container", [
                ReactComponent.creditCard.build(data)
@@ -291,8 +293,32 @@ fileprivate func value(text: String, classes: Class = "") -> Node {
     return Node.span(classes: "flex-auto color-gray-30" + classes, [.text(text)])
 }
 
-func billing(context: Context, user: Row<UserData>, subscription: Subscription?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo) -> Node {
+func billingLayout(context: Context, content: [Node]) -> Node {
+    return LayoutConfig(context: context, contents: [
+        pageHeader(.link(header: "Account", backlink: .home, label: "")),
+        accountContainer(context: context, content: Node.div(classes: "stack++", content), forRoute: .accountBilling)
+    ]).layout
+}
 
+func teamMemberBilling(context: Context) -> Node {
+    return billingLayout(context: context, content: [
+        Node.div(classes: "c-text", [
+            heading("Billing"),
+            Node.p([.text("You have a team member account, which doesn't have its own billing details. To manage billing details and to download invoices, please contact the person managing the organization account with the GitHub handle \"\(context.session?.masterTeamUser?.data.githubLogin ?? "<unknown>")\".")])
+        ])
+    ])
+}
+
+func unsubscribedBilling(context: Context) -> Node {
+    return billingLayout(context: context, content: [
+        Node.div(classes: "c-text", [
+            heading("Billing"),
+            Node.p([.text("You haven't subscribed yet. Please use the Subscribe button in the upper right to start your Swift Talk subscription.")])
+        ])
+    ])
+}
+
+func billing(context: Context, user: Row<UserData>, subscription: Subscription?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo) -> Node {
     // todo: reactivate subscription.
     let subscriptionInfo: [Node] = subscription.map { sub in
         [
@@ -341,20 +367,11 @@ func billing(context: Context, user: Row<UserData>, subscription: Subscription?,
         ])
     ]
    
-    
-     // todo team members?
-    return LayoutConfig(context: context, contents: [        
-        pageHeader(.link(header: "Account", backlink: .home, label: "")),
-        accountContainer(Node.div(classes: "stack++", [
-            Node.div(
-                subscriptionInfo
-            ),
-            Node.div(
-                billingInfo.show
-            ),
-            Node.div(invoicesView(context: context, user: user, invoices: invoices))
-        ]), forRoute: .accountBilling)
-    ]).layout
+    return billingLayout(context: context, content: [
+        Node.div(subscriptionInfo),
+        Node.div(billingInfo.show),
+        Node.div(invoicesView(context: context, user: user, invoices: invoices))
+    ])
 }
 
 func accountForm(context: Context) -> Form<ProfileFormData> {
@@ -363,7 +380,7 @@ func accountForm(context: Context) -> Form<ProfileFormData> {
     return form.wrap { node in
         LayoutConfig(context: context, contents: [
             pageHeader(.link(header: "Account", backlink: .home, label: "")),
-            accountContainer(node, forRoute: .accountProfile)
+            accountContainer(context: context, content: node, forRoute: .accountProfile)
         ]).layout
     }
 }
@@ -413,7 +430,7 @@ func teamMembers(context: Context, csrf: CSRFToken, addForm: Node, teamMembers: 
 
     return LayoutConfig(context: context, contents: [
         pageHeader(HeaderContent.other(header: "Account", blurb: nil, extraClasses: "ms4 pb")),
-        accountContainer(Node.div(classes: "stack++", [
+        accountContainer(context: context, content: Node.div(classes: "stack++", [
             Node.div(content)
         ]), forRoute: .accountTeamMembers)
     ]).layout

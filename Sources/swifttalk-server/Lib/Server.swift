@@ -93,6 +93,18 @@ extension Interpreter {
         })
     }
     
+    static func onSuccess<A>(promise: Promise<A?>, file: StaticString = #file, line: UInt = #line, message: String = "Something went wrong.", do cont: @escaping (A) throws -> Self, or: @escaping () throws -> Self) -> Self {
+        return onComplete(promise: promise, do: { value in
+            catchAndDisplayError {
+                if let v = value {
+                    return try cont(v)
+                } else {
+                    return try or()
+                }
+            }
+        })
+    }
+    
     static func withPostBody(do cont: @escaping ([String:String]) throws -> Self) -> Self {
         return .withPostBody { dict in
             return catchAndDisplayError { try cont(dict) }

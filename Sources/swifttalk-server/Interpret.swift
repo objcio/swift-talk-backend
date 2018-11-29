@@ -24,7 +24,15 @@ struct Session {
     var masterTeamUser: Row<UserData>?
     
     var premiumAccess: Bool {
-        return user.data.premiumAccess || masterTeamUser?.data.premiumAccess == true
+        return selfPremiumAccess || teamMemberPremiumAccess
+    }
+    
+    var teamMemberPremiumAccess: Bool {
+        return masterTeamUser?.data.premiumAccess == true
+    }
+    
+    var selfPremiumAccess: Bool {
+        return user.data.premiumAccess
     }
 }
 
@@ -272,10 +280,6 @@ extension Route {
                     return I.write(f.render(result, u.data.csrf, errors))
                 }
             })
-//                return I.onComplete(promise: sess.user.monthsOfActiveSubscription, do: { num in
-//                    let d = try c.get().execute(sess.user.downloads).count
-//                    return .write("Number of months of subscription: \(num ?? 0), downloads: \(d)")
-//                })
         case .accountBilling:
             let sess = try requireSession()
             var user = sess.user
@@ -292,11 +296,17 @@ extension Route {
                 })
             }
             guard let t = sess.user.data.recurlyHostedLoginToken else {
-                return I.onSuccess(promise: sess.user.account.elPromise) { acc in
+                return I.onSuccess(promise: sess.user.account.elPromise, do: { acc in
                     user.data.recurlyHostedLoginToken = acc.hosted_login_token
                     try c.get().execute(user.update())
                     return renderBilling(recurlyToken: acc.hosted_login_token)
-                }
+                }, or: {
+                    if sess.teamMemberPremiumAccess {
+                        return I.write(teamMemberBilling(context: context))
+                    } else {
+                        return I.write(unsubscribedBilling(context: context))
+                    }
+                })
             }
             return renderBilling(recurlyToken: t)
         case .cancelSubscription:
@@ -370,7 +380,7 @@ extension Route {
             let sess = try requireSession()
             let csrf = sess.user.data.csrf
             return I.withPostBody(do: { params in
-                guard let formData = addTeamMemberForm().parse(csrf: csrf, params) else { return try teamMembersResponse(sess, csrf: csrf) }
+                guard let formData = addTeamMemberForm().parse(csrf: csrf, params), sess.selfPremiumAccess else { return try teamMembersResponse(sess, csrf: csrf) }
                 let promise = github.profile(username: formData.githubUsername).elPromise
                 return I.onComplete(promise: promise) { profile in
                     guard let p = profile else {
