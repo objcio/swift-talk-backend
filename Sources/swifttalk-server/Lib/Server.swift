@@ -343,16 +343,20 @@ struct Server {
         t.start()
         return t
     }()
-    let fileIO: NonBlockingFileIO
-    let handle: (Request) -> NIOInterpreter?
-    let paths: [URL]
+    private let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+    private let fileIO: NonBlockingFileIO
+    private let handle: (Request) -> NIOInterpreter?
+    private let paths: [URL]
+
     init(handle: @escaping (Request) -> NIOInterpreter?, resourcePaths: [URL]) {
         fileIO = NonBlockingFileIO(threadPool: threadPool)
         self.handle = handle
         paths = resourcePaths
     }
     
-    let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+    func execute(_ f: @escaping () -> ()) {
+        group.next().execute(f)
+    }
     
     func listen(port: Int = 8765) throws {
         let reuseAddr = ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET),
