@@ -93,6 +93,11 @@ To build the stylesheets:
 
 A heroku-based docker app (needs postgres as well).
 
+If you get a "basic auth" error: heroku container:login
+heroku container:push web
+heroku container:release web
+
+
 # Debugging Linux Bugs
 
 You can run a docker container from one of the intermediate steps. Then install screen and vim, and you have a small linux dev environment.
