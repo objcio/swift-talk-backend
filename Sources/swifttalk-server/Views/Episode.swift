@@ -252,15 +252,16 @@ extension Episode {
             ]
         }
         let downloadImage = Node.inlineSvg(path: "icon-resource-download.svg", classes: "block icon-40")
+        let downloadAllowed = downloadStatus.allowed || context.session?.user.data.admin == true
         let download: [[Node]] = [
             [
                 Node.div(classes: "flex-none mr-", [
-                    downloadStatus.allowed || context.session?.user.data.admin == true
+                    downloadAllowed
                         ? Node.link(to: Route.download(id), classes: "block bgcolor-orange radius-5 hover-bgcolor-blue", [downloadImage])
                         : Node.span(classes: "block bgcolor-orange radius-5 cursor-not-allowed", [downloadImage])
                 ]),
                 Node.div(classes: "ms-1 lh-125", [
-                    smallH4(.text("Episode Video"), link: downloadStatus.allowed ? Route.download(id) : nil),
+                    smallH4(.text("Episode Video"), link: downloadAllowed ? Route.download(id) : nil),
                     .p(classes: "color-gray-50", [.text(downloadStatus.text)])
                 ])
             ]
