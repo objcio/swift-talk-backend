@@ -255,7 +255,7 @@ extension Episode {
         let download: [[Node]] = [
             [
                 Node.div(classes: "flex-none mr-", [
-                    downloadStatus.allowed
+                    downloadStatus.allowed || context.session?.user.data.admin == true
                         ? Node.link(to: Route.download(id), classes: "block bgcolor-orange radius-5 hover-bgcolor-blue", [downloadImage])
                         : Node.span(classes: "block bgcolor-orange radius-5 cursor-not-allowed", [downloadImage])
                 ]),
