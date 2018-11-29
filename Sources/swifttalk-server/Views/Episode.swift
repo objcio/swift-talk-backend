@@ -264,7 +264,7 @@ extension Episode {
                     .p(classes: "color-gray-50", [.text(downloadStatus.text)])
                 ])
             ]
-        ] // todo
+        ]
         let resourceItems: [[Node]] = episodeResource + download
         let resources: [Node] = canWatch ? [
             Node.section(classes: "pb++", [
@@ -366,12 +366,38 @@ extension Episode {
             ])
         ]
         
+        let progressCode: [Node] = (context.session?.user.data.csrf).map { token in
+            return [
+                Node.script(src: "https://player.vimeo.com/api/player.js"),
+                Node.script(code: """
+                    var player = new Vimeo.Player(document.querySelector('iframe'));
+                    var playedUntil = 0
+                    function postProgress(time) {
+                        $.post(\"\(Route.playProgress(id).absoluteString)\", {
+                            \"csrf\": \"\(token.stringValue)\",
+                            \"progress": Math.floor(time)
+                        }, function(data, status) {
+                            console.log(data);
+                        });
+                    }
+                    player.on('timeupdate', function(data) {
+                        if (data.seconds > playedUntil + 10) {
+                            playedUntil = data.seconds
+                            console.log(data.seconds);
+                            postProgress(playedUntil);
+                        }
+                    });
+                    """
+                )
+            ]
+        } ?? []
+        
         let main: Node = Node.div(classes: "js-episode", [
             headerAndPlayer,
             .div(classes: "bgcolor-white l+|pt++", [
                 .div(classes: "container", canWatch ? transcriptAvailable : noTranscript)
             ])
-        ])
+        ] + progressCode)
         
         let data = StructuredData(title: title, description: synopsis, url: Route.episode(id).url, image: posterURL(width: 600, height: 338), type: .video(duration: Int(media_duration), releaseDate: releaseAt))
         return LayoutConfig(context: context, contents: [main, scroller] + (context.session.premiumAccess ? [] : [subscribeBanner()]), footerContent: [Node.raw(transcriptLinks)], structuredData: data).layout

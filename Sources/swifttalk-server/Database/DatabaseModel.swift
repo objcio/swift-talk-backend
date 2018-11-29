@@ -138,3 +138,11 @@ extension UserData {
     }
     
 }
+
+struct PlayProgressData: Insertable {
+    var userId: UUID
+    var episodeNumber: Int
+    var progress: Int
+    
+    static let tableName = "play_progress"
+}

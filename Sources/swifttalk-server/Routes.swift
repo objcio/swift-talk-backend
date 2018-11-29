@@ -27,6 +27,7 @@ enum Route: Equatable {
     case collection(Id<Collection>)
     case episode(Id<Episode>)
     case download(Id<Episode>)
+    case playProgress(Id<Episode>)
     case staticFile(path: [String])
     case recurlyWebhook
     case githubWebhook
@@ -83,6 +84,11 @@ private let episode: Router<Route> = (Router<()>.c("episodes") / .string()).tran
 
 private let episodeDownload: Router<Route> = (Router<()>.c("episodes") / .string() / Router<()>.c("download")).transform({ Route.download(Id(rawValue: $0.0)) }, { r in
     guard case let .download(num) = r else { return nil }
+    return (num.rawValue, ())
+})
+
+private let episodePlayProgress: Router<Route> = (Router<()>.c("episodes") / .string() / Router<()>.c("play-progress")).transform({ Route.playProgress(Id(rawValue: $0.0)) }, { r in
+    guard case let .playProgress(num) = r else { return nil }
     return (num.rawValue, ())
 })
 
@@ -157,6 +163,7 @@ private let otherRoutes: [Router<Route>] = [
     assetsRoute,
     .c("collections", .collections),
     episodeDownload,
+    episodePlayProgress,
     episode,
     collection,
     .c("promo") / (Router.string().transform(Route.promoCode, { r in

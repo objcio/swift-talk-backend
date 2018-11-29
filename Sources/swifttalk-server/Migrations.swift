@@ -155,5 +155,14 @@ fileprivate let migrations: [String] = [
     ALTER TABLE users
         ADD COLUMN IF NOT EXISTS csrf uuid DEFAULT public.uuid_generate_v4() NOT NULL;
     """,
+    """
+    CREATE TABLE IF NOT EXISTS play_progress (
+        id uuid DEFAULT public.uuid_generate_v4() PRIMARY KEY,
+        user_id uuid REFERENCES users NOT NULL,
+        episode_number integer NOT NULL,
+        progress integer DEFAULT 0 NOT NULL,
+        UNIQUE (user_id, episode_number)
+    );
+    """,
 ]
 

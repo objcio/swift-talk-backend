@@ -434,6 +434,15 @@ extension Route {
             // This could be done more fine grained, but this works just fine for now
             refreshStaticData()
             return I.write("", status: .ok)
+        case let .playProgress(episodeId):
+            guard let s = try? requireSession() else { return I.write("", status: .ok)}
+            return I.withPostBody(csrf: s.user.data.csrf) { body in
+                if let progress = body["progress"].flatMap(Int.init), let ep = Episode.all.first(where: { $0.id == episodeId }) {
+                    let data = PlayProgressData.init(userId: s.user.id, episodeNumber: ep.number, progress: progress)
+                    try c.get().execute(data.insertOrUpdate(uniqueKey: "user_id, episode_number"))
+                }
+                return I.write("", status: .ok)
+            }
         }
     }
 }

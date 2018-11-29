@@ -303,7 +303,11 @@ extension ANode {
             "src": src
 		], children: []))
     }
-    
+
+    static func script(code: String) -> ANode {
+        return .node(El(name: "script", children: [ANode.raw(code)]))
+    }
+
     static func stylesheet(media: String = "all", href: String) -> Node {
         let attributes = [
             "rel": "stylesheet",
