@@ -198,7 +198,6 @@ extension Episode {
     func show(watched: Bool = false, downloadStatus: DownloadStatus, context: Context) -> Node {
         let canWatch = !subscription_only || context.session.premiumAccess
         let guests_: [Node] = [] // todo
-        // todo: subscribe banner
         
         let scroller =  // scroller
             Node.aside(attributes: ["class": "bgcolor-pale-gray pt++ js-scroller"], [
