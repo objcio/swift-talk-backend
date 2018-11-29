@@ -44,7 +44,7 @@ struct LayoutConfig {
     var context: Context
     var includeRecurlyJS: Bool = false
     
-    init(context: Context, pageTitle: String = "objc.io", contents: [Node], theme: String = "default", preFooter: [Node] = [], footerContent: [Node] = [], structuredData: StructuredData? = nil, csrf: String? = nil, includeRecurlyJS: Bool = false) {
+    init(context: Context, pageTitle: String = "objc.io", contents: [Node], theme: String = "default", preFooter: [Node] = [], footerContent: [Node] = [], structuredData: StructuredData? = nil, includeRecurlyJS: Bool = false) {
         self.context = context
         self.pageTitle = pageTitle
         self.contents = contents
@@ -115,9 +115,6 @@ let navigationItems: [(LinkTarget, String)] = [
 
 extension LayoutConfig {
     // todo: we can probably not include the CSRF token, I think it might only be needed in the React components (and we can pass it explicitly there)
-    var csrf: [Node] {
-        return (context.session?.user.data.csrf).map { [Node.meta(attributes: ["name": "csrf-token", "content": "'\($0.stringValue)'"])] } ?? []
-    }
     var structured: [Node] {
         return structuredData.map { $0.nodes } ?? []
     }
@@ -127,7 +124,7 @@ extension LayoutConfig {
             .meta(attributes: ["charset": "utf-8"]),
             .meta(attributes: ["http-equiv": "X-UA-Compatible", "content": "IE=edge"]),
             .meta(attributes: ["name": "viewport", "content": "'width=device-width, initial-scale=1, user-scalable=no'"]),
-        ] + csrf + [
+        ] + [
             .title(pageTitle),
             // todo rss+atom links
             .hashedStylesheet(href: "/assets/stylesheets/application.css"),
@@ -172,7 +169,6 @@ extension LayoutConfig {
             .meta(attributes: ["charset": "utf-8"]),
             .meta(attributes: ["http-equiv": "X-UA-Compatible", "content": "IE=edge"]),
             .meta(attributes: ["name": "viewport", "content": "'width=device-width, initial-scale=1, user-scalable=no'"]),
-        ] + csrf + [
             .title(pageTitle),
             // todo rss+atom links
             .hashedStylesheet(href: "/assets/stylesheets/application.css"),
