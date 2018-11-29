@@ -55,6 +55,14 @@ extension Interpreter {
     }
 }
 
+extension RemoteEndpoint {
+    var elPromise: Promise<A?> {
+        return Promise { cb in
+            URLSession.shared.load(self) { result in server.execute { cb(result) } }
+        }
+    }
+}
+
 extension Route {
     func interpret<I: Interpreter>(sessionId: UUID?, connection c: Lazy<Connection>) throws -> I {
         let session: Session?
@@ -92,7 +100,7 @@ extension Route {
     
         func newSubscription(couponCode: String?, csrf: CSRFToken, errs: [String]) throws -> I {
             if let c = couponCode {
-                return I.onSuccess(promise: recurly.coupon(code: c).promise, do: { coupon in
+                return I.onSuccess(promise: recurly.coupon(code: c).elPromise, do: { coupon in
                     return try I.write(newSub(context: context, csrf: csrf, coupon: coupon, errs: errs))
                 })
             } else {
@@ -134,7 +142,7 @@ extension Route {
                 }
                 let plan = try Plan.all.first(where: { $0.plan_code == planId }) ?! RenderingError.init(privateMessage: "Illegal plan: \(planId)", publicMessage: "Couldn't find the plan you selected.")
                 let cr = CreateSubscription.init(plan_code: plan.plan_code, currency: "USD", coupon_code: couponCode, account: .init(account_code: s.user.id, email: s.user.data.email, billing_info: .init(token_id: token)))
-                return I.onSuccess(promise: recurly.createSubscription(cr).promise, message: "Something went wrong, please try again", do: { sub_ in
+                return I.onSuccess(promise: recurly.createSubscription(cr).elPromise, message: "Something went wrong, please try again", do: { sub_ in
                     switch sub_ {
                     case .errors(let messages):
                         log(RecurlyErrors(messages))
@@ -178,10 +186,10 @@ extension Route {
             try c.get().execute(s.user.deleteSession(s.sessionId))
             return I.redirect(to: .home)
         case .githubCallback(let code, let origin):
-            let loadToken = github.getAccessToken(code).promise.map({ $0?.access_token })
+            let loadToken = github.getAccessToken(code).elPromise.map({ $0?.access_token })
             return I.onComplete(promise: loadToken, do: { token in
                 let t = try token ?! RenderingError(privateMessage: "No github access token", publicMessage: "Couldn't access your Github profile.")
-                let loadProfile = Github(accessToken: t).profile.promise
+                let loadProfile = Github(accessToken: t).profile.elPromise
                 return I.onSuccess(promise: loadProfile, message: "Couldn't access your Github profile", do: { profile in
                     let uid: UUID
                     if let user = try c.get().execute(Row<UserData>.select(githubId: profile.id)) {
@@ -215,7 +223,7 @@ extension Route {
             return .write(Route.siteMap)
         case .promoCode(let str):
             // todo what if we can't find a coupon, or if it's not redeemable
-            return I.onSuccess(promise: recurly.coupon(code: str).promise, message: "Can't find that coupon.", do: { coupon in
+            return I.onSuccess(promise: recurly.coupon(code: str).elPromise, message: "Can't find that coupon.", do: { coupon in
                 guard coupon.state == "redeemable" else {
                     throw RenderingError(privateMessage: "not redeemable: \(str)", publicMessage: "This coupon is not redeemable anymore.")
                 }
@@ -226,7 +234,7 @@ extension Route {
             guard let ep = Episode.all.scoped(for: session?.user.data).first(where: { $0.id == id }) else {
                 return .notFound("No such episode")
             }
-            return .onComplete(promise: vimeo.downloadURL(for: ep.vimeo_id).promise) { downloadURL in
+            return .onComplete(promise: vimeo.downloadURL(for: ep.vimeo_id).elPromise) { downloadURL in
                 guard let result = downloadURL, let url = result else { return .redirect(to: .episode(ep.id)) }
                 let downloads = try c.get().execute(s.user.downloads)
                 switch s.user.downloadStatus(for: ep, downloads: downloads) {
@@ -272,19 +280,19 @@ extension Route {
             let sess = try requireSession()
             var user = sess.user
             func renderBilling(recurlyToken: String) -> I {
-                return I.onSuccess(promise: sess.user.currentSubscription.promise, do: { sub in
-                    return I.onSuccess(promise: sess.user.invoices.promise, do: { invoices in
+                return I.onSuccess(promise: sess.user.currentSubscription.elPromise, do: { sub in
+                    return I.onSuccess(promise: sess.user.invoices.elPromise, do: { invoices in
                         let invoicesAndPDFs = invoices.map { invoice in
                             (invoice, recurly.pdfURL(invoice: invoice, hostedLoginToken: recurlyToken))
                         }
-                        return I.onSuccess(promise: sess.user.billingInfo.promise, do: { billingInfo in
+                        return I.onSuccess(promise: sess.user.billingInfo.elPromise, do: { billingInfo in
                             return I.write(billing(context: context, user: sess.user, subscription: sub, invoices: invoicesAndPDFs, billingInfo: billingInfo))
                         })
                     })
                 })
             }
             guard let t = sess.user.data.recurlyHostedLoginToken else {
-                return I.onSuccess(promise: sess.user.account.promise) { acc in
+                return I.onSuccess(promise: sess.user.account.elPromise) { acc in
                     user.data.recurlyHostedLoginToken = acc.hosted_login_token
                     try c.get().execute(user.update())
                     return renderBilling(recurlyToken: acc.hosted_login_token)
@@ -295,11 +303,11 @@ extension Route {
             let sess = try requireSession()
             let user = sess.user
             return try requirePost(csrf: user.data.csrf) {
-                return I.onSuccess(promise: user.currentSubscription.promise.map(flatten)) { sub in
+                return I.onSuccess(promise: user.currentSubscription.elPromise.map(flatten)) { sub in
                     guard sub.state == .active else {
                         throw RenderingError(privateMessage: "cancel: no active sub \(user) \(sub)", publicMessage: "Can't find an active subscription.")
                     }
-                    return I.onSuccess(promise: recurly.cancel(sub).promise) { result in
+                    return I.onSuccess(promise: recurly.cancel(sub).elPromise) { result in
                         switch result {
                         case .success: return I.redirect(to: .accountBilling)
                         case .errors(let errs): throw RecurlyErrors(errs)
@@ -311,10 +319,10 @@ extension Route {
         case .upgradeSubscription:
             let sess = try requireSession()
             return try requirePost(csrf: sess.user.data.csrf) {
-                return I.onSuccess(promise: sess.user.currentSubscription.promise.map(flatten), do: { (sub: Subscription) throws -> I in
+                return I.onSuccess(promise: sess.user.currentSubscription.elPromise.map(flatten), do: { (sub: Subscription) throws -> I in
                     guard let u = sub.upgrade else { throw RenderingError(privateMessage: "no upgrade available \(sub)", publicMessage: "There's no upgrade available.")}
                     let teamMembers = try c.get().execute(sess.user.teamMembers)
-                    return I.onSuccess(promise: recurly.updateSubscription(sub, plan_code: u.plan.plan_code, numberOfTeamMembers: teamMembers.count).promise, do: { (result: Subscription) throws -> I in
+                    return I.onSuccess(promise: recurly.updateSubscription(sub, plan_code: u.plan.plan_code, numberOfTeamMembers: teamMembers.count).elPromise, do: { (result: Subscription) throws -> I in
                         return I.redirect(to: .accountBilling)
                     })
                 })
@@ -323,11 +331,11 @@ extension Route {
             let sess = try requireSession()
             let user = sess.user
             return try requirePost(csrf: user.data.csrf) {
-                return I.onSuccess(promise: user.currentSubscription.promise.map(flatten)) { sub in
+                return I.onSuccess(promise: user.currentSubscription.elPromise.map(flatten)) { sub in
                     guard sub.state == .canceled else {
                         throw RenderingError(privateMessage: "cancel: no active sub \(user) \(sub)", publicMessage: "Can't find a cancelled subscription.")
                     }
-                    return I.onSuccess(promise: recurly.reactivate(sub).promise) { result in
+                    return I.onSuccess(promise: recurly.reactivate(sub).elPromise) { result in
                         switch result {
                         case .success: return I.redirect(to: .accountBilling)
                         case .errors(let errs): throw RecurlyErrors(errs)
@@ -339,7 +347,7 @@ extension Route {
         case .accountUpdatePayment:
             let sess = try requireSession()
             func renderForm(errs: [RecurlyError]) -> I {
-                return I.onSuccess(promise: sess.user.billingInfo.promise, do: { billingInfo in
+                return I.onSuccess(promise: sess.user.billingInfo.elPromise, do: { billingInfo in
                     let view = updatePaymentView(context: context, data: PaymentViewData(billingInfo, action: Route.accountUpdatePayment.path, csrf: sess.user.data.csrf, publicKey: env.recurlyPublicKey, buttonText: "Update", paymentErrors: errs.map { $0.message }))
                     return I.write(view)
                 })
@@ -348,7 +356,7 @@ extension Route {
                 guard let token = body["billing_info[token]"] else {
                     throw RenderingError(privateMessage: "No billing_info[token]", publicMessage: "Something went wrong, please try again.")
                 }
-                return I.onSuccess(promise: sess.user.updateBillingInfo(token: token).promise, do: { (response: RecurlyResult<BillingInfo>) -> I in
+                return I.onSuccess(promise: sess.user.updateBillingInfo(token: token).elPromise, do: { (response: RecurlyResult<BillingInfo>) -> I in
                     switch response {
                     case .success: return I.redirect(to: .accountUpdatePayment) // todo show message?
                     case .errors(let errs): return renderForm(errs: errs)
@@ -363,7 +371,7 @@ extension Route {
             let csrf = sess.user.data.csrf
             return I.withPostBody(do: { params in
                 guard let formData = addTeamMemberForm().parse(csrf: csrf, params) else { return try teamMembersResponse(sess, csrf: csrf) }
-                let promise = github.profile(username: formData.githubUsername).promise
+                let promise = github.profile(username: formData.githubUsername).elPromise
                 return I.onComplete(promise: promise) { profile in
                     guard let p = profile else {
                         return try teamMembersResponse(sess, formData, csrf: csrf, [(field: "github_username", message: "No user with this username exists on GitHub")])

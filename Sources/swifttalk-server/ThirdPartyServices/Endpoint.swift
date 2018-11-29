@@ -105,10 +105,3 @@ extension URLSession {
         }
     }
 }
-
-extension RemoteEndpoint {
-    var promise: Promise<A?> {
-        return URLSession.shared.load(self)
-    }
-}
-

@@ -101,31 +101,31 @@ extension Task {
         case .syncTeamMembersWithRecurly(let userId):
             guard let user = try c.get().execute(Row<UserData>.select(userId)) else { onCompletion(true); return }
             let teamMembers = try c.get().execute(user.teamMembers)
-            user.currentSubscription.promise.flatMap { (sub: Subscription??) -> Promise<Subscription?> in
+            URLSession.shared.load(user.currentSubscription).flatMap { (sub: Subscription??) -> Promise<Subscription?> in
                 guard let su = sub, let s = su else { return Promise { $0(nil) } }
-                return recurly.updateSubscription(s, numberOfTeamMembers: teamMembers.count).promise
+                return URLSession.shared.load(recurly.updateSubscription(s, numberOfTeamMembers: teamMembers.count))
             }.run { sub in
                 onCompletion(sub?.subscription_add_ons.first?.quantity == teamMembers.count)
             }
         
         case .releaseEpisode(let number):
             guard let ep = Episode.all.first(where: { $0.number == number }) else { onCompletion(true); return }
-            let sendCampaign: Promise<Bool> = mailchimp.createCampaign(for: ep).promise.flatMap { campaignId in
+            let sendCampaign: Promise<Bool> = URLSession.shared.load(mailchimp.createCampaign(for: ep)).flatMap { campaignId in
                 guard let id = campaignId else { return Promise { $0(false) } }
-                return mailchimp.addContent(for: ep, toCampaign: id).promise.flatMap { _ in
+                return URLSession.shared.load(mailchimp.addContent(for: ep, toCampaign: id)).flatMap { _ in
                     if env.production {
                         // TODO here we have to actually send the campaign
-                        return mailchimp.testCampaign(campaignId: id).promise.map { $0 != nil }
+                        return URLSession.shared.load(mailchimp.testCampaign(campaignId: id)).map { $0 != nil }
                     } else {
-                        return mailchimp.testCampaign(campaignId: id).promise.map { $0 != nil }
+                        return URLSession.shared.load(mailchimp.testCampaign(campaignId: id)).map { $0 != nil }
                     }
                 }
             }
 
-            github.changeVisibility(private: false, of: ep.id.rawValue).promise.flatMap { _ in
-                circle.triggerMainSiteBuild.promise
+            URLSession.shared.load(github.changeVisibility(private: false, of: ep.id.rawValue)).flatMap { _ in
+                URLSession.shared.load(circle.triggerMainSiteBuild)
             }.flatMap { _ in
-                mailchimp.existsCampaign(for: ep).promise
+                URLSession.shared.load(mailchimp.existsCampaign(for: ep))
             }.flatMap { campaignExists in
                 return campaignExists == false ? sendCampaign : Promise { $0(false) }
             }.run { success in
