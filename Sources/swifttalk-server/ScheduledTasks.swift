@@ -8,6 +8,27 @@
 import Foundation
 import PostgreSQL
 
+func scheduleTaskTimer() -> DispatchSourceTimer {
+    let queue = DispatchQueue(label: "Scheduled Task Timer")
+    let timer = DispatchSource.makeTimerSource(queue: queue)
+    timer.schedule(deadline: .now(), repeating: 10.0, leeway: .seconds(1))
+    timer.setEventHandler {
+        tryOrLog {
+            let conn = lazyConnection()
+            func process(_ tasks: ArraySlice<Row<TaskData>>) {
+                guard let task = tasks.first else { return }
+                try? task.process(conn) { _ in
+                    process(tasks.dropFirst())
+                }
+            }
+            let tasks = try conn.get().execute(Row<TaskData>.dueTasks)
+            process(tasks[...])
+        }
+    }
+    timer.resume()
+    return timer
+}
+
 enum Task {
     case syncTeamMembersWithRecurly(userId: UUID)
     case releaseEpisode(number: Int)

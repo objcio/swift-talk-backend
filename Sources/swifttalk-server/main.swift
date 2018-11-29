@@ -4,29 +4,12 @@ import NIOHTTP1
 import PostgreSQL
 
 
-let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-let resourcePaths = [currentDir.appendingPathComponent("assets"), currentDir.appendingPathComponent("node_modules")]
-
 try runMigrations()
 refreshStaticData()
+let timer = scheduleTaskTimer()
 
-let queue = DispatchQueue(label: "com.domain.app.timer")
-let timer = DispatchSource.makeTimerSource(queue: queue)
-timer.schedule(deadline: .now(), repeating: 10.0, leeway: .seconds(1))
-timer.setEventHandler {
-    tryOrLog {
-        let conn = lazyConnection()
-        func process(_ tasks: ArraySlice<Row<TaskData>>) {
-            guard let task = tasks.first else { return }
-            try? task.process(conn) { _ in
-                process(tasks.dropFirst())
-            }
-        }
-        let tasks = try conn.get().execute(Row<TaskData>.dueTasks)
-        process(tasks[...])
-    }
-}
-timer.resume()
+let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+let resourcePaths = [currentDir.appendingPathComponent("assets"), currentDir.appendingPathComponent("node_modules")]
 
 let server = Server(handle: { request in
     guard let route = Route(request) else { return nil }
