@@ -87,7 +87,6 @@ extension Episode {
         let synopsisNode: [Node] = options.synopsis ? [.p(classes: synopsisClasses, [.text(synopsis)])] : [] // todo widow thing
         
         let poster = options.featured ? posterURL(width: 1260, height: 630) : posterURL(width: 590, height: 270)
-        // TODO sidebar!
         
         return Node.article(classes: classes, [
             Node.div(classes: pictureClasses, [
