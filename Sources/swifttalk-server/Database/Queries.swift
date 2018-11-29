@@ -194,8 +194,8 @@ extension Row where Element == UserData {
     }
     
     func downloadStatus(for episode: Episode, downloads: [Row<DownloadData>]) -> Episode.DownloadStatus {
-        guard data.subscriber else { return .notSubscribed }
-        if downloads.contains(where: { $0.data.episodeNumber == episode.number }) {
+        guard data.subscriber || data.admin else { return .notSubscribed }
+        if data.admin || downloads.contains(where: { $0.data.episodeNumber == episode.number }) {
             return .reDownload
         } else if data.downloadCredits - downloads.count > 0 {
             return .canDownload(creditsLeft: data.downloadCredits - downloads.count)
