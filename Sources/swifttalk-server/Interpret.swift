@@ -7,62 +7,8 @@
 
 import Foundation
 import PostgreSQL
+import NIOHTTP1
 
-extension Interpreter {
-    static func onComplete<A>(promise: Promise<A>, do cont: @escaping (A) throws -> Self) -> Self {
-        return onComplete(promise: promise, do: { value in
-            catchAndDisplayError { try cont(value) }
-        })
-    }
-    
-    static func onSuccess<A>(promise: Promise<A?>, file: StaticString = #file, line: UInt = #line, message: String = "Something went wrong.", do cont: @escaping (A) throws -> Self) -> Self {
-        return onComplete(promise: promise, do: { value in
-            catchAndDisplayError {
-                guard let v = value else {
-                    throw RenderingError(privateMessage: "Expected non-nil value, but got nil (\(file):\(line)).", publicMessage: message)
-                }
-                return try cont(v)
-            }
-        })
-    }
-    
-    static func withPostBody(do cont: @escaping ([String:String]) throws -> Self) -> Self {
-        return .withPostBody { dict in
-            return catchAndDisplayError { try cont(dict) }
-        }
-    }
-    
-    static func withPostBody(do cont: @escaping ([String:String]) throws -> Self, or: @escaping () throws -> Self) -> Self {
-        return .withPostData { data in
-            return catchAndDisplayError {
-                // TODO instead of checking whether data is empty, we should check whether it was a post?
-                if !data.isEmpty, let r = String(data: data, encoding: .utf8)?.parseAsQueryPart {
-                    return try cont(r)
-                } else {
-                    return try or()
-                }
-            }
-        }
-    }
-
-    static func withPostBody(csrf: CSRFToken, do cont: @escaping ([String:String]) throws -> Self, or: @escaping () throws -> Self) -> Self {
-        return .withPostBody(do: { body in
-            guard body["csrf"] == csrf.stringValue else {
-                throw RenderingError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
-            }
-            return try cont(body)
-        }, or: or)
-    }
-    
-    static func withPostBody(csrf: CSRFToken, do cont: @escaping ([String:String]) throws -> Self) -> Self {
-        return .withPostBody(do: { body in
-            guard body["csrf"] == csrf.stringValue else {
-                throw RenderingError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
-            }
-            return try cont(body)
-        })
-    }
-}
 
 struct NotLoggedInError: Error { }
 
@@ -99,7 +45,6 @@ extension ProfileFormData {
     }
 }
 
-import NIOHTTP1
 extension Interpreter {
     static func write(_ html: Node, status: HTTPResponseStatus = .ok) -> Self {
         return Self.write(html.htmlDocument(input: LayoutDependencies(hashedAssetName: { file in

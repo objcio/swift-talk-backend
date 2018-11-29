@@ -37,41 +37,6 @@ extension Interpreter {
     }
 }
 
-struct Promise<A> {
-    public let run: (@escaping (A) -> ()) -> ()
-    init(_ run: @escaping ((@escaping (A) -> ()) -> ())) {
-        self.run = run
-    }
-    
-    func map<B>(_ f: @escaping (A) -> B) -> Promise<B> {
-        return Promise<B> { cb in
-            self.run { a in
-                cb(f(a))
-            }
-        }
-    }
-    
-    func flatMap<B>(_ f: @escaping (A) -> Promise<B>) -> Promise<B> {
-        return Promise<B> { cb in
-            self.run { a in
-                let p = f(a)
-                p.run(cb)
-            }
-        }
-    }
-}
-
-func sequentially<A>(_ promises: [Promise<A>]) -> Promise<[A]> {
-    let initial: Promise<[A]> = Promise { $0([]) }
-    return promises.reduce(initial) { result, promise in
-        return result.flatMap { (existing: [A]) in
-            promise.map { new in
-                return existing + [new]
-            }
-        }
-    }
-}
-
 extension Interpreter {
     static func notFound(_ string: String = "Not found") -> Self {
         return .write(string, status: .notFound)
@@ -109,6 +74,60 @@ extension Interpreter {
                 return or()
             }
         }
+    }
+
+    static func onComplete<A>(promise: Promise<A>, do cont: @escaping (A) throws -> Self) -> Self {
+        return onComplete(promise: promise, do: { value in
+            catchAndDisplayError { try cont(value) }
+        })
+    }
+    
+    static func onSuccess<A>(promise: Promise<A?>, file: StaticString = #file, line: UInt = #line, message: String = "Something went wrong.", do cont: @escaping (A) throws -> Self) -> Self {
+        return onComplete(promise: promise, do: { value in
+            catchAndDisplayError {
+                guard let v = value else {
+                    throw RenderingError(privateMessage: "Expected non-nil value, but got nil (\(file):\(line)).", publicMessage: message)
+                }
+                return try cont(v)
+            }
+        })
+    }
+    
+    static func withPostBody(do cont: @escaping ([String:String]) throws -> Self) -> Self {
+        return .withPostBody { dict in
+            return catchAndDisplayError { try cont(dict) }
+        }
+    }
+    
+    static func withPostBody(do cont: @escaping ([String:String]) throws -> Self, or: @escaping () throws -> Self) -> Self {
+        return .withPostData { data in
+            return catchAndDisplayError {
+                // TODO instead of checking whether data is empty, we should check whether it was a post?
+                if !data.isEmpty, let r = String(data: data, encoding: .utf8)?.parseAsQueryPart {
+                    return try cont(r)
+                } else {
+                    return try or()
+                }
+            }
+        }
+    }
+    
+    static func withPostBody(csrf: CSRFToken, do cont: @escaping ([String:String]) throws -> Self, or: @escaping () throws -> Self) -> Self {
+        return .withPostBody(do: { body in
+            guard body["csrf"] == csrf.stringValue else {
+                throw RenderingError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
+            }
+            return try cont(body)
+        }, or: or)
+    }
+    
+    static func withPostBody(csrf: CSRFToken, do cont: @escaping ([String:String]) throws -> Self) -> Self {
+        return .withPostBody(do: { body in
+            guard body["csrf"] == csrf.stringValue else {
+                throw RenderingError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
+            }
+            return try cont(body)
+        })
     }
 }
 
