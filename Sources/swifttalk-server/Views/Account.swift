@@ -340,10 +340,13 @@ func billing(context: Context, user: Row<UserData>, subscription: Subscription?,
                             Node.text(" on "),
                             .text(sub.current_period_ends_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "n/a"),
                         ]), // todo team member add-on pricing, VAT
-                        redemptions.isEmpty ? .none : Node.p(classes: " input-note mt-", [
-                            Node.span(classes: "bold", [.text("Note:")]),
-                             Node.text("this price does not take your active coupons into account.")
-                        ]),
+                        redemptions.isEmpty ? .none : Node.p(classes: " input-note mt-",
+                            [Node.span(classes: "bold", [.text("Note:")])] + redemptions.map { x in
+                             let (redemption, coupon) = x
+                            let start = DateFormatter.fullPretty.string(from: redemption.created_at)
+                             return Node.text("Due to a technical limation, the displayed price does not take your active coupon (\(coupon.billingDescription), started at \(start)) into account.")
+                            }
+                        ),
                         button(to: .cancelSubscription, csrf: user.data.csrf, text: "Cancel Subscription", classes: "color-invalid")
                     ])
                 ]) : .none,
@@ -353,17 +356,7 @@ func billing(context: Context, user: Row<UserData>, subscription: Subscription?,
                             Node.div(classes: "flex-auto color-gray-30 stack--", upgrade.pretty(csrf: user.data.csrf))
                         ])
                     } ?? .none,
-                redemptions.isEmpty ? .none : Node.li(classes: "flex", [
-                    label(text: "Active Coupons"),
-                    Node.div(classes: "flex-auto color-gray-30 stack-", redemptions.map { x in
-                        let (redemption, coupon) = x
-                        let start = DateFormatter.fullPretty.string(from: redemption.created_at)
-                        return Node.p([
-                            Node.text(coupon.billingDescription),
-                            Node.span(classes: "color-gray-60", [Node.text("started at \(start)")])
-                        ])
-                    })
-                ]),
+
                 sub.state == .canceled ? Node.li(classes: "flex", [
                     label(text: "Expires on"),
                     Node.div(classes: "flex-auto color-gray-30 stack-", [
