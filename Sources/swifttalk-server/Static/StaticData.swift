@@ -98,7 +98,7 @@ fileprivate let sortedEpisodesO: Observable<[Episode]> = episodesSource.observab
 
 fileprivate let sortedCollectionsO: Observable<[Collection]> = collectionsSource.observable.map { (colls: [Collection]?) in
     guard let c = colls else { return [] }
-    return c.filter { !$0.expensive_allEpisodes.isEmpty && $0.public }.sorted(by: { $0.new && !$1.new || $0.position > $1.position })
+    return c.filter { !$0.expensive_allEpisodes.isEmpty && $0.public }.sorted(by: { $0.new && !$1.new || $0.position < $1.position })
 }
 
 fileprivate let collectionsDictO: Observable<[Id<Collection>:Collection]> = sortedCollectionsO.map { (colls: [Collection]?) in
