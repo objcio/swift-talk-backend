@@ -7,22 +7,24 @@
 
 import Foundation
 
-func index(_ items: [Episode], context: Context) -> Node {
+func index(_ episodes: [EpisodeWithProgress], context: Context) -> Node {
     return LayoutConfig(context: context, contents: [
         pageHeader(.link(header: "All Episodes", backlink: .home, label: "Swift Talk")),
         .div(classes: "container pb0", [
             .div([
                 .h2(attributes: ["class": "inline-block lh-100 mb+"], [
-                    .span(attributes: ["class": "bold"], [
-                        .text("\(items.count) Episodes")
+                    .span(classes: "bold", [
+                        .text("\(episodes.count) Episodes")
                     ])
                 ])
             ]),
-            .ul(attributes: ["class": "cols s+|cols--2n m+|cols--3n xl+|cols--4n"], items.map { e in
-                Node.li(attributes: ["class": "col mb++ width-full s+|width-1/2 m+|width-1/3 xl+|width-1/4"], [e.render(.init(synopsis: true, canWatch: (context.session.premiumAccess) || !e.subscription_only))])
+            .ul(attributes: ["class": "cols s+|cols--2n m+|cols--3n xl+|cols--4n"], episodes.map { e in
+                Node.li(attributes: ["class": "col mb++ width-full s+|width-1/2 m+|width-1/3 xl+|width-1/4"], [
+                    e.episode.render(.init(synopsis: true, watched: e.watched, canWatch: e.episode.canWatch(session: context.session)))
+                ])
             })
-            ])
-        ]).layout
+        ])
+    ]).layout
 }
 
 extension Episode {
@@ -49,8 +51,7 @@ extension Episode {
     }
     
     func render(_ options: ViewOptions) -> Node {
-        assert(!options.watched)
-        let iconFile = options.canWatch ? "icon-play.svg" : "icon-lock.svg"
+        let iconFile = options.canWatch ? (options.watched ? "icon-watched.svg" : "icon-play.svg") : "icon-lock.svg"
         let classes: Class = "flex flex-column width-full" + // normal
             (options.wide ? "max-width-6 m+|max-width-none m+|flex-row" : "") + // wide
             (options.featured ? "min-height-full hover-scale transition-all transition-transform" : "") // featured
@@ -194,32 +195,31 @@ extension Episode {
             ])
     }
     
-    func show(watched: Bool = false, downloadStatus: DownloadStatus, context: Context) -> Node {
+    func show(downloadStatus: DownloadStatus, otherEpisodes: [EpisodeWithProgress], context: Context) -> Node {
         let canWatch = !subscription_only || context.session.premiumAccess
         let guests_: [Node] = [] // todo
         
-        let scroller =  // scroller
-            Node.aside(attributes: ["class": "bgcolor-pale-gray pt++ js-scroller"], [
-                Node.header(attributes: ["class": "container-h flex items-center justify-between"], [
-                    Node.div([
-                        Node.h3(attributes: ["class": "inline-block bold color-black"], [.text("Recent Episodes")]),
-                        Node.link(to: .episodes, attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-underline"], [.text("See All")])
-                        ]),
-                    Node.div(classes: "js-scroller-buttons flex items-center", [
-                        Node.button(attributes: ["class": "scroller-button no-js-hide js-scroller-button-left ml-", "label": "Scroll left"], [
-                            Node.inlineSvg(path: "icon-arrow-16-left.svg", preserveAspectRatio: "xMinYMid meet", attributes: ["class": "icon-16 color-white svg-fill-current block"])
-                            ]),
-                        Node.button(attributes: ["class": "scroller-button no-js-hide js-scroller-button-right ml-", "label": "Scroll right"], [
-                            Node.inlineSvg(path: "icon-arrow-16.svg", preserveAspectRatio: "xMinYMid meet", attributes: ["class": "icon-16 color-white svg-fill-current block"])
-                            ])
-                        ])
+        let scroller = Node.aside(attributes: ["class": "bgcolor-pale-gray pt++ js-scroller"], [
+            Node.header(attributes: ["class": "container-h flex items-center justify-between"], [
+                Node.div([
+                    Node.h3(attributes: ["class": "inline-block bold color-black"], [.text("Recent Episodes")]),
+                    Node.link(to: .episodes, attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-underline"], [.text("See All")])
                     ]),
-                Node.div(classes: "flex scroller js-scroller-container p-edges pt pb++", [
-                    Node.div(classes: "scroller__offset flex-none")
-                    ] + Episode.all.scoped(for: context.session?.user.data).filter { $0 != self }.prefix(8).map { e in
-                        Node.div(classes: "flex-110 pr+ min-width-5", [e.render(.init(synopsis: false, canWatch: canWatch))]) // todo watched
-                    })
+                Node.div(classes: "js-scroller-buttons flex items-center", [
+                    Node.button(attributes: ["class": "scroller-button no-js-hide js-scroller-button-left ml-", "label": "Scroll left"], [
+                        Node.inlineSvg(path: "icon-arrow-16-left.svg", preserveAspectRatio: "xMinYMid meet", attributes: ["class": "icon-16 color-white svg-fill-current block"])
+                    ]),
+                    Node.button(attributes: ["class": "scroller-button no-js-hide js-scroller-button-right ml-", "label": "Scroll right"], [
+                        Node.inlineSvg(path: "icon-arrow-16.svg", preserveAspectRatio: "xMinYMid meet", attributes: ["class": "icon-16 color-white svg-fill-current block"])
+                    ])
                 ])
+            ]),
+            Node.div(classes: "flex scroller js-scroller-container p-edges pt pb++", [
+                Node.div(classes: "scroller__offset flex-none")
+            ] + otherEpisodes.map { e in
+                Node.div(classes: "flex-110 pr+ min-width-5", [e.episode.render(.init(synopsis: false, watched: e.watched, canWatch: e.episode.canWatch(session: context.session)))])
+            })
+        ])
         
         func smallBlueH3(_ text: Node) -> Node {
             return Node.h3(classes: "color-blue mb", [Node.span(classes: "smallcaps", [text])])

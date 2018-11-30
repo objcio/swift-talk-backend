@@ -142,3 +142,13 @@ fileprivate func json<A: Encodable>(_ value: A) -> String {
     //    encoder.keyEncodingStrategy = .convertToSnakeCase // TODO doesn't compile on Linux (?)
     return try! String(data: encoder.encode(value), encoding: .utf8)!
 }
+
+struct EpisodeWithProgress {
+    var episode: Episode
+    var progress: Int?
+    
+    var watched: Bool {
+        return Int(episode.media_duration) - (progress ?? 0) < 30
+    }
+}
+

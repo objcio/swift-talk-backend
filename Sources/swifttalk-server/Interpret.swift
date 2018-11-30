@@ -62,6 +62,16 @@ extension Interpreter {
         })), status: status)
     }
 }
+ 
+extension Swift.Collection where Element == Episode {
+    func withProgress(for userId: UUID?, connection: Lazy<Connection>) throws -> [EpisodeWithProgress] {
+        guard let id = userId else { return map { EpisodeWithProgress(episode: $0, progress: nil) } }
+        let progresses = try connection.get().execute(Row<PlayProgressData>.sortedDesc(for: id)).map { $0.data }
+        return map { episode in
+            EpisodeWithProgress(episode: episode, progress: progresses.first { $0.episodeNumber == episode.number }?.progress)
+        }
+    }
+}
 
 extension Route {
     func interpret<I: Interpreter>(sessionId: UUID?, connection c: Lazy<Connection>) throws -> I {
@@ -161,10 +171,11 @@ extension Route {
         case .subscribe:
             return try I.write(Plan.all.subscribe(context: context))
         case .collection(let name):
-            guard let c = Collection.all.first(where: { $0.id == name }) else {
+            guard let coll = Collection.all.first(where: { $0.id == name }) else {
                 return I.notFound("No such collection")
             }
-            return .write(c.show(context: context))
+            let episodesWithProgress = try coll.episodes(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
+            return .write(coll.show(episodes: episodesWithProgress, context: context))
         case .newSubscription(let couponCode):
             let s = try requireSession()
             let u = s.user
@@ -214,11 +225,14 @@ extension Route {
             }
             let downloads = try (session?.user.downloads).map { try c.get().execute($0) } ?? []
             let status = session?.user.downloadStatus(for: ep, downloads: downloads) ?? .notSubscribed
-            return .write(ep.show(downloadStatus: status, context: context))
+            let otherEpisodes = try Episode.all.scoped(for: session?.user.data).filter { $0 != ep }.prefix(8).withProgress(for: session?.user.id, connection: c)
+            return .write(ep.show(downloadStatus: status, otherEpisodes: otherEpisodes, context: context))
         case .episodes:
-            return I.write(index(Episode.all.scoped(for: session?.user.data), context: context))
+            let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
+            return I.write(index(episodesWithProgress, context: context))
         case .home:
-            return .write(renderHome(context: context))
+            let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
+            return .write(renderHome(episodes: episodesWithProgress, context: context))
         case .sitemap:
             return .write(Route.siteMap)
         case .promoCode(let str):

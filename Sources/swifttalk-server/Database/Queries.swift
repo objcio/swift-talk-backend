@@ -236,4 +236,11 @@ extension Row where Element: Insertable {
     }
 }
 
-
+extension Row where Element == PlayProgressData {
+    static func sortedDesc(for userId: UUID) -> Query<[Row<PlayProgressData>]> {
+        let query = "SELECT * FROM \(Element.tableName) WHERE user_id=$1 ORDER BY episode_number DESC;"
+        return Query(query: query, values: [userId], parse: { node in
+            return PostgresNodeDecoder.decode([Row<Element>].self, transformKey: { $0.snakeCased }, node: node)
+        })
+    }
+}

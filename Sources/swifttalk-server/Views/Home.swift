@@ -7,7 +7,7 @@
 
 import Foundation
 
-func renderHome(context: Context) -> Node {
+func renderHome(episodes: [EpisodeWithProgress], context: Context) -> Node {
     let header = pageHeader(HeaderContent.other(header: "Swift Talk", blurb: "A weekly video series on Swift programming.", extraClasses: "ms4"))
     var recentNodes = [
         Node.header(attributes: ["class": "mb+"], [
@@ -15,19 +15,18 @@ func renderHome(context: Context) -> Node {
             .link(to: .episodes, attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-under"], [.text("See All")])
         ])
     ]
-    let scoped = Episode.all.scoped(for: context.session?.user.data)
-    if scoped.count >= 5 {
-        let episodes = scoped[0..<5]
-        let firstEpisode = episodes[0]
+    if episodes.count >= 5 {
+        let slice = episodes[0..<5]
+        let featured = slice[0]
         recentNodes.append(.div(classes: "m-cols flex flex-wrap", [
             .div(classes: "mb++ p-col width-full l+|width-1/2", [
-                firstEpisode.render(Episode.ViewOptions(featured: true, synopsis: true, canWatch: context.session.premiumAccess || !firstEpisode.subscription_only))
+                featured.episode.render(Episode.ViewOptions(featured: true, synopsis: true, watched: featured.watched, canWatch: featured.episode.canWatch(session: context.session)))
             ]),
             .div(classes: "p-col width-full l+|width-1/2", [
                 .div(classes: "s+|cols s+|cols--2n",
-                    episodes.dropFirst().map { ep in
+                    slice.dropFirst().map { e in
                         .div(classes: "mb++ s+|col s+|width-1/2", [
-                            ep.render(Episode.ViewOptions(synopsis: false, canWatch: context.session.premiumAccess || !ep.subscription_only))
+                            e.episode.render(Episode.ViewOptions(synopsis: false, watched: e.watched, canWatch: e.episode.canWatch(session: context.session)))
                         ])
                     }
                 )

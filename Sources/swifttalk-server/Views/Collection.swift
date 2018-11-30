@@ -22,9 +22,8 @@ func index(_ items: [Collection], context: Context) -> Node {
 }
 
 extension Collection {
-    func show(context: Context) -> Node {
+    func show(episodes: [EpisodeWithProgress], context: Context) -> Node {
         let bgImage = "background-image: url('/assets/images/collections/\(title)@4x.png');"
-        let eps = episodes(for: context.session?.user.data)
         return LayoutConfig(context: context, contents: [
             Node.div(attributes: ["class": "pattern-illustration overflow-hidden", "style": bgImage], [
                 Node.div(classes: "wrapper", [
@@ -37,22 +36,22 @@ extension Collection {
                         Node.h2(attributes: ["class": "ms5 bold color-black mt--- lh-110 mb-"], [.text(title)]),
                         Node.p(attributes: ["class": "ms1 color-gray-40 text-wrapper lh-135"], description.widont),
                         Node.p(attributes: ["class": "color-gray-65 lh-125 mt"], [
-                            .text(eps.count.pluralize("Episode")),
+                            .text(episodes.count.pluralize("Episode")),
                             .span(attributes: ["class": "ph---"], [.raw("&middot;")]),
-                            .text(eps.totalDuration.hoursAndMinutes)
-                            ])
+                            .text(episodes.map { $0.episode }.totalDuration.hoursAndMinutes)
                         ])
                     ])
-                ]),
+                ])
+            ]),
             Node.div(classes: "wrapper pt++", [
-                Node.ul(attributes: ["class": "offset-content"], eps.map { e in
+                Node.ul(attributes: ["class": "offset-content"], episodes.map { e in
                     Node.li(attributes: ["class": "flex justify-center mb++ m+|mb+++"], [
                         Node.div(classes: "width-1 ms1 mr- color-theme-highlight bold lh-110 m-|hide", [.raw("&rarr;")]),
-                        e.render(.init(wide: true, synopsis: true, canWatch: e.canWatch(session: context.session), collection: false))
-                        ])
+                        e.episode.render(.init(wide: true, synopsis: true, watched: e.watched, canWatch: e.episode.canWatch(session: context.session), collection: false))
+                    ])
                 })
-                ]),
-            ], theme: "collection").layout
+            ]),
+        ], theme: "collection").layout
     }
 }
 
