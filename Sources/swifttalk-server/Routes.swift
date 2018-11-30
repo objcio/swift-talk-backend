@@ -25,7 +25,7 @@ enum Route: Equatable {
     case accountDeleteTeamMember(UUID)
     case githubCallback(String, origin: String?)
     case collection(Id<Collection>)
-    case episode(Id<Episode>)
+    case episode(Id<Episode>, playPosition: Int?)
     case download(Id<Episode>)
     case playProgress(Id<Episode>)
     case staticFile(path: [String])
@@ -77,9 +77,14 @@ private extension Array where Element == Router<Route> {
     }
 }
 
-private let episode: Router<Route> = (Router<()>.c("episodes") / .string()).transform({ Route.episode(Id(rawValue: $0)) }, { r in
-    guard case let .episode(num) = r else { return nil }
-    return num.rawValue
+private let episode: Router<Route> = (Router<()>.c("episodes") / .string() / Router<String>.optionalQueryParam(name: "t")).transform({
+    let playPosition = $0.1.flatMap { str in
+        Int(str.trimmingCharacters(in: CharacterSet.decimalDigits.inverted))
+    }
+    return Route.episode(Id(rawValue: $0.0), playPosition: playPosition)
+}, { r in
+    guard case let .episode(num, playPosition) = r else { return nil }
+    return (num.rawValue, playPosition.map { "\($0)s" })
 })
 
 private let episodeDownload: Router<Route> = (Router<()>.c("episodes") / .string() / Router<()>.c("download")).transform({ Route.download(Id(rawValue: $0.0)) }, { r in

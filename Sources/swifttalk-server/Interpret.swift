@@ -219,7 +219,7 @@ extension Route {
                     return I.redirect(path: destination, headers: ["Set-Cookie": "sessionid=\"\(sid.uuidString)\"; HttpOnly; Path=/"]) // TODO secure
                 })
             })
-        case .episode(let id):
+        case let .episode(id, playPosition):
             guard let ep = Episode.all.scoped(for: session?.user.data).first(where: { $0.id == id }) else {
                 return .notFound("No such episode")
             }
@@ -227,8 +227,8 @@ extension Route {
             let status = session?.user.downloadStatus(for: ep, downloads: downloads) ?? .notSubscribed
             let allEpisodes = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
             let featuredEpisodes = Array(allEpisodes.filter { $0.episode != ep }.prefix(8))
-            let playPosition = allEpisodes.first { $0.episode == ep }?.progress
-            return .write(ep.show(playPosition: playPosition, downloadStatus: status, otherEpisodes: featuredEpisodes, context: context))
+            let position = playPosition ?? allEpisodes.first { $0.episode == ep }?.progress
+            return .write(ep.show(playPosition: position, downloadStatus: status, otherEpisodes: featuredEpisodes, context: context))
         case .episodes:
             let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
             return I.write(index(episodesWithProgress, context: context))
@@ -251,7 +251,7 @@ extension Route {
                 return .notFound("No such episode")
             }
             return .onComplete(promise: vimeo.downloadURL(for: ep.vimeo_id).promise) { downloadURL in
-                guard let result = downloadURL, let url = result else { return .redirect(to: .episode(ep.id)) }
+                guard let result = downloadURL, let url = result else { return .redirect(to: .episode(ep.id, playPosition: nil)) }
                 let downloads = try c.get().execute(s.user.downloads)
                 switch s.user.downloadStatus(for: ep, downloads: downloads) {
                 case .reDownload:
@@ -260,7 +260,7 @@ extension Route {
                     try c.get().execute(DownloadData(user: s.user.id, episode: ep.number).insert)
                     return .redirect(path: url.absoluteString)
                 default:
-                    return .redirect(to: .episode(ep.id)) // just redirect back to episode page if somebody tries this without download credits
+                    return .redirect(to: .episode(ep.id, playPosition: nil)) // just redirect back to episode page if somebody tries this without download credits
                 }
             }
         case let .staticFile(path: p):

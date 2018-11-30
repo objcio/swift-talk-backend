@@ -91,7 +91,7 @@ extension Episode {
         
         return Node.article(classes: classes, [
             Node.div(classes: pictureClasses, [
-                .link(to: .episode(id), classes: pictureLinkClasses, [
+                .link(to: .episode(id, playPosition: nil), classes: pictureLinkClasses, [
                     Node.div(attributes: ["class": "ratio__container bg-center bg-cover", "style": "background-image: url('\(poster)')"]),
                     Node.div(attributes: ["class": "absolute position-stretch opacity-60 blend-darken gradient-episode-black"]),
                     Node.div(classes: "absolute position-stretch flex flex-column", [
@@ -103,19 +103,17 @@ extension Episode {
             ]),
             Node.div(classes: contentClasses, [
                 Node.header(coll + ([
-                    Node.h3([Node.link(to: .episode(id), classes: titleClasses, [Node.text(title + (released ? "" : " (unreleased)"))])])
-                    ] as [Node])),
-                ] + synopsisNode + [
-                    .p(classes: footerClasses, [
-                        Node.text("Episode \(number)"),
-                        Node.span(attributes: ["class": "ph---"], [.raw("&middot;")]),
-                        Node.text(releaseAt.pretty)
-                        ])
-                ]),
-            
-            ])
+                    Node.h3([Node.link(to: .episode(id, playPosition: nil), classes: titleClasses, [Node.text(title + (released ? "" : " (unreleased)"))])])
+                ] as [Node])),
+            ] + synopsisNode + [
+                .p(classes: footerClasses, [
+                    Node.text("Episode \(number)"),
+                    Node.span(attributes: ["class": "ph---"], [.raw("&middot;")]),
+                    Node.text(releaseAt.pretty)
+                ])
+            ]),
+        ])
     }
-    
 }
 
 
@@ -423,7 +421,7 @@ extension Episode {
             ])
         ])
         
-        let data = StructuredData(title: title, description: synopsis, url: Route.episode(id).url, image: posterURL(width: 600, height: 338), type: .video(duration: Int(media_duration), releaseDate: releaseAt))
+        let data = StructuredData(title: title, description: synopsis, url: Route.episode(id, playPosition: nil).url, image: posterURL(width: 600, height: 338), type: .video(duration: Int(media_duration), releaseDate: releaseAt))
         return LayoutConfig(context: context, contents: [main, scroller] + (context.session.premiumAccess ? [] : [subscribeBanner()]), footerContent: scripts, structuredData: data).layout
     }
 }
