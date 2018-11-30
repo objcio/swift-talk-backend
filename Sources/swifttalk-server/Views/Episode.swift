@@ -172,10 +172,10 @@ extension Episode {
                 return Node.span(attributes: ["class": wrapperClasses], [.text(entry.title)])
             }
             
-            return Node.a(attributes: ["class": wrapperClasses + " items-baseline no-decoration hover-cascade js-episode-seek"], [
+            return Node.a(attributes: ["data-time": "\(entry.0)", "class": wrapperClasses + " items-baseline no-decoration hover-cascade js-episode-seek"], [
                 Node.span(attributes: ["class": "hover-cascade__underline"], [.text(entry.title)]),
                 Node.span(attributes: ["class": "ml-auto color-orange pl-"], [.text(entry.0.timeString)]),
-                ], href: "?t=\(Int(entry.0))")
+            ], href: "?t=\(Int(entry.0))")
         }
         
         let items = [(6, title: "Introduction")] + tableOfContents
@@ -189,10 +189,10 @@ extension Episode {
                 Node.ol(attributes: ["class": "lh-125 ms-1 color-white"], items.map { entry in
                     Node.li(attributes: ["class": "border-bottom border-1 border-color-lighten-10"], [
                         item(entry)
-                        ])
+                    ])
                 })
-                ])
             ])
+        ])
     }
     
     func show(downloadStatus: DownloadStatus, otherEpisodes: [EpisodeWithProgress], context: Context) -> Node {
@@ -364,26 +364,52 @@ extension Episode {
             ])
         ]
         
-        let progressCode: [Node] = (context.session?.user.data.csrf).map { token in
+        let scripts: [Node] = (context.session?.user.data.csrf).map { token in
             return [
                 Node.script(src: "https://player.vimeo.com/api/player.js"),
                 Node.script(code: """
-                    var player = new Vimeo.Player(document.querySelector('iframe'));
-                    var playedUntil = 0
-                    function postProgress(time) {
-                        $.post(\"\(Route.playProgress(id).absoluteString)\", {
-                            \"csrf\": \"\(token.stringValue)\",
-                            \"progress": Math.floor(time)
-                        }, function(data, status) {
-                            console.log(data);
-                        });
-                    }
-                    player.on('timeupdate', function(data) {
-                        if (data.seconds > playedUntil + 10) {
-                            playedUntil = data.seconds
-                            console.log(data.seconds);
-                            postProgress(playedUntil);
+                    $(function () {
+                        var player = new Vimeo.Player(document.querySelector('iframe'));
+                        var playedUntil = 0
+                    
+                        function postProgress(time) {
+                            $.post(\"\(Route.playProgress(id).absoluteString)\", {
+                                \"csrf\": \"\(token.stringValue)\",
+                                \"progress": Math.floor(time)
+                            }, function(data, status) {
+                            });
                         }
+                    
+                        player.on('timeupdate', function(data) {
+                            if (data.seconds > playedUntil + 10) {
+                                playedUntil = data.seconds
+                                postProgress(playedUntil);
+                            }
+                        });
+
+                        $('.js-transcript').find("a[href^='#']").each(function () {
+                            if (/^\\d+$/.test(this.hash.slice(1)) && /^\\d{1,2}(:\\d{2}){1,2}$/.test(this.innerHTML)) {
+                            var time = parseInt(this.hash.slice(1));
+                            $(this)
+                                .data('time', time)
+                                .attr('href', '?t='+time)
+                                .addClass('js-episode-seek js-transcript-cue');
+                            }
+                        });
+
+                        // Auto-expand transcript if #transcript hash is passed
+                        if (window.location.hash.match(/^#?transcript$/)) {
+                            $('#transcript').find('.js-expandable-trigger').trigger('click');
+                        }
+
+                        // Catch clicks on timestamps and forward to player
+                        $(document).on('click singletap', '.js-episode .js-episode-seek', function (event) {
+                            if ($(this).data('time') !== undefined) {
+                                player.setCurrentTime($(this).data('time'));
+                                player.play();
+                                event.preventDefault();
+                            }
+                        });
                     });
                     """
                 )
@@ -395,34 +421,12 @@ extension Episode {
             .div(classes: "bgcolor-white l+|pt++", [
                 .div(classes: "container", canWatch ? transcriptAvailable : noTranscript)
             ])
-        ] + progressCode)
+        ])
         
         let data = StructuredData(title: title, description: synopsis, url: Route.episode(id).url, image: posterURL(width: 600, height: 338), type: .video(duration: Int(media_duration), releaseDate: releaseAt))
-        return LayoutConfig(context: context, contents: [main, scroller] + (context.session.premiumAccess ? [] : [subscribeBanner()]), footerContent: [Node.raw(transcriptLinks)], structuredData: data).layout
+        return LayoutConfig(context: context, contents: [main, scroller] + (context.session.premiumAccess ? [] : [subscribeBanner()]), footerContent: scripts, structuredData: data).layout
     }
 }
-
-let transcriptLinks = """
-<script>
-$(function () {
-$('.js-transcript').find("a[href^='#']").each(function () {
-if (/^\\d+$/.test(this.hash.slice(1)) && /^\\d{1,2}(:\\d{2}){1,2}$/.test(this.innerHTML)) {
-var time = parseInt(this.hash.slice(1));
-$(this)
-.data('time', time)
-.attr('href', '?t='+time)
-.addClass('js-episode-seek js-transcript-cue');
-}
-});
-
-// Auto-expand transcript if #transcript hash is passed
-if (window.location.hash.match(/^#?transcript$/)) {
-$('#transcript').find('.js-expandable-trigger').trigger('click');
-}
-
-});
-</script>
-"""
 
 let expandTranscript = """
 <div class="no-js-hide absolute height-4 gradient-fade-to-white position-stretch-h position-s ph z-1" data-expandable-expanded="hide">
