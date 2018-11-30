@@ -225,8 +225,10 @@ extension Route {
             }
             let downloads = try (session?.user.downloads).map { try c.get().execute($0) } ?? []
             let status = session?.user.downloadStatus(for: ep, downloads: downloads) ?? .notSubscribed
-            let otherEpisodes = try Episode.all.scoped(for: session?.user.data).filter { $0 != ep }.prefix(8).withProgress(for: session?.user.id, connection: c)
-            return .write(ep.show(downloadStatus: status, otherEpisodes: otherEpisodes, context: context))
+            let allEpisodes = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
+            let featuredEpisodes = Array(allEpisodes.filter { $0.episode != ep }.prefix(8))
+            let playPosition = allEpisodes.first { $0.episode == ep }?.progress
+            return .write(ep.show(playPosition: playPosition, downloadStatus: status, otherEpisodes: featuredEpisodes, context: context))
         case .episodes:
             let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
             return I.write(index(episodesWithProgress, context: context))

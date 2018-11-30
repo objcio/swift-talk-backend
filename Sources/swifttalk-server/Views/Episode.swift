@@ -195,7 +195,7 @@ extension Episode {
         ])
     }
     
-    func show(downloadStatus: DownloadStatus, otherEpisodes: [EpisodeWithProgress], context: Context) -> Node {
+    func show(playPosition: Int?, downloadStatus: DownloadStatus, otherEpisodes: [EpisodeWithProgress], context: Context) -> Node {
         let canWatch = !subscription_only || context.session.premiumAccess
         let guests_: [Node] = [] // todo
         
@@ -312,7 +312,7 @@ extension Episode {
             .p(attributes: ["class": "color-orange ms1"], [
                 .link(to: .home, attributes: ["class": "color-inherit no-decoration bold hover-border-bottom"], [.text("Swift Talk")]),
                 .text("#" + number.padded)
-                ]),
+            ]),
             .h2(attributes: ["class": "ms5 color-white bold mt-- lh-110"], [.text(fullTitle + (released ? "" : " (unreleased)"))])
         ] + guests_ )
         let headerAndPlayer = Node.div(classes: "bgcolor-night-blue pattern-shade-darker", [
@@ -320,7 +320,7 @@ extension Episode {
                 header,
                 .div(classes: "l+|flex", [
                     .div(classes: "flex-110 order-2", [
-                        player(canWatch: canWatch, playPosition: nil)
+                        player(canWatch: canWatch, playPosition: playPosition)
                     ]),
                     .div(classes: "min-width-5 relative order-1 mt++ l+|mt0 l+|mr++ l+|mb++", [
                         toc(canWatch: canWatch)
