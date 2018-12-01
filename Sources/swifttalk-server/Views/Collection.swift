@@ -32,11 +32,11 @@ extension Collection {
                             .link(to: .home, attributes: ["class": "bold"], [.text("Swift Talk")]),
                             .raw("&#8202;"),
                             .link(to: .collections, attributes: ["class": "opacity: 90"], [.text("Collection")])
-                            ]),
+                        ]),
                         Node.h2(attributes: ["class": "ms5 bold color-black mt--- lh-110 mb-"], [.text(title)]),
                         Node.p(attributes: ["class": "ms1 color-gray-40 text-wrapper lh-135"], description.widont),
                         Node.p(attributes: ["class": "color-gray-65 lh-125 mt"], [
-                            .text(episodes.count.pluralize("Episode")),
+                            .text("\(episodes.count) \("Episode".pluralize(episodes.count))"),
                             .span(attributes: ["class": "ph---"], [.raw("&middot;")]),
                             .text(episodes.map { $0.episode }.totalDuration.hoursAndMinutes)
                         ])
@@ -93,7 +93,7 @@ extension Collection {
                     Node.span(attributes: ["class": "flex-none label smallcaps color-white bgcolor-blue nowrap ml-"], [Node.text("New")])
                 ] : [])),
                 Node.p(attributes: ["class": "ms-1 color-gray-55 lh-125 mt--"], [
-                    .text(eps.count.pluralize("Episode")),
+                    .text("\(eps.count) \("Episode".pluralize(eps.count))"),
                     .span(attributes: ["class": "ph---"], [Node.raw("&middot;")]),
                     .text(eps.totalDuration.hoursAndMinutes)
                 ] as [Node])

@@ -108,6 +108,10 @@ extension Episode {
         }
     }
     
+    var guestHosts: [Collaborator] {
+        return theCollaborators.filter { $0.role == .guestHost }
+    }
+    
     var primaryCollection: Collection? {
         return theCollections.first
     }

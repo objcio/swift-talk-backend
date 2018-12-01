@@ -195,7 +195,6 @@ extension Episode {
     
     func show(playPosition: Int?, downloadStatus: DownloadStatus, otherEpisodes: [EpisodeWithProgress], context: Context) -> Node {
         let canWatch = !subscription_only || context.session.premiumAccess
-        let guests_: [Node] = [] // todo
         
         let scroller = Node.aside(attributes: ["class": "bgcolor-pale-gray pt++ js-scroller"], [
             Node.header(attributes: ["class": "container-h flex items-center justify-between"], [
@@ -306,13 +305,23 @@ extension Episode {
             ])
         ] : []
         let sidebar: Node = Node.aside(classes: "p-col max-width-7 center stack l+|width-1/3 xl+|width-3/10 l+|flex-auto", resources + inCollection + details)
-        let header = Node.header(attributes: ["class": "mb++ pb"], [
+        let epTitle: [Node] = [
             .p(attributes: ["class": "color-orange ms1"], [
                 .link(to: .home, attributes: ["class": "color-inherit no-decoration bold hover-border-bottom"], [.text("Swift Talk")]),
                 .text("#" + number.padded)
             ]),
-            .h2(attributes: ["class": "ms5 color-white bold mt-- lh-110"], [.text(fullTitle + (released ? "" : " (unreleased)"))])
-        ] + guests_ )
+            .h2(attributes: ["class": "ms5 color-white bold mt-- lh-110"], [.text(fullTitle + (released ? "" : " (unreleased)"))]),
+        ]
+        let guests: [Node] = guestHosts.isEmpty ? [] : [
+            .p(classes: "color-white opacity-70 mt-", [
+                Node.text("with special \("guest".pluralize(guestHosts.count))")
+            ] + guestHosts.map { gh in
+                Node.link(to: gh.url, classes: "color-inherit bold no-decoration hover-border-bottom", [
+                    Node.text(gh.name)
+                ])
+            })
+        ]
+        let header = Node.header(attributes: ["class": "mb++ pb"], epTitle + guests)
         let headerAndPlayer = Node.div(classes: "bgcolor-night-blue pattern-shade-darker", [
             .div(classes: "container l+|pb0 l+|n-mb++", [
                 header,

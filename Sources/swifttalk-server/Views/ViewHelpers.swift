@@ -45,18 +45,15 @@ extension String {
     }
 }
 
+extension String {
+    func pluralize(_ number: Int) -> String {
+        return number == 1 ? self : "\(self)s"
+    }
+}
+
 extension Int {
     var padded: String {
         return self < 10 ? "0" + "\(self)" : "\(self)"
-    }
-
-    func pluralize(_ text: String) -> String {
-        assert(text == "Episode") // todo
-        if self == 1 {
-            return "1 " + text
-        } else {
-            return "\(self) \(text)s"
-        }
     }
 }
 
