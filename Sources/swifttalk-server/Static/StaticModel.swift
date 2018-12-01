@@ -66,12 +66,24 @@ struct Episode: Codable, Equatable {
     var vimeo_id: Int
     var preview_vimeo_id: Int?
     var thumbnail_id: Int
+    var updates: [Update]?
 }
 
 struct Resource: Codable, Equatable {
     var title: String
     var subtitle: String
     var url: URL
+}
+
+struct Update: Codable, Equatable {
+    var date: String
+    var text: String
+}
+
+extension Update {
+    var dateAdded: Date {
+        return DateFormatter.iso8601.date(from: date) ?? Date()
+    }
 }
 
 extension Episode {

@@ -335,6 +335,29 @@ extension Episode {
                 ])
             ])
         ])
+        
+        let episodeUpdates: [Node]
+        if let ups = updates, ups.count > 0 {
+            episodeUpdates = [
+                .div(classes: "text-wrapper mv+", [
+                    .aside(classes: "js-expandable border border-1 border-color-subtle-blue bgcolor-pale-blue pa radius-5", [
+                        .header(classes: "flex justify-between items-baseline mb-", [
+                            .h3(classes: "smallcaps color-blue-darker mb-", [.text("Updates")])
+                        ]),
+                        .ul(classes: "stack", ups.map { u in
+                            .li(classes: "ms-1 media", [
+                                .div(classes: "media__image grafs color-blue-darker mr-", [.text("•")]),
+                                .div(classes: "media__body links grafs inline-code", [
+                                    .markdown(u.text)
+                                ])
+                            ])
+                        }),
+                    ])
+                ])
+            ]
+        } else {
+            episodeUpdates = []
+        }
 
         let transcriptAvailable: [Node] = [
             context.session.premiumAccess ? .raw("") : .raw(subscriptionPitch),
@@ -343,9 +366,9 @@ extension Episode {
                     Node.div(classes: "text-wrapper", [
                         Node.div(classes: "lh-140 color-blue-darkest ms1 bold mb+", [
                             .markdown(synopsis),
-                            // todo episode.updates
                         ])
                     ]),
+                ] + episodeUpdates + [
                     .div(classes: "flex-auto relative min-height-5", [
                         .div(attributes: ["class": "js-transcript js-expandable z-0", "data-expandable-collapsed": "absolute position-stretch position-nw overflow-hidden", "id": "transcript"], [
                             Node.raw(expandTranscript),
