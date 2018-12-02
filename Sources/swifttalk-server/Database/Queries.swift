@@ -20,6 +20,18 @@ extension Query {
             return transform(self.parse(node))
         }
     }
+    
+    static func build(parameters: [NodeRepresentable] = [], parse: @escaping (PostgreSQL.Node) -> A, construct: ([String]) -> String) -> Query {
+        let placeholders = (0..<(parameters.count)).map { "$\($0 + 1)" }
+        let sql = construct(placeholders)
+        return Query(query: sql, values: parameters, parse: parse)
+    }
+    
+    func appending(parameters: [NodeRepresentable] = [], construct: ([String]) -> String) -> Query<A> {
+        let placeholders = (values.count..<(values.count + parameters.count)).map { "$\($0 + 1)" }
+        let sql = construct(placeholders)
+        return Query(query: "\(query) \(sql)", values: values + parameters, parse: parse)
+    }
 }
 
 struct Row<Element: Codable>: Codable {
@@ -33,115 +45,86 @@ struct Row<Element: Codable>: Codable {
     }
 }
 
-enum QueryCondition {
-    case equal(key: String, value: NodeRepresentable)
-    case startsWith(key: String, value: NodeRepresentable)
+fileprivate func parseId(_ node: PostgreSQL.Node) -> UUID {
+    return UUID(uuidString: node[0, "id"]!.string!)!
 }
 
-extension QueryCondition {
-    var value: NodeRepresentable {
-        switch self {
-        case let .equal(_, v): return v
-        case let .startsWith(_, v): return v
-        }
+fileprivate func parseEmpty(_ node: PostgreSQL.Node) -> () {
+}
+
+fileprivate extension Insertable {
+    static func parse(_ node: PostgreSQL.Node) -> [Row<Self>] {
+        return PostgresNodeDecoder.decode([Row<Self>].self, transformKey: { $0.snakeCased }, node: node)
     }
-    
-    func condition(placeholder: Int) -> String {
-        switch self {
-        case let .equal(k, _): return "\(k) = $\(placeholder)"
-        case let .startsWith(k, _): return "\(k) LIKE $\(placeholder) || '%'"
-        }
+
+    static func parseFirst(_ node: PostgreSQL.Node) -> Row<Self>? {
+        return self.parse(node).first
     }
 }
 
-extension Sequence where Element == QueryCondition {
-    var conditionsAndValues: (String, [NodeRepresentable]) {
-        let arr = array
-        let values = arr.map { $0.value }
-        let conditions = arr.enumerated().map { idx, c in c.condition(placeholder: idx + 1) }.joined(separator: " AND ")
-        return (conditions, values)
-    }
-}
 
 extension Row where Element: Insertable {
     static func select(_ id: UUID) -> Query<Row<Element>?> {
-        return selectOne(where: [.equal(key: "id", value: id)])
+        return selectOne.appending(parameters: [id]) { "WHERE id=\($0[0])" }
     }
 
-    static func select(where conditions: [QueryCondition] = []) -> Query<[Row<Element>]> {
-        let fields = Element.fieldNames.joined(separator: ",")
-        let (conditions, values) = conditions.conditionsAndValues
-        let query = "SELECT id,\(fields) FROM \(Element.tableName) WHERE \(conditions);"
-        return Query(query: query, values: values, parse: { node in
-            return PostgresNodeDecoder.decode([Row<Element>].self, transformKey: { $0.snakeCased }, node: node)
-        })
+    static var select: Query<[Row<Element>]> {
+        let fields = Element.fieldNames.sqlJoined
+        return .build(parse: Element.parse) { _ in
+            "SELECT id,\(fields) FROM \(Element.tableName)"
+        }
     }
     
-    static func selectOne(where conditions: [QueryCondition] = []) -> Query<Row<Element>?> {
-        return select(where: conditions).map { $0.first }
+    static var selectOne: Query<Row<Element>?> {
+        return select.map { $0.first }
     }
     
-    static func delete(where conditions: [QueryCondition]) -> Query<()> {
-        let (conditions, values) = conditions.conditionsAndValues
-        let query = "DELETE FROM \(Element.tableName) WHERE \(conditions);"
-        return Query(query: query, values: values, parse: { _ in })
+    static var delete: Query<()> {
+        return Query(query: "DELETE FROM \(Element.tableName)", values: [], parse: parseEmpty)
     }
     
     var delete: Query<()> {
-        return Query(query: "DELETE FROM \(Element.tableName) WHERE id=$1", values: [id], parse: { _ in })
+        return Query.build(parameters: [id], parse: parseEmpty) { "DELETE FROM \(Element.tableName) WHERE id=\($0[0])" }
     }
 }
 
 extension Insertable {
     var insert: Query<UUID> {
-        let fields = fieldNamesAndValues
-        let names = fields.map { $0.0 }.joined(separator: ",")
-        let values = fields.map { $0.1 }
-        let placeholders = (1...fields.count).map { "$\($0)" }.joined(separator: ",")
-        let query = "INSERT INTO \(Self.tableName) (\(names)) VALUES (\(placeholders)) RETURNING id"
-        return Query(query: query, values: values, parse: { node in
-            return UUID(uuidString: node[0, "id"]!.string!)!
-        })
+        let f = fields
+        return .build(parameters: f.values, parse: parseId) {
+            "INSERT INTO \(Self.tableName) (\(f.names.sqlJoined)) VALUES (\($0.sqlJoined)) RETURNING id"
+        }
     }
     
     func findOrInsert(uniqueKey: String, value: NodeRepresentable) -> Query<UUID> {
-        let fields = fieldNamesAndValues
-        let names = fields.map { $0.0 }.joined(separator: ",")
-        let values = fields.map { $0.1 }
-        let placeholders = (1...fields.count).map { "$\($0)" }.joined(separator: ",")
-        let query = """
-        WITH inserted AS (
-            INSERT INTO \(Self.tableName) (\(names)) VALUES (\(placeholders))
-            ON CONFLICT DO NOTHING
-            RETURNING id
-        )
-        SELECT id FROM inserted UNION ALL (SELECT id FROM \(Self.tableName) WHERE \(uniqueKey)=$\(fields.count+1) LIMIT 1);
-        """
-        return Query(query: query, values: values + [value], parse: { node in
-            return UUID(uuidString: node[0, "id"]!.string!)!
-        })
+        let f = fields
+        return Query.build(parameters: f.values, parse: parseId) { """
+            WITH inserted AS (
+                INSERT INTO \(Self.tableName) (\(f.names.sqlJoined)) VALUES (\($0.sqlJoined))
+                ON CONFLICT DO NOTHING
+                RETURNING id
+            )
+            """
+        }.appending(parameters: [value]) {
+            "SELECT id FROM inserted UNION ALL (SELECT id FROM \(Self.tableName) WHERE \(uniqueKey)=\($0[0]) LIMIT 1);"
+        }
     }
     
     func insertOrUpdate(uniqueKey: String) -> Query<UUID> {
-        let fields = fieldNamesAndValues
-        let names = fields.map { $0.0 }.joined(separator: ",")
-        let values = fields.map { $0.1 }
-        let placeholders = (1...fields.count).map { "$\($0)" }.joined(separator: ",")
-        let updates = fields.map { "\($0.0) = EXCLUDED.\($0.0)" }.joined(separator: ",")
-        let query = """
-        INSERT INTO \(Self.tableName) (\(names)) VALUES (\(placeholders))
-        ON CONFLICT (\(uniqueKey)) DO UPDATE SET \(updates)
-        RETURNING id;
-        """
-        return Query(query: query, values: values, parse: { node in
-            return UUID(uuidString: node[0, "id"]!.string!)!
-        })
+        let f = fields
+        let updates = f.names.map { "\($0) = EXCLUDED.\($0)" }.sqlJoined
+        return .build(parameters: f.values, parse: parseId) { """
+            INSERT INTO \(Self.tableName) (\(f.names.sqlJoined)) VALUES (\($0.sqlJoined))
+            ON CONFLICT (\(uniqueKey)) DO UPDATE SET \(updates)
+            RETURNING id
+            """
+        }
     }
 }
 
 extension Row where Element == FileData {
     static func select(key: String) -> Query<Row<FileData>?> {
-        return selectOne(where: [.equal(key: "key", value: key)])
+        return selectOne.appending(parameters: [key]) { "WHERE key=\($0[0])" }
     }
     
     static func select(repository: String, path: String) -> Query<Row<FileData>?> {
@@ -149,98 +132,85 @@ extension Row where Element == FileData {
     }
     
     static func transcripts() -> Query<[Row<FileData>]> {
-        return select(where: [.startsWith(key: "key", value: FileData.keyPrefix(forRepository: github.transcriptsRepo))])
+        return select.appending(parameters: [FileData.keyPrefix(forRepository: github.transcriptsRepo)]) {
+            "WHERE key LIKE \($0[0]) || '%'"
+        }
     }
     
     static func staticData(jsonName: String) -> Query<Row<FileData>?> {
-        return selectOne(where: [.equal(key: "key", value: FileData.key(forRepository: github.staticDataRepo, path: jsonName))])
+        let key = FileData.key(forRepository: github.staticDataRepo, path: jsonName)
+        return selectOne.appending(parameters: [key]) { "WHERE key=\($0[0])" }
     }
 }
 
 extension Row where Element == UserData {
     static func select(githubId id: Int) -> Query<Row<Element>?> {
-        return Row<UserData>.selectOne(where: [.equal(key: "github_uid", value: id)])
+        return Row<UserData>.selectOne.appending(parameters: [id]) { "WHERE github_uid=\($0[0])" }
     }
     
     static func select(sessionId id: UUID) -> Query<Row<Element>?> {
-        let fields = UserData.fieldNames.map { "u.\($0)" }.joined(separator: ",")
-        let query = "SELECT u.id,\(fields) FROM \(UserData.tableName) AS u INNER JOIN \(SessionData.tableName) AS s ON s.user_id = u.id WHERE s.id = $1"
-        return Query(query: query, values: [id], parse: { node in
-            let result = PostgresNodeDecoder.decode([Row<Element>].self, transformKey: { $0.snakeCased }, node: node)
-            return result.first
-        })
+        let fields = UserData.fieldNames.map { "u.\($0)" }.sqlJoined
+        return .build(parameters: [id], parse: Element.parseFirst) {
+            "SELECT u.id,\(fields) FROM \(UserData.tableName) AS u INNER JOIN \(SessionData.tableName) AS s ON s.user_id = u.id WHERE s.id=\($0[0])"
+        }
     }
     
     var masterTeamUser: Query<Row<UserData>?> {
-        let fields = UserData.fieldNames.map { "u.\($0)" }.joined(separator: ",")
-        let query = "SELECT u.id,\(fields) FROM \(UserData.tableName) AS u INNER JOIN \(TeamMemberData.tableName) AS t ON t.user_id = u.id WHERE t.team_member_id = $1"
-        return Query(query: query, values: [id], parse: { node in
-            let result = PostgresNodeDecoder.decode([Row<Element>].self, transformKey: { $0.snakeCased }, node: node)
-            return result.first
-        })
+        let fields = UserData.fieldNames.map { "u.\($0)" }.sqlJoined
+        return .build(parameters: [id], parse: Element.parseFirst) { """
+            SELECT u.id,\(fields) FROM \(UserData.tableName) AS u
+            INNER JOIN \(TeamMemberData.tableName) AS t ON t.user_id = u.id
+            WHERE t.team_member_id=\($0[0])
+            """
+        }
     }
     
     var downloads: Query<[Row<DownloadData>]> {
-        return Row<DownloadData>.select(where: [.equal(key: "user_id", value: id)])
+        return Row<DownloadData>.select.appending(parameters: [id]) { "WHERE user_id=\($0[0])" }
     }
     
     var teamMembers: Query<[Row<UserData>]> {
-        let fields = UserData.fieldNames.map { "u.\($0)" }.joined(separator: ",")
-        let query = "SELECT u.id,\(fields) FROM \(UserData.tableName) AS u INNER JOIN \(TeamMemberData.tableName) AS t ON t.team_member_id = u.id WHERE t.user_id = $1"
-        return Query(query: query, values: [id], parse: { node in
-            let result = PostgresNodeDecoder.decode([Row<Element>].self, transformKey: { $0.snakeCased }, node: node)
-            return result
-        })
-    }
-    
-    func downloadStatus(for episode: Episode, downloads: [Row<DownloadData>]) -> Episode.DownloadStatus {
-        guard data.subscriber || data.admin else { return .notSubscribed }
-        if data.admin || downloads.contains(where: { $0.data.episodeNumber == episode.number }) {
-            return .reDownload
-        } else if data.downloadCredits - downloads.count > 0 {
-            return .canDownload(creditsLeft: data.downloadCredits - downloads.count)
-        } else {
-            return .noCredits
+        let fields = UserData.fieldNames.map { "u.\($0)" }.sqlJoined
+        return .build(parameters: [id], parse: Element.parse) { """
+            SELECT u.id,\(fields) FROM \(UserData.tableName) AS u
+            INNER JOIN \(TeamMemberData.tableName) AS t ON t.team_member_id = u.id
+            WHERE t.user_id=\($0[0])
+            """
         }
     }
-
+    
     func deleteSession(_ sessionId: UUID) -> Query<()> {
-        return Query(query: "DELETE FROM \(SessionData.tableName) where user_id = $1 AND id = $2", values: [id, sessionId], parse: { _ in })
+        return Row<SessionData>.delete.appending(parameters: [id, sessionId]) { "WHERE user_id=\($0[0]) AND id=\($0[1])" }
     }
     
     func changeSubscriptionStatus(_ subscribed: Bool) -> Query<()> {
-        return Query(query: "UPDATE users SET subscriber = $1 where id = $2", values: [subscribed, id], parse: { _ in () })
+        return .build(parameters: [subscribed, id], parse: parseEmpty) { "UPDATE users SET subscriber=\($0[0]) WHERE id=\($0[1])" }
     }
     
     func deleteTeamMember(_ teamMemberId: UUID) -> Query<()> {
-        return Row<TeamMemberData>.delete(where: [.equal(key: "user_id", value: self.id), .equal(key: "team_member_id", value: teamMemberId)])
+        return Row<TeamMemberData>.delete.appending(parameters: [self.id, teamMemberId]) {
+            "WHERE user_id=\($0[0]) AND team_member_id=\($0[1])"
+        }
     }
 }
 
 extension Row where Element == TaskData {
     static var dueTasks: Query<[Row<TaskData>]> {
-        let query = "SELECT * FROM \(Element.tableName) WHERE date < LOCALTIMESTAMP ORDER BY date ASC;"
-        return Query(query: query, values: [], parse: { node in
-            return PostgresNodeDecoder.decode([Row<Element>].self, transformKey: { $0.snakeCased }, node: node)
-        })
+        return Row<TaskData>.select.appending() { _ in "WHERE date < LOCALTIMESTAMP ORDER BY date ASC" }
     }
 }
 
 extension Row where Element: Insertable {
     func update() -> Query<()> {
-        let fields = data.fieldNamesAndValues
-        let fieldNames = zip(fields, 2...).map { (nameAndValue, idx) in
-            return "\(nameAndValue.0) = $\(idx)"
-        }.joined(separator: ", ")
-        return Query(query: "UPDATE \(Element.tableName) SET \(fieldNames) where id = $1", values: [id] + fields.map { $0.1 }, parse: { _ in () })
+        let f = data.fields
+        return Query.build(parameters: f.values, parse: parseEmpty) {
+            "UPDATE \(Element.tableName) SET \(zip(f.names, $0).map { "\($0.0)=\($0.1)" }.sqlJoined)"
+        }.appending(parameters: [id]) { "WHERE id=\($0[0])" }
     }
 }
 
 extension Row where Element == PlayProgressData {
     static func sortedDesc(for userId: UUID) -> Query<[Row<PlayProgressData>]> {
-        let query = "SELECT * FROM \(Element.tableName) WHERE user_id=$1 ORDER BY episode_number DESC;"
-        return Query(query: query, values: [userId], parse: { node in
-            return PostgresNodeDecoder.decode([Row<Element>].self, transformKey: { $0.snakeCased }, node: node)
-        })
+        return Row<PlayProgressData>.select.appending(parameters: [userId]) { "WHERE user_id=\($0[0]) ORDER BY episode_number DESC" }
     }
 }

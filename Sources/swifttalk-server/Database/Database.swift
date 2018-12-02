@@ -39,9 +39,18 @@ protocol Insertable: Codable {
 }
 
 extension Encodable {
-    var fieldNamesAndValues: [(String, NodeRepresentable)] {
+    var fields: (names: [String], values: [NodeRepresentable]) {
         let m = Mirror(reflecting: self)
-        return m.children.map { ($0.label!.snakeCased, $0.value as! NodeRepresentable) }
+        let children = Array(m.children)
+        let names = children.map { $0.label!.snakeCased }
+        let values = children.map { $0.value as! NodeRepresentable }
+        return (names, values)
+    }
+}
+
+extension Sequence where Element == String {
+    var sqlJoined: String {
+        return joined(separator: ",")
     }
 }
 
