@@ -224,7 +224,7 @@ extension Route {
                 return .notFound("No such episode")
             }
             let downloads = try (session?.user.downloads).map { try c.get().execute($0) } ?? []
-            let status = session?.user.downloadStatus(for: ep, downloads: downloads) ?? .notSubscribed
+            let status = session?.user.data.downloadStatus(for: ep, downloads: downloads) ?? .notSubscribed
             let allEpisodes = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
             let featuredEpisodes = Array(allEpisodes.filter { $0.episode != ep }.prefix(8))
             let position = playPosition ?? allEpisodes.first { $0.episode == ep }?.progress
@@ -253,7 +253,7 @@ extension Route {
             return .onComplete(promise: vimeo.downloadURL(for: ep.vimeo_id).promise) { downloadURL in
                 guard let result = downloadURL, let url = result else { return .redirect(to: .episode(ep.id, playPosition: nil)) }
                 let downloads = try c.get().execute(s.user.downloads)
-                switch s.user.downloadStatus(for: ep, downloads: downloads) {
+                switch s.user.data.downloadStatus(for: ep, downloads: downloads) {
                 case .reDownload:
                     return .redirect(path: url.absoluteString)
                 case .canDownload:

@@ -136,7 +136,17 @@ extension UserData {
         }
         return result
     }
-    
+
+    func downloadStatus(for episode: Episode, downloads: [Row<DownloadData>]) -> Episode.DownloadStatus {
+        guard subscriber || admin else { return .notSubscribed }
+        if admin || downloads.contains(where: { $0.data.episodeNumber == episode.number }) {
+            return .reDownload
+        } else if downloadCredits - downloads.count > 0 {
+            return .canDownload(creditsLeft: downloadCredits - downloads.count)
+        } else {
+            return .noCredits
+        }
+    }
 }
 
 struct PlayProgressData: Insertable {
