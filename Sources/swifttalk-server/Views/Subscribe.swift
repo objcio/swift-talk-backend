@@ -83,7 +83,11 @@ extension Array where Element == Plan {
         let continueLink: Node
         let linkClasses: Class = "c-button c-button--big c-button--blue c-button--wide"
         if context.session.premiumAccess {
-            continueLink = Node.link(to: .accountProfile, classes: linkClasses + "c-button--ghost", ["You're already subscribed"])
+            if let d = context.session?.user.data, d.canceled {
+                continueLink = Node.button(to: .reactivateSubscription, csrf: d.csrf, [.text("Reactivate Subscription")], classes: linkClasses + "c-button--ghost")
+            } else {
+                continueLink = Node.link(to: .accountProfile, classes: linkClasses + "c-button--ghost", ["You're already subscribed"])
+            }
         } else if context.session?.user != nil {
 //            print(session?.user)
             continueLink = Node.link(to: .newSubscription(couponCode: coupon?.coupon_code), classes: linkClasses, ["Proceed to payment"])
