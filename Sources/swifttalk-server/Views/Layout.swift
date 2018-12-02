@@ -218,7 +218,7 @@ func userHeader(_ context: Context) -> Node {
     if let s = context.session {
         let account = link(to: .accountProfile, text: "Account")
         let logout = link(to: .logout, text: "Log out")
-        items = s.premiumAccess ? [account, logout] : [account, subscribeButton]
+        items = (s.premiumAccess && !s.user.data.canceled) ? [account, logout] : [account, subscribeButton]
     } else {
         items = [link(to: .login(continue: context.path), text: "Log in"), subscribeButton]
     }
