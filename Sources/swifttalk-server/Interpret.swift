@@ -440,6 +440,7 @@ extension Route {
                     }
                     row.data.subscriber = s.subscriber
                     row.data.downloadCredits = Int(s.months)
+                    row.data.canceled = s.canceled
                     guard let _ = try? c.get().execute(row.update()) else {
                         return log(error: "Failed to update user \(id) in response to Recurly webhook")
                     }

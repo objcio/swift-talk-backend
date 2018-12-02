@@ -164,5 +164,9 @@ fileprivate let migrations: [String] = [
         UNIQUE (user_id, episode_number)
     );
     """,
+    """
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS canceled BOOLEAN DEFAULT false NOT NULL;
+    """,
 ]
 

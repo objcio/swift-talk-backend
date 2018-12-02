@@ -547,12 +547,13 @@ struct Recurly {
         return RemoteEndpoint(xml: .get, url: url, headers: headers)
     }
 
-    func subscriptionStatus(for accountId: UUID) -> Promise<(subscriber: Bool, months: UInt)?> {
+    func subscriptionStatus(for accountId: UUID) -> Promise<(subscriber: Bool, canceled: Bool, months: UInt)?> {
         return Promise { cb in
             URLSession.shared.load(self.account(with: accountId)) { result in
                 guard let acc = result else { cb(nil); return }
                 URLSession.shared.load(recurly.listSubscriptions(accountId: acc.account_code)) { subs in
-                    cb((acc.subscriber, (subs?.activeMonths ?? 0) * 4))
+                    let hasActiveSubscription = subs?.contains(where:  { $0.state == .active }) ?? false
+                    cb((acc.subscriber, canceled: !hasActiveSubscription, (subs?.activeMonths ?? 0) * 4))
                 }
             }
         }
