@@ -53,12 +53,28 @@ enum Role: String, Codable, Equatable, Comparable {
     }
 }
 
+struct StaticDate: Codable, Equatable {
+    var date: Date?
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let isoString = try container.decode(String.self)
+        date = DateFormatter.iso8601.date(from: isoString)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        let isoString = date.map { DateFormatter.iso8601.string(from: $0) } ?? ""
+        try container.encode(isoString)
+    }
+}
+
 struct Episode: Codable, Equatable {
     var collections: [Id<Collection>]
     var collaborators: [Id<Collaborator>]
     var media_duration: TimeInterval
     var number: Int
-    var release_at: String
+    var release_at: StaticDate
     var subscription_only: Bool
     var synopsis: String
     var title: String
@@ -76,13 +92,13 @@ struct Resource: Codable, Equatable {
 }
 
 struct Update: Codable, Equatable {
-    var date: String
+    var date: StaticDate
     var text: String
 }
 
 extension Update {
     var dateAdded: Date {
-        return DateFormatter.iso8601.date(from: date) ?? Date()
+        return date.date ?? Date()
     }
 }
 
@@ -97,7 +113,7 @@ extension Episode {
     }
     
     var releaseAt: Date {
-        return DateFormatter.iso8601.date(from: release_at) ?? Date.distantFuture
+        return release_at.date ?? .distantFuture
     }
     
     var released: Bool {
