@@ -120,7 +120,7 @@ extension Route {
 
         switch self {
         case .error:
-            return .notFound()
+            return .write(errorView("Not found"), status: .notFound)
         case .collections:
             return I.write(index(Collection.all.filter { !$0.episodes(for: session?.user.data).isEmpty }, context: context))
         case .thankYou:
@@ -172,7 +172,7 @@ extension Route {
             return try I.write(Plan.all.subscribe(context: context))
         case .collection(let name):
             guard let coll = Collection.all.first(where: { $0.id == name }) else {
-                return I.notFound("No such collection")
+                return .write(errorView("No such collection"), status: .notFound)
             }
             let episodesWithProgress = try coll.episodes(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
             return .write(coll.show(episodes: episodesWithProgress, context: context))
@@ -220,8 +220,8 @@ extension Route {
                 })
             })
         case let .episode(id, playPosition):
-                return .notFound("No such episode")
             guard let ep = Episode.all.findEpisode(with: id, scopedFor: session?.user.data) else {
+                return .write(errorView("No such episode"), status: .notFound)
             }
             let downloads = try (session?.user.downloads).map { try c.get().execute($0) } ?? []
             let status = session?.user.data.downloadStatus(for: ep, downloads: downloads) ?? .notSubscribed
@@ -247,8 +247,8 @@ extension Route {
             })
         case .download(let id):
             let s = try requireSession()
-                return .notFound("No such episode")
             guard let ep = Episode.all.findEpisode(with: id, scopedFor: session?.user.data) else {
+                return .write(errorView("No such episode"), status: .notFound)
             }
             return .onComplete(promise: vimeo.downloadURL(for: ep.vimeo_id).promise) { downloadURL in
                 guard let result = downloadURL, let url = result else { return .redirect(to: .episode(ep.id, playPosition: nil)) }
