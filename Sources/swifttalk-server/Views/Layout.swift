@@ -142,8 +142,8 @@ extension LayoutConfig {
                 ]),
             .hashedStylesheet(href: "/assets/stylesheets/application.css"),
             includeRecurlyJS ? .script(src: "https://js.recurly.com/v4/recurly.js") : .none,
-            .hashedScript(src: "/assets/application.js")
-            // todo google analytics
+            .hashedScript(src: "/assets/application.js"),
+            googleAnalytics,
         ] + structured)
         let logo = Node.link(to: URL(string: "https://www.objc.io")!, attributes: ["class": "flex-none outline-none mr++ flex"], [
             .inlineSvg(path: "logo.svg", attributes: ["class": "block logo logo--themed height-auto"]), // todo scaling parameter?
@@ -198,7 +198,7 @@ extension LayoutConfig {
             .hashedStylesheet(href: "/assets/stylesheets/application.css"),
             includeRecurlyJS ? .script(src: "https://js.recurly.com/v4/recurly.js") : .none,
             .hashedScript(src: "/assets/application.js"),
-            // todo google analytics
+            googleAnalytics,
         ] + structured)
         let linkClasses: Class = "no-decoration color-inherit hover-color-black mr"
         let body: Node = .body(attributes: ["class": "theme-" + theme], [ // todo theming classes?
@@ -251,6 +251,16 @@ func userHeader(_ context: Context) -> Node {
     ])
 }
 
+let googleAnalytics = Node.raw("""
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-40809116-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-40809116-1');
+</script>
+""")
 let footer = """
 <footer>
 <div class="container">
