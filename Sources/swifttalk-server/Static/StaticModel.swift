@@ -103,8 +103,12 @@ extension Update {
 }
 
 extension Episode {
+    var seasonAndEpisodeShortcut: String {
+        return "S01E\(number)"
+    }
+    
     var id: Id<Episode> {
-        return Id(rawValue: "S01E\(number)-\(title.asSlug)")
+        return Id(rawValue: "\(seasonAndEpisodeShortcut)-\(title.asSlug)")
     }
     
     var fullTitle: String {
@@ -167,7 +171,12 @@ extension Swift.Collection where Element == Episode {
         guard let u = user, u.admin || u.collaborator else { return filter { $0.released } }
         return Array(self)
     }
-
+    
+    func findEpisode(with id: Id<Episode>, scopedFor user: UserData?) -> Episode? {
+        let eps = scoped(for: user)
+        let shortcut = id.rawValue[..<(id.rawValue.firstIndex(of: "-") ?? id.rawValue.endIndex)]
+        return eps.first { $0.seasonAndEpisodeShortcut == shortcut }
+    }
 }
 
 struct Collection: Codable, Equatable {

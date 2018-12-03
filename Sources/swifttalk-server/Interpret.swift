@@ -220,8 +220,8 @@ extension Route {
                 })
             })
         case let .episode(id, playPosition):
-            guard let ep = Episode.all.scoped(for: session?.user.data).first(where: { $0.id == id }) else {
                 return .notFound("No such episode")
+            guard let ep = Episode.all.findEpisode(with: id, scopedFor: session?.user.data) else {
             }
             let downloads = try (session?.user.downloads).map { try c.get().execute($0) } ?? []
             let status = session?.user.data.downloadStatus(for: ep, downloads: downloads) ?? .notSubscribed
@@ -247,8 +247,8 @@ extension Route {
             })
         case .download(let id):
             let s = try requireSession()
-            guard let ep = Episode.all.scoped(for: session?.user.data).first(where: { $0.id == id }) else {
                 return .notFound("No such episode")
+            guard let ep = Episode.all.findEpisode(with: id, scopedFor: session?.user.data) else {
             }
             return .onComplete(promise: vimeo.downloadURL(for: ep.vimeo_id).promise) { downloadURL in
                 guard let result = downloadURL, let url = result else { return .redirect(to: .episode(ep.id, playPosition: nil)) }
@@ -454,7 +454,7 @@ extension Route {
         case let .playProgress(episodeId):
             guard let s = try? requireSession() else { return I.write("", status: .ok)}
             return I.withPostBody(csrf: s.user.data.csrf) { body in
-                if let progress = body["progress"].flatMap(Int.init), let ep = Episode.all.first(where: { $0.id == episodeId }) {
+                if let progress = body["progress"].flatMap(Int.init), let ep = Episode.all.findEpisode(with: episodeId, scopedFor: s.user.data) {
                     let data = PlayProgressData.init(userId: s.user.id, episodeNumber: ep.number, progress: progress)
                     try c.get().execute(data.insertOrUpdate(uniqueKey: "user_id, episode_number"))
                 }
