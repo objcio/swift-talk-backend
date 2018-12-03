@@ -451,6 +451,8 @@ extension Route {
             // This could be done more fine grained, but this works just fine for now
             refreshStaticData()
             return I.write("", status: .ok)
+        case .rssFeed:
+            return I.write(xml: Episode.all.released.rssView, status: .ok)
         case let .playProgress(episodeId):
             guard let s = try? requireSession() else { return I.write("", status: .ok)}
             return I.withPostBody(csrf: s.user.data.csrf) { body in

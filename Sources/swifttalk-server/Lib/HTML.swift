@@ -29,7 +29,9 @@ extension UnicodeScalar {
 
 extension String {
     var addingUnicodeEntities: String {
-        return unicodeScalars.reduce(into: "", { $0.append($1.escapingIfNeeded) })
+        var result = ""
+        result.reserveCapacity(count)
+        return unicodeScalars.reduce(into: result, { $0.append($1.escapingIfNeeded) })
     }
 }
 
@@ -307,7 +309,17 @@ extension ANode {
     static func script(code: String) -> ANode {
         return .node(El(name: "script", children: [ANode.raw(code)]))
     }
-
+    
+    static func xml(_ name: String, attributes: [String:String] = [:], _ children: [ANode] = []) -> ANode {
+        let block: Bool
+        if children.count == 1, case let .text = children[0] {
+            block = false
+        } else {
+            block = true
+        }
+        return .node(El(name: name, block: block, attributes: attributes, children: children))
+    }
+    
     static func stylesheet(media: String = "all", href: String) -> Node {
         let attributes = [
             "rel": "stylesheet",
@@ -332,3 +344,26 @@ extension ANode: ExpressibleByStringLiteral {
     }
 }
 
+extension ANode where I == () {
+    var xmlDocument: String {
+        return ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>", render(input: (), encodeText: { $0.xmlString })].joined(separator: "\n")
+    }
+}
+
+fileprivate extension String {
+    var xmlString: String {
+        var result = ""
+        result.reserveCapacity(count)
+        for c in self {
+            switch c {
+            case "&": result.append("&amp")
+            case "\"": result.append("&quot;")
+            case "'": result.append("&apos;")
+            case "<": result.append("&lt;")
+            case ">": result.append("&gt;")
+            default: result.append(c)
+            }
+        }
+        return result
+    }
+}

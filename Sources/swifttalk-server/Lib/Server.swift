@@ -50,6 +50,10 @@ extension Interpreter {
         return .write(html.htmlDocument(input: input))
     }
     
+    static func write(xml: ANode<()>, status: HTTPResponseStatus = .ok) -> Self {
+        return Self.write(xml.xmlDocument, status: .ok, headers: ["Content-Type": "application/rss+xml; charset=utf-8"])
+    }
+    
     static func redirect(path: String) -> Self {
         return .redirect(path: path, headers: [:])
     }

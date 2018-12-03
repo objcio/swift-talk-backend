@@ -167,8 +167,12 @@ extension Episode {
 }
 
 extension Swift.Collection where Element == Episode {
+    var released: [Episode] {
+        return filter { $0.released }
+    }
+    
     func scoped(for user: UserData?) -> [Episode] {
-        guard let u = user, u.admin || u.collaborator else { return filter { $0.released } }
+        guard let u = user, u.admin || u.collaborator else { return released }
         return Array(self)
     }
     

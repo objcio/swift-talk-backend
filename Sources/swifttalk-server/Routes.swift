@@ -37,6 +37,7 @@ enum Route: Equatable {
     case upgradeSubscription
     case accountUpdatePayment
     case promoCode(String)
+    case rssFeed
 }
 
 extension Route {
@@ -171,6 +172,7 @@ private let otherRoutes: [Router<Route>] = [
     episodePlayProgress,
     episode,
     collection,
+    .c("episodes.rss", .rssFeed),
     .c("promo") / (Router.string().transform(Route.promoCode, { r in
         guard case let .promoCode(s) = r else { return nil }
         return s
