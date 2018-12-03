@@ -312,7 +312,9 @@ extension ANode {
     
     static func xml(_ name: String, attributes: [String:String] = [:], _ children: [ANode] = []) -> ANode {
         let block: Bool
-        if children.count == 1, case let .text = children[0] {
+        if children.isEmpty {
+            block = false
+        } else if children.count == 1, case .text = children[0] {
             block = false
         } else {
             block = true
@@ -356,7 +358,7 @@ fileprivate extension String {
         result.reserveCapacity(count)
         for c in self {
             switch c {
-            case "&": result.append("&amp")
+            case "&": result.append("&amp;")
             case "\"": result.append("&quot;")
             case "'": result.append("&apos;")
             case "<": result.append("&lt;")

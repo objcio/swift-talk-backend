@@ -113,6 +113,8 @@ let navigationItems: [(LinkTarget, String)] = [
     (URL(string: "https://www.objc.io/issues")!, "Issues")
 ]
 
+let rssURL = Route.rssFeed.url.absoluteString
+
 extension LayoutConfig {
     // todo: we can probably not include the CSRF token, I think it might only be needed in the React components (and we can pass it explicitly there)
     var structured: [Node] {
@@ -126,7 +128,18 @@ extension LayoutConfig {
             .meta(attributes: ["name": "viewport", "content": "'width=device-width, initial-scale=1, user-scalable=no'"]),
         ] + [
             .title(pageTitle),
-            // todo rss+atom links
+            Node.xml("link", attributes: [
+                "href": rssURL,
+                "rel": "alternate",
+                "title": "RSS",
+                "type": "application/rss+xml"
+                ]),
+            Node.xml("link", attributes: [
+                "href": rssURL,
+                "rel": "alternate",
+                "title": "Atom",
+                "type": "application/atom+xml"
+                ]),
             .hashedStylesheet(href: "/assets/stylesheets/application.css"),
             includeRecurlyJS ? .script(src: "https://js.recurly.com/v4/recurly.js") : .none,
             .hashedScript(src: "/assets/application.js")
@@ -170,7 +183,18 @@ extension LayoutConfig {
             .meta(attributes: ["http-equiv": "X-UA-Compatible", "content": "IE=edge"]),
             .meta(attributes: ["name": "viewport", "content": "'width=device-width, initial-scale=1, user-scalable=no'"]),
             .title(pageTitle),
-            // todo rss+atom links
+            Node.xml("link", attributes: [
+                "href": rssURL,
+                "rel": "alternate",
+                "title": "RSS",
+                "type": "application/rss+xml"
+            ]),
+            Node.xml("link", attributes: [
+                "href": rssURL,
+                "rel": "alternate",
+                "title": "Atom",
+                "type": "application/atom+xml"
+                ]),
             .hashedStylesheet(href: "/assets/stylesheets/application.css"),
             includeRecurlyJS ? .script(src: "https://js.recurly.com/v4/recurly.js") : .none,
             .hashedScript(src: "/assets/application.js"),
