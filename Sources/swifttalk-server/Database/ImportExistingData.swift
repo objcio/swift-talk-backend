@@ -114,7 +114,7 @@ func importExistingData() throws {
 //                assert(u.last_reconciled_at == nil)
 //                continue
 //            }
-            let userData = UserData(email: u.email ?? "none", githubUID: u.github_uid, githubLogin: u.github_login, githubToken: u.github_token, avatarURL: u.avatar_url ?? "", name: u.name ?? "", createdAt: u.created_at, rememberCreatedAt: u.remember_created_at, updatedAt: u.updated_at, collaborator: u.collaborator ?? false, downloadCredits: u.download_credits, canceled: false)
+            let userData = UserData(email: u.email ?? "none", githubUID: u.github_uid, githubLogin: u.github_login, githubToken: u.github_token, avatarURL: u.avatar_url ?? "", name: u.name ?? "", createdAt: u.created_at, rememberCreatedAt: u.remember_created_at, updatedAt: u.updated_at, collaborator: u.collaborator ?? false, downloadCredits: u.download_credits, canceled: false, confirmedNameAndEmail: true)
             do {
 		try conn.execute(userData.insertFromImport(id: u.id))
             } catch {
