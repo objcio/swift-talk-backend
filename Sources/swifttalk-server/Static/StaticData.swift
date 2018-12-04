@@ -36,8 +36,8 @@ final class Static<A> {
 // Re-computable static sources
 
 fileprivate let episodesSource: Static<[Episode]> = .fromStaticRepo(onRefresh: { newEpisodes in
-    for ep in newEpisodes where ep.release_at > Date() {
-        let query = Task.releaseEpisode(number: ep.number).schedule(at: ep.release_at)
+    for ep in newEpisodes where ep.releaseAt > Date() {
+        let query = Task.releaseEpisode(number: ep.number).schedule(at: ep.releaseAt)
         tryOrLog("Failed to schedule release task for episode \(ep.number)") { try lazyConnection().get().execute(query) }
     }
 })

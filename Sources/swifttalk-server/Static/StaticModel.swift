@@ -56,16 +56,16 @@ enum Role: String, Codable, Equatable, Comparable {
 struct Episode: Codable, Equatable {
     var collections: [Id<Collection>]
     var collaborators: [Id<Collaborator>]
-    var media_duration: TimeInterval
+    var mediaDuration: TimeInterval
     var number: Int
-    var release_at: Date
-    var subscription_only: Bool
+    var releaseAt: Date
+    var subscriptionOnly: Bool
     var synopsis: String
     var title: String
     var resources: [Resource]
-    var vimeo_id: Int
-    var preview_vimeo_id: Int?
-    var thumbnail_id: Int
+    var vimeoId: Int
+    var previewVimeoId: Int?
+    var thumbnailId: Int
     var updates: [Update]?
 }
 
@@ -90,16 +90,16 @@ extension Episode {
     }
     
     var fullTitle: String {
-        guard let p = primaryCollection, p.use_as_title_prefix else { return title }
+        guard let p = primaryCollection, p.useAsTitlePrefix else { return title }
         return "\(p.title): \(title)"
     }
     
     var released: Bool {
-        return release_at < Date()
+        return releaseAt < Date()
     }
     
     func posterURL(width: Int, height: Int) -> URL {
-        return URL(string: "https://i.vimeocdn.com/video/\(thumbnail_id)_\(width)x\(height).jpg")!
+        return URL(string: "https://i.vimeocdn.com/video/\(thumbnailId)_\(width)x\(height).jpg")!
     }
 
     var theCollections: [Collection] {
@@ -136,7 +136,7 @@ extension Episode {
     }
 
     func canWatch(session: Session?) -> Bool {
-        return session.premiumAccess || !subscription_only
+        return session.premiumAccess || !subscriptionOnly
     }
 }
 
@@ -164,7 +164,7 @@ struct Collection: Codable, Equatable {
     var description: String
     var position: Int
     var new: Bool
-    var use_as_title_prefix: Bool
+    var useAsTitlePrefix: Bool
 }
 
 extension Collection {
@@ -179,7 +179,7 @@ extension Collection {
 
 extension Sequence where Element == Episode {
     var totalDuration: TimeInterval {
-        return lazy.map { $0.media_duration }.reduce(0, +)
+        return lazy.map { $0.mediaDuration }.reduce(0, +)
     }
 }
 

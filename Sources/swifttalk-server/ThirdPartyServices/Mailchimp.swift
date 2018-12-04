@@ -84,7 +84,7 @@ struct Mailchimp {
         let query: [String: String] = [
             "list_id": listId,
             "count": "10000",
-            "since_create_time": DateFormatter.iso8601.string(from: episode.release_at)
+            "since_create_time": DateFormatter.iso8601.string(from: episode.releaseAt)
         ]
         return RemoteEndpoint<Response>(json: .get, url: url, headers: authHeader, query: query).map { resp in
             return resp.campaigns.contains { $0.settings.title == self.campaignTitle(for: episode) }

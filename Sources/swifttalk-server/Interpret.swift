@@ -250,7 +250,7 @@ extension Route {
             guard let ep = Episode.all.findEpisode(with: id, scopedFor: session?.user.data) else {
                 return .write(errorView("No such episode"), status: .notFound)
             }
-            return .onComplete(promise: vimeo.downloadURL(for: ep.vimeo_id).promise) { downloadURL in
+            return .onComplete(promise: vimeo.downloadURL(for: ep.vimeoId).promise) { downloadURL in
                 guard let result = downloadURL, let url = result else { return .redirect(to: .episode(ep.id, playPosition: nil)) }
                 let downloads = try c.get().execute(s.user.downloads)
                 switch s.user.data.downloadStatus(for: ep, downloads: downloads) {

@@ -96,7 +96,7 @@ extension Episode {
                     Node.div(attributes: ["class": "absolute position-stretch opacity-60 blend-darken gradient-episode-black"]),
                     Node.div(classes: "absolute position-stretch flex flex-column", [
                         Node.div(classes: "mt-auto width-full flex items-center lh-100 ms-1 pa- color-white",
-                                 smallIcon + [Node.span(attributes: ["class": "ml-auto bold text-shadow-20"], [.text("\(media_duration.minutes)")])] // todo format text
+                                 smallIcon + [Node.span(attributes: ["class": "ml-auto bold text-shadow-20"], [.text("\(mediaDuration.minutes)")])] // todo format text
                         )
                     ])
                 ] + largeIcon)
@@ -109,7 +109,7 @@ extension Episode {
                 .p(classes: footerClasses, [
                     Node.text("Episode \(number)"),
                     Node.span(attributes: ["class": "ph---"], [.raw("&middot;")]),
-                    Node.text(release_at.pretty)
+                    Node.text(releaseAt.pretty)
                 ])
             ]),
         ])
@@ -146,11 +146,11 @@ extension Episode {
 
     fileprivate func player(canWatch: Bool, playPosition: Int?) -> Node {
         let startTime = playPosition.map { "#t=\($0)s" } ?? ""
-        let vimeoId = canWatch ? vimeo_id : (preview_vimeo_id ?? 0)
+        let videoId = canWatch ? vimeoId : (previewVimeoId ?? 0)
         return .div(classes: "ratio ratio--16/9", [
             .div(classes: "ratio__container", [
                 .figure(attributes: ["class":"stretch relative"], [
-                    Node.iframe(URL(string: "https://player.vimeo.com/video/\(vimeoId)\(startTime)")!, attributes: [
+                    Node.iframe(URL(string: "https://player.vimeo.com/video/\(videoId)\(startTime)")!, attributes: [
                         "width": "100%",
                         "height": "100%",
                         "webkitallowfullscreen": "",
@@ -181,7 +181,7 @@ extension Episode {
         return .div(classes: "l+|absolute l+|position-stretch stretch width-full flex flex-column", [
             Node.h3(attributes: ["class": "color-blue border-top border-2 pt mb+ flex-none flex items-baseline"], [
                 .span(attributes: ["class": "smallcaps"], [.text(canWatch ? "In this episode" : "In the full episode")]),
-                .span(attributes: ["class": "ml-auto ms-1 bold"], [.text(media_duration.timeString)])
+                .span(attributes: ["class": "ml-auto ms-1 bold"], [.text(mediaDuration.timeString)])
             ]),
             Node.div(classes: "flex-auto overflow-auto border-color-lighten-10 border-1 border-top", [
                 Node.ol(attributes: ["class": "lh-125 ms-1 color-white"], items.map { entry in
@@ -194,7 +194,7 @@ extension Episode {
     }
     
     func show(playPosition: Int?, downloadStatus: DownloadStatus, otherEpisodes: [EpisodeWithProgress], context: Context) -> Node {
-        let canWatch = !subscription_only || context.session.premiumAccess
+        let canWatch = !subscriptionOnly || context.session.premiumAccess
         
         let scroller = Node.aside(attributes: ["class": "bgcolor-pale-gray pt++ js-scroller"], [
             Node.header(attributes: ["class": "container-h flex items-center justify-between"], [
@@ -285,7 +285,7 @@ extension Episode {
             ]
         } ?? []
         let detailItems: [(String,String, URL?)] = [
-            ("Released", DateFormatter.fullPretty.string(from: release_at), nil)
+            ("Released", DateFormatter.fullPretty.string(from: releaseAt), nil)
         ] + theCollaborators.sorted(by: { $0.role < $1.role }).map { coll in
             (coll.role.name, coll.name, .some(coll.url))
         }
@@ -453,7 +453,7 @@ extension Episode {
             ])
         ])
         
-        let data = StructuredData(title: title, description: synopsis, url: Route.episode(id, playPosition: nil).url, image: posterURL(width: 600, height: 338), type: .video(duration: Int(media_duration), releaseDate: release_at))
+        let data = StructuredData(title: title, description: synopsis, url: Route.episode(id, playPosition: nil).url, image: posterURL(width: 600, height: 338), type: .video(duration: Int(mediaDuration), releaseDate: releaseAt))
         return LayoutConfig(context: context, contents: [main, scroller] + (context.session.premiumAccess ? [] : [subscribeBanner()]), footerContent: scripts, structuredData: data).layout
     }
 }
@@ -493,7 +493,7 @@ let previewBadge = """
 
 extension Episode {
     static var subscriberOnly: Int {
-        return all.lazy.filter { $0.subscription_only }.count
+        return all.lazy.filter { $0.subscriptionOnly }.count
     }
 }
 

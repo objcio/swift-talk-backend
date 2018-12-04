@@ -145,7 +145,7 @@ struct EpisodeWithProgress {
     var progress: Int?
     
     var watched: Bool {
-        return Int(episode.media_duration) - (progress ?? 0) < 30
+        return Int(episode.mediaDuration) - (progress ?? 0) < 30
     }
 }
 

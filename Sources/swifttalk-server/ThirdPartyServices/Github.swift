@@ -96,12 +96,14 @@ struct Github {
     static let staticDataDecoder: JSONDecoder = {
         let d = JSONDecoder()
         d.dateDecodingStrategy = .formatted(DateFormatter.iso8601)
+        d.keyDecodingStrategy = .convertFromSnakeCase
         return d
     }()
     
     static let staticDataEncoder: JSONEncoder = {
         let e = JSONEncoder()
         e.dateEncodingStrategy = .formatted(DateFormatter.iso8601)
+        e.keyEncodingStrategy = .convertToSnakeCase
         return e
     }()
 }
