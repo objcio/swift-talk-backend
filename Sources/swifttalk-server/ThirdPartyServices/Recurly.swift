@@ -41,6 +41,11 @@ struct Plan: Codable {
         case months
         case days
     }
+    struct AddOn: Codable, RootElement {
+        static let rootElementName: String = "add_on"
+        var add_on_code: String
+        var unit_amount_in_cents: Amount
+    }
     var plan_code: String
     var name: String
     var description: String?
@@ -55,6 +60,10 @@ extension Plan {
     }
     static var yearly: Plan? {
         return all.first(where: { $0.plan_interval_unit == .months && $0.plan_interval_length == 12 })
+    }
+    
+    var teamMemberAddOn: RemoteEndpoint<AddOn> {
+        return recurly.teamMemberAddOn(plan_code: plan_code)
     }
 
     func discountedPrice(coupon: Coupon?) -> Amount {
@@ -126,7 +135,7 @@ extension Subscription {
     }
 
     // Todo: this should include the team members as well.
-    var totalAtRenewal: Int {
+    func totalAtRenewal(addOn: Plan.AddOn) -> Int {
         let beforeTax = unit_amount_in_cents * quantity
         if let rate = tax_rate {
             return beforeTax + Int(Double(beforeTax) * rate)
@@ -137,7 +146,7 @@ extension Subscription {
     // Returns nil if there aren't any upgrades.
     var upgrade: Upgrade? {
         if state == .active, let m = Plan.monthly, plan.plan_code == m.plan_code, let y = Plan.yearly {
-            // TODO calculate correctly
+            // TODO include team members!
             let totalWithoutVat = y.unit_amount_in_cents.usdCents // todo add team members
             let vat: Int? = tax_rate.map { Int(Double(totalWithoutVat) * $0) }
             let total = totalWithoutVat + (vat ?? 0)
@@ -376,11 +385,13 @@ struct CreateSubscription: Codable, RootElement {
     var account: CreateAccount
 }
 
+fileprivate let teamMemberAddOnCode = "team_members"
+
 struct UpdateSubscription: Codable, RootElement {
     static let rootElementName = "subscription"
     struct AddOn: Codable, RootElement {
         static let rootElementName: String = "subscription_add_on"
-        var add_on_code = "team_members"
+        var add_on_code = teamMemberAddOnCode
         var quantity: Int
     }
     var timeframe: String = "now"
@@ -492,6 +503,10 @@ struct Recurly {
         return RemoteEndpoint(xml: .get, url: base.appendingPathComponent("accounts/\(id.uuidString)/billing_info"), headers: headers)
     }
     
+    func teamMemberAddOn(plan_code: String) -> RemoteEndpoint<Plan.AddOn> {
+        return RemoteEndpoint(xml: .get, url: base.appendingPathComponent("plans/\(plan_code)/add_ons/\(teamMemberAddOnCode)"), headers: headers)
+    }
+    
     func updatePaymentMethod(for accountId: UUID, token: String) -> RemoteEndpoint<RecurlyResult<BillingInfo>> {
         struct UpdateData: Codable, RootElement {
             var token_id: String
@@ -532,7 +547,7 @@ struct Recurly {
     }
     
     func updateSubscription(_ subscription: Subscription, plan_code: String? = nil, numberOfTeamMembers: Int? = nil) -> RemoteEndpoint<Subscription> {
-        let addons: [UpdateSubscription.AddOn]? = numberOfTeamMembers == 0 ? nil : numberOfTeamMembers.map { [UpdateSubscription.AddOn(add_on_code: "team_members", quantity: $0)] }
+        let addons: [UpdateSubscription.AddOn]? = numberOfTeamMembers == 0 ? nil : numberOfTeamMembers.map { [UpdateSubscription.AddOn(add_on_code: teamMemberAddOnCode, quantity: $0)] }
         let url = base.appendingPathComponent("subscriptions/\(subscription.uuid)")
         return RemoteEndpoint(xml: .put, url: url, value: UpdateSubscription(timeframe: "now", plan_code: plan_code, subscription_add_ons: addons), headers: headers, query: [:])
     }

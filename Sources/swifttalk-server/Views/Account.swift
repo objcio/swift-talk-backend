@@ -319,10 +319,11 @@ func unsubscribedBilling(context: Context) -> Node {
     ])
 }
 
-func billing(context: Context, user: Row<UserData>, subscription: Subscription?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo, redemptions: [(Redemption, Coupon)]) -> Node {    
+func billing(context: Context, user: Row<UserData>, subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo, redemptions: [(Redemption, Coupon)]) -> Node {
     // todo: reactivate subscription.
-    let subscriptionInfo: [Node] = subscription.map { sub in
-        [
+    let subscriptionInfo: [Node] = subscription.map { (x) -> [Node] in
+        let (sub, addOn) = x
+        return [
         heading("Subscription"),
         Node.div([
             Node.ul(classes: "stack- mb", [
@@ -338,7 +339,7 @@ func billing(context: Context, user: Row<UserData>, subscription: Subscription?,
                     label(text: "Next Billing"),
                     Node.div(classes: "flex-auto color-gray-30 stack-", [
                         Node.p([
-                            Node.text(dollarAmount(cents: sub.totalAtRenewal)),
+                            Node.text(dollarAmount(cents: sub.totalAtRenewal(addOn: addOn))),
                             Node.text(" on "),
                             .text(sub.current_period_ends_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "n/a"),
                         ]), // todo team member add-on pricing, VAT

@@ -303,15 +303,24 @@ extension Route {
                 }
                 let promise = zip(sess.user.currentSubscription.promise, invoicesAndPDFs, redemptions, sess.user.billingInfo.promise, recurly.coupons().promise).map(zip)
                 return I.onSuccess(promise: promise, do: { p in
-                    
                     let (sub, invoicesAndPDFs, redemptions, billingInfo, coupons) = p
-                    let redemptionsWithCoupon = try redemptions.map { (r) -> (Redemption, Coupon) in
-                        guard let c = coupons.first(where: { $0.coupon_code == r.coupon_code }) else {
-                            throw RenderingError(privateMessage: "No coupon for \(r)!", publicMessage: "Something went wrong.")
+                    func cont(subAndAddOn: (Subscription, Plan.AddOn)?) throws -> I {
+                        let redemptionsWithCoupon = try redemptions.map { (r) -> (Redemption, Coupon) in
+                            guard let c = coupons.first(where: { $0.coupon_code == r.coupon_code }) else {
+                                throw RenderingError(privateMessage: "No coupon for \(r)!", publicMessage: "Something went wrong.")
+                            }
+                            return (r,c)
                         }
-                        return (r,c)
+                        let result = billing(context: context, user: sess.user, subscription: subAndAddOn, invoices: invoicesAndPDFs, billingInfo: billingInfo, redemptions: redemptionsWithCoupon)
+                        return I.write(result)
                     }
-                    return I.write(billing(context: context, user: sess.user, subscription: sub, invoices: invoicesAndPDFs, billingInfo: billingInfo, redemptions: redemptionsWithCoupon))
+                    if let s = sub, let p = Plan.all.first(where: { $0.plan_code == s.plan.plan_code }) {
+                        return I.onSuccess(promise: p.teamMemberAddOn.promise, do: { addOn in
+                            try cont(subAndAddOn: (s, addOn))
+                    	})
+                    } else {
+                        return try cont(subAndAddOn: nil)
+                    }
                 })
             }
             guard let t = sess.user.data.recurlyHostedLoginToken else {
