@@ -7,6 +7,8 @@
 
 import Foundation
 
+fileprivate let accountHeader = pageHeader(.other(header: "Account", blurb: nil, extraClasses: "ms4"))
+
 func accountContainer(context: Context, content: Node, forRoute: Route) -> Node {
     var items: [(Route, title: String)] = [
         (Route.accountProfile, title: "Profile"),
@@ -242,7 +244,7 @@ extension ReactComponent where A == PaymentViewData {
 
 func updatePaymentView(context: Context, data: PaymentViewData) -> Node {
     return LayoutConfig(context: context, contents: [
-        pageHeader(.link(header: "Account", backlink: .home, label: "")),
+        accountHeader,
         accountContainer(context: context, content: Node.div([
             heading("Update Payment Method"),
             .div(classes: "container", [
@@ -294,7 +296,7 @@ fileprivate func value(text: String, classes: Class = "") -> Node {
 
 func billingLayout(context: Context, content: [Node]) -> Node {
     return LayoutConfig(context: context, contents: [
-        pageHeader(.link(header: "Account", backlink: .home, label: "")),
+        accountHeader,
         accountContainer(context: context, content: Node.div(classes: "stack++", content), forRoute: .accountBilling)
     ]).layout
 }
@@ -386,7 +388,7 @@ func accountForm(context: Context) -> Form<ProfileFormData> {
     let form = profile(submitTitle: "Update Profile", action: .accountProfile)
     return form.wrap { node in
         LayoutConfig(context: context, contents: [
-            pageHeader(.link(header: "Account", backlink: .home, label: "")),
+            accountHeader,
             accountContainer(context: context, content: node, forRoute: .accountProfile)
         ]).layout
     }
@@ -436,7 +438,7 @@ func teamMembers(context: Context, csrf: CSRFToken, addForm: Node, teamMembers: 
     ]
 
     return LayoutConfig(context: context, contents: [
-        pageHeader(HeaderContent.other(header: "Account", blurb: nil, extraClasses: "ms4 pb")),
+        accountHeader,
         accountContainer(context: context, content: Node.div(classes: "stack++", [
             Node.div(content)
         ]), forRoute: .accountTeamMembers)
