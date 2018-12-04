@@ -87,19 +87,24 @@ func decode<A: Decodable>(_ file: String) throws -> [A] {
 
 func importExistingData() throws {
     _ = try withConnection { conn in
-        let users: [ImportUser] = try decode("import/users.json")
+        try conn.execute("DELETE FROM sessions")
+        try conn.execute("DELETE FROM downloads")
+        try conn.execute("DELETE FROM team_members")
+        try conn.execute("DELETE FROM play_progress")
+        try conn.execute("DELETE FROM users")
+        let users: [ImportUser] = try decode("data/users.json")
         print(users.count)
 
-        let downloads: [ImportDownload] = try decode("import/downloads.json")
+        let downloads: [ImportDownload] = try decode("data/downloads.json")
         print(downloads.count)
 
-        let teamMembers: [ImportTeamMember] = try decode("import/team_member_associations.json")
+        let teamMembers: [ImportTeamMember] = try decode("data/team_member_associations.json")
         print(teamMembers.count)
 
-        let views: [ImportView] = try decode("import/episode_views.json")
+        let views: [ImportView] = try decode("data/episode_views.json")
         print(views.count)
 
-        let eps: [ImportEpisode] = try decode("import/episodes.json")
+        let eps: [ImportEpisode] = try decode("data/episodes.json")
         let epMap: [UUID:Int] = Dictionary(eps.map { ($0.id, $0.number) }, uniquingKeysWith: { $1 })
 
         var duplicates: [UUID:UUID] = [:]
@@ -176,6 +181,6 @@ func importExistingData() throws {
             }
         }
 
-            fatalError("Done")
+//            fatalError("Done")
     }
 }

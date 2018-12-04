@@ -454,6 +454,11 @@ extension Route {
             return I.write("", status: .ok)
         case .rssFeed:
             return I.write(xml: Episode.all.released.rssView, status: .ok)
+        case .migrate:
+            DispatchQueue.global().async {
+                try! importExistingData()
+            }
+            return I.write("", status: .ok)
         case let .playProgress(episodeId):
             guard let s = try? requireSession() else { return I.write("", status: .ok)}
             return I.withPostBody(csrf: s.user.data.csrf) { body in
