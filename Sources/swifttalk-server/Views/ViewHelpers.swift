@@ -121,8 +121,13 @@ extension Date {
 }
 
 func dollarAmount(cents: Int) -> String {
-    let amount = String(format: "%.2f", Double(cents) / 100)
-    return "$\(amount)"
+    if cents < 0 {
+        let amount = String(format: "%.2f", Double(0-cents) / 100)
+        return "- $\(amount)"
+    } else {
+        let amount = String(format: "%.2f", Double(cents) / 100)
+        return "$\(amount)"
+    }
 }
 
 struct ReactComponent<A: Encodable> {
