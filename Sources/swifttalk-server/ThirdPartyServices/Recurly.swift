@@ -99,7 +99,7 @@ struct Subscription: Codable {
     var quantity: Int
     var unit_amount_in_cents: Int
     var tax_rate: Double?
-    var subscription_add_ons: [AddOn]
+    var subscription_add_ons: [AddOn]?
 }
 
 extension Date {
@@ -532,7 +532,7 @@ struct Recurly {
     }
     
     func updateSubscription(_ subscription: Subscription, plan_code: String? = nil, numberOfTeamMembers: Int? = nil) -> RemoteEndpoint<Subscription> {
-        let addons: [UpdateSubscription.AddOn]? = numberOfTeamMembers.map { [UpdateSubscription.AddOn(add_on_code: "team_members", quantity: $0)] }
+        let addons: [UpdateSubscription.AddOn]? = numberOfTeamMembers == 0 ? nil : numberOfTeamMembers.map { [UpdateSubscription.AddOn(add_on_code: "team_members", quantity: $0)] }
         let url = base.appendingPathComponent("subscriptions/\(subscription.uuid)")
         return RemoteEndpoint(xml: .put, url: url, value: UpdateSubscription(timeframe: "now", plan_code: plan_code, subscription_add_ons: addons), headers: headers, query: [:])
     }
