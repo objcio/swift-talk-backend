@@ -168,6 +168,7 @@ private let subscriptionRoutes: [Router<Route>] = [
 private let otherRoutes: [Router<Route>] = [
     .c("episodes", .episodes),
     assetsRoute,
+    .c("favicon.ico", Route.staticFile(path: ["favicon.ico"])),
     .c("collections", .collections),
     episodeDownload,
     episodePlayProgress,
