@@ -68,6 +68,7 @@ extension Swift.Collection where Element == Episode {
         guard let id = userId else { return map { EpisodeWithProgress(episode: $0, progress: nil) } }
         let progresses = try connection.get().execute(Row<PlayProgressData>.sortedDesc(for: id)).map { $0.data }
         return map { episode in
+            // todo this is (n*m), we should use the fact that `progresses` is sorted!
             EpisodeWithProgress(episode: episode, progress: progresses.first { $0.episodeNumber == episode.number }?.progress)
         }
     }
@@ -457,7 +458,7 @@ extension Route {
             guard let s = try? requireSession() else { return I.write("", status: .ok)}
             return I.withPostBody(csrf: s.user.data.csrf) { body in
                 if let progress = body["progress"].flatMap(Int.init), let ep = Episode.all.findEpisode(with: episodeId, scopedFor: s.user.data) {
-                    let data = PlayProgressData.init(userId: s.user.id, episodeNumber: ep.number, progress: progress)
+                    let data = PlayProgressData.init(userId: s.user.id, episodeNumber: ep.number, progress: progress, furthestWatched: progress)
                     try c.get().execute(data.insertOrUpdate(uniqueKey: "user_id, episode_number"))
                 }
                 return I.write("", status: .ok)

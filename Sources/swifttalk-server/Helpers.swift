@@ -173,12 +173,12 @@ extension Data {
     }
 }
 
-func measure<A>(message: String, file: StaticString = #file, line: UInt = #line, treshold: TimeInterval = 0.1, _ code: () throws -> A) rethrows -> A {
+func measure<A>(message: String, file: StaticString = #file, line: UInt = #line, treshold: TimeInterval = 0.01, _ code: () throws -> A) rethrows -> A {
     let start = Date()
     let result = try code()
     let time = Date().timeIntervalSince(start)
     if time > treshold {
-        log(file: file, line: line, info: "measure: \(time)s \(message)")
+        log(file: file, line: line, info: "measure: \(time*1000)ms \(message)")
     }
     return result
 }

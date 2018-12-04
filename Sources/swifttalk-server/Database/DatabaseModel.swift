@@ -95,7 +95,7 @@ struct UserData: Codable, Insertable {
     var csrf: CSRFToken
 
     
-    init(email: String, githubUID: Int, githubLogin: String, githubToken: String? = nil, avatarURL: String, name: String) {
+    init(email: String, githubUID: Int, githubLogin: String, githubToken: String? = nil, avatarURL: String, name: String, createdAt: Date? = nil, rememberCreatedAt: Date? = nil, updatedAt: Date? = nil, collaborator: Bool = false, downloadCredits: Int = 0, canceled: Bool = false) {
         self.email = email
         self.githubUID = githubUID
         self.githubLogin = githubLogin
@@ -103,13 +103,13 @@ struct UserData: Codable, Insertable {
         self.avatarURL = avatarURL
         self.name = name
         let now = Date()
-        rememberCreatedAt = now
-        updatedAt = now
-        createdAt = now
-        collaborator = false
-        downloadCredits = 0
+        self.rememberCreatedAt = rememberCreatedAt ?? now
+        self.updatedAt = updatedAt ?? now
+        self.createdAt = createdAt ?? now
+        self.collaborator = collaborator
+        self.downloadCredits = downloadCredits
         csrf = CSRFToken(UUID())
-        canceled = false
+        self.canceled = canceled
     }
     
     static let tableName: String = "users"
@@ -152,10 +152,13 @@ extension UserData {
     }
 }
 
-struct PlayProgressData: Insertable {
+struct PlayProgressData {
     var userId: UUID
     var episodeNumber: Int
     var progress: Int
+    var furthestWatched: Int
     
     static let tableName = "play_progress"
 }
+
+extension PlayProgressData: Insertable { }

@@ -168,5 +168,9 @@ fileprivate let migrations: [String] = [
     ALTER TABLE users
     ADD COLUMN IF NOT EXISTS canceled BOOLEAN DEFAULT false NOT NULL;
     """,
+    """
+    ALTER TABLE play_progress
+    ADD COLUMN IF NOT EXISTS furthest_watched integer DEFAULT 0 NOT NULL;
+    """,
 ]
 

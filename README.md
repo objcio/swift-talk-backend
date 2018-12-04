@@ -101,3 +101,13 @@ heroku container:release web
 # Debugging Linux Bugs
 
 You can run a docker container from one of the intermediate steps. Then install screen and vim, and you have a small linux dev environment.
+
+# Importing the existing database
+
+```
+select json_agg(t) from (select * from users) t \g users.json
+select json_agg(t) from (select * from team_member_associations) t \g team_member_associations.json
+select json_agg(t) from (select * from downloads) t \g downloads.json
+select json_agg(t) from (select * from episode_views) t \g episode_views.json
+select json_agg(t) from (select * from episodes) t \g episodes.json
+```

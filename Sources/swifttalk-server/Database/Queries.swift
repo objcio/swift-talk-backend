@@ -38,6 +38,8 @@ struct Row<Element: Codable>: Codable {
     var id: UUID
     var data: Element
     
+    // For importing
+
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try c.decode(UUID.self, forKey: CodingKeys.id)
@@ -96,6 +98,13 @@ extension Insertable {
         }
     }
     
+    func insertFromImport(id: UUID) -> Query<()> {
+        let f = fields
+        return .build(parameters: f.values + [id], parse: { _ in () }) {
+            "INSERT INTO \(Self.tableName) (\(f.names.sqlJoined), id) VALUES (\($0.sqlJoined))"
+        }
+    }
+
     func findOrInsert(uniqueKey: String, value: NodeRepresentable) -> Query<UUID> {
         let f = fields
         return Query.build(parameters: f.values, parse: parseId) { """
@@ -148,6 +157,10 @@ extension Row where Element == UserData {
         return Row<UserData>.selectOne.appending(parameters: [id]) { "WHERE github_uid=\($0[0])" }
     }
     
+    static func select(githubLogin login: String) -> Query<Row<Element>?> {
+        return Row<UserData>.selectOne.appending(parameters: [login]) { "WHERE github_login=\($0[0])" }
+    }
+
     static func select(sessionId id: UUID) -> Query<Row<Element>?> {
         let fields = UserData.fieldNames.map { "u.\($0)" }.sqlJoined
         return .build(parameters: [id], parse: Element.parseFirst) {
