@@ -85,13 +85,25 @@ struct Github {
     func staticData<A: StaticLoadable>() -> RemoteEndpoint<[A]> {
         let url = URL(string: "https://api.github.com/repos/objcio/\(staticDataRepo)/contents/\(A.jsonName)")!
         let headers = ["Authorization": "token \(accessToken)"]
-        return RemoteEndpoint(json: .get, url: url, accept: .githubRaw, headers: headers)
+        return RemoteEndpoint(json: .get, url: url, accept: .githubRaw, headers: headers, decoder: Github.staticDataDecoder)
     }
     
     func contents(_ url: URL) -> RemoteEndpoint<String> {
         let headers = ["Authorization": "token \(accessToken)"]
         return RemoteEndpoint(.get, url: url, accept: .githubRaw, headers: headers) { String(data: $0, encoding: .utf8) }
     }
+    
+    static let staticDataDecoder: JSONDecoder = {
+        let d = JSONDecoder()
+        d.dateDecodingStrategy = .formatted(DateFormatter.iso8601)
+        return d
+    }()
+    
+    static let staticDataEncoder: JSONEncoder = {
+        let e = JSONEncoder()
+        e.dateEncodingStrategy = .formatted(DateFormatter.iso8601)
+        return e
+    }()
 }
 
 

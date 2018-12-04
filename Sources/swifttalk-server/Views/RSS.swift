@@ -35,11 +35,11 @@ extension Swift.Collection where Element == Episode {
                 return .xml("item", [
                     .xml("guid", [.text(link)]),
                     .xml("title", [.text(item.title)]),
-                    .xml("pubDate", [.text(formatter.string(from: item.release_at.date!))]),
+                    .xml("pubDate", [.text(formatter.string(from: item.release_at))]),
                     .xml("link", [.text(link)]),
                     .xml("description", [.text(item.synopsis)])
                 ])
-                })
+            })
         ])
     }
 }

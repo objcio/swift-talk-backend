@@ -75,9 +75,10 @@ extension RemoteEndpoint where A == () {
 }
 
 extension RemoteEndpoint where A: Decodable {
-    init(json method: Method, url: URL, accept: Accept = .json, headers: [String: String] = [:], query: [String: String] = [:]) {
+    init(json method: Method, url: URL, accept: Accept = .json, headers: [String: String] = [:], query: [String: String] = [:], decoder: JSONDecoder? = nil) {
+        let d = decoder ?? JSONDecoder()
         self.init(method, url: url, accept: accept, body: nil, headers: headers, query: query) { data in
-            return try? JSONDecoder().decode(A.self, from: data)
+            return try? d.decode(A.self, from: data)
         }
     }
 

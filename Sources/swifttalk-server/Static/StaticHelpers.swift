@@ -28,7 +28,7 @@ func loadStaticData<A: Codable>(name: String) -> [A] {
     return tryOrLog { try withConnection { connection in
         guard
             let row = try connection.execute(Row<FileData>.staticData(jsonName: name)),
-            let result = try? JSONDecoder().decode([A].self, from: row.data.value.data(using: .utf8)!)
+            let result = try? Github.staticDataDecoder.decode([A].self, from: row.data.value.data(using: .utf8)!)
             else { return [] }
         return result
     }} ?? []
@@ -37,12 +37,12 @@ func loadStaticData<A: Codable>(name: String) -> [A] {
 func cacheStaticData<A: Codable>(_ data: A, name: String) {
     tryOrLog { try withConnection { connection in
         guard
-            let encoded = try? JSONEncoder().encode(data),
+            let encoded = try? Github.staticDataEncoder.encode(data),
             let json = String(data: encoded, encoding: .utf8)
             else { log(error: "Unable to encode static data \(name)"); return }
         let fd = FileData(repository: github.staticDataRepo, path: name, value: json)
         tryOrLog("Error caching \(name) in database") { try connection.execute(fd.insertOrUpdate(uniqueKey: "key")) }
-        }}
+    }}
 }
 
 fileprivate func refreshStaticData<A: StaticLoadable>(_ endpoint: RemoteEndpoint<[A]>, onCompletion: @escaping () -> ()) {
@@ -51,7 +51,7 @@ fileprivate func refreshStaticData<A: StaticLoadable>(_ endpoint: RemoteEndpoint
             guard let r = result else { log(error: "Failed loading static data \(A.jsonName)"); return }
             cacheStaticData(r, name: A.jsonName)
             onCompletion()
-            }}
+        }}
     }
 }
 

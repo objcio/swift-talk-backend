@@ -109,7 +109,7 @@ extension Episode {
                 .p(classes: footerClasses, [
                     Node.text("Episode \(number)"),
                     Node.span(attributes: ["class": "ph---"], [.raw("&middot;")]),
-                    Node.text(releaseAt.pretty)
+                    Node.text(release_at.pretty)
                 ])
             ]),
         ])
@@ -285,9 +285,9 @@ extension Episode {
             ]
         } ?? []
         let detailItems: [(String,String, URL?)] = [
-            ("Released", DateFormatter.fullPretty.string(from: releaseAt), nil)
-            ] + theCollaborators.sorted(by: { $0.role < $1.role }).map { coll in
-                (coll.role.name, coll.name, .some(coll.url))
+            ("Released", DateFormatter.fullPretty.string(from: release_at), nil)
+        ] + theCollaborators.sorted(by: { $0.role < $1.role }).map { coll in
+            (coll.role.name, coll.name, .some(coll.url))
         }
         let details = canWatch ? [
             Node.div(classes: "pb++", [
@@ -453,7 +453,7 @@ extension Episode {
             ])
         ])
         
-        let data = StructuredData(title: title, description: synopsis, url: Route.episode(id, playPosition: nil).url, image: posterURL(width: 600, height: 338), type: .video(duration: Int(media_duration), releaseDate: releaseAt))
+        let data = StructuredData(title: title, description: synopsis, url: Route.episode(id, playPosition: nil).url, image: posterURL(width: 600, height: 338), type: .video(duration: Int(media_duration), releaseDate: release_at))
         return LayoutConfig(context: context, contents: [main, scroller] + (context.session.premiumAccess ? [] : [subscribeBanner()]), footerContent: scripts, structuredData: data).layout
     }
 }
