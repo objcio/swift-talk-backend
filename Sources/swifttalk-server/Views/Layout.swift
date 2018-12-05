@@ -170,7 +170,10 @@ extension LayoutConfig {
         ])
         let body: Node = .body(attributes: ["class": "theme-" + theme], [ // todo theming classes?
             header,
-            .main(contents),
+            .main(
+        		[context.message.map(flash) ?? .none] +
+                contents
+            ),
         ] + preFooter + [
             .raw(footer)
         ] + footerContent)
@@ -225,6 +228,25 @@ extension LayoutConfig {
         ] + footerContent)
         return Node.html(attributes: ["lang": "en"], [head, body])
     }
+}
+
+enum FlashType {
+    case notice
+    case alert
+}
+
+func flash(message: String, type: FlashType) -> Node {
+    let classes: Class
+    switch type {
+    case .notice: classes = "bgcolor-blue-dark"
+    case .alert: classes = "bgcolor-invalid"
+    }
+    return .div(classes: "p-edges pv" + classes + "color-white js-closeable pattern-shade", [
+        .div(classes: "wrapper flex items-center justify-between", [
+            .p(classes: "bold flex-auto", [.text(message)]),
+            Node.button(classes: "smallcaps reset-button color-inherit hover-color-black js-closeable-toggle", attributes: ["type": "button"], [.text("Close")])
+        ])
+    ])
 }
 
 func userHeader(_ context: Context) -> Node {

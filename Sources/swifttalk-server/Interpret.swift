@@ -15,6 +15,7 @@ struct NotLoggedInError: Error { }
 struct Context {
     var path: String
     var route: Route
+    var message: (String, FlashType)?
     var session: Session?
 }
 
@@ -90,7 +91,7 @@ extension Route {
             return try session ?! NotLoggedInError()
         }
         
-        let context = Context(path: path, route: self, session: session)
+        let context = Context(path: path, route: self, message: nil, session: session)
         
         
         // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
@@ -125,7 +126,10 @@ extension Route {
         case .collections:
             return I.write(index(Collection.all.filter { !$0.episodes(for: session?.user.data).isEmpty }, context: context))
         case .thankYou:
-            return .write("TODO thanks")
+            let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
+            var cont = context
+            cont.message = ("Thank you for supporting us.", .notice)
+            return .write(renderHome(episodes: episodesWithProgress, context: cont))
         case .register(let couponCode):
             let s = try requireSession()
             return I.withPostBody(do: { body in
@@ -375,7 +379,7 @@ extension Route {
                     }
                     return I.onSuccess(promise: recurly.reactivate(sub).promise) { result in
                         switch result {
-                        case .success: return I.redirect(to: .accountBilling)
+                        case .success: return I.redirect(to: .thankYou)
                         case .errors(let errs): throw RecurlyErrors(errs)
                         }
                     }
