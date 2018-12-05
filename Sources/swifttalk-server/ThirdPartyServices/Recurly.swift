@@ -62,6 +62,17 @@ extension Plan {
         return all.first(where: { $0.plan_interval_unit == .months && $0.plan_interval_length == 12 })
     }
     
+    var teamMemberPrice: Int? {
+        // todo think of a good way to load this from recurly
+        if plan_interval_unit == .months && plan_interval_length == 1 {
+            return 1000
+        } else if plan_interval_unit == .months && plan_interval_length == 12 {
+            return 15000
+        } else {
+            return nil
+        }
+    }
+    
     var teamMemberAddOn: RemoteEndpoint<AddOn> {
         return recurly.teamMemberAddOn(plan_code: plan_code)
     }
@@ -151,12 +162,13 @@ extension Subscription {
 
     // Returns nil if there aren't any upgrades.
     var upgrade: Upgrade? {
-        if state == .active, let m = Plan.monthly, plan.plan_code == m.plan_code, let y = Plan.yearly {
+        if state == .active, let m = Plan.monthly, plan.plan_code == m.plan_code, let y = Plan.yearly, let teamMemberPrice = y.teamMemberPrice {
             // TODO include team members!
-            let totalWithoutVat = y.unit_amount_in_cents.usdCents // todo add team members
+            let teamMembers = subscription_add_ons?.first?.quantity ?? 0
+            let totalWithoutVat = y.unit_amount_in_cents.usdCents + (teamMembers * teamMemberPrice)
             let vat: Int? = tax_rate.map { Int(Double(totalWithoutVat) * $0) }
             let total = totalWithoutVat + (vat ?? 0)
-            return Upgrade(plan: y, total_without_vat: totalWithoutVat, total_in_cents: total, vat_in_cents: vat, tax_rate: tax_rate, team_members: 0, per_team_member_in_cents: 78)
+            return Upgrade(plan: y, total_without_vat: totalWithoutVat, total_in_cents: total, vat_in_cents: vat, tax_rate: tax_rate, team_members: teamMembers, per_team_member_in_cents: teamMemberPrice)
         } else {
             return nil
         }
