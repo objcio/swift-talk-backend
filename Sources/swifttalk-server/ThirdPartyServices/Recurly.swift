@@ -136,7 +136,13 @@ extension Subscription {
 
     // Todo: this should include the team members as well.
     func totalAtRenewal(addOn: Plan.AddOn) -> Int {
-        let beforeTax = unit_amount_in_cents * quantity
+        let teamMemberPrice: Int
+        if let a = subscription_add_ons?.first, a.add_on_code == addOn.add_on_code {
+            teamMemberPrice = a.quantity * addOn.unit_amount_in_cents.usdCents
+        } else {
+            teamMemberPrice = 0
+        }
+        let beforeTax = unit_amount_in_cents * quantity + teamMemberPrice
         if let rate = tax_rate {
             return beforeTax + Int(Double(beforeTax) * rate)
         }
