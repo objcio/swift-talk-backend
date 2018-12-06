@@ -145,7 +145,6 @@ extension Subscription {
         return toMinusOneDay.numberOfMonths(since: act)
     }
 
-    // Todo: this should include the team members as well.
     func totalAtRenewal(addOn: Plan.AddOn) -> Int {
         let teamMemberPrice: Int
         if let a = subscription_add_ons?.first, a.add_on_code == addOn.add_on_code {
@@ -163,7 +162,6 @@ extension Subscription {
     // Returns nil if there aren't any upgrades.
     var upgrade: Upgrade? {
         if state == .active, let m = Plan.monthly, plan.plan_code == m.plan_code, let y = Plan.yearly, let teamMemberPrice = y.teamMemberPrice {
-            // TODO include team members!
             let teamMembers = subscription_add_ons?.first?.quantity ?? 0
             let totalWithoutVat = y.unit_amount_in_cents.usdCents + (teamMembers * teamMemberPrice)
             let vat: Int? = tax_rate.map { Int(Double(totalWithoutVat) * $0) }

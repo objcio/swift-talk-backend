@@ -38,7 +38,6 @@ func profile(submitTitle: String, action: Route) -> Form<ProfileFormData> {
         guard let e = dict["email"], let n = dict["name"] else { return nil }
         return ProfileFormData(email: e, name: n)
     }, render: { data, csrf, errors in
-        // todo include csrf
         let form = FormView(fields: [
             FormView.Field(id: "name", title: "Name", value: data.name, note: nil),
             FormView.Field(id: "email", title: "Email", value: data.email, note: nil)

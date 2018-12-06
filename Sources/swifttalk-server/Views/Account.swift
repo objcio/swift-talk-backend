@@ -164,7 +164,6 @@ extension Subscription.State {
 extension Subscription.Upgrade {
     func pretty(csrf: CSRFToken) -> [Node] {
         let priceBreakdown: String
-        // todo team members
         if let v = vat_in_cents {
             let vatText = " + \(dollarAmount(cents: v)) VAT"
             let subTotal = dollarAmount(cents: total_without_vat)
@@ -320,7 +319,6 @@ func unsubscribedBilling(context: Context) -> Node {
 }
 
 func billing(context: Context, user: Row<UserData>, subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo, redemptions: [(Redemption, Coupon)]) -> Node {
-    // todo: reactivate subscription.
     let subscriptionInfo: [Node] = subscription.map { (x) -> [Node] in
         let (sub, addOn) = x
         return [
@@ -342,7 +340,7 @@ func billing(context: Context, user: Row<UserData>, subscription: (Subscription,
                             Node.text(dollarAmount(cents: sub.totalAtRenewal(addOn: addOn))),
                             Node.text(" on "),
                             .text(sub.current_period_ends_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "n/a"),
-                        ]), // todo team member add-on pricing, VAT
+                        ]),
                         redemptions.isEmpty ? .none : Node.p(classes: " input-note mt-",
                             [Node.span(classes: "bold", [.text("Note:")])] + redemptions.map { x in
                              let (redemption, coupon) = x

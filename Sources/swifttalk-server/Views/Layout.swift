@@ -108,7 +108,7 @@ struct StructuredData {
 
 
 let navigationItems: [(LinkTarget, String)] = [
-    (Route.home, "Swift Talk"), // todo
+    (Route.home, "Swift Talk"),
     (URL(string: "https://www.objc.io/books")!, "Books"),
     (URL(string: "https://www.objc.io/issues")!, "Issues")
 ]
@@ -116,7 +116,6 @@ let navigationItems: [(LinkTarget, String)] = [
 let rssURL = Route.rssFeed.url.absoluteString
 
 extension LayoutConfig {
-    // todo: we can probably not include the CSRF token, I think it might only be needed in the React components (and we can pass it explicitly there)
     var structured: [Node] {
         return structuredData.map { $0.nodes } ?? []
     }
@@ -168,7 +167,7 @@ extension LayoutConfig {
                 ])
             ])
         ])
-        let body: Node = .body(attributes: ["class": "theme-" + theme], [ // todo theming classes?
+        let body: Node = .body(attributes: ["class": "theme-" + theme], [
             header,
             .main(
         		[context.message.map(flash) ?? .none] +
@@ -204,7 +203,7 @@ extension LayoutConfig {
             googleAnalytics,
         ] + structured)
         let linkClasses: Class = "no-decoration color-inherit hover-color-black mr"
-        let body: Node = .body(attributes: ["class": "theme-" + theme], [ // todo theming classes?
+        let body: Node = .body(attributes: ["class": "theme-" + theme], [
             .header(attributes: ["class": "site-header"], [
         		.div(classes: "site-header__nav flex", [
                     .div(classes: "container-h flex-grow flex items-center height-3", [

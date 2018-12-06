@@ -36,7 +36,7 @@ extension Double {
 extension String {
     var asSlug: String {
         let allowed = CharacterSet.alphanumerics
-        return components(separatedBy: allowed.inverted).filter { !$0.isEmpty }.joined(separator: "-").lowercased() // todo check logic
+        return components(separatedBy: allowed.inverted).filter { !$0.isEmpty }.joined(separator: "-").lowercased()
     }
 
     /// Inserts a non-breakable space before the last word (to prevent widows)

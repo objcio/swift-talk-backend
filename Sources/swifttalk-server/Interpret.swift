@@ -243,7 +243,6 @@ extension Route {
         case .sitemap:
             return .write(Route.siteMap)
         case .promoCode(let str):
-            // todo what if we can't find a coupon, or if it's not redeemable
             return I.onSuccess(promise: recurly.coupon(code: str).promise, message: "Can't find that coupon.", do: { coupon in
                 guard coupon.state == "redeemable" else {
                     throw RenderingError(privateMessage: "not redeemable: \(str)", publicMessage: "This coupon is not redeemable anymore.")

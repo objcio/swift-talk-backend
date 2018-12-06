@@ -74,10 +74,9 @@ extension FormView {
         }
         
         return [
-            errors.isEmpty ? .none : Node.ul(classes: "mb++ bgcolor-invalid color-white ms-1 pa radius-3 bold", errors.map { Node.li([Node.text($0.message)]) }), // todo
+            errors.isEmpty ? .none : Node.ul(classes: "mb++ bgcolor-invalid color-white ms-1 pa radius-3 bold", errors.map { Node.li([Node.text($0.message)]) }),
             Node.div(classes: "", [
                 Node.form(classes: classes, action: action.path, attributes: ["id": id], [
-                    // todo utf8?
                     Node.input(name: "csrf", id: "csrf", type: "hidden", attributes: ["value": csrf.stringValue], []),
                     Node.div(classes: "stack+", fields.map {
                         field(id: $0.id, description: $0.title, value: $0.value, note: $0.note)
