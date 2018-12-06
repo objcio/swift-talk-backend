@@ -188,6 +188,7 @@ extension Route {
                 let resp = registerForm(context, couponCode: couponCode).render(.init(u.data), u.data.csrf, [])
                 return I.write(resp)
             } else {
+                try c.get().execute(Task.unfinishedSubscriptionReminder(userId: u.id).schedule(weeks: 1))
                 return try newSubscription(couponCode: couponCode, csrf: u.data.csrf, errs: [])
             }
         case .login(let cont):
@@ -423,7 +424,7 @@ extension Route {
                     guard let _ = try? c.get().execute(teamMemberData.insert) else {
                         return try teamMembersResponse(sess, formData, csrf: csrf, [(field: "github_username", message: "Team member already exists")])
                     }
-                    let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: Date().addingTimeInterval(5*60))
+                    let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(minutes: 5)
                     try c.get().execute(task)
                     return try teamMembersResponse(sess, csrf: csrf)
                 }

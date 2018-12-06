@@ -9,4 +9,5 @@ import Foundation
 
 let teamDiscount = 30
 let assetsPath = "assets"
-
+let emailFrom = "mail@objc.io"
+let emailName = "objc.io"

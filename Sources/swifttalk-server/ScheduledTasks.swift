@@ -32,6 +32,7 @@ func scheduleTaskTimer() -> DispatchSourceTimer {
 enum Task {
     case syncTeamMembersWithRecurly(userId: UUID)
     case releaseEpisode(number: Int)
+    case unfinishedSubscriptionReminder(userId: UUID)
 }
 
 struct TaskError: Error {
@@ -42,6 +43,7 @@ extension Task: Codable {
     enum CodingKeys: CodingKey {
         case syncTeamMembersWithRecurly
         case releaseEpisode
+        case unfinishedSubscriptionReminder
     }
     
     func encode(to encoder: Encoder) throws {
@@ -51,6 +53,8 @@ extension Task: Codable {
             try container.encode(userId, forKey: .syncTeamMembersWithRecurly)
         case .releaseEpisode(let number):
             try container.encode(number, forKey: .releaseEpisode)
+        case .unfinishedSubscriptionReminder(let userId):
+            try container.encode(userId, forKey: .unfinishedSubscriptionReminder)
         }
     }
     
@@ -60,6 +64,8 @@ extension Task: Codable {
             self = .syncTeamMembersWithRecurly(userId: id)
         } else if let number = try? container.decode(Int.self, forKey: .releaseEpisode) {
             self = .releaseEpisode(number: number)
+        } else if let id = try? container.decode(UUID.self, forKey: .unfinishedSubscriptionReminder) {
+            self = .unfinishedSubscriptionReminder(userId: id)
         } else {
             throw TaskError(message: "Unable to decode")
         }
@@ -71,6 +77,8 @@ extension Task: Codable {
             return "\(CodingKeys.syncTeamMembersWithRecurly.stringValue):\(userId.uuidString)"
         case .releaseEpisode(let number):
             return "\(CodingKeys.releaseEpisode.stringValue):\(number):\(date.timeIntervalSinceReferenceDate)"
+        case .unfinishedSubscriptionReminder(let userId):
+            return "\(CodingKeys.unfinishedSubscriptionReminder.stringValue):\(userId.uuidString)"
         }
     }
 }
@@ -94,6 +102,16 @@ extension Task {
     func schedule(at date: Date) -> Query<()> {
         let taskData = TaskData(date: date, task: self)
         return taskData.insertOrUpdate(uniqueKey: "key").map { _ in }
+    }
+
+    func schedule(minutes: Int) -> Query<()> {
+        let date = Date().addingTimeInterval(60 * TimeInterval(minutes))
+        return schedule(at: date)
+    }
+
+    func schedule(weeks: Int) -> Query<()> {
+        let date = Calendar.current.date(byAdding: DateComponents(day: weeks * 7), to: Date())!
+        return schedule(at: date)
     }
     
     func interpret(_ c: Lazy<Connection>, onCompletion: @escaping (Bool) -> ()) throws {
@@ -130,6 +148,11 @@ extension Task {
             }.run { success in
                 onCompletion(success)
             }
+        
+        case .unfinishedSubscriptionReminder(let userId):
+            guard let user = try c.get().execute(Row<UserData>.select(userId)), !user.data.subscriber else { onCompletion(true); return }
+            let ep = sendgrid.send(to: user.data.email, name: user.data.name, subject: "Your Swift Talk Registration", text: unfinishedSubscriptionReminderText)
+            URLSession.shared.load(ep) { onCompletion($0 != nil)}
         }
     }
 }
@@ -145,3 +168,16 @@ extension Row where Element == TaskData {
         }
     }
 }
+
+fileprivate let unfinishedSubscriptionReminderText = """
+Hi!
+
+We noticed that you signed up for Swift Talk a while ago, but never finished your registration. We'd love for you to become a subscriber.
+
+Use the following link to get a 20% discount: https://talk.objc.io/promo/swift-talk-discount (you'll get 20% off of the first three months, or if you choose a yearly plan, 20% off of your first year).
+
+If you have any questions, let us know.
+
+Best from Berlin,
+Florian and Chris
+"""
