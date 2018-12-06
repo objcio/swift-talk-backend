@@ -211,7 +211,7 @@ extension Route {
                     if let user = try c.get().execute(Row<UserData>.select(githubId: profile.id)) {
                         uid = user.id
                     } else {
-                        let userData = UserData(email: profile.email ?? "no email", githubUID: profile.id, githubLogin: profile.login, githubToken: t, avatarURL: profile.avatar_url, name: profile.name ?? "")
+                        let userData = UserData(email: profile.email ?? "", githubUID: profile.id, githubLogin: profile.login, githubToken: t, avatarURL: profile.avatar_url, name: profile.name ?? "")
                         uid = try c.get().execute(userData.insert)
                     }
                     let sid = try c.get().execute(SessionData(userId: uid).insert)
