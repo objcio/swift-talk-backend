@@ -321,7 +321,7 @@ final class RouteHandler: ChannelInboundHandler {
             let env = NIOInterpreter.Deps(header: header, ctx: ctx, fileIO: fileIO, handler: self, manager: FileManager.default, resourcePaths: paths)
 
             func notFound() {
-                log(error: "Not found: \(header.uri), method: \(header.method)")
+                log(info: "Not found: \(header.uri), method: \(header.method)")
                 _ = NIOInterpreter.write("Not found: \(header.uri)").run(env)
             }
             
