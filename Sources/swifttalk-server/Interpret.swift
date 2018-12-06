@@ -476,6 +476,11 @@ extension Route {
             return I.write("", status: .ok)
         case .rssFeed:
             return I.write(xml: Episode.all.released.rssView, status: .ok)
+        case .tmp:
+            DispatchQueue.global().async {
+                updateAllUsers(c: c)
+            }
+            return I.write("", status: .ok)
         case let .playProgress(episodeId):
             guard let s = try? requireSession() else { return I.write("", status: .ok)}
             return I.withPostBody(csrf: s.user.data.csrf) { body in
@@ -486,5 +491,43 @@ extension Route {
                 return I.write("", status: .ok)
             }
         }
+    }
+}
+
+func updateAllUsers(c: Lazy<Connection>) {
+    var skipped = 0
+    func cont(next: ArraySlice<Row<UserData>>) {
+        guard !next.isEmpty else {
+            log(info: "Done updating all users")
+            return
+        }
+        var copy = next
+        let work = copy.prefix(100)
+        for u in work {
+            recurly.subscriptionStatus(for: u.id).run { status in
+                guard let s = status else {
+                    skipped += 1
+                    print("no status \(u.data.githubLogin) (skipped: \(skipped))")
+                    return
+                }
+                var r = u
+                r.data.subscriber = s.subscriber
+                r.data.canceled = s.canceled
+                let res: ()? = try? c.get().execute(r.update())
+                log(info: "update user \(r.data.githubLogin) \(status) \(res != nil)")
+            }
+        }
+        copy.removeFirst(work.count)
+        print("update \(work.count) users, remaining: \(copy.count)")
+        DispatchQueue.global().asyncAfter(deadline: .now() + .milliseconds(500), execute: {
+            cont(next: copy)
+        })
+    }
+    do {
+        let users = try c.get().execute(Row<UserData>.select)
+        print(users.count)
+        cont(next: users[...])
+    } catch {
+        print("error \(error)")
     }
 }
