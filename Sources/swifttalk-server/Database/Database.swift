@@ -69,9 +69,9 @@ extension CSRFToken: NodeRepresentable {
 
 extension Connection {
     @discardableResult
-    func execute<A>(_ query: Query<A>) throws -> A {
+    func execute<A>(_ query: Query<A>, loggingTreshold: TimeInterval = 0.1) throws -> A {
 //        print(query.query)
-        let node = try measure(message: "query: \(query.query)", treshold: 0.2) { try execute(query.query, query.values) }
+        let node = try measure(message: "query: \(query.query)", treshold: loggingTreshold) { try execute(query.query, query.values) }
         return query.parse(node)
     }
 }

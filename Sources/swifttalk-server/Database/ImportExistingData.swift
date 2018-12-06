@@ -175,11 +175,12 @@ func importExistingData() throws {
             }
             let d = PlayProgressData.init(userId: duplicates[i] ?? i, episodeNumber: num, progress: v.play_position, furthestWatched: v.furthest_watched)
             do {
-            _ = try conn.execute(d.insert)
+                _ = try conn.execute(d.insert, loggingTreshold: 0.4)
             } catch {
                 print(error)
             }
         }
+        log(info: "Migration Done")
 
 //            fatalError("Done")
     }
