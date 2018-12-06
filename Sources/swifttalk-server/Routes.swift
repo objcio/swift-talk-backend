@@ -38,7 +38,6 @@ enum Route: Equatable {
     case accountUpdatePayment
     case promoCode(String)
     case rssFeed
-    case migrate
 }
 
 extension Route {
@@ -184,7 +183,6 @@ private let otherRoutes: [Router<Route>] = [
 private let internalRoutes: [Router<Route>] = [
     .c("hooks") / .c("recurly", .recurlyWebhook),
     .c("hooks") / .c("github", .githubWebhook),
-    .c("secret") / .c("migrate", .migrate),
 ]
 
 let allRoutes = externalRoutes + accountRoutes + subscriptionRoutes + otherRoutes + internalRoutes

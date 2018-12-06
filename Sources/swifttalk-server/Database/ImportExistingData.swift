@@ -86,6 +86,9 @@ func decode<A: Decodable>(_ file: String) throws -> [A] {
 }
 
 func importExistingData() throws {
+    log(error: "Not implemented anymore")
+    return
+
     _ = try withConnection { conn in
         try conn.execute("DELETE FROM sessions")
         try conn.execute("DELETE FROM downloads")
