@@ -172,5 +172,9 @@ fileprivate let migrations: [String] = [
     ALTER TABLE play_progress
     ADD COLUMN IF NOT EXISTS furthest_watched integer DEFAULT 0 NOT NULL;
     """,
+    """
+    ALTER TABLE USERS
+        ADD COLUMN IF NOT EXISTS download_credits_offset integer DEFAULT 0 NOT NULL;
+    """
 ]
 

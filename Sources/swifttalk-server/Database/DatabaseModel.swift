@@ -89,6 +89,7 @@ struct UserData: Codable, Insertable {
     var lastReconciledAt: Date?
     var collaborator: Bool = false
     var downloadCredits: Int = 0
+    var downloadCreditsOffset: Int = 0
     var subscriber: Bool = false
     var canceled: Bool = false
     var confirmedNameAndEmail: Bool = false
@@ -143,10 +144,11 @@ extension UserData {
 
     func downloadStatus(for episode: Episode, downloads: [Row<DownloadData>]) -> Episode.DownloadStatus {
         guard subscriber || admin else { return .notSubscribed }
+        let creditsLeft = (downloadCredits + downloadCreditsOffset) - downloads.count
         if admin || downloads.contains(where: { $0.data.episodeNumber == episode.number }) {
             return .reDownload
-        } else if downloadCredits - downloads.count > 0 {
-            return .canDownload(creditsLeft: downloadCredits - downloads.count)
+        } else if creditsLeft > 0 {
+            return .canDownload(creditsLeft: creditsLeft)
         } else {
             return .noCredits
         }
