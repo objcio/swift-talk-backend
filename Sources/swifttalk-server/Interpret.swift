@@ -84,6 +84,16 @@ extension Route {
                 let masterTeamuser = u.data.premiumAccess ? nil : try c.get().execute(u.masterTeamUser)
                 return Session(sessionId: sId, user: u, masterTeamUser: masterTeamuser)
             }
+            if let u = user, !u.data.subscriber {
+                recurly.subscriptionStatus(for: u.id).run { status in
+                    guard let s = status else { return }
+                    var r = u
+                    r.data.subscriber = s.subscriber
+                    r.data.canceled = s.canceled
+                    let res: ()? = try? c.get().execute(r.update())
+                    log(info: "update user \(r.data.githubLogin) \(status) \(res != nil)")
+                }
+            }
         } else {
             session = nil
         }
