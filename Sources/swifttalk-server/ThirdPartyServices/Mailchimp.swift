@@ -72,6 +72,11 @@ struct Mailchimp {
         return RemoteEndpoint<()>(json: .post, url: url, body: body, headers: authHeader)
     }
     
+    func sendCampaign(campaignId: String) -> RemoteEndpoint<()> {
+        let url = base.appendingPathComponent("campaigns/\(campaignId)/actions/send")
+        return RemoteEndpoint<()>(.post, url: url, headers: authHeader)
+    }
+    
     func existsCampaign(for episode: Episode) -> RemoteEndpoint<Bool> {
         struct Response: Codable {
             var campaigns: [Campaign]
