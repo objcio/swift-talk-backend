@@ -468,7 +468,7 @@ extension Route {
         case .rssFeed:
             return I.write(xml: Episode.all.released.rssView, status: .ok)
         case let .episodesJSON(showUnreleased: key):
-            let secret = "2CF2557A-4AD9-4E39-99CB-22D61BEC04F6"
+            let secret = "2CF2557A-4AD9-4E39-99CB-22D61BEC04F6" // TODO: this should be an ENV variable
             let json = episodesJSONView(showUnreleased: key == secret)
             return I.write(json: json)
         case let .collectionsJSON(showUnreleased: key):
