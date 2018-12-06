@@ -502,12 +502,13 @@ func updateAllUsers(c: Lazy<Connection>) {
             return
         }
         var copy = next
-        let work = copy.prefix(100)
+        let work = copy.prefix(10)
         for u in work {
+            if u.data.subscriber { log(info: "skipping successful subscriber \(u.data.githubLogin)" )}
             recurly.subscriptionStatus(for: u.id).run { status in
                 guard let s = status else {
                     skipped += 1
-                    print("no status \(u.data.githubLogin) (skipped: \(skipped))")
+                    log(info: "no status \(u.data.githubLogin) \(u.id) (skipped: \(skipped))")
                     return
                 }
                 var r = u
@@ -519,7 +520,7 @@ func updateAllUsers(c: Lazy<Connection>) {
         }
         copy.removeFirst(work.count)
         print("update \(work.count) users, remaining: \(copy.count)")
-        DispatchQueue.global().asyncAfter(deadline: .now() + .milliseconds(500), execute: {
+        DispatchQueue.global().asyncAfter(deadline: .now() + .milliseconds(1000), execute: {
             cont(next: copy)
         })
     }
