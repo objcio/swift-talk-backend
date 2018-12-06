@@ -322,7 +322,7 @@ final class RouteHandler: ChannelInboundHandler {
 
             func notFound() {
                 log(info: "Not found: \(header.uri), method: \(header.method)")
-                _ = NIOInterpreter.write("Not found: \(header.uri)").run(env)
+                _ = NIOInterpreter.write("Not found: \(header.uri)", status: .notFound).run(env)
             }
             
             guard let method = HTTPMethod(header.method) else { notFound(); return }
