@@ -152,8 +152,11 @@ extension Swift.Collection where Element == Episode {
     
     func findEpisode(with id: Id<Episode>, scopedFor user: UserData?) -> Episode? {
         let eps = scoped(for: user)
-        let shortcut = id.rawValue[..<(id.rawValue.firstIndex(of: "-") ?? id.rawValue.endIndex)]
-        return eps.first { $0.seasonAndEpisodeShortcut == shortcut }
+        guard let start = id.rawValue.firstIndex(of: "E").map({ id.rawValue.index(after: $0) }) else { return nil }
+        let end = id.rawValue.firstIndex(of: "-") ?? id.rawValue.endIndex
+        guard end > start else { return nil }
+        let number = Int(id.rawValue[start..<end])
+        return eps.first { $0.number == number }
     }
 }
 
