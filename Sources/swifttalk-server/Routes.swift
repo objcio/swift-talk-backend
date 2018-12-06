@@ -38,6 +38,8 @@ enum Route: Equatable {
     case accountUpdatePayment
     case promoCode(String)
     case rssFeed
+    case episodesJSON(showUnreleased: String?)
+    case collectionsJSON(showUnreleased: String?)
 }
 
 extension Route {
@@ -86,6 +88,16 @@ private let episode: Router<Route> = (Router<()>.c("episodes") / .string() / Rou
 }, { r in
     guard case let .episode(num, playPosition) = r else { return nil }
     return (num.rawValue, playPosition.map { "\($0)s" })
+})
+
+private let episodesJSON: Router<Route> = (Router<()>.c("episodes.json") / Router<String>.optionalQueryParam(name: "show_unreleased")).transform({ Route.episodesJSON(showUnreleased: $0) }, { r in
+    guard case let .episodesJSON(x) = r else { return nil }
+    return x
+})
+
+private let collectionsJSON: Router<Route> = (Router<()>.c("collections.json") / Router<String>.optionalQueryParam(name: "show_unreleased")).transform({ Route.collectionsJSON(showUnreleased: $0) }, { r in
+    guard case let .collectionsJSON(x) = r else { return nil }
+    return x
 })
 
 private let episodeDownload: Router<Route> = (Router<()>.c("episodes") / .string() / Router<()>.c("download")).transform({ Route.download(Id(rawValue: $0.0)) }, { r in
@@ -183,6 +195,8 @@ private let otherRoutes: [Router<Route>] = [
 private let internalRoutes: [Router<Route>] = [
     .c("hooks") / .c("recurly", .recurlyWebhook),
     .c("hooks") / .c("github", .githubWebhook),
+    episodesJSON,
+    collectionsJSON
 ]
 
 let allRoutes = externalRoutes + accountRoutes + subscriptionRoutes + otherRoutes + internalRoutes

@@ -25,6 +25,7 @@ struct Request {
 
 protocol Interpreter {
     static func write(_ string: String, status: HTTPResponseStatus, headers: [String: String]) -> Self
+    static func write(_ data: Data, status: HTTPResponseStatus, headers: [String: String]) -> Self
     static func writeFile(path: String, maxAge: UInt64?) -> Self
     static func redirect(path: String, headers: [String: String]) -> Self
     static func onComplete<A>(promise: Promise<A>, do cont: @escaping (A) -> Self) -> Self
@@ -54,6 +55,10 @@ extension Interpreter {
         return Self.write(xml.xmlDocument, status: .ok, headers: ["Content-Type": "application/rss+xml; charset=utf-8"])
     }
     
+    static func write(json: Data, status: HTTPResponseStatus = .ok) -> Self {
+        return Self.write(json, status: .ok, headers: ["Content-Type": "application/json"])
+    }
+
     static func redirect(path: String) -> Self {
         return .redirect(path: path, headers: [:])
     }
@@ -232,6 +237,25 @@ struct NIOInterpreter: Interpreter {
         }
     }
     
+    static func write(_ data: Data, status: HTTPResponseStatus = .ok, headers: [String: String] = [:]) -> NIOInterpreter {
+        return NIOInterpreter { env in
+            var head = HTTPResponseHead(version: env.header.version, status: status)
+            for (key, value) in headers {
+                head.headers.add(name: key, value: value)
+            }
+            let part = HTTPServerResponsePart.head(head)
+            _ = env.ctx.channel.write(part)
+            var buffer = env.ctx.channel.allocator.buffer(capacity: data.count)
+            buffer.write(bytes: data)
+            let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
+            _ = env.ctx.channel.write(bodyPart)
+            _ = env.ctx.channel.writeAndFlush(HTTPServerResponsePart.end(nil)).then {
+                env.ctx.channel.close()
+            }
+            return nil
+        }
+    }
+
     static func write(_ string: String, status: HTTPResponseStatus = .ok, headers: [String: String] = [:]) -> NIOInterpreter {
         return NIOInterpreter { env in
             var head = HTTPResponseHead(version: env.header.version, status: status)
