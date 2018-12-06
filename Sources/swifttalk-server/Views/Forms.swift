@@ -40,6 +40,12 @@ struct FormView {
         var title: String
         var value: String
         var note: String?
+        init(id: String, title: String, value: String, note: String? = nil) {
+            self.id = id
+            self.title = title
+            self.value = value
+            self.note = note
+        }
     }
     var classes: Class? = nil
     var id: String = ""

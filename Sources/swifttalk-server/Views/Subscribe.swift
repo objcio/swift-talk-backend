@@ -157,6 +157,11 @@ extension ReactComponent where A == NewSubscriptionData {
     static let newSubscription: ReactComponent<A> = ReactComponent(name: "NewSubscription")
 }
 
+
+extension ReactComponent where A == NewGiftSubscriptionData {
+    static let newGiftSubscription: ReactComponent<A> = ReactComponent(name: "NewGiftSubscription")
+}
+
 extension Plan {
     var prettyInterval: String {
         switch  plan_interval_unit {
@@ -168,7 +173,45 @@ extension Plan {
             return "every \(plan_interval_length) \(plan_interval_unit.rawValue)"
         }
     }
+    
+    var prettyDuration: String {
+        switch  plan_interval_unit {
+        case .days:
+            return "\(plan_interval_length) Days"
+        case .months:
+            if plan_interval_length == 12 {
+                return "One Year"
+            } else if plan_interval_length == 1 {
+            	return "1 Month"
+            } else {
+                return "\(plan_interval_length) Months"
+            }
+        }
+    }
 }
+
+struct NewGiftSubscriptionData: Codable {
+    struct SubscriptionPlan: Codable {
+        var id: String
+        var base_price: Int
+        var interval: String
+        
+        init(_ plan: Plan) {
+            id = plan.plan_code
+            base_price = plan.unit_amount_in_cents.usdCents
+            interval = plan.prettyDuration
+            // todo make sure we don't renew
+//            myAssert(plan.total_billing_cycles == 1) // we don't support other plans yet
+        }
+    }
+    var action: String
+    var public_key: String
+    var plans: [SubscriptionPlan]
+    var payment_errors: [String] // TODO verify type
+    var method: HTTPMethod = .post
+    var csrf: CSRFToken
+}
+
 struct NewSubscriptionData: Codable {
     struct SubscriptionPlan: Codable {
         var id: String

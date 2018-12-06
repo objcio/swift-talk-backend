@@ -40,6 +40,8 @@ enum Route: Equatable {
     case rssFeed
     case episodesJSON(showUnreleased: String?)
     case collectionsJSON(showUnreleased: String?)
+    case newGift
+    case payGift(UUID)
 }
 
 extension Route {
@@ -78,6 +80,12 @@ private extension Array where Element == Router<Route> {
         assert(!isEmpty)
         return dropFirst().reduce(self[0], { $0.or($1) })
     }
+}
+
+extension Router where A == UUID {
+    static let uuid: Router<UUID> = Router<String>.string().transform({ return UUID(uuidString: $0)}, { uuid in
+        return uuid.uuidString
+    })
 }
 
 private let episode: Router<Route> = (Router<()>.c("episodes") / .string() / Router<String>.optionalQueryParam(name: "t")).transform({
@@ -129,6 +137,8 @@ private let loginRoute: Router<Route> = (.c("users") / .c("auth") / .c("github")
     guard case .login(let x) = r else { return nil }
     return x
 })
+
+
 
 private let deleteTeamMember: Router<Route> = (Router<()>.c("team_members") / .c("delete") / .string()).transform({
     let id = UUID(uuidString: $0)
@@ -199,6 +209,14 @@ private let internalRoutes: [Router<Route>] = [
     collectionsJSON
 ]
 
-let allRoutes = externalRoutes + accountRoutes + subscriptionRoutes + otherRoutes + internalRoutes
+private let giftRoutes: [Router<Route>] = [
+    .c("gift", Route.newGift),
+    .c("gift") / Router.uuid.transform(Route.payGift, { r in
+        guard case let .payGift(x) = r else { return nil }
+        return x
+    })
+]
+
+let allRoutes = externalRoutes + accountRoutes + subscriptionRoutes + otherRoutes + internalRoutes + giftRoutes
 let router = allRoutes.choice()
 

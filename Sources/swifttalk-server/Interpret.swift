@@ -93,12 +93,16 @@ extension Route {
         
         let context = Context(path: path, route: self, message: nil, session: session)
         
-        
         // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
-        func form<A>(_ f: Form<A>, initial: A, csrf: CSRFToken, onPost: @escaping (A) throws -> I) -> I {
+        func form<A>(_ f: Form<A>, initial: A, csrf: CSRFToken, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> I) -> I {
             return I.withPostBody(do: { body in
                 guard let result = f.parse(csrf: csrf, body) else { throw RenderingError(privateMessage: "Couldn't parse form", publicMessage: "Something went wrong. Please try again.") }
-                return try onPost(result)
+                let errors = validate(result)
+                if errors.isEmpty {
+                	return try onPost(result)
+                } else {
+                    return .write(f.render(result, csrf, errors))
+                }
             }, or: {
                 return .write(f.render(initial, csrf, []))
             })
@@ -279,7 +283,7 @@ extension Route {
             var u = sess.user
             let data = ProfileFormData(email: u.data.email, name: u.data.name)
             let f = accountForm(context: context)
-            return form(f, initial: data, csrf: u.data.csrf, onPost: { result in
+            return form(f, initial: data, csrf: u.data.csrf, validate: { _ in [] }, onPost: { result in
                 // todo: this is almost the same as the new account logic... can we abstract this?
                 u.data.email = result.email
                 u.data.name = result.name
@@ -474,6 +478,18 @@ extension Route {
             let secret = "2CF2557A-4AD9-4E39-99CB-22D61BEC04F6"
             let json = collectionsJSONView(showUnreleased: key == secret)
             return I.write(json: json)
+        case .newGift:
+            // todo case where user is logged in.
+            return form(giftForm(context: context), initial: GiftStep1.empty, csrf: sharedCSRF, validate: { $0.validate() }, onPost: { gift in
+                dump(gift) // todo insert into DB
+                return I.redirect(to: Route.payGift(UUID()))
+            })
+        case .payGift(let id):
+            let f = payGiftForm(context: context, route: .payGift(id))
+            return form(f, initial: RecurlyToken(value: ""), csrf: sharedCSRF, validate: { _ in [] }, onPost: { (token: RecurlyToken) throws in
+                dump(token)
+                return I.write("todo")
+            })
         case let .playProgress(episodeId):
             guard let s = try? requireSession() else { return I.write("", status: .ok)}
             return I.withPostBody(csrf: s.user.data.csrf) { body in
@@ -486,3 +502,5 @@ extension Route {
         }
     }
 }
+
+let sharedCSRF = CSRFToken(UUID(uuidString: "F5F6C2AE-85CB-4989-B0BF-F471CC92E3FF")!)

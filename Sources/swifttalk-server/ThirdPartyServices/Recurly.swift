@@ -52,9 +52,13 @@ struct Plan: Codable {
     var plan_interval_length: Int
     var plan_interval_unit: IntervalUnit
     var unit_amount_in_cents: Amount
+    var total_billing_cycles: Int?
 }
 
 extension Plan {
+    static var gifts: [Plan] {
+        return all // TODO
+    }
     static var monthly: Plan? {
         return all.first(where: { $0.plan_interval_unit == .months && $0.plan_interval_length == 1 })
     }

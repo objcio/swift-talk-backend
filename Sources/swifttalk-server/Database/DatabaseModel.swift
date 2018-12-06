@@ -15,6 +15,32 @@ struct FileData: Codable, Insertable {
     static let tableName: String = "files"
 }
 
+struct GiftStep1: Codable, Insertable {
+    var gifterEmail: String
+    var gifterName: String
+    var gifteeEmail: String
+    var gifteeName: String
+    var sendAt: Date
+    var message: String
+    static let tableName: String = "gifts_step_1"
+    static let empty = GiftStep1(gifterEmail: "", gifterName: "", gifteeEmail: "", gifteeName: "", sendAt: Date(), message: "")
+    
+    func validate() -> [ValidationError] {
+        var result: [(String,String)] = []
+        if gifterName.isEmpty {
+            result.append(("name", "Your name can't be empty."))
+        }
+        if !gifterEmail.isValidEmail {
+            result.append(("gifter_email", "Your email address is invalid."))
+        }
+        if !gifteeEmail.isValidEmail {
+            result.append(("giftee_email", "Their email address is invalid."))
+        }
+        // todo check send-at date
+        return result
+    }
+}
+
 extension FileData {
     init(repository: String, path: String, value: String) {
         self.init(key: FileData.key(forRepository: repository, path: path), value: value)
@@ -124,16 +150,22 @@ struct TeamMemberData: Codable, Insertable {
     static let tableName: String = "team_members"
 }
 
+fileprivate let emailRegex = try! NSRegularExpression(pattern: "^[^@]+@(?:[^@.]+?\\.)+.{2,}$", options: [.caseInsensitive])
+
+extension String {
+    var isValidEmail: Bool {
+        return !emailRegex.matches(in: self, options: [], range: NSRange(startIndex..<endIndex, in: self)).isEmpty
+    }
+}
+
 extension UserData {
     var premiumAccess: Bool {
         return admin || collaborator || subscriber
     }
     
-    static let emailRegex = try! NSRegularExpression(pattern: "^[^@]+@(?:[^@.]+?\\.)+.{2,}$", options: [.caseInsensitive])
-    
     func validate() -> [ValidationError] {
         var result: [(String,String)] = []
-        if UserData.emailRegex.matches(in: email, options: [], range: NSRange(email.startIndex..<email.endIndex, in: email)).isEmpty {
+        if !email.isValidEmail {
             result.append(("email", "Invalid email address"))
         }
         if name.isEmpty {
