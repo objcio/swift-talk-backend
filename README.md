@@ -105,6 +105,8 @@ You can run a docker container from one of the intermediate steps. Then install 
 # Importing the existing database
 
 ```
+\t on
+\pset format unaligned
 select json_agg(t) from (select * from users) t \g users.json
 select json_agg(t) from (select * from team_member_associations) t \g team_member_associations.json
 select json_agg(t) from (select * from downloads) t \g downloads.json
