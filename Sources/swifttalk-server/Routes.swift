@@ -213,7 +213,7 @@ private let internalRoutes: [Router<Route>] = [
 private let giftRoutes: [Router<Route>] = [
     .c("gift") / .c("new", .gift),
     .c("gift") / .c("new", .newGift),
-    .c("gift") / Router.uuid.transform(.payGift, { r in
+    .c("gift") / Router.uuid.transform(Route.payGift, { r in
         guard case let .payGift(x) = r else { return nil }
         return x
     })
