@@ -193,6 +193,10 @@ fileprivate let migrations: [String] = [
     ALTER TABLE USERS
         ALTER github_login DROP NOT NULL,
         ALTER github_uid DROP NOT NULL
+    """,
+    """
+    ALTER TABLE gifts
+        ADD COLUMN IF NOT EXISTS subscription_id text;
     """
 ]
 

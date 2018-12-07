@@ -7,18 +7,8 @@
 
 import Foundation
 
-fileprivate extension Plan {
-    var sortDuration: Int {
-        switch self.plan_interval_unit {
-        case .days: return plan_interval_length
-        case .months: return plan_interval_length * 30
-        }
-    }
-}
-
 extension Array where Element == Plan {
     func gift(context: Context) throws -> Node {
-        let plans = sorted { $0.sortDuration < $1.sortDuration }
         func node(plan: Plan) -> Node {
             let amount = Double(plan.unit_amount_in_cents.usdCents) / 100
             let amountStr =  amount.isInt ? "\(Int(amount))" : String(format: "%.2f", amount) // don't use a decimal point for integer numbers
@@ -56,7 +46,7 @@ extension Array where Element == Plan {
             .div(classes: "container pt0", [
                 .div(classes: "bgcolor-white pa- radius-8 max-width-7 box-sizing-content center stack-", [
                     .div(classes: "pattern-gradient pattern-gradient--swifttalk pv++ ph+ radius-5", [
-                        .div(classes: "flex items-center justify-around text-center color-white", plans.map { node(plan: $0) })
+                        .div(classes: "flex items-center justify-around text-center color-white", self.map { node(plan: $0) })
                     ]),
                     .div([
                         continueLink
@@ -135,7 +125,7 @@ extension Gift {
             guard let date = Calendar.current.date(from: DateComponents(calendar: Calendar.current, timeZone: TimeZone(secondsFromGMT: 0), year: year, month: month, day: day)) else {
                 return .right([ValidationError(field: "day", message: "Invalid Date")])
             }
-            return .left(Gift(gifterEmail: data.gifterEmail, gifterName: data.gifterName, gifteeEmail: data.gifteeEmail, gifteeName: data.gifteeName, sendAt: date, message: data.message, gifterUserId: nil, gifteeUserId: nil))
+            return .left(Gift(gifterEmail: data.gifterEmail, gifterName: data.gifterName, gifteeEmail: data.gifteeEmail, gifteeName: data.gifteeName, sendAt: date, message: data.message, gifterUserId: nil, gifteeUserId: nil, subscriptionId: nil))
         case let .right(errs): return .right(errs)
         }
     }
@@ -189,14 +179,15 @@ func giftForm(context: Context) -> Form<GiftStep1Data> {
     }
 }
 
-struct RecurlyToken {
-    var value: String
+struct GiftResult {
+    var token: String = ""
+    var plan_id: String = ""
 }
 
-func payGiftForm(context: Context, route: Route) -> Form<RecurlyToken> {
+func payGiftForm(context: Context, route: Route) -> Form<GiftResult> {
     return Form.init(parse: { dict in
-        guard let d = dict["billing_info[token]"] else { return nil }
-        return RecurlyToken(value: d)
+        guard let d = dict["billing_info[token]"], let p = dict["plan_id"] else { return nil }
+        return GiftResult(token: d, plan_id: p)
     }, render: { (_, csrf, errs) -> Node in
         let data = NewGiftSubscriptionData(action: route.path, public_key: env.recurlyPublicKey, plans: Plan.gifts.map { .init($0) }, payment_errors: errs.map { "\($0.field): \($0.message)" }, method: .post, csrf: csrf)
         return LayoutConfig(context: context,  contents: [

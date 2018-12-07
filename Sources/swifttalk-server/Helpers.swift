@@ -218,3 +218,11 @@ extension Either {
         return e
     }
 }
+
+extension Date {
+    var isToday: Bool {
+        let components = Calendar.current.dateComponents([.month,.year,.day], from: self)
+        let components2 = Calendar.current.dateComponents([.month,.year,.day], from: Date())
+        return components.year == components2.year && components.month == components2.month && components.day == components2.day
+    }
+}

@@ -186,7 +186,7 @@ extension Route {
                     throw RenderingError(privateMessage: "Incorrect post data", publicMessage: "Something went wrong")
                 }
                 let plan = try Plan.all.first(where: { $0.plan_code == planId }) ?! RenderingError.init(privateMessage: "Illegal plan: \(planId)", publicMessage: "Couldn't find the plan you selected.")
-                let cr = CreateSubscription.init(plan_code: plan.plan_code, currency: "USD", coupon_code: couponCode, account: .init(account_code: s.user.id, email: s.user.data.email, billing_info: .init(token_id: token)))
+                let cr = CreateSubscription.init(plan_code: plan.plan_code, currency: "USD", coupon_code: couponCode, starts_at: nil, account: .init(account_code: s.user.id, email: s.user.data.email, billing_info: .init(token_id: token)))
                 return I.onSuccess(promise: recurly.createSubscription(cr).promise, message: "Something went wrong, please try again", do: { sub_ in
                     switch sub_ {
                     case .errors(let messages):
@@ -517,11 +517,40 @@ extension Route {
                 }
             })
         case .payGift(let id):
+            guard let gift = try c.get().execute(Row<Gift>.select(id)) else {
+                throw RenderingError(privateMessage: "No such gift", publicMessage: "Something went wrong, please try again.")
+            }
+            // todo verify the gift isn't paid for already!
             let f = payGiftForm(context: context, route: .payGift(id))
-            return form(f, initial: RecurlyToken(value: ""), csrf: sharedCSRF, validate: { _ in [] }, onPost: { (token: RecurlyToken) throws in
-                dump(token)
+            return form(f, initial: .init(), csrf: sharedCSRF, validate: { _ in [] }, onPost: { (result: GiftResult) throws in
+                let plan = try Plan.gifts.first(where: { $0.plan_code == result.plan_id }) ?! RenderingError.init(privateMessage: "Illegal plan: \(result.plan_id)", publicMessage: "Couldn't find the plan you selected.")
+                let userId = try c.get().execute(UserData(email: gift.data.gifterEmail, avatarURL: "", name: gift.data.gifterName).insert)
+                let start = gift.data.sendAt > Date() ? gift.data.sendAt : nil // no start date means starting immediately
+                let cr = CreateSubscription(plan_code: plan.plan_code, currency: "USD", coupon_code: nil, starts_at: start, account: .init(account_code: userId, email: gift.data.gifterEmail, billing_info: .init(token_id: result.token)))
+                return I.onSuccess(promise: recurly.createSubscription(cr).promise, message: "Something went wrong, please try again", do: { sub_ in
+                    switch sub_ {
+                    case .errors(let messages):
+                        log(RecurlyErrors(messages))
+                        if messages.contains(where: { $0.field == "subscription.account.email" && $0.symbol == "invalid_email" }) {
+//                            let response = registerForm(context, couponCode: couponCode).render(.init(s.user.data), s.user.data.csrf, [ValidationError("email", "Please provide a valid email address and try again.")])
+                            return I.write("Todo try again")
+                        }
+//                        return try newSubscription(couponCode: couponCode, csrf: s.user.data.csrf, errs: messages.map { $0.message })
+                        return I.write("Todo")
+                    case .success(let sub):
+                        //try c.get().execute(s.user.changeSubscriptionStatus(sub.state == .active))
+                        print("Todo change gift to store subscription")
+
+                        dump(sub)
+                        // todo flash
+                        return I.redirect(to: .thankYouGift(id))
+                    }
+                })
                 return I.write("todo")
             })
+        case .thankYouGift(let id):
+            // we can display the kind of gift, but shouldn't display any gifter-specific information. this is because the giftee also gets the id, and can construct this thank you URL manually...
+            return I.write("TODO thank you page for the gifter")
         case .redeemGift(let id):
             guard let gift = try c.get().execute(Row<Gift>.select(id)) else {
                 throw RenderingError(privateMessage: "gift doesn't exist: \(id.uuidString)", publicMessage: "This gift subscription doesn't exist. Please get in touch to resolve this issue.")

@@ -55,9 +55,18 @@ struct Plan: Codable {
     var total_billing_cycles: Int?
 }
 
+fileprivate extension Plan {
+    var sortDuration: Int {
+        switch self.plan_interval_unit {
+        case .days: return plan_interval_length
+        case .months: return plan_interval_length * 30
+        }
+    }
+}
+
 extension Plan {
     static var gifts: [Plan] {
-        return all // TODO
+        return all.filter { $0.plan_code.hasPrefix("gift") }.sorted { $0.sortDuration < $1.sortDuration } // TODO
     }
     static var monthly: Plan? {
         return all.first(where: { $0.plan_interval_unit == .months && $0.plan_interval_length == 1 })
@@ -402,6 +411,7 @@ struct CreateSubscription: Codable, RootElement {
     var plan_code: String
     var currency: String = "USD"
     var coupon_code: String? = nil
+    var starts_at: Date? = nil
     var account: CreateAccount
 }
 
@@ -606,6 +616,8 @@ extension RemoteEndpoint where A: Decodable {
     }
 
     init<B: Encodable & RootElement>(xml method: Method, url: URL, value: B, headers: [String:String], query: [String:String] = [:]) {
+        let data = try! encodeXML(value).data(using: .utf8)!
+        print(try! encodeXML(value))
         self.init(method, url: url, accept: .xml, body: try! encodeXML(value).data(using: .utf8)!, headers: headers, query: query, parse: parseRecurlyResponse(url))
     }
 }

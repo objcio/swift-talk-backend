@@ -24,6 +24,7 @@ struct Gift: Codable, Insertable {
     var message: String
     var gifterUserId: UUID?
     var gifteeUserId: UUID?
+    var subscriptionId: String?
     static let tableName: String = "gifts"
     
     func validate() -> [ValidationError] {
@@ -36,6 +37,9 @@ struct Gift: Codable, Insertable {
         }
         if !gifteeEmail.isValidEmail {
             result.append(("giftee_email", "Their email address is invalid."))
+        }
+        if sendAt < Date() && !sendAt.isToday {
+            result.append(("send_at", "The date cannot be in the past."))
         }
         // todo check send-at date
         return result

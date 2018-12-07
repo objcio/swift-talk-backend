@@ -44,6 +44,7 @@ enum Route: Equatable {
     case newGift
     case payGift(UUID)
     case redeemGift(UUID)
+    case thankYouGift(UUID)
 }
 
 extension Route {
@@ -220,6 +221,10 @@ private let giftRoutes: [Router<Route>] = [
     }),
     .c("gift") / .c("redeem") / Router.uuid.transform(Route.redeemGift, { r in
         guard case let .redeemGift(x) = r else { return nil }
+        return x
+    }),
+    .c("gift") / .c("thankYou") / Router.uuid.transform(Route.thankYouGift, { r in
+        guard case let .thankYouGift(x) = r else { return nil }
         return x
     })
 ]
