@@ -507,7 +507,6 @@ extension Route {
                 return I.write("todo")
             })
         case .redeemGift(let id):
-            
             if session?.premiumAccess == true {
                 return try I.write(redeemGiftAlreadySubscribed(context: context))
             } else if session?.user != nil {

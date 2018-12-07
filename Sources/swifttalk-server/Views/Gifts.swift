@@ -91,24 +91,23 @@ func redeemGiftAlreadySubscribed(context: Context) throws -> Node {
                     .text("Please email us at"),
                     .link(to: URL(string: "mailto:\(email)")!, [.text(email)]),
                     .text("to resolve this issue.")
-                    ]),
-                ])
+                ]),
             ])
+        ])
     ]
     return LayoutConfig(context: context, pageTitle: "Redeem Your Gift Subscription", contents: contents).layout
 }
 
 func redeemGiftSub(context: Context, giftId: UUID) throws -> Node {
-    let continueLink = Node.link(to: .login(continue: Route.newSubscription(couponCode: nil).path), classes: "c-button c-button--big c-button--blue c-button--wide", ["Login with GitHub"])
     let contents: [Node] = [
         redeemheader,
         .div(classes: "container pt0", [
             .div(classes: "bgcolor-white pa- radius-8 max-width-7 box-sizing-content center stack-", [
                 .div([
-                    continueLink
-                    ])
+                    Node.link(to: .login(continue: Route.redeemGift(giftId).path), classes: "c-button c-button--big c-button--blue c-button--wide", ["Login with GitHub"])
                 ])
             ])
+        ])
     ]
     return LayoutConfig(context: context, pageTitle: "Redeem Your Gift Subscription", contents: contents).layout
 }
