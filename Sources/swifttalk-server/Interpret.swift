@@ -543,22 +543,17 @@ extension Route {
                     switch sub_ {
                     case .errors(let messages):
                         log(RecurlyErrors(messages))
-                        if messages.contains(where: { $0.field == "subscription.account.email" && $0.symbol == "invalid_email" }) {
-//                            let response = registerForm(context, couponCode: couponCode).render(.init(s.user.data), s.user.data.csrf, [ValidationError("email", "Please provide a valid email address and try again.")])
-                            return I.write("Todo try again")
-                        }
-//                        return try newSubscription(couponCode: couponCode, csrf: s.user.data.csrf, errs: messages.map { $0.message })
-                        return I.write("Todo")
+                        // todo: add a message that the gift was *not* created
+                        let response = giftForm(context: context).render(GiftStep1Data(gifterEmail: gift.data.gifterEmail, gifterName: gift.data.gifterName, gifteeEmail: gift.data.gifteeEmail, gifteeName: gift.data.gifteeName, day: "", month: "", year: "", message: gift.data.message), sharedCSRF, messages.map { ($0.field ?? "", $0.message) })
+                        return I.write(response)
                     case .success(let sub):
-                        //try c.get().execute(s.user.changeSubscriptionStatus(sub.state == .active))
-                        print("Todo change gift to store subscription")
-
-                        dump(sub)
-                        // todo flash
+                        var copy = gift
+                        copy.data.gifteeUserId = userId
+                        copy.data.subscriptionId = sub.uuid
+                        try c.get().execute(copy.update())
                         return I.redirect(to: .thankYouGift(id))
                     }
                 })
-                return I.write("todo")
             })
         case .thankYouGift(let id):
             // we can display the kind of gift, but shouldn't display any gifter-specific information. this is because the giftee also gets the id, and can construct this thank you URL manually...
