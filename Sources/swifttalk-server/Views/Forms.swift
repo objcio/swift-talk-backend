@@ -35,18 +35,18 @@ extension Form {
 }
 
 struct FormView {
-    struct Field {
-        var id: String
-        var title: String
-        var value: String
-        var note: String?
-        init(id: String, title: String, value: String, note: String? = nil) {
-            self.id = id
-            self.title = title
-            self.value = value
-            self.note = note
+    indirect enum Field {
+        case input(id: String, value: String, type: String, placeHolder: String, otherAttributes: [String:String])
+        case fieldSet([Field], required: Bool, title: String, note: String?)
+        case flex(Field, amount: Int)
+        case custom(Node)
+
+
+        static func text(id: String, required: Bool = true, title: String, value: String, placeHolder: String = "", note: String? = nil) -> Field {
+            return .fieldSet([.input(id: id, value: value, type: "text", placeHolder: placeHolder, otherAttributes: [:])], required: required, title: title, note: note)
         }
     }
+
     var classes: Class? = nil
     var id: String = ""
     var errors: [ValidationError] = []
@@ -65,18 +65,49 @@ struct FormView {
     }
 }
 
+extension Swift.Collection where Element == FormView.Field {
+    var firstId: String? {
+        for f in self {
+            switch f {
+            case .input(let t):
+                return t.id
+            case .fieldSet(let fields, _, _, _):
+                if let id = fields.firstId { return id }
+            case .flex(let f, _):
+                if let id = [f].firstId { return id }
+            case .custom(_):
+                continue
+            }
+        }
+        return nil
+    }
+}
+
 extension FormView {
     func renderStacked(csrf: CSRFToken) -> [Node] {
-        func field(id: String, description: String, value: String?, note: String?) -> Node {
-            let isErr = errors.contains { $0.field == id }
-            return Node.fieldset(classes: "input-unit", [
-                Node.label(classes: "input-label input-label--required" + (isErr ? "color-invalid" : ""), attributes: ["for": id], [.text(description)]),
-                Node.input(classes: "text-input block width-full max-width-6", name: id, attributes: ["required": "required", "value": value ?? ""]),
-                note.map { Node.label(classes: "input-note mt-", attributes: ["for": id], [
-                    .span(classes: "bold", [.raw("Note: ")]),
-                    .raw($0)
-                ]) } ?? .none
-            ])
+        func renderField(_ field: Field) -> Node {
+            switch field {
+            case let .fieldSet(fields, required, title, note):
+                let id = fields.firstId ?? ""
+                let isErr = errors.contains { $0.field == id }
+                let children = fields.count == 1 ? renderField(fields[0]) : Node.div(classes: "flex items-center width-full max-width-6", fields.map(renderField))
+                return Node.fieldset(classes: "input-unit mb+", [
+                    Node.label(classes: "input-label" + (required ? "input-label--required" : "") + (isErr ? "color-invalid" : ""), attributes: ["for": id], [.text(title)]),
+                    children,
+                    note.map { Node.label(classes: "input-note mt-", attributes: ["for": id], [
+                        .span(classes: "bold", [.raw("Note: ")]),
+                        .raw($0)
+                    ]) } ?? .none
+			]
+                )
+            case let .input(id, value, type, placeHolder, attributes):
+                let isErr = errors.contains { $0.field == id }
+                var atts = ["required": "required", "value": value, "placeholder": placeHolder]
+                return Node.input(classes: "text-input block width-full max-width-6", name: id, type: type, attributes: atts.merging(attributes, uniquingKeysWith: { $1 }))
+            case let .flex(field, amount):
+                return Node.div(classes: Class(stringLiteral: "flex-\(amount)"), [renderField(field)])
+            case let .custom(n): return n
+            }
         }
         
         return [
@@ -84,9 +115,7 @@ extension FormView {
             Node.div(classes: "", [
                 Node.form(classes: classes, action: action.path, attributes: ["id": id], [
                     Node.input(name: "csrf", id: "csrf", type: "hidden", attributes: ["value": csrf.stringValue], []),
-                    Node.div(classes: "stack+", fields.map {
-                        field(id: $0.id, description: $0.title, value: $0.value, note: $0.note)
-                        } + [
+                    Node.div(classes: "stack+", fields.map(renderField) + [
                             .div([
                                 Node.input(classes: "c-button c-button--blue", name: "commit", type: "submit", attributes: ["value": submitTitle, "data-disable-with": submitTitle], []),
                                 submitNote.map { Node.p(classes: "ms-1 color-gray-40 mt", [.raw($0)]) } ?? .none

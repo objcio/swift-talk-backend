@@ -97,11 +97,18 @@ func giftForm(submitTitle: String, action: Route) -> Form<GiftStep1> {
         
     }, render: { data, csrf, errors in
         let form = FormView(fields: [
-            FormView.Field(id: "gifter_name", title: "Your Name", value: data.gifterName),
-            FormView.Field(id: "gifter_email", title: "Your Email", value: data.gifterEmail),
-            FormView.Field(id: "giftee_name", title: "The Recipients' Name", value: data.gifteeName),
-            FormView.Field(id: "giftee_email", title: "The Recipients' Email", value: data.gifteeEmail),
-            FormView.Field(id: "message", title: "Your Message", value: data.message)
+            .text(id: "gifter_name", title: "Your Name", value: data.gifterName),
+            .text(id: "gifter_email", title: "Your Email", value: data.gifterEmail),
+            .text(id: "giftee_name", title: "The Recipients' Name", value: data.gifteeName),
+            .text(id: "giftee_email", title: "The Recipients' Email", value: data.gifteeEmail),
+            .text(id: "message", title: "Your Message", value: data.message),
+            .fieldSet([
+		.flex(.input(id: "day", value: "", type: "number", placeHolder: "DD", otherAttributes: ["min": "1", "max": "31"]), amount: 1),
+                .custom(Node.span(classes: "ph- color-gray-30 bold", [.text("/")])),
+                .flex(.input(id: "month", value: "MM", type: "number", placeHolder: "MM", otherAttributes: ["min": "1", "max": "12"]), amount: 1),
+                .custom(Node.span(classes: "ph- color-gray-30 bold", [.text("/")])),
+                .flex(.input(id: "year", value: "YYYY", type: "number", placeHolder: "YYYY", otherAttributes: ["min": "2018", "max": "2023"]), amount: 2),
+            ], required: true, title: "Delivery Date", note: nil)
             ], submitTitle: submitTitle, action: action, errors: errors)
         return .div(form.renderStacked(csrf: csrf))
     })
@@ -116,7 +123,7 @@ func giftForm(context: Context) -> Form<GiftStep1> {
                 Node.h2(classes: "color-blue bold ms2 mb", [.text("New Gift Subscription (Step 1/2)")]),
                 node
             ])
-        ]).layout
+        ]).layoutForCheckout
         return result
     }
 }

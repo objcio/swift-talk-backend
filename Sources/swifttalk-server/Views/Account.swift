@@ -404,7 +404,7 @@ func addTeamMemberForm() -> Form<TeamMemberFormData> {
         return TeamMemberFormData(githubUsername: username)
     }, render: { data, csrf, errors in
         let form = FormView(fields: [
-            FormView.Field(id: "github_username", title: "Github Username", value: data.githubUsername, note: "Your new team member won’t be notified, as we don’t have their email address yet."),
+            .text(id: "github_username", title: "Github Username", value: data.githubUsername, note: "Your new team member won’t be notified, as we don’t have their email address yet."),
             ], submitTitle: "Add Team Member", submitNote: "Team members cost $10/month or $100/year, depending on your subscription. All prices excluding VAT.", action: .accountTeamMembers, errors: errors)
         return .div(form.renderStacked(csrf: csrf))
     })

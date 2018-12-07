@@ -218,6 +218,10 @@ extension ANode {
         a["name"] = name
         a["id"] = id ?? name
         a["type"] = type
+        if type == "number" {
+            a["inputmode"] = "numeric"
+            a["pattern"] = "[0-9]*"
+        }
         return .node(El(name: "input", classes: classes, attributes: a, children: children))
     }
     

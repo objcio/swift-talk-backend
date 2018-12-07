@@ -39,8 +39,8 @@ func profile(submitTitle: String, action: Route) -> Form<ProfileFormData> {
         return ProfileFormData(email: e, name: n)
     }, render: { data, csrf, errors in
         let form = FormView(fields: [
-            FormView.Field(id: "name", title: "Name", value: data.name, note: nil),
-            FormView.Field(id: "email", title: "Email", value: data.email, note: nil)
+            .text(id: "name", title: "Name", value: data.name, note: nil),
+            .text(id: "email", title: "Email", value: data.email, note: nil)
         ], submitTitle: submitTitle, action: action, errors: errors)
         return .div(form.renderStacked(csrf: csrf))
     })
