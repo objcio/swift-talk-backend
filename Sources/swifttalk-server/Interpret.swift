@@ -479,7 +479,7 @@ extension Route {
             let json = collectionsJSONView(showUnreleased: key == secret)
             return I.write(json: json)
         case .gift:
-        	return I.write("gift landing page")
+            return try I.write(Plan.gifts.gift(context: context))
         case .newGift:
             // todo case where user is logged in.
             return form(giftForm(context: context), initial: GiftStep1.empty, csrf: sharedCSRF, validate: { $0.validate() }, onPost: { gift in

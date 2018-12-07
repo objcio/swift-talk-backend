@@ -124,7 +124,7 @@ extension Array where Element == Plan {
     }
 }
 
-func smallPrint(noTeamMemberDiscount: Bool) -> [String] {
+fileprivate func smallPrint(noTeamMemberDiscount: Bool) -> [String] {
     return
         (noTeamMemberDiscount ? ["The discount doesn’t apply to added team members."] : []) +
             [

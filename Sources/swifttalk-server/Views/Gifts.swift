@@ -7,6 +7,81 @@
 
 import Foundation
 
+fileprivate extension Plan {
+    var sortDuration: Int {
+        switch self.plan_interval_unit {
+        case .days: return plan_interval_length
+        case .months: return plan_interval_length * 30
+        }
+    }
+}
+
+extension Array where Element == Plan {
+    func gift(context: Context) throws -> Node {
+        guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
+            throw RenderingError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
+        }
+        let plans = sorted { $0.sortDuration < $1.sortDuration }
+        func node(plan: Plan) -> Node {
+            let amount = Double(plan.unit_amount_in_cents.usdCents) / 100
+            let amountStr =  amount.isInt ? "\(Int(amount))" : String(format: "%.2f", amount) // don't use a decimal point for integer numbers
+            return .div(classes: "pb-", [
+                .div(classes: "smallcaps-large mb-", [.text(plan.prettyDuration)]),
+                .span(classes: "ms7", [
+                    .span(classes: "opacity-50", ["$"]),
+                    .span(classes: "bold", [.text(amountStr)])
+                ])
+            ])
+        }
+        let continueLink = Node.link(to: .newGift, classes: "c-button c-button--big c-button--blue c-button--wide", ["Start Gifting"])
+        let contents: [Node] = [
+            pageHeader(.other(header: "Gift a Swift Talk Subscription", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),
+            .div(classes: "container pt0", [
+                .div(classes: "bgcolor-white pa- radius-8 max-width-7 box-sizing-content center stack-", [
+                    .div(classes: "pattern-gradient pattern-gradient--swifttalk pv++ ph+ radius-5", [
+            .div(classes: "flex items-center justify-around text-center color-white", plans.map { node(plan: $0) })
+                    ]),
+                    .div([
+                        continueLink
+                    ])
+                ]),
+                Node.ul(classes: "lh-110 text-center cols max-width-9 center mb- pv++ m-|stack+", [
+                    Node.li(classes: "m+|col m+|width-1/2", [
+                        .div(classes: "color-orange", [
+                            .inlineSvg(path: "icon-benefit-gift.svg", classes: "svg-fill-current")
+                        ]),
+                        .div([
+                            .h3(classes: "bold color-blue mt- mb---", [.text("The Perfect Gift for Swift Developers")]),
+                            .p(classes: "color-gray-50 lh-125", [.text("This needs some copy here...")]),
+                        ])
+                    ]),
+                    Node.li(classes: "m+|col m+|width-1/2", [
+                        .div(classes: "color-orange", [
+                            .inlineSvg(path: "icon-benefit-protect.svg", classes: "svg-fill-current")
+                        ]),
+                        .div([
+                            .h3(classes: "bold color-blue mt- mb---", [.text("Non-Renewing")]),
+                            .p(classes: "color-gray-50 lh-125", [.text("You choose the duration of the subscription up front and make a one-time payment. Gift subscriptions don't auto-renew.")]),
+                        ])
+                    ])
+                ]),
+                .div(classes: "ms-1 color-gray-65 text-center pt+", [
+                    .ul(classes: "stack pl", smallPrint().map { Node.li([.text($0)])})
+                ])
+            ]),
+        ]
+        return LayoutConfig(context: context, pageTitle: "Gift a Swift Talk Subscription", contents: contents).layout
+    }
+}
+
+fileprivate func smallPrint() -> [String] {
+    return [
+        "All prices shown excluding VAT.",
+        "VAT only applies to EU customers."
+    ]
+}
+
+
 func giftForm(submitTitle: String, action: Route) -> Form<GiftStep1> {
     return Form(parse: { dict in
         // todo parse date
