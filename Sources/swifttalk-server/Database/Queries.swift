@@ -152,6 +152,12 @@ extension Row where Element == FileData {
     }
 }
 
+extension Row where Element == Gift {
+    static func select(subscriptionId id: String) -> Query<Row<Element>?> {
+        return Row<Gift>.selectOne.appending(parameters: [id]) { "WHERE subscription_id=\($0[0])" }
+    }
+}
+
 extension Row where Element == UserData {
     static func select(githubId id: Int) -> Query<Row<Element>?> {
         return Row<UserData>.selectOne.appending(parameters: [id]) { "WHERE github_uid=\($0[0])" }

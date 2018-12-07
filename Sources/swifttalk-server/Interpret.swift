@@ -502,7 +502,20 @@ extension Route {
                         update(credits: row.data.downloadCredits, for: giftees)
                     }
                 }
-                return I.write("", status: .ok)
+                
+                return catchAndDisplayError {
+                    // TODO: catch "canceled" or "active" state.
+                    if let s = webhook.subscription, s.state == "future", let a = s.activated_at, s.plan.plan_code.hasPrefix("gift") { // todo this is a lot of logic that should maybe live somewhere else?
+                        if var gift = flatten(try? c.get().execute(Row<Gift>.select(subscriptionId: s.uuid))) {
+                            if gift.data.sendAt != a {
+                                gift.data.sendAt = a
+                                try c.get().execute(gift.update())
+                            }
+                            // todo change scheduled task that sends email
+                        }
+                    }
+                    return I.write("", status: .ok)
+                }
             }
         case .githubWebhook:
             // This could be done more fine grained, but this works just fine for now

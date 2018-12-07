@@ -300,6 +300,17 @@ extension Account {
 
 struct Webhook: Codable {
     var account: WebhookAccount
+    var subscription: Subscription?
+    struct Subscription: Codable {
+        var plan: Plan
+        var uuid: String
+        var state: String
+        var activated_at: Date?
+    }
+    struct Plan: Codable {
+        var plan_code: String
+        var name: String
+    }
 }
 
 struct WebhookAccount: Codable {
