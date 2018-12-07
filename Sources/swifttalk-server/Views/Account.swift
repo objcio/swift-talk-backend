@@ -309,6 +309,15 @@ func teamMemberBilling(context: Context) -> Node {
     ])
 }
 
+func gifteeBilling(context: Context) -> Node {
+    return billingLayout(context: context, content: [
+        Node.div(classes: "c-text", [
+            heading("Billing"),
+            Node.p([.text("You currently have an active gift subscription, which doesn't have its own billing details.")])
+        ])
+    ])
+}
+
 func unsubscribedBilling(context: Context) -> Node {
     return billingLayout(context: context, content: [
         Node.div(classes: "c-text", [

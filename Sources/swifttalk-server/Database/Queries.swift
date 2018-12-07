@@ -167,13 +167,23 @@ extension Row where Element == UserData {
             "SELECT u.id,\(fields) FROM \(UserData.tableName) AS u INNER JOIN \(SessionData.tableName) AS s ON s.user_id = u.id WHERE s.id=\($0[0])"
         }
     }
-    
+
     var masterTeamUser: Query<Row<UserData>?> {
         let fields = UserData.fieldNames.map { "u.\($0)" }.sqlJoined
         return .build(parameters: [id], parse: Element.parseFirst) { """
             SELECT u.id,\(fields) FROM \(UserData.tableName) AS u
             INNER JOIN \(TeamMemberData.tableName) AS t ON t.user_id = u.id
             WHERE t.team_member_id=\($0[0])
+            """
+        }
+    }
+    
+    var gifter: Query<Row<UserData>?> {
+        let fields = UserData.fieldNames.map { "u.\($0)" }.sqlJoined
+        return .build(parameters: [id], parse: Element.parseFirst) { """
+            SELECT u.id,\(fields) FROM \(UserData.tableName) AS u
+            INNER JOIN \(Gift.tableName) AS g ON g.gifter_user_id = u.id
+            WHERE g.giftee_user_id=\($0[0])
             """
         }
     }

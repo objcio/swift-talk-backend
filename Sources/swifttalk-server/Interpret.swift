@@ -23,13 +23,18 @@ struct Session {
     var sessionId: UUID
     var user: Row<UserData>
     var masterTeamUser: Row<UserData>?
+    var gifter: Row<UserData>?
     
     var premiumAccess: Bool {
-        return selfPremiumAccess || teamMemberPremiumAccess
+        return selfPremiumAccess || teamMemberPremiumAccess || gifterPremiumAccess
     }
     
     var teamMemberPremiumAccess: Bool {
         return masterTeamUser?.data.premiumAccess == true
+    }
+    
+    var gifterPremiumAccess: Bool {
+        return gifter?.data.premiumAccess == true
     }
     
     var selfPremiumAccess: Bool {
@@ -81,8 +86,13 @@ extension Route {
         if self.loadSession, let sId = sessionId {
             let user = try c.get().execute(Row<UserData>.select(sessionId: sId))
             session = try user.map { u in
-                let masterTeamuser = u.data.premiumAccess ? nil : try c.get().execute(u.masterTeamUser)
-                return Session(sessionId: sId, user: u, masterTeamUser: masterTeamuser)
+                if u.data.premiumAccess {
+                    return Session(sessionId: sId, user: u, masterTeamUser: nil, gifter: nil)
+                } else {
+                    let masterTeamUser: Row<UserData>? = try c.get().execute(u.masterTeamUser)
+                    let gifter: Row<UserData>? = try c.get().execute(u.gifter)
+                    return Session(sessionId: sId, user: u, masterTeamUser: masterTeamUser, gifter: gifter)
+                }
             }
         } else {
             session = nil
@@ -159,7 +169,11 @@ extension Route {
                 let errors = u.data.validate()
                 if errors.isEmpty {
                     try c.get().execute(u.update())
-                    return I.redirect(to: Route.newSubscription(couponCode: couponCode))
+                    if s.premiumAccess {
+                        return I.redirect(to: .home)
+                    } else {
+                        return I.redirect(to: .newSubscription(couponCode: couponCode))
+                    }
                 } else {
                     let result = registerForm(context, couponCode: couponCode).render(result, u.data.csrf, errors)
                     return I.write(result)
@@ -350,6 +364,8 @@ extension Route {
                 }, or: {
                     if sess.teamMemberPremiumAccess {
                         return I.write(teamMemberBilling(context: context))
+                    } else if sess.gifterPremiumAccess {
+                        return I.write(gifteeBilling(context: context))
                     } else {
                         return I.write(unsubscribedBilling(context: context))
                     }
@@ -507,10 +523,15 @@ extension Route {
                 return I.write("todo")
             })
         case .redeemGift(let id):
+            guard let gift = try c.get().execute(Row<Gift>.select(id)) else {
+                throw RenderingError(privateMessage: "gift doesn't exist: \(id.uuidString)", publicMessage: "This gift subscription doesn't exist. Please get in touch to resolve this issue.")
+            }
             if session?.premiumAccess == true {
                 return try I.write(redeemGiftAlreadySubscribed(context: context))
-            } else if session?.user != nil {
-                // TODO Connect giftee to gifter
+            } else if let user = session?.user {
+                var g = gift
+                g.data.gifteeUserId = user.id
+                try c.get().execute(g.update())
                 return I.redirect(to: Route.register(couponCode: nil))
             } else {
                 return I.write(try redeemGiftSub(context: context, giftId: id))
