@@ -94,18 +94,30 @@ extension Route {
         let context = Context(path: path, route: self, message: nil, session: session)
         
         // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
-        func form<A>(_ f: Form<A>, initial: A, csrf: CSRFToken, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> I) -> I {
+        func form<A,B>(_ f: Form<A>, initial: A, csrf: CSRFToken, convert: @escaping (A) -> Either<B, [ValidationError]>, validate: @escaping (B) -> [ValidationError], onPost: @escaping (B) throws -> I) -> I {
             return I.withPostBody(do: { body in
                 guard let result = f.parse(csrf: csrf, body) else { throw RenderingError(privateMessage: "Couldn't parse form", publicMessage: "Something went wrong. Please try again.") }
-                let errors = validate(result)
-                if errors.isEmpty {
-                	return try onPost(result)
-                } else {
-                    return .write(f.render(result, csrf, errors))
+                switch convert(result) {
+                case let .left(value):
+                    let errors = validate(value)
+                    if errors.isEmpty {
+                        return try onPost(value)
+                    } else {
+                        return .write(f.render(result, csrf, errors))
+                    }
+
+                case let .right(errs):
+                    return .write(f.render(result, csrf, errs))
                 }
+
             }, or: {
                 return .write(f.render(initial, csrf, []))
             })
+
+        }
+        
+        func form<A>(_ f: Form<A>, initial: A, csrf: CSRFToken, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> I) -> I {
+            return form(f, initial: initial, csrf: csrf, convert: { .left($0) }, validate: validate, onPost: onPost)
         }
         
         func teamMembersResponse(_ session: Session, _ data: TeamMemberFormData? = nil, csrf: CSRFToken, _ errors: [ValidationError] = []) throws -> I {
@@ -482,9 +494,11 @@ extension Route {
             return try I.write(Plan.gifts.gift(context: context))
         case .newGift:
             // todo case where user is logged in.
-            return form(giftForm(context: context), initial: GiftStep1.empty, csrf: sharedCSRF, validate: { $0.validate() }, onPost: { gift in
-                dump(gift) // todo insert into DB
-                return I.redirect(to: Route.payGift(UUID()))
+            return form(giftForm(context: context), initial: GiftStep1Data(), csrf: sharedCSRF, convert: GiftStep1.fromData, validate: { $0.validate() }, onPost: { gift in
+                catchAndDisplayError {
+                    let id = try c.get().execute(gift.insert)
+                    return I.redirect(to: Route.payGift(id))
+                }
             })
         case .payGift(let id):
             let f = payGiftForm(context: context, route: .payGift(id))

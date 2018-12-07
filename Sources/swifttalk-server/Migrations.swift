@@ -175,6 +175,17 @@ fileprivate let migrations: [String] = [
     """
     ALTER TABLE USERS
         ADD COLUMN IF NOT EXISTS download_credits_offset integer DEFAULT 0 NOT NULL;
+    """,
+    """
+    CREATE TABLE IF NOT exists gifts_step_1 (
+    	id uuid DEFAULT public.uuid_generate_v4() PRIMARY KEY,
+        gifter_email text NOT NULL,
+        gifter_name text NOT NULL,
+        giftee_email text NOT NULL,
+        giftee_name text NOT NULL,
+        send_at timestamp NOT NULL,
+        message text NOT NULL
+    )
     """
 ]
 

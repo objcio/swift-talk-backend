@@ -81,8 +81,35 @@ fileprivate func smallPrint() -> [String] {
     ]
 }
 
+struct GiftStep1Data: Codable {
+    var gifterEmail: String = ""
+    var gifterName: String = ""
+    var gifteeEmail: String = ""
+    var gifteeName: String = ""
+    var day: String = ""
+    var month: String = ""
+    var year: String = ""
+    var message: String = ""
+}
 
-func giftForm(submitTitle: String, action: Route) -> Form<GiftStep1> {
+
+extension GiftStep1 {
+    static func fromData(_ data: GiftStep1Data) -> Either<GiftStep1, [ValidationError]> {
+        let day_ = Either(Int(data.day), or: [ValidationError(field: "day", message: "Day is not a number")])
+        let month_ = Either(Int(data.month), or: [ValidationError(field: "month", message: "Month is not a number")])
+        let year_ = Either(Int(data.year), or: [ValidationError(field: "year", message: "Year is not a number")])
+        switch zip(day_, month_, year_) {
+        case let .left(day, month, year):
+            guard let date = Calendar.current.date(from: DateComponents(calendar: Calendar.current, timeZone: TimeZone(secondsFromGMT: 0), year: year, month: month, day: day)) else {
+                return .right([ValidationError(field: "day", message: "Invalid Date")])
+            }
+            return .left(GiftStep1(gifterEmail: data.gifterEmail, gifterName: data.gifterName, gifteeEmail: data.gifteeEmail, gifteeName: data.gifteeName, sendAt: date, message: data.message))
+        case let .right(errs): return .right(errs)
+        }
+    }
+}
+
+func giftForm(submitTitle: String, action: Route) -> Form<GiftStep1Data> {
     return Form(parse: { dict in
         // todo parse date
         dump(dict)
@@ -90,10 +117,12 @@ func giftForm(submitTitle: String, action: Route) -> Form<GiftStep1> {
             let gifterName = dict["gifter_name"],
         	let gifteeEmail = dict["giftee_email"],
             let message = dict["message"],
-            let gifteeName = dict["giftee_name"]
+            let gifteeName = dict["giftee_name"],
+            let month = dict["month"],
+        	let year = dict["year"],
+        	let day = dict["day"]
             else { return nil }
-        return GiftStep1(gifterEmail: gifterEmail, gifterName: gifterName, gifteeEmail: gifteeEmail, gifteeName: gifteeName, sendAt: Date() // todo
-            , message: message)
+        return GiftStep1Data(gifterEmail: gifterEmail, gifterName: gifterName, gifteeEmail: gifteeEmail, gifteeName: gifteeName, day: day, month: month, year: year, message: message)
         
     }, render: { data, csrf, errors in
         let form = FormView(fields: [
@@ -103,18 +132,18 @@ func giftForm(submitTitle: String, action: Route) -> Form<GiftStep1> {
             .text(id: "giftee_email", title: "The Recipients' Email", value: data.gifteeEmail),
             .text(id: "message", title: "Your Message", value: data.message),
             .fieldSet([
-		.flex(.input(id: "day", value: "", type: "number", placeHolder: "DD", otherAttributes: ["min": "1", "max": "31"]), amount: 1),
+		.flex(.input(id: "day", value: data.day, type: "number", placeHolder: "DD", otherAttributes: ["min": "1", "max": "31"]), amount: 1),
                 .custom(Node.span(classes: "ph- color-gray-30 bold", [.text("/")])),
-                .flex(.input(id: "month", value: "MM", type: "number", placeHolder: "MM", otherAttributes: ["min": "1", "max": "12"]), amount: 1),
+                .flex(.input(id: "month", value: data.month, type: "number", placeHolder: "MM", otherAttributes: ["min": "1", "max": "12"]), amount: 1),
                 .custom(Node.span(classes: "ph- color-gray-30 bold", [.text("/")])),
-                .flex(.input(id: "year", value: "YYYY", type: "number", placeHolder: "YYYY", otherAttributes: ["min": "2018", "max": "2023"]), amount: 2),
+                .flex(.input(id: "year", value: data.year, type: "number", placeHolder: "YYYY", otherAttributes: ["min": "2018", "max": "2023"]), amount: 2),
             ], required: true, title: "Delivery Date", note: nil)
             ], submitTitle: submitTitle, action: action, errors: errors)
         return .div(form.renderStacked(csrf: csrf))
     })
 }
 
-func giftForm(context: Context) -> Form<GiftStep1> {
+func giftForm(context: Context) -> Form<GiftStep1Data> {
     // todo button color required fields.
     let form = giftForm(submitTitle: "Step 2: Choose Plan", action: .newGift)
     return form.wrap { (node: Node) -> Node in
