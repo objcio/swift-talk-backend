@@ -40,6 +40,7 @@ enum Route: Equatable {
     case rssFeed
     case episodesJSON(showUnreleased: String?)
     case collectionsJSON(showUnreleased: String?)
+    case gift
     case newGift
     case payGift(UUID)
 }
@@ -210,8 +211,9 @@ private let internalRoutes: [Router<Route>] = [
 ]
 
 private let giftRoutes: [Router<Route>] = [
-    .c("gift", Route.newGift),
-    .c("gift") / Router.uuid.transform(Route.payGift, { r in
+    .c("gift") / .c("new", .gift),
+    .c("gift") / .c("new", .newGift),
+    .c("gift") / Router.uuid.transform(.payGift, { r in
         guard case let .payGift(x) = r else { return nil }
         return x
     })

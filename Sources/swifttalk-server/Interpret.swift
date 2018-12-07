@@ -478,6 +478,8 @@ extension Route {
             let secret = "2CF2557A-4AD9-4E39-99CB-22D61BEC04F6"
             let json = collectionsJSONView(showUnreleased: key == secret)
             return I.write(json: json)
+        case .gift:
+        	return I.write("gift landing page")
         case .newGift:
             // todo case where user is logged in.
             return form(giftForm(context: context), initial: GiftStep1.empty, csrf: sharedCSRF, validate: { $0.validate() }, onPost: { gift in
