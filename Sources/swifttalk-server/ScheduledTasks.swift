@@ -76,7 +76,7 @@ extension Task: Codable {
         case .syncTeamMembersWithRecurly(let userId):
             return "\(CodingKeys.syncTeamMembersWithRecurly.stringValue):\(userId.uuidString)"
         case .releaseEpisode(let number):
-            return "\(CodingKeys.releaseEpisode.stringValue):\(number):\(date.timeIntervalSinceReferenceDate)"
+            return "\(CodingKeys.releaseEpisode.stringValue):\(number)"
         case .unfinishedSubscriptionReminder(let userId):
             return "\(CodingKeys.unfinishedSubscriptionReminder.stringValue):\(userId.uuidString)"
         }
