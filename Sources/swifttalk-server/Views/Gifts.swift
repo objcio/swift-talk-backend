@@ -125,8 +125,8 @@ struct GiftStep1Data: Codable {
 }
 
 
-extension GiftStep1 {
-    static func fromData(_ data: GiftStep1Data) -> Either<GiftStep1, [ValidationError]> {
+extension Gift {
+    static func fromData(_ data: GiftStep1Data) -> Either<Gift, [ValidationError]> {
         let day_ = Either(Int(data.day), or: [ValidationError(field: "day", message: "Day is not a number")])
         let month_ = Either(Int(data.month), or: [ValidationError(field: "month", message: "Month is not a number")])
         let year_ = Either(Int(data.year), or: [ValidationError(field: "year", message: "Year is not a number")])
@@ -135,7 +135,7 @@ extension GiftStep1 {
             guard let date = Calendar.current.date(from: DateComponents(calendar: Calendar.current, timeZone: TimeZone(secondsFromGMT: 0), year: year, month: month, day: day)) else {
                 return .right([ValidationError(field: "day", message: "Invalid Date")])
             }
-            return .left(GiftStep1(gifterEmail: data.gifterEmail, gifterName: data.gifterName, gifteeEmail: data.gifteeEmail, gifteeName: data.gifteeName, sendAt: date, message: data.message))
+            return .left(Gift(gifterEmail: data.gifterEmail, gifterName: data.gifterName, gifteeEmail: data.gifteeEmail, gifteeName: data.gifteeName, sendAt: date, message: data.message, gifterUserId: nil, gifteeUserId: nil))
         case let .right(errs): return .right(errs)
         }
     }
@@ -177,7 +177,7 @@ func giftForm(submitTitle: String, action: Route) -> Form<GiftStep1Data> {
 
 func giftForm(context: Context) -> Form<GiftStep1Data> {
     // todo button color required fields.
-    let form = giftForm(submitTitle: "Step 2: Choose Plan", action: .newGift)
+    let form = giftForm(submitTitle: "Step 2: Plan and Payment", action: .newGift)
     return form.wrap { (node: Node) -> Node in
         let result: Node = LayoutConfig(context: context, contents: [
             .div(classes: "container", [

@@ -15,15 +15,16 @@ struct FileData: Codable, Insertable {
     static let tableName: String = "files"
 }
 
-struct GiftStep1: Codable, Insertable {
+struct Gift: Codable, Insertable {
     var gifterEmail: String
     var gifterName: String
     var gifteeEmail: String
     var gifteeName: String
     var sendAt: Date
     var message: String
-    static let tableName: String = "gifts_step_1"
-    static let empty = GiftStep1(gifterEmail: "", gifterName: "", gifteeEmail: "", gifteeName: "", sendAt: Date(), message: "")
+    var gifterUserId: UUID?
+    var gifteeUserId: UUID?
+    static let tableName: String = "gifts"
     
     func validate() -> [ValidationError] {
         var result: [(String,String)] = []

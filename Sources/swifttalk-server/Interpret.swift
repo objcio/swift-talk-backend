@@ -494,7 +494,7 @@ extension Route {
             return try I.write(Plan.gifts.gift(context: context))
         case .newGift:
             // todo case where user is logged in.
-            return form(giftForm(context: context), initial: GiftStep1Data(), csrf: sharedCSRF, convert: GiftStep1.fromData, validate: { $0.validate() }, onPost: { gift in
+            return form(giftForm(context: context), initial: GiftStep1Data(), csrf: sharedCSRF, convert: Gift.fromData, validate: { $0.validate() }, onPost: { gift in
                 catchAndDisplayError {
                     let id = try c.get().execute(gift.insert)
                     return I.redirect(to: Route.payGift(id))
