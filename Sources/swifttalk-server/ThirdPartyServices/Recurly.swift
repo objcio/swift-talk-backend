@@ -462,13 +462,6 @@ extension RecurlyResult: Decodable where A: Decodable {
 }
 
 extension Row where Element == UserData {
-    var monthsOfActiveSubscription: Promise<UInt?> {
-        return recurly.subscriptionStatus(for: self.id).map { status in
-            guard let s = status else { log(error: "Couldn't fetch subscription status for user \(self.id) from Recurly"); return nil }
-            return s.months
-        }
-    }
-    
     var account: RemoteEndpoint<Account> {
         return recurly.account(with: id)
     }
@@ -592,12 +585,12 @@ struct Recurly {
         return RemoteEndpoint(xml: .get, url: url, headers: headers)
     }
 
-    func subscriptionStatus(for accountId: UUID) -> Promise<(subscriber: Bool, canceled: Bool, months: UInt)?> {
+    func subscriptionStatus(for accountId: UUID) -> Promise<(subscriber: Bool, canceled: Bool, downloadCredits: UInt)?> {
         return Promise { cb in
             URLSession.shared.load(self.account(with: accountId)) { result in
                 guard let acc = result else { cb(nil); return }
                 URLSession.shared.load(recurly.listSubscriptions(accountId: acc.account_code)) { subs in
-                    let hasActiveSubscription = subs?.contains(where:  { $0.state == .active }) ?? false
+                    let hasActiveSubscription = subs?.contains(where: { $0.state == .active }) ?? false
                     cb((acc.subscriber, canceled: !hasActiveSubscription, (subs?.activeMonths ?? 0) * 4))
                 }
             }
