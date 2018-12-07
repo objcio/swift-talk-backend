@@ -506,6 +506,16 @@ extension Route {
                 dump(token)
                 return I.write("todo")
             })
+        case .redeemGift(let id):
+            
+            if session?.premiumAccess == true {
+                return try I.write(redeemGiftAlreadySubscribed(context: context))
+            } else if session?.user != nil {
+                // TODO Connect giftee to gifter
+                return I.redirect(to: Route.register(couponCode: nil))
+            } else {
+                return I.write(try redeemGiftSub(context: context, giftId: id))
+            }
         case let .playProgress(episodeId):
             guard let s = try? requireSession() else { return I.write("", status: .ok)}
             return I.withPostBody(csrf: s.user.data.csrf) { body in
