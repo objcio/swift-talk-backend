@@ -101,8 +101,8 @@ struct CSRFToken: Codable, Equatable, Hashable {
 
 struct UserData: Codable, Insertable {
     var email: String
-    var githubUID: Int
-    var githubLogin: String
+    var githubUID: Int?
+    var githubLogin: String?
     var githubToken: String?
     var avatarURL: String
     var admin: Bool = false
@@ -122,7 +122,7 @@ struct UserData: Codable, Insertable {
     var csrf: CSRFToken
 
     
-    init(email: String, githubUID: Int, githubLogin: String, githubToken: String? = nil, avatarURL: String, name: String, createdAt: Date? = nil, rememberCreatedAt: Date? = nil, updatedAt: Date? = nil, collaborator: Bool = false, downloadCredits: Int = 0, canceled: Bool = false, confirmedNameAndEmail: Bool = false) {
+    init(email: String, githubUID: Int? = nil, githubLogin: String? = nil, githubToken: String? = nil, avatarURL: String, name: String, createdAt: Date? = nil, rememberCreatedAt: Date? = nil, updatedAt: Date? = nil, collaborator: Bool = false, downloadCredits: Int = 0, canceled: Bool = false, confirmedNameAndEmail: Bool = false) {
         self.email = email
         self.githubUID = githubUID
         self.githubLogin = githubLogin

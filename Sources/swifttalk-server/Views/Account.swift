@@ -411,13 +411,14 @@ func addTeamMemberForm() -> Form<TeamMemberFormData> {
 }
 
 func teamMembers(context: Context, csrf: CSRFToken, addForm: Node, teamMembers: [Row<UserData>]) -> Node {
-    let currentTeamMembers = teamMembers.isEmpty ? Node.p([.raw("No team members added yet.")]) : Node.div(teamMembers.map { tm in
-        .div(classes: "flex items-center pv- border-top border-1 border-color-gray-90", [
+    let currentTeamMembers = teamMembers.isEmpty ? Node.p([.raw("No team members added yet.")]) : Node.div(teamMembers.compactMap { tm in
+        guard let githubLogin = tm.data.githubLogin else { return nil }
+        return .div(classes: "flex items-center pv- border-top border-1 border-color-gray-90", [
             .div(classes: "block radius-full ms-2 width-2 mr", [
                 .img(src: tm.data.avatarURL, classes: "block radius-full ms-2 width-2 mr")
             ]),
             .div(classes: "flex-grow type-mono", [
-                .link(to: URL(string: "https://github.com/\(tm.data.githubLogin)")!, classes: "color-gray-30 no-decoration hover-color-blue", [.text(tm.data.githubLogin)])
+                .link(to: URL(string: "https://github.com/\(githubLogin)")!, classes: "color-gray-30 no-decoration hover-color-blue", [.text(githubLogin)])
             ]),
             Node.button(to: .accountDeleteTeamMember(tm.id), csrf: csrf, [.raw("&times;")], classes: "button-input ms-1")
         ])

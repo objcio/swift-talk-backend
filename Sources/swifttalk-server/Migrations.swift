@@ -186,6 +186,11 @@ fileprivate let migrations: [String] = [
         send_at timestamp NOT NULL,
         message text NOT NULL
     )
+    """,
+    """
+    ALTER TABLE USERS
+        ALTER github_login DROP NOT NULL,
+        ALTER github_uid DROP NOT NULL
     """
 ]
 
