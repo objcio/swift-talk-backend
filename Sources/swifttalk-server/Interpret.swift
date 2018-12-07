@@ -469,11 +469,11 @@ extension Route {
             return I.write(xml: Episode.all.released.rssView, status: .ok)
         case let .episodesJSON(showUnreleased: key):
             let secret = "2CF2557A-4AD9-4E39-99CB-22D61BEC04F6" // TODO: this should be an ENV variable
-            let json = episodesJSONView(showUnreleased: key == secret)
+            let json = episodesJSONView(showUnreleased: false)
             return I.write(json: json)
         case let .collectionsJSON(showUnreleased: key):
             let secret = "2CF2557A-4AD9-4E39-99CB-22D61BEC04F6"
-            let json = collectionsJSONView(showUnreleased: key == secret)
+            let json = collectionsJSONView(showUnreleased: false)
             return I.write(json: json)
         case let .playProgress(episodeId):
             guard let s = try? requireSession() else { return I.write("", status: .ok)}
