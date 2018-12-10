@@ -179,7 +179,7 @@ extension Row where Element == UserData {
         return .build(parameters: [id], parse: Element.parseFirst) { """
             SELECT u.id,\(fields) FROM \(UserData.tableName) AS u
             INNER JOIN \(TeamMemberData.tableName) AS t ON t.user_id = u.id
-            WHERE t.team_member_id=\($0[0]) AND u.subscribed=true
+            WHERE t.team_member_id=\($0[0]) AND u.subscriber=true
             """
         }
     }
@@ -189,7 +189,7 @@ extension Row where Element == UserData {
         return .build(parameters: [id], parse: Element.parseFirst) { """
             SELECT u.id,\(fields) FROM \(UserData.tableName) AS u
             INNER JOIN \(Gift.tableName) AS g ON g.gifter_user_id = u.id
-            WHERE g.giftee_user_id=\($0[0]) AND u.subscribed=true
+            WHERE g.giftee_user_id=\($0[0]) AND u.subscriber=true
             """
         }
     }
