@@ -154,7 +154,7 @@ func giftForm(submitTitle: String, action: Route) -> Form<GiftStep1Data> {
             .text(id: "giftee_email", title: "The Recipients' Email", value: data.gifteeEmail),
             .text(id: "message", title: "Your Message", value: data.message),
             .fieldSet([
-		.flex(.input(id: "day", value: data.day, type: "number", placeHolder: "DD", otherAttributes: ["min": "1", "max": "31"]), amount: 1),
+				.flex(.input(id: "day", value: data.day, type: "number", placeHolder: "DD", otherAttributes: ["min": "1", "max": "31"]), amount: 1),
                 .custom(Node.span(classes: "ph- color-gray-30 bold", [.text("/")])),
                 .flex(.input(id: "month", value: data.month, type: "number", placeHolder: "MM", otherAttributes: ["min": "1", "max": "12"]), amount: 1),
                 .custom(Node.span(classes: "ph- color-gray-30 bold", [.text("/")])),
