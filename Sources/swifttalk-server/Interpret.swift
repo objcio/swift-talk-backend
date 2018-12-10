@@ -80,6 +80,33 @@ extension Swift.Collection where Element == Episode {
     }
 }
 
+// Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
+func form<A,B,I: Interpreter>(_ f: Form<A>, initial: A, csrf: CSRFToken, convert: @escaping (A) -> Either<B, [ValidationError]>, validate: @escaping (B) -> [ValidationError], onPost: @escaping (B) throws -> I) -> I {
+    return I.withPostBody(do: { body in
+        guard let result = f.parse(csrf: csrf, body) else { throw RenderingError(privateMessage: "Couldn't parse form", publicMessage: "Something went wrong. Please try again.") }
+        switch convert(result) {
+        case let .left(value):
+            let errors = validate(value)
+            if errors.isEmpty {
+                return try onPost(value)
+            } else {
+                return .write(f.render(result, csrf, errors))
+            }
+            
+        case let .right(errs):
+            return .write(f.render(result, csrf, errs))
+        }
+        
+    }, or: {
+        return .write(f.render(initial, csrf, []))
+    })
+    
+}
+
+func form<A, I: Interpreter>(_ f: Form<A>, initial: A, csrf: CSRFToken, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> I) -> I {
+    return form(f, initial: initial, csrf: csrf, convert: { .left($0) }, validate: validate, onPost: onPost)
+}
+
 extension Route {
     func interpret<I: Interpreter>(sessionId: UUID?, connection c: Lazy<Connection>) throws -> I {
         let session: Session?
@@ -102,33 +129,6 @@ extension Route {
         }
         
         let context = Context(path: path, route: self, message: nil, session: session)
-        
-        // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
-        func form<A,B>(_ f: Form<A>, initial: A, csrf: CSRFToken, convert: @escaping (A) -> Either<B, [ValidationError]>, validate: @escaping (B) -> [ValidationError], onPost: @escaping (B) throws -> I) -> I {
-            return I.withPostBody(do: { body in
-                guard let result = f.parse(csrf: csrf, body) else { throw RenderingError(privateMessage: "Couldn't parse form", publicMessage: "Something went wrong. Please try again.") }
-                switch convert(result) {
-                case let .left(value):
-                    let errors = validate(value)
-                    if errors.isEmpty {
-                        return try onPost(value)
-                    } else {
-                        return .write(f.render(result, csrf, errors))
-                    }
-
-                case let .right(errs):
-                    return .write(f.render(result, csrf, errs))
-                }
-
-            }, or: {
-                return .write(f.render(initial, csrf, []))
-            })
-
-        }
-        
-        func form<A>(_ f: Form<A>, initial: A, csrf: CSRFToken, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> I) -> I {
-            return form(f, initial: initial, csrf: csrf, convert: { .left($0) }, validate: validate, onPost: onPost)
-        }
         
         func teamMembersResponse(_ session: Session, _ data: TeamMemberFormData? = nil, csrf: CSRFToken, _ errors: [ValidationError] = []) throws -> I {
             let renderedForm = addTeamMemberForm().render(data ?? TeamMemberFormData(githubUsername: ""), csrf, errors)
@@ -546,23 +546,41 @@ extension Route {
         case .collectionsJSON(_):
             let json = collectionsJSONView(showUnreleased: false)
             return I.write(json: json)
-        case .gift:
+        case .gift(let g):
+            return try g.interpret(session: session, context: context, connection: c)
+        case let .playProgress(episodeId):
+            guard let s = try? requireSession() else { return I.write("", status: .ok)}
+            return I.withPostBody(csrf: s.user.data.csrf) { body in
+                if let progress = body["progress"].flatMap(Int.init), let ep = Episode.all.findEpisode(with: episodeId, scopedFor: s.user.data) {
+                    let data = PlayProgressData.init(userId: s.user.id, episodeNumber: ep.number, progress: progress, furthestWatched: progress)
+                    try c.get().execute(data.insertOrUpdate(uniqueKey: "user_id, episode_number"))
+                }
+                return I.write("", status: .ok)
+            }
+        }
+    }
+}
+
+extension Route.Gifts {
+    func interpret<I: Interpreter>(session: Session?, context: Context, connection c: Lazy<Connection>) throws -> I {
+        switch self {
+        case .home:
             return try I.write(Plan.gifts.gift(context: context))
-        case .newGift:
+        case .new:
             return form(giftForm(context: context), initial: GiftStep1Data(), csrf: sharedCSRF, convert: Gift.fromData, validate: { $0.validate() }, onPost: { gift in
                 catchAndDisplayError {
                     let id = try c.get().execute(gift.insert)
-                    return I.redirect(to: Route.payGift(id))
+                    return I.redirect(to: Route.gift(.pay(id)))
                 }
             })
-        case .payGift(let id):
+        case .pay(let id):
             guard let gift = try c.get().execute(Row<Gift>.select(id)) else {
                 throw RenderingError(privateMessage: "No such gift", publicMessage: "Something went wrong, please try again.")
             }
             guard gift.data.subscriptionId == nil else {
                 throw RenderingError(privateMessage: "Already paid \(gift.id)", publicMessage: "You already paid this gift.")
             }
-            let f = payGiftForm(context: context, route: .payGift(id))
+            let f = payGiftForm(context: context, route: .gift(.pay(id)))
             return form(f, initial: .init(), csrf: sharedCSRF, validate: { _ in [] }, onPost: { (result: GiftResult) throws in
                 let plan = try Plan.gifts.first(where: { $0.plan_code == result.plan_id }) ?! RenderingError.init(privateMessage: "Illegal plan: \(result.plan_id)", publicMessage: "Couldn't find the plan you selected.")
                 let userId = try c.get().execute(UserData(email: gift.data.gifterEmail, avatarURL: "", name: gift.data.gifterName).insert)
@@ -586,14 +604,14 @@ extension Route {
                                 myAssert(result != nil)
                             }
                         }
-                        return I.redirect(to: .thankYouGift(id))
+                        return I.redirect(to: .gift(.thankYou(id)))
                     }
                 })
             })
-        case .thankYouGift(let id):
+        case .thankYou(let id):
             // we can display the kind of gift, but shouldn't display any gifter-specific information. this is because the giftee also gets the id, and can construct this thank you URL manually...
             return I.write("TODO thank you page for the gifter")
-        case .redeemGift(let id):
+        case .redeem(let id):
             guard let gift = try c.get().execute(Row<Gift>.select(id)) else {
                 throw RenderingError(privateMessage: "gift doesn't exist: \(id.uuidString)", publicMessage: "This gift subscription doesn't exist. Please get in touch to resolve this issue.")
             }
@@ -606,15 +624,6 @@ extension Route {
                 return I.redirect(to: Route.register(couponCode: nil))
             } else {
                 return I.write(try redeemGiftSub(context: context, giftId: id))
-            }
-        case let .playProgress(episodeId):
-            guard let s = try? requireSession() else { return I.write("", status: .ok)}
-            return I.withPostBody(csrf: s.user.data.csrf) { body in
-                if let progress = body["progress"].flatMap(Int.init), let ep = Episode.all.findEpisode(with: episodeId, scopedFor: s.user.data) {
-                    let data = PlayProgressData.init(userId: s.user.id, episodeNumber: ep.number, progress: progress, furthestWatched: progress)
-                    try c.get().execute(data.insertOrUpdate(uniqueKey: "user_id, episode_number"))
-                }
-                return I.write("", status: .ok)
             }
         }
     }

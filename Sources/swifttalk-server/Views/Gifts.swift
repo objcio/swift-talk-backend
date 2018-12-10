@@ -20,7 +20,7 @@ extension Array where Element == Plan {
                 ])
             ])
         }
-        let continueLink = Node.link(to: .newGift, classes: "c-button c-button--big c-button--blue c-button--wide", ["Start Gifting"])
+        let continueLink = Node.link(to: .gift(.new), classes: "c-button c-button--big c-button--blue c-button--wide", ["Start Gifting"])
         let benefits: [Node] = [
             Node.li(classes: "m+|col m+|width-1/2", [
                 .div(classes: "color-orange", [
@@ -94,7 +94,7 @@ func redeemGiftSub(context: Context, giftId: UUID) throws -> Node {
         .div(classes: "container pt0", [
             .div(classes: "bgcolor-white pa- radius-8 max-width-7 box-sizing-content center stack-", [
                 .div([
-                    Node.link(to: .login(continue: Route.redeemGift(giftId).path), classes: "c-button c-button--big c-button--blue c-button--wide", ["Login with GitHub"])
+                    Node.link(to: .login(continue: Route.gift(.redeem(giftId)).path), classes: "c-button c-button--big c-button--blue c-button--wide", ["Login with GitHub"])
                 ])
             ])
         ])
@@ -167,7 +167,7 @@ func giftForm(submitTitle: String, action: Route) -> Form<GiftStep1Data> {
 
 func giftForm(context: Context) -> Form<GiftStep1Data> {
     // todo button color required fields.
-    let form = giftForm(submitTitle: "Step 2: Plan and Payment", action: .newGift)
+    let form = giftForm(submitTitle: "Step 2: Plan and Payment", action: .gift(.new))
     return form.wrap { (node: Node) -> Node in
         let result: Node = LayoutConfig(context: context, contents: [
             .div(classes: "container", [
@@ -221,7 +221,7 @@ extension Gift {
 
 extension Row where Element == Gift {
     func gifteeEmailText(duration: String) -> String {
-        let url = Route.redeemGift(id).url.absoluteString
+        let url = Route.gift(.redeem(id)).url.absoluteString
         
         let theMessage: String = data.message.isEmpty ? "" : ("Here is their message: \n\n" + data.message)
         

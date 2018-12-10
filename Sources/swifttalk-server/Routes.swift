@@ -40,12 +40,17 @@ enum Route: Equatable {
     case rssFeed
     case episodesJSON(showUnreleased: String?)
     case collectionsJSON(showUnreleased: String?)
-    case gift
-    case newGift
-    case payGift(UUID)
-    case redeemGift(UUID)
-    case thankYouGift(UUID)
+    case gift(Gifts)
+    
+    enum Gifts: Equatable {
+        case home
+        case new
+        case pay(UUID)
+        case redeem(UUID)
+        case thankYou(UUID)
+    }
 }
+
 
 extension Route {
     var path: String {
@@ -213,18 +218,18 @@ private let internalRoutes: [Router<Route>] = [
 ]
 
 private let giftRoutes: [Router<Route>] = [
-    .c("gift", .gift),
-    .c("gift") / .c("new", .newGift),
-    .c("gift") / Router.uuid.transform(Route.payGift, { r in
-        guard case let .payGift(x) = r else { return nil }
+    .c("gift", .gift(.home)),
+    .c("gift") / .c("new", .gift(.new)),
+    .c("gift") / Router.uuid.transform({ Route.gift(.pay($0)) }, { r in
+        guard case let .gift(.pay(x)) = r else { return nil }
         return x
     }),
-    .c("gift") / .c("redeem") / Router.uuid.transform(Route.redeemGift, { r in
-        guard case let .redeemGift(x) = r else { return nil }
+        .c("gift") / .c("redeem") / Router.uuid.transform({ Route.gift(.redeem($0)) }, { r in
+        guard case let .gift(.redeem(x)) = r else { return nil }
         return x
     }),
-    .c("gift") / .c("thankYou") / Router.uuid.transform(Route.thankYouGift, { r in
-        guard case let .thankYouGift(x) = r else { return nil }
+        .c("gift") / .c("thankYou") / Router.uuid.transform({ .gift(.thankYou($0)) }, { r in
+        guard case let .gift(.thankYou(x)) = r else { return nil }
         return x
     })
 ]
