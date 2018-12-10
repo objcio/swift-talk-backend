@@ -41,7 +41,6 @@ struct Gift: Codable, Insertable {
         if sendAt < Date() && !sendAt.isToday {
             result.append(("send_at", "The date cannot be in the past."))
         }
-        // todo check send-at date
         return result
     }
 }

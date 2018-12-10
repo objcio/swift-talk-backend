@@ -534,7 +534,6 @@ extension Route {
         case .gift:
             return try I.write(Plan.gifts.gift(context: context))
         case .newGift:
-            // todo case where user is logged in.
             return form(giftForm(context: context), initial: GiftStep1Data(), csrf: sharedCSRF, convert: Gift.fromData, validate: { $0.validate() }, onPost: { gift in
                 catchAndDisplayError {
                     let id = try c.get().execute(gift.insert)
@@ -545,7 +544,9 @@ extension Route {
             guard let gift = try c.get().execute(Row<Gift>.select(id)) else {
                 throw RenderingError(privateMessage: "No such gift", publicMessage: "Something went wrong, please try again.")
             }
-            // todo verify the gift isn't paid for already!
+            guard gift.data.subscriptionId == nil else {
+                throw RenderingError(privateMessage: "Already paid \(gift.id)", publicMessage: "You already paid this gift.")
+            }
             let f = payGiftForm(context: context, route: .payGift(id))
             return form(f, initial: .init(), csrf: sharedCSRF, validate: { _ in [] }, onPost: { (result: GiftResult) throws in
                 let plan = try Plan.gifts.first(where: { $0.plan_code == result.plan_id }) ?! RenderingError.init(privateMessage: "Illegal plan: \(result.plan_id)", publicMessage: "Couldn't find the plan you selected.")
@@ -556,14 +557,17 @@ extension Route {
                     switch sub_ {
                     case .errors(let messages):
                         log(RecurlyErrors(messages))
-                        // todo: add a message that the gift was *not* created
-                        let response = giftForm(context: context).render(GiftStep1Data(gifterEmail: gift.data.gifterEmail, gifterName: gift.data.gifterName, gifteeEmail: gift.data.gifteeEmail, gifteeName: gift.data.gifteeName, day: "", month: "", year: "", message: gift.data.message), sharedCSRF, messages.map { ($0.field ?? "", $0.message) })
+                        let theMessages = messages.map { ($0.field ?? "", $0.message) } + [("", "There was a problem with the payment. You have not been charged. Please try again or contact us for assistance.")]
+                        let response = giftForm(context: context).render(GiftStep1Data(gifterEmail: gift.data.gifterEmail, gifterName: gift.data.gifterName, gifteeEmail: gift.data.gifteeEmail, gifteeName: gift.data.gifteeName, day: "", month: "", year: "", message: gift.data.message), sharedCSRF, theMessages)
                         return I.write(response)
                     case .success(let sub):
                         var copy = gift
                         copy.data.gifteeUserId = userId
                         copy.data.subscriptionId = sub.uuid
                         try c.get().execute(copy.update())
+                        if let futureDate = start {
+                            // todo send email
+                        }
                         return I.redirect(to: .thankYouGift(id))
                     }
                 })
