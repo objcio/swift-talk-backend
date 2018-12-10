@@ -361,7 +361,7 @@ objc.io publishes books, videos, and articles on advanced techniques for iOS and
 <a class="no-decoration color-gray-60 hover-color-black" href="mailto:mail@objc.io">Email</a>
 </li>
 <li>
-<a class="no-decoration color-gray-60 hover-color-black" href="/imprint">Imprint &amp; Legal</a>
+<a class="no-decoration color-gray-60 hover-color-black" href="https://www.objc.io/imprint">Imprint &amp; Legal</a>
 </li>
 </ul>
 </div><!-- .col -->
