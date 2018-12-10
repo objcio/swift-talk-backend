@@ -14,7 +14,6 @@ enum Route: Equatable {
     case subscribe
     case collections
     case login(continue: String?)
-    case thankYou
     case githubCallback(code: String?, origin: String?)
     case collection(Id<Collection>)
     case episode(Id<Episode>, playPosition: Int?)
@@ -42,6 +41,7 @@ enum Route: Equatable {
    
     enum Account: Equatable {
         case register(couponCode: String?)
+        case thankYou
         case profile
         case billing
         case teamMembers
@@ -189,6 +189,7 @@ private let accountRoutes: [Router<Route>] = [
     callbackRoute,
     loginRoute,
     .c("account") / [
+      .c("thankYou", .account(.thankYou)),
       .c("logout", .account(.logout)),
       .c("profile", .account(.profile)),
       .c("billing", .account(.billing)),
@@ -219,7 +220,6 @@ private let subscriptionRoutes: [Router<Route>] = [
         guard case let .subscription(x) = r else { return nil }
         return x
     }),
-    .c("thankYou", .thankYou),
 ]
 
 private let otherRoutes: [Router<Route>] = [

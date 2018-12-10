@@ -128,17 +128,12 @@ extension Route {
             return try session ?! NotLoggedInError()
         }
         
-        let context = Context(path: path, route: self, message: nil, session: session)        
+        let context = Context(path: path, route: self, message: nil, session: session)
         switch self {
         case .error:
             return .write(errorView("Not found"), status: .notFound)
         case .collections:
             return I.write(index(Collection.all.filter { !$0.episodes(for: session?.user.data).isEmpty }, context: context))
-        case .thankYou:
-            let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
-            var cont = context
-            cont.message = ("Thank you for supporting us.", .notice)
-            return .write(renderHome(episodes: episodesWithProgress, context: cont))
         case .subscription(let s):
             return try s.interpret(sesssion: requireSession(), context: context, connection: c)
         case .account(let action):
@@ -153,7 +148,6 @@ extension Route {
             }
             let episodesWithProgress = try coll.episodes(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
             return .write(coll.show(episodes: episodesWithProgress, context: context))
-       
         case .login(let cont):
             var path = "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(github.clientId)"
             if let c = cont {
@@ -353,7 +347,7 @@ extension Route.Subscription {
                     case .success(let sub):
                         try c.get().execute(user.changeSubscriptionStatus(sub.state == .active))
                         // todo flash
-                        return I.redirect(to: .thankYou)
+                        return I.redirect(to: .account(.thankYou))
                     }
                 })
             }
@@ -398,7 +392,7 @@ extension Route.Subscription {
                     }
                     return I.onSuccess(promise: recurly.reactivate(sub).promise) { result in
                         switch result {
-                        case .success: return I.redirect(to: .thankYou)
+                        case .success: return I.redirect(to: .account(.thankYou))
                         case .errors(let errs): throw RecurlyErrors(errs)
                         }
                     }
@@ -418,6 +412,11 @@ extension Route.Account {
         }
 
         switch self {
+        case .thankYou:
+            let episodesWithProgress = try Episode.all.scoped(for: sess.user.data).withProgress(for: sess.user.id, connection: c)
+            var cont = context
+            cont.message = ("Thank you for supporting us.", .notice)
+            return .write(renderHome(episodes: episodesWithProgress, context: cont))
         case .logout:
             try c.get().execute(sess.user.deleteSession(sess.sessionId))
             return I.redirect(to: .home)
@@ -552,10 +551,8 @@ extension Route.Account {
             }, or: {
                 return try teamMembersResponse()
             })
-            
         case .deleteTeamMember(let id):
-            let csrf = sess.user.data.csrf
-            return try requirePost(csrf: csrf) {
+            return try requirePost(csrf: sess.user.data.csrf) {
                 try c.get().execute(sess.user.deleteTeamMember(id))
                 let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: Date().addingTimeInterval(5*60))
                 try c.get().execute(task)
