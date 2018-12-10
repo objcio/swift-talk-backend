@@ -23,7 +23,7 @@ enum Route: Equatable {
     case accountBilling
     case accountTeamMembers
     case accountDeleteTeamMember(UUID)
-    case githubCallback(String, origin: String?)
+    case githubCallback(code: String?, origin: String?)
     case collection(Id<Collection>)
     case episode(Id<Episode>, playPosition: Int?)
     case download(Id<Episode>)
@@ -126,7 +126,7 @@ private let collection: Router<Route> = (Router<()>.c("collections") / .string()
     return name.rawValue
 })
 
-private let callbackRoute: Router<Route> = .c("users") / .c("auth") / .c("github") / .c("callback") / ((Router<String>.queryParam(name: "code") / Router.optionalQueryParam(name: "origin")).transform({ Route.githubCallback($0.0, origin: $0.1) }, { r in
+private let callbackRoute: Router<Route> = .c("users") / .c("auth") / .c("github") / .c("callback") / ((Router.optionalQueryParam(name: "code") / Router.optionalQueryParam(name: "origin")).transform({ Route.githubCallback(code: $0.0, origin: $0.1) }, { r in
     guard case let .githubCallback(x, y) = r else { return nil }
     return (x,y)
 }))

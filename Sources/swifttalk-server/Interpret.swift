@@ -224,7 +224,7 @@ extension Route {
         case .login(let cont):
             var path = "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(github.clientId)"
             if let c = cont {
-                let encoded = env.baseURL.absoluteString + Route.githubCallback("", origin: c).path
+                let encoded = env.baseURL.absoluteString + Route.githubCallback(code: nil, origin: c).path
                 path.append("&redirect_uri=" + encoded.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)
             }
             return I.redirect(path: path)
@@ -232,7 +232,10 @@ extension Route {
             let s = try requireSession()
             try c.get().execute(s.user.deleteSession(s.sessionId))
             return I.redirect(to: .home)
-        case .githubCallback(let code, let origin):
+        case .githubCallback(let optionalCode, let origin):
+            guard let code = optionalCode else {
+                throw RenderingError(privateMessage: "No auth code", publicMessage: "Something went wrong, please try again.")
+            }
             let loadToken = github.getAccessToken(code).promise.map({ $0?.access_token })
             return I.onComplete(promise: loadToken, do: { token in
                 let t = try token ?! RenderingError(privateMessage: "No github access token", publicMessage: "Couldn't access your Github profile.")
