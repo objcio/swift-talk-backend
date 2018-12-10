@@ -218,6 +218,7 @@ extension Route {
                 let resp = registerForm(context, couponCode: couponCode).render(.init(u.data), u.data.csrf, [])
                 return I.write(resp)
             } else {
+                try c.get().execute(Task.unfinishedSubscriptionReminder(userId: u.id).schedule(weeks: 1))
                 return try newSubscription(couponCode: couponCode, csrf: u.data.csrf, errs: [])
             }
         case .login(let cont):
@@ -455,7 +456,7 @@ extension Route {
                     guard let _ = try? c.get().execute(teamMemberData.insert) else {
                         return try teamMembersResponse(sess, formData, csrf: csrf, [(field: "github_username", message: "Team member already exists")])
                     }
-                    let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: Date().addingTimeInterval(5*60))
+                    let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(minutes: 5)
                     try c.get().execute(task)
                     return try teamMembersResponse(sess, csrf: csrf)
                 }
@@ -523,13 +524,11 @@ extension Route {
             return I.write("", status: .ok)
         case .rssFeed:
             return I.write(xml: Episode.all.released.rssView, status: .ok)
-        case let .episodesJSON(showUnreleased: key):
-            let secret = "2CF2557A-4AD9-4E39-99CB-22D61BEC04F6" // TODO: this should be an ENV variable
-            let json = episodesJSONView(showUnreleased: key == secret)
+        case .episodesJSON(_):
+            let json = episodesJSONView(showUnreleased: false)
             return I.write(json: json)
-        case let .collectionsJSON(showUnreleased: key):
-            let secret = "2CF2557A-4AD9-4E39-99CB-22D61BEC04F6"
-            let json = collectionsJSONView(showUnreleased: key == secret)
+        case .collectionsJSON(_):
+            let json = collectionsJSONView(showUnreleased: false)
             return I.write(json: json)
         case .gift:
             return try I.write(Plan.gifts.gift(context: context))

@@ -70,7 +70,9 @@ extension RemoteEndpoint where A == () {
 
     init<B: Codable>(json method: Method, url: URL, accept: Accept? = .json, body: B, headers: [String:String] = [:], query: [String:String] = [:]) {
         let b = try! JSONEncoder().encode(body)
-        self.init(method, url: url, accept: accept, body: b, headers: headers, query: query, parse: { _ in () })
+        var h = headers
+        h["Content-Type"] = "application/json"
+        self.init(method, url: url, accept: accept, body: b, headers: h, query: query, parse: { _ in () })
     }
 }
 
@@ -84,6 +86,8 @@ extension RemoteEndpoint where A: Decodable {
 
     init<B: Codable>(json method: Method, url: URL, accept: Accept = .json, body: B? = nil, headers: [String: String] = [:], query: [String: String] = [:]) {
         let b = body.map { try! JSONEncoder().encode($0) }
+        var h = headers
+        h["Content-Type"] = "application/json"
         self.init(method, url: url, accept: accept, body: b, headers: headers, query: query) { data in
             return try? JSONDecoder().decode(A.self, from: data)
         }

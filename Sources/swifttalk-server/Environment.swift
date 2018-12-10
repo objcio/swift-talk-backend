@@ -36,7 +36,8 @@ struct Env {
           "CIRCLE_API_KEY",
           "MAILCHIMP_API_KEY",
           "MAILCHIMP_LIST_ID",
-          "VIMEO_ACCESS_TOKEN"
+          "VIMEO_ACCESS_TOKEN",
+          "SENDGRID_API_KEY"
 		].compactMap(verify)
 		guard messages.isEmpty else {
 			fatalError("Missing environment variables: \(messages)")
@@ -66,6 +67,8 @@ struct Env {
     
     var mailchimpApiKey: String { return env["MAILCHIMP_API_KEY"]! }
     var mailchimpListId: String { return env["MAILCHIMP_LIST_ID"]! }
+    
+    var sendgridApiKey: String { return env["SENDGRID_API_KEY"]! }
     
     // The vimeo access token needs to have the "private" and "files" roles enabled to fetch the download urls for private videos
     var vimeoAccessToken: String { return env["VIMEO_ACCESS_TOKEN"]! }

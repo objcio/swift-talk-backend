@@ -128,7 +128,7 @@ public final class PostgresNodeDecoder: Decoder {
             if type == UUID.self {
                 let str: String = try! newNode.converted(to: String.self)
                 return UUID(uuidString: str)! as! T
-            } else if type == Date.self {
+            } else if type == Date.self { // todo: could we check that type is NodeConvertible?
                 let d: Date = try decode(key)
                 return d as! T
             }

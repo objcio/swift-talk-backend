@@ -71,7 +71,7 @@ extension Router {
     func route(for request: Request) -> A? {
         var copy = request
         let result = parse(&copy)
-        guard copy.path.isEmpty, copy.query.isEmpty else { return nil }
+        guard copy.path.isEmpty else { return nil }
         return result
     }
 }
