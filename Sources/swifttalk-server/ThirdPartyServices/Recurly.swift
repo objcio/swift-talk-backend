@@ -128,6 +128,7 @@ struct Subscription: Codable {
     var activated_at: Date?
     var expires_at: Date?
     var current_period_ends_at: Date?
+    var trial_ends_at: Date?
     var plan: PlanInfo
     var quantity: Int
     var unit_amount_in_cents: Int

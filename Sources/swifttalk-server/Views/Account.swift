@@ -342,6 +342,12 @@ func billing(context: Context, user: Row<UserData>, subscription: (Subscription,
                     label(text: "State"),
                     value(text: sub.state.pretty)
                 ]),
+                sub.trial_ends_at.map { trialEndDate in
+                    Node.li(classes: "flex", [
+                        label(text: "Trial Ends At"),
+                        value(text: DateFormatter.fullPretty.string(from: trialEndDate))
+                    ])
+                } ?? Node.none,
                 sub.state == .active ? Node.li(classes: "flex", [
                     label(text: "Next Billing"),
                     Node.div(classes: "flex-auto color-gray-30 stack-", [
