@@ -121,7 +121,7 @@ extension LayoutConfig {
     }
     
     var layout: Node {
-        let head: Node = .head([
+        let head: Node = Node.head([
             .meta(attributes: ["charset": "utf-8"]),
             .meta(attributes: ["http-equiv": "X-UA-Compatible", "content": "IE=edge"]),
             .meta(attributes: ["name": "viewport", "content": "'width=device-width, initial-scale=1, user-scalable=no'"]),
@@ -167,15 +167,17 @@ extension LayoutConfig {
                 ])
             ])
         ])
-        let body: Node = .body(attributes: ["class": "theme-" + theme], [
+        var bodyChildren: [Node] = [
             header,
             .main(
-        		[context.message.map(flash) ?? .none] +
+                [context.message.map(flash) ?? .none] +
                 contents
-            ),
-        ] + preFooter + [
-            .raw(footer)
-        ] + footerContent)
+            )]
+        // these are appends because of compile time
+        bodyChildren.append(contentsOf: preFooter)
+        bodyChildren.append(.raw(footer))
+        bodyChildren.append(contentsOf: footerContent)
+        let body: Node = Node.body(attributes: ["class": "theme-" + theme], bodyChildren)
         return Node.html(attributes: ["lang": "en"], [head, body])
     }
     

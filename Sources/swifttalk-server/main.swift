@@ -5,7 +5,6 @@ import PostgreSQL
 
 
 try runMigrations()
-//try importExistingData()
 refreshStaticData()
 let timer = scheduleTaskTimer()
 

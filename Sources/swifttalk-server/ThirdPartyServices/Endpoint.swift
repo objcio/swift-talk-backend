@@ -100,6 +100,10 @@ extension URLSession {
         let r = e.request
         dataTask(with: r, completionHandler: { data, resp, err in
             guard let d = data else { callback(nil); return }
+            guard let h = resp as? HTTPURLResponse, h.statusCode >= 200 && h.statusCode <= 400 else {
+                log(error: "\(r) response: \(String(describing: resp))")
+                callback(nil); return
+            }
             return callback(e.parse(d))
         }).resume()
     }

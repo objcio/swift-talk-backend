@@ -101,10 +101,13 @@ extension DateFormatter {
     convenience init(format: String) {
         self.init()
         self.locale = Locale(identifier: "en_US")
+        self.timeZone = TimeZone(secondsFromGMT: 0)
         self.dateFormat = format
     }
     
     static let withYear = DateFormatter(format: "MMM dd yyyy")
+    
+    /// e.g. "November 23, 2018"
     static let fullPretty = DateFormatter(format: "MMMM dd, yyyy")
     static let withoutYear = DateFormatter(format: "MMM dd")
 }

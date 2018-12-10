@@ -505,14 +505,27 @@ extension Route {
                 }
                 
                 return catchAndDisplayError {
-                    // TODO: catch "canceled" or "active" state.
-                    if let s = webhook.subscription, s.state == "future", let a = s.activated_at, s.plan.plan_code.hasPrefix("gift") { // todo this is a lot of logic that should maybe live somewhere else?
+                    if let s = webhook.subscription, s.plan.plan_code.hasPrefix("gift") {
                         if var gift = flatten(try? c.get().execute(Row<Gift>.select(subscriptionId: s.uuid))) {
-                            if gift.data.sendAt != a {
-                                gift.data.sendAt = a
-                                try c.get().execute(gift.update())
+                            if s.state == "future", let a = s.activated_at {
+                                if gift.data.sendAt != a {
+                                    gift.data.sendAt = a
+                                    try c.get().execute(gift.update())
+                                }
+                            } else if s.state == "active" {
+                                if !gift.data.activated {
+                                    let plan = Plan.gifts.first { $0.plan_code == s.plan.plan_code }
+                                    let duration = plan?.prettyDuration ?? "unknown"
+                                    let email = sendgrid.send(to: gift.data.gifterEmail, name: gift.data.gifteeName, subject: "We have a gift for you...", text: gift.gifteeEmailText(duration: duration))
+                                    URLSession.shared.load(email) { result in
+                                        log(error: "Can't send email for gift \(gift)")
+                                    }
+                                    gift.data.activated = true
+                                    try c.get().execute(gift.update())
+                                }
                             }
-                            // todo change scheduled task that sends email
+                        } else {
+                            log(error: "Got a recurly webhook but can't find gift \(s)")
                         }
                     }
                     return I.write("", status: .ok)
@@ -561,11 +574,14 @@ extension Route {
                         return I.write(response)
                     case .success(let sub):
                         var copy = gift
-                        copy.data.gifteeUserId = userId
+                        copy.data.gifterUserId = userId
                         copy.data.subscriptionId = sub.uuid
                         try c.get().execute(copy.update())
-                        if let futureDate = start {
-                            // todo send email
+                        if start != nil {
+                            let email = sendgrid.send(to: copy.data.gifterEmail, name: copy.data.gifterName, subject: "Thank you for gifting Swift Talk", text: copy.data.gifterEmailText)
+                            URLSession.shared.load(email) { result in
+                                myAssert(result != nil)
+                            }
                         }
                         return I.redirect(to: .thankYouGift(id))
                     }

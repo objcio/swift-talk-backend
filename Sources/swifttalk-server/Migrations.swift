@@ -197,6 +197,10 @@ fileprivate let migrations: [String] = [
     """
     ALTER TABLE gifts
         ADD COLUMN IF NOT EXISTS subscription_id text;
+    """,
     """
+    ALTER TABLE gifts
+        ADD COLUMN IF NOT EXISTS activated boolean DEFAULT FALSE NOT NULL;
+    """,
 ]
 

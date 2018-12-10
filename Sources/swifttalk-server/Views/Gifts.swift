@@ -125,7 +125,7 @@ extension Gift {
             guard let date = Calendar.current.date(from: DateComponents(calendar: Calendar.current, timeZone: TimeZone(secondsFromGMT: 0), year: year, month: month, day: day)) else {
                 return .right([ValidationError(field: "day", message: "Invalid Date")])
             }
-            return .left(Gift(gifterEmail: data.gifterEmail, gifterName: data.gifterName, gifteeEmail: data.gifteeEmail, gifteeName: data.gifteeName, sendAt: date, message: data.message, gifterUserId: nil, gifteeUserId: nil, subscriptionId: nil))
+            return .left(Gift(gifterEmail: data.gifterEmail, gifterName: data.gifterName, gifteeEmail: data.gifteeEmail, gifteeName: data.gifteeName, sendAt: date, message: data.message, gifterUserId: nil, gifteeUserId: nil, subscriptionId: nil, activated: false))
         case let .right(errs): return .right(errs)
         }
     }
@@ -201,4 +201,41 @@ func payGiftForm(context: Context, route: Route) -> Form<GiftResult> {
                 ])
 		], includeRecurlyJS: true).layoutForCheckout
     })
+}
+
+extension Gift {
+    var gifterEmailText: String {
+        let prettyDate = DateFormatter.fullPretty.string(from: sendAt)
+        return """
+        Hello \(gifterName),
+        
+        Thank you for gifting Swift Talk. The gift will be sent to \(gifteeName) (\(gifteeEmail)) on \(prettyDate).
+        
+        Your credit card is not charged yet, but will be charged on \(prettyDate).
+        
+        Thanks,
+        objc.io
+        """
+    }
+}
+
+extension Row where Element == Gift {
+    func gifteeEmailText(duration: String) -> String {
+        let url = Route.redeemGift(id).url.absoluteString
+        
+        let theMessage: String = data.message.isEmpty ? "" : ("Here is their message: \n\n" + data.message)
+        
+        return """
+        Hello \(data.gifteeName),
+        
+        \(data.gifterName) has sent you a gift Swift Talk subscription for \(duration). \(theMessage)
+        
+        Your subscription start today, and you can activate your account at:
+        
+        \(url)
+        
+        Thanks,
+        objc.io
+        """
+    }
 }
