@@ -47,7 +47,7 @@ func profile(submitTitle: String, action: Route) -> Form<ProfileFormData> {
 }
 
 func registerForm(_ context: Context, couponCode: String?) -> Form<ProfileFormData> {
-    return profile(submitTitle: "Create Account", action: .register(couponCode: couponCode)).wrap { node in
+    return profile(submitTitle: "Create Account", action: .account(.register(couponCode: couponCode))).wrap { node in
         LayoutConfig(context: context, contents: [
             Node.header([
                 Node.div(classes: "container-h pb+ pt-", [
@@ -83,15 +83,15 @@ extension Array where Element == Plan {
         let linkClasses: Class = "c-button c-button--big c-button--blue c-button--wide"
         if context.session.premiumAccess {
             if let d = context.session?.user.data, d.canceled {
-                continueLink = Node.button(to: .reactivateSubscription, csrf: d.csrf, [.text("Reactivate Subscription")], classes: linkClasses + "c-button--ghost")
+                continueLink = Node.button(to: .subscription(.reactivate), csrf: d.csrf, [.text("Reactivate Subscription")], classes: linkClasses + "c-button--ghost")
             } else {
-                continueLink = Node.link(to: .accountProfile, classes: linkClasses + "c-button--ghost", ["You're already subscribed"])
+                continueLink = Node.link(to: .account(.profile), classes: linkClasses + "c-button--ghost", ["You're already subscribed"])
             }
         } else if context.session?.user != nil {
 //            print(session?.user)
-            continueLink = Node.link(to: .newSubscription(couponCode: coupon?.coupon_code), classes: linkClasses, ["Proceed to payment"])
+            continueLink = Node.link(to: .subscription(.new(couponCode: coupon?.coupon_code)), classes: linkClasses, ["Proceed to payment"])
         } else {
-            continueLink = Node.link(to: .login(continue: Route.newSubscription(couponCode: coupon?.coupon_code).path), classes: linkClasses, ["Sign in with Github"])
+            continueLink = Node.link(to: .login(continue: Route.subscription(.new(couponCode: coupon?.coupon_code)).path), classes: linkClasses, ["Sign in with Github"])
         }
         let contents: [Node] = [
             pageHeader(.other(header: "Subscribe to Swift Talk", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),
@@ -138,7 +138,7 @@ func newSub(context: Context, csrf: CSRFToken, coupon: Coupon?, errs: [String]) 
     guard let m = Plan.monthly, let y = Plan.yearly else {
         throw RenderingError(privateMessage: "No monthly or yearly plan: \(Plan.all)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
     }
-    let data = NewSubscriptionData(action: Route.createSubscription(couponCode: coupon?.coupon_code).path, public_key: env.recurlyPublicKey, plans: [
+    let data = NewSubscriptionData(action: Route.subscription(.create(couponCode: coupon?.coupon_code)).path, public_key: env.recurlyPublicKey, plans: [
         .init(m), .init(y)
         ], payment_errors: errs, method: .post, coupon: coupon.map(NewSubscriptionData.Coupon.init), csrf: csrf)
     return LayoutConfig(context: context,  contents: [

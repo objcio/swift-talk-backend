@@ -128,24 +128,7 @@ extension Route {
             return try session ?! NotLoggedInError()
         }
         
-        let context = Context(path: path, route: self, message: nil, session: session)
-        
-        func teamMembersResponse(_ session: Session, _ data: TeamMemberFormData? = nil, csrf: CSRFToken, _ errors: [ValidationError] = []) throws -> I {
-            let renderedForm = addTeamMemberForm().render(data ?? TeamMemberFormData(githubUsername: ""), csrf, errors)
-            let members = try c.get().execute(session.user.teamMembers)
-            return I.write(teamMembers(context: context, csrf: csrf, addForm: renderedForm, teamMembers: members))
-        }
-    
-        func newSubscription(couponCode: String?, csrf: CSRFToken, errs: [String]) throws -> I {
-            if let c = couponCode {
-                return I.onSuccess(promise: recurly.coupon(code: c).promise, do: { coupon in
-                    return try I.write(newSub(context: context, csrf: csrf, coupon: coupon, errs: errs))
-                })
-            } else {
-                return try I.write(newSub(context: context, csrf: csrf, coupon: nil, errs: errs))
-            }
-        }
-
+        let context = Context(path: path, route: self, message: nil, session: session)        
         switch self {
         case .error:
             return .write(errorView("Not found"), status: .notFound)
@@ -156,53 +139,12 @@ extension Route {
             var cont = context
             cont.message = ("Thank you for supporting us.", .notice)
             return .write(renderHome(episodes: episodesWithProgress, context: cont))
-        case .register(let couponCode):
-            let s = try requireSession()
-            return I.withPostBody(do: { body in
-                guard let result = registerForm(context, couponCode: couponCode).parse(csrf: s.user.data.csrf, body) else {
-                    throw RenderingError(privateMessage: "Failed to parse form data to create an account", publicMessage: "Something went wrong during account creation. Please try again.")
-                }
-                var u = s.user
-                u.data.email = result.email
-                u.data.name = result.name
-                u.data.confirmedNameAndEmail = true
-                let errors = u.data.validate()
-                if errors.isEmpty {
-                    try c.get().execute(u.update())
-                    if s.premiumAccess {
-                        return I.redirect(to: .home)
-                    } else {
-                        return I.redirect(to: .newSubscription(couponCode: couponCode))
-                    }
-                } else {
-                    let result = registerForm(context, couponCode: couponCode).render(result, u.data.csrf, errors)
-                    return I.write(result)
-                }
-            })
-        case .createSubscription(let couponCode):
-            let s = try requireSession()
-            return I.withPostBody(csrf: s.user.data.csrf) { dict in
-                guard let planId = dict["plan_id"], let token = dict["billing_info[token]"] else {
-                    throw RenderingError(privateMessage: "Incorrect post data", publicMessage: "Something went wrong")
-                }
-                let plan = try Plan.all.first(where: { $0.plan_code == planId }) ?! RenderingError.init(privateMessage: "Illegal plan: \(planId)", publicMessage: "Couldn't find the plan you selected.")
-                let cr = CreateSubscription.init(plan_code: plan.plan_code, currency: "USD", coupon_code: couponCode, starts_at: nil, account: .init(account_code: s.user.id, email: s.user.data.email, billing_info: .init(token_id: token)))
-                return I.onSuccess(promise: recurly.createSubscription(cr).promise, message: "Something went wrong, please try again", do: { sub_ in
-                    switch sub_ {
-                    case .errors(let messages):
-                        log(RecurlyErrors(messages))
-                        if messages.contains(where: { $0.field == "subscription.account.email" && $0.symbol == "invalid_email" }) {
-                            let response = registerForm(context, couponCode: couponCode).render(.init(s.user.data), s.user.data.csrf, [ValidationError("email", "Please provide a valid email address and try again.")])
-                            return I.write(response)
-                        }
-                        return try newSubscription(couponCode: couponCode, csrf: s.user.data.csrf, errs: messages.map { $0.message })
-                    case .success(let sub):
-                        try c.get().execute(s.user.changeSubscriptionStatus(sub.state == .active))
-                        // todo flash
-                        return I.redirect(to: .thankYou)
-                    }
-                })
-            }
+        case .subscription(let s):
+            return try s.interpret(sesssion: requireSession(), context: context, connection: c)
+        case .account(let action):
+            return try action.interpret(sesssion: requireSession(), context: context, connection: c)
+        case .gift(let g):
+            return try g.interpret(session: session, context: context, connection: c)
         case .subscribe:
             return try I.write(Plan.all.subscribe(context: context))
         case .collection(let name):
@@ -211,16 +153,7 @@ extension Route {
             }
             let episodesWithProgress = try coll.episodes(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
             return .write(coll.show(episodes: episodesWithProgress, context: context))
-        case .newSubscription(let couponCode):
-            let s = try requireSession()
-            let u = s.user
-            if !u.data.confirmedNameAndEmail {
-                let resp = registerForm(context, couponCode: couponCode).render(.init(u.data), u.data.csrf, [])
-                return I.write(resp)
-            } else {
-                try c.get().execute(Task.unfinishedSubscriptionReminder(userId: u.id).schedule(weeks: 1))
-                return try newSubscription(couponCode: couponCode, csrf: u.data.csrf, errs: [])
-            }
+       
         case .login(let cont):
             var path = "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(github.clientId)"
             if let c = cont {
@@ -228,10 +161,6 @@ extension Route {
                 path.append("&redirect_uri=" + encoded.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)
             }
             return I.redirect(path: path)
-        case .logout:
-            let s = try requireSession()
-            try c.get().execute(s.user.deleteSession(s.sessionId))
-            return I.redirect(to: .home)
         case .githubCallback(let optionalCode, let origin):
             guard let code = optionalCode else {
                 throw RenderingError(privateMessage: "No auth code", publicMessage: "Something went wrong, please try again.")
@@ -308,174 +237,6 @@ extension Route {
             } else {
             	return .writeFile(path: name)
             }
-        case .accountProfile:
-            let sess = try requireSession()
-            var u = sess.user
-            let data = ProfileFormData(email: u.data.email, name: u.data.name)
-            let f = accountForm(context: context)
-            return form(f, initial: data, csrf: u.data.csrf, validate: { _ in [] }, onPost: { result in
-                // todo: this is almost the same as the new account logic... can we abstract this?
-                u.data.email = result.email
-                u.data.name = result.name
-                u.data.confirmedNameAndEmail = true
-                let errors = u.data.validate()
-                if errors.isEmpty {
-                    try c.get().execute(u.update())
-                    return I.redirect(to: .accountProfile)
-                } else {
-                    return I.write(f.render(result, u.data.csrf, errors))
-                }
-            })
-        case .accountBilling:
-            let sess = try requireSession()
-            var user = sess.user
-            func renderBilling(recurlyToken: String) -> I {
-                let invoicesAndPDFs = sess.user.invoices.promise.map { invoices in
-                    return invoices?.map { invoice in
-                        (invoice, recurly.pdfURL(invoice: invoice, hostedLoginToken: recurlyToken))
-                    }
-                }
-                let redemptions = sess.user.redemptions.promise.map { r in
-                    r?.filter { $0.state == "active" }
-                }
-                let promise = zip(sess.user.currentSubscription.promise, invoicesAndPDFs, redemptions, sess.user.billingInfo.promise, recurly.coupons().promise).map(zip)
-                return I.onSuccess(promise: promise, do: { p in
-                    let (sub, invoicesAndPDFs, redemptions, billingInfo, coupons) = p
-                    func cont(subAndAddOn: (Subscription, Plan.AddOn)?) throws -> I {
-                        let redemptionsWithCoupon = try redemptions.map { (r) -> (Redemption, Coupon) in
-                            guard let c = coupons.first(where: { $0.coupon_code == r.coupon_code }) else {
-                                throw RenderingError(privateMessage: "No coupon for \(r)!", publicMessage: "Something went wrong.")
-                            }
-                            return (r,c)
-                        }
-                        let result = billing(context: context, user: sess.user, subscription: subAndAddOn, invoices: invoicesAndPDFs, billingInfo: billingInfo, redemptions: redemptionsWithCoupon)
-                        return I.write(result)
-                    }
-                    if let s = sub, let p = Plan.all.first(where: { $0.plan_code == s.plan.plan_code }) {
-                        return I.onSuccess(promise: p.teamMemberAddOn.promise, do: { addOn in
-                            try cont(subAndAddOn: (s, addOn))
-                    	})
-                    } else {
-                        return try cont(subAndAddOn: nil)
-                    }
-                })
-            }
-            guard let t = sess.user.data.recurlyHostedLoginToken else {
-                return I.onSuccess(promise: sess.user.account.promise, do: { acc in
-                    user.data.recurlyHostedLoginToken = acc.hosted_login_token
-                    try c.get().execute(user.update())
-                    return renderBilling(recurlyToken: acc.hosted_login_token)
-                }, or: {
-                    if sess.teamMemberPremiumAccess {
-                        return I.write(teamMemberBilling(context: context))
-                    } else if sess.gifterPremiumAccess {
-                        return I.write(gifteeBilling(context: context))
-                    } else {
-                        return I.write(unsubscribedBilling(context: context))
-                    }
-                })
-            }
-            return renderBilling(recurlyToken: t)
-        case .cancelSubscription:
-            let sess = try requireSession()
-            let user = sess.user
-            return try requirePost(csrf: user.data.csrf) {
-                return I.onSuccess(promise: user.currentSubscription.promise.map(flatten)) { sub in
-                    guard sub.state == .active else {
-                        throw RenderingError(privateMessage: "cancel: no active sub \(user) \(sub)", publicMessage: "Can't find an active subscription.")
-                    }
-                    return I.onSuccess(promise: recurly.cancel(sub).promise) { result in
-                        switch result {
-                        case .success: return I.redirect(to: .accountBilling)
-                        case .errors(let errs): throw RecurlyErrors(errs)
-                        }
-                    }
-
-                }
-            }
-        case .upgradeSubscription:
-            let sess = try requireSession()
-            return try requirePost(csrf: sess.user.data.csrf) {
-                return I.onSuccess(promise: sess.user.currentSubscription.promise.map(flatten), do: { (sub: Subscription) throws -> I in
-                    guard let u = sub.upgrade else { throw RenderingError(privateMessage: "no upgrade available \(sub)", publicMessage: "There's no upgrade available.")}
-                    let teamMembers = try c.get().execute(sess.user.teamMembers)
-                    return I.onSuccess(promise: recurly.updateSubscription(sub, plan_code: u.plan.plan_code, numberOfTeamMembers: teamMembers.count).promise, do: { (result: Subscription) throws -> I in
-                        return I.redirect(to: .accountBilling)
-                    })
-                })
-            }
-        case .reactivateSubscription:
-            let sess = try requireSession()
-            let user = sess.user
-            return try requirePost(csrf: user.data.csrf) {
-                return I.onSuccess(promise: user.currentSubscription.promise.map(flatten)) { sub in
-                    guard sub.state == .canceled else {
-                        throw RenderingError(privateMessage: "cancel: no active sub \(user) \(sub)", publicMessage: "Can't find a cancelled subscription.")
-                    }
-                    return I.onSuccess(promise: recurly.reactivate(sub).promise) { result in
-                        switch result {
-                        case .success: return I.redirect(to: .thankYou)
-                        case .errors(let errs): throw RecurlyErrors(errs)
-                        }
-                    }
-
-                }
-            }
-        case .accountUpdatePayment:
-            let sess = try requireSession()
-            func renderForm(errs: [RecurlyError]) -> I {
-                return I.onSuccess(promise: sess.user.billingInfo.promise, do: { billingInfo in
-                    let view = updatePaymentView(context: context, data: PaymentViewData(billingInfo, action: Route.accountUpdatePayment.path, csrf: sess.user.data.csrf, publicKey: env.recurlyPublicKey, buttonText: "Update", paymentErrors: errs.map { $0.message }))
-                    return I.write(view)
-                })
-            }
-            return I.withPostBody(csrf: sess.user.data.csrf, do: { body in
-                guard let token = body["billing_info[token]"] else {
-                    throw RenderingError(privateMessage: "No billing_info[token]", publicMessage: "Something went wrong, please try again.")
-                }
-                return I.onSuccess(promise: sess.user.updateBillingInfo(token: token).promise, do: { (response: RecurlyResult<BillingInfo>) -> I in
-                    switch response {
-                    case .success: return I.redirect(to: .accountUpdatePayment) // todo show message?
-                    case .errors(let errs): return renderForm(errs: errs)
-                    }
-                })
-            }, or: {
-                renderForm(errs: [])
-            })
-            
-        case .accountTeamMembers:
-            let sess = try requireSession()
-            let csrf = sess.user.data.csrf
-            return I.withPostBody(do: { params in
-                guard let formData = addTeamMemberForm().parse(csrf: csrf, params), sess.selfPremiumAccess else { return try teamMembersResponse(sess, csrf: csrf) }
-                let promise = github.profile(username: formData.githubUsername).promise
-                return I.onComplete(promise: promise) { profile in
-                    guard let p = profile else {
-                        return try teamMembersResponse(sess, formData, csrf: csrf, [(field: "github_username", message: "No user with this username exists on GitHub")])
-                    }
-                    let newUserData = UserData(email: p.email ?? "", githubUID: p.id, githubLogin: p.login, avatarURL: p.avatar_url, name: p.name ?? "")
-                    let newUserid = try c.get().execute(newUserData.findOrInsert(uniqueKey: "github_uid", value: p.id))
-                    let teamMemberData = TeamMemberData(userId: sess.user.id, teamMemberId: newUserid)
-                    guard let _ = try? c.get().execute(teamMemberData.insert) else {
-                        return try teamMembersResponse(sess, formData, csrf: csrf, [(field: "github_username", message: "Team member already exists")])
-                    }
-                    let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(minutes: 5)
-                    try c.get().execute(task)
-                    return try teamMembersResponse(sess, csrf: csrf)
-                }
-            }, or: {
-                return try teamMembersResponse(sess, csrf: csrf)
-            })
-        
-        case .accountDeleteTeamMember(let id):
-            let sess = try requireSession()
-            let csrf = sess.user.data.csrf
-            return try requirePost(csrf: csrf) {
-                try c.get().execute(sess.user.deleteTeamMember(id))
-                let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: Date().addingTimeInterval(5*60))
-                try c.get().execute(task)
-                return try teamMembersResponse(sess, csrf: csrf)
-            }
         case .recurlyWebhook:
             return I.withPostData { data in
                 guard let webhook: Webhook = try? decodeXML(from: data) else { return I.write("", status: .ok) }
@@ -546,8 +307,6 @@ extension Route {
         case .collectionsJSON(_):
             let json = collectionsJSONView(showUnreleased: false)
             return I.write(json: json)
-        case .gift(let g):
-            return try g.interpret(session: session, context: context, connection: c)
         case let .playProgress(episodeId):
             guard let s = try? requireSession() else { return I.write("", status: .ok)}
             return I.withPostBody(csrf: s.user.data.csrf) { body in
@@ -556,6 +315,251 @@ extension Route {
                     try c.get().execute(data.insertOrUpdate(uniqueKey: "user_id, episode_number"))
                 }
                 return I.write("", status: .ok)
+            }
+        }
+    }
+}
+
+extension Route.Subscription {
+    func interpret<I: Interpreter>(sesssion sess: Session, context: Context, connection c: Lazy<Connection>) throws -> I {
+        let user = sess.user
+        func newSubscription(couponCode: String?, errs: [String]) throws -> I {
+            if let c = couponCode {
+                return I.onSuccess(promise: recurly.coupon(code: c).promise, do: { coupon in
+                    return try I.write(newSub(context: context, csrf: sess.user.data.csrf, coupon: coupon, errs: errs))
+                })
+            } else {
+                return try I.write(newSub(context: context, csrf: sess.user.data.csrf, coupon: nil, errs: errs))
+            }
+        }
+
+        switch self {
+        case .create(let couponCode):
+            return I.withPostBody(csrf: sess.user.data.csrf) { dict in
+                guard let planId = dict["plan_id"], let token = dict["billing_info[token]"] else {
+                    throw RenderingError(privateMessage: "Incorrect post data", publicMessage: "Something went wrong")
+                }
+                let plan = try Plan.all.first(where: { $0.plan_code == planId }) ?! RenderingError.init(privateMessage: "Illegal plan: \(planId)", publicMessage: "Couldn't find the plan you selected.")
+                let cr = CreateSubscription.init(plan_code: plan.plan_code, currency: "USD", coupon_code: couponCode, starts_at: nil, account: .init(account_code: user.id, email: user.data.email, billing_info: .init(token_id: token)))
+                return I.onSuccess(promise: recurly.createSubscription(cr).promise, message: "Something went wrong, please try again", do: { sub_ in
+                    switch sub_ {
+                    case .errors(let messages):
+                        log(RecurlyErrors(messages))
+                        if messages.contains(where: { $0.field == "subscription.account.email" && $0.symbol == "invalid_email" }) {
+                            let response = registerForm(context, couponCode: couponCode).render(.init(user.data), user.data.csrf, [ValidationError("email", "Please provide a valid email address and try again.")])
+                            return I.write(response)
+                        }
+                        return try newSubscription(couponCode: couponCode, errs: messages.map { $0.message })
+                    case .success(let sub):
+                        try c.get().execute(user.changeSubscriptionStatus(sub.state == .active))
+                        // todo flash
+                        return I.redirect(to: .thankYou)
+                    }
+                })
+            }
+        case .new(let couponCode):
+            if !user.data.confirmedNameAndEmail {
+                let resp = registerForm(context, couponCode: couponCode).render(.init(user.data), user.data.csrf, [])
+                return I.write(resp)
+            } else {
+                try c.get().execute(Task.unfinishedSubscriptionReminder(userId: user.id).schedule(weeks: 1))
+                return try newSubscription(couponCode: couponCode, errs: [])
+            }
+        case .cancel:
+            return try requirePost(csrf: user.data.csrf) {
+                return I.onSuccess(promise: user.currentSubscription.promise.map(flatten)) { sub in
+                    guard sub.state == .active else {
+                        throw RenderingError(privateMessage: "cancel: no active sub \(user) \(sub)", publicMessage: "Can't find an active subscription.")
+                    }
+                    return I.onSuccess(promise: recurly.cancel(sub).promise) { result in
+                        switch result {
+                        case .success: return I.redirect(to: .account(.billing))
+                        case .errors(let errs): throw RecurlyErrors(errs)
+                        }
+                    }
+                    
+                }
+            }
+        case .upgrade:
+            return try requirePost(csrf: sess.user.data.csrf) {
+                return I.onSuccess(promise: sess.user.currentSubscription.promise.map(flatten), do: { sub throws -> I in
+                    guard let u = sub.upgrade else { throw RenderingError(privateMessage: "no upgrade available \(sub)", publicMessage: "There's no upgrade available.")}
+                    let teamMembers = try c.get().execute(sess.user.teamMembers)
+                    return I.onSuccess(promise: recurly.updateSubscription(sub, plan_code: u.plan.plan_code, numberOfTeamMembers: teamMembers.count).promise, do: { result throws -> I in
+                        return I.redirect(to: .account(.billing))
+                    })
+                })
+            }
+        case .reactivate:
+            return try requirePost(csrf: user.data.csrf) {
+                return I.onSuccess(promise: user.currentSubscription.promise.map(flatten)) { sub in
+                    guard sub.state == .canceled else {
+                        throw RenderingError(privateMessage: "cancel: no active sub \(user) \(sub)", publicMessage: "Can't find a cancelled subscription.")
+                    }
+                    return I.onSuccess(promise: recurly.reactivate(sub).promise) { result in
+                        switch result {
+                        case .success: return I.redirect(to: .thankYou)
+                        case .errors(let errs): throw RecurlyErrors(errs)
+                        }
+                    }
+                    
+                }
+            }
+        }
+    }
+}
+
+extension Route.Account {
+    func interpret<I: Interpreter>(sesssion sess: Session, context: Context, connection c: Lazy<Connection>) throws -> I {
+        func teamMembersResponse(_ data: TeamMemberFormData? = nil,_ errors: [ValidationError] = []) throws -> I {
+            let renderedForm = addTeamMemberForm().render(data ?? TeamMemberFormData(githubUsername: ""), sess.user.data.csrf, errors)
+            let members = try c.get().execute(sess.user.teamMembers)
+            return I.write(teamMembersView(context: context, csrf: sess.user.data.csrf, addForm: renderedForm, teamMembers: members))
+        }
+
+        switch self {
+        case .logout:
+            try c.get().execute(sess.user.deleteSession(sess.sessionId))
+            return I.redirect(to: .home)
+        case .register(let couponCode):
+            return I.withPostBody(do: { body in
+                guard let result = registerForm(context, couponCode: couponCode).parse(csrf: sess.user.data.csrf, body) else {
+                    throw RenderingError(privateMessage: "Failed to parse form data to create an account", publicMessage: "Something went wrong during account creation. Please try again.")
+                }
+                var u = sess.user
+                u.data.email = result.email
+                u.data.name = result.name
+                u.data.confirmedNameAndEmail = true
+                let errors = u.data.validate()
+                if errors.isEmpty {
+                    try c.get().execute(u.update())
+                    if sess.premiumAccess {
+                        return I.redirect(to: .home)
+                    } else {
+                        return I.redirect(to: .subscription(.new(couponCode: couponCode)))
+                    }
+                } else {
+                    let result = registerForm(context, couponCode: couponCode).render(result, u.data.csrf, errors)
+                    return I.write(result)
+                }
+            })
+        case .profile:
+            var u = sess.user
+            let data = ProfileFormData(email: u.data.email, name: u.data.name)
+            let f = accountForm(context: context)
+            return form(f, initial: data, csrf: u.data.csrf, validate: { _ in [] }, onPost: { result in
+                // todo: this is almost the same as the new account logic... can we abstract this?
+                u.data.email = result.email
+                u.data.name = result.name
+                u.data.confirmedNameAndEmail = true
+                let errors = u.data.validate()
+                if errors.isEmpty {
+                    try c.get().execute(u.update())
+                    return I.redirect(to: .account(.profile))
+                } else {
+                    return I.write(f.render(result, u.data.csrf, errors))
+                }
+            })
+        case .billing:
+            var user = sess.user
+            func renderBilling(recurlyToken: String) -> I {
+                let invoicesAndPDFs = sess.user.invoices.promise.map { invoices in
+                    return invoices?.map { invoice in
+                        (invoice, recurly.pdfURL(invoice: invoice, hostedLoginToken: recurlyToken))
+                    }
+                }
+                let redemptions = sess.user.redemptions.promise.map { r in
+                    r?.filter { $0.state == "active" }
+                }
+                let promise = zip(sess.user.currentSubscription.promise, invoicesAndPDFs, redemptions, sess.user.billingInfo.promise, recurly.coupons().promise).map(zip)
+                return I.onSuccess(promise: promise, do: { p in
+                    let (sub, invoicesAndPDFs, redemptions, billingInfo, coupons) = p
+                    func cont(subAndAddOn: (Subscription, Plan.AddOn)?) throws -> I {
+                        let redemptionsWithCoupon = try redemptions.map { (r) -> (Redemption, Coupon) in
+                            guard let c = coupons.first(where: { $0.coupon_code == r.coupon_code }) else {
+                                throw RenderingError(privateMessage: "No coupon for \(r)!", publicMessage: "Something went wrong.")
+                            }
+                            return (r,c)
+                        }
+                        let result = billingView(context: context, user: sess.user, subscription: subAndAddOn, invoices: invoicesAndPDFs, billingInfo: billingInfo, redemptions: redemptionsWithCoupon)
+                        return I.write(result)
+                    }
+                    if let s = sub, let p = Plan.all.first(where: { $0.plan_code == s.plan.plan_code }) {
+                        return I.onSuccess(promise: p.teamMemberAddOn.promise, do: { addOn in
+                            try cont(subAndAddOn: (s, addOn))
+                        })
+                    } else {
+                        return try cont(subAndAddOn: nil)
+                    }
+                })
+            }
+            guard let t = sess.user.data.recurlyHostedLoginToken else {
+                return I.onSuccess(promise: sess.user.account.promise, do: { acc in
+                    user.data.recurlyHostedLoginToken = acc.hosted_login_token
+                    try c.get().execute(user.update())
+                    return renderBilling(recurlyToken: acc.hosted_login_token)
+                }, or: {
+                    if sess.teamMemberPremiumAccess {
+                        return I.write(teamMemberBilling(context: context))
+                    } else if sess.gifterPremiumAccess {
+                        return I.write(gifteeBilling(context: context))
+                    } else {
+                        return I.write(unsubscribedBilling(context: context))
+                    }
+                })
+            }
+            return renderBilling(recurlyToken: t)
+        case .updatePayment:
+            func renderForm(errs: [RecurlyError]) -> I {
+                return I.onSuccess(promise: sess.user.billingInfo.promise, do: { billingInfo in
+                    let view = updatePaymentView(context: context, data: PaymentViewData(billingInfo, action: Route.account(.updatePayment).path, csrf: sess.user.data.csrf, publicKey: env.recurlyPublicKey, buttonText: "Update", paymentErrors: errs.map { $0.message }))
+                    return I.write(view)
+                })
+            }
+            return I.withPostBody(csrf: sess.user.data.csrf, do: { body in
+                guard let token = body["billing_info[token]"] else {
+                    throw RenderingError(privateMessage: "No billing_info[token]", publicMessage: "Something went wrong, please try again.")
+                }
+                return I.onSuccess(promise: sess.user.updateBillingInfo(token: token).promise, do: { (response: RecurlyResult<BillingInfo>) -> I in
+                    switch response {
+                    case .success: return I.redirect(to: .account(.updatePayment)) // todo show message?
+                    case .errors(let errs): return renderForm(errs: errs)
+                    }
+                })
+            }, or: {
+                renderForm(errs: [])
+            })
+            
+        case .teamMembers:
+            let csrf = sess.user.data.csrf
+            return I.withPostBody(do: { params in
+                guard let formData = addTeamMemberForm().parse(csrf: csrf, params), sess.selfPremiumAccess else { return try teamMembersResponse() }
+                let promise = github.profile(username: formData.githubUsername).promise
+                return I.onComplete(promise: promise) { profile in
+                    guard let p = profile else {
+                        return try teamMembersResponse(formData, [(field: "github_username", message: "No user with this username exists on GitHub")])
+                    }
+                    let newUserData = UserData(email: p.email ?? "", githubUID: p.id, githubLogin: p.login, avatarURL: p.avatar_url, name: p.name ?? "")
+                    let newUserid = try c.get().execute(newUserData.findOrInsert(uniqueKey: "github_uid", value: p.id))
+                    let teamMemberData = TeamMemberData(userId: sess.user.id, teamMemberId: newUserid)
+                    guard let _ = try? c.get().execute(teamMemberData.insert) else {
+                        return try teamMembersResponse(formData, [(field: "github_username", message: "Team member already exists")])
+                    }
+                    let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(minutes: 5)
+                    try c.get().execute(task)
+                    return try teamMembersResponse()
+                }
+            }, or: {
+                return try teamMembersResponse()
+            })
+            
+        case .deleteTeamMember(let id):
+            let csrf = sess.user.data.csrf
+            return try requirePost(csrf: csrf) {
+                try c.get().execute(sess.user.deleteTeamMember(id))
+                let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: Date().addingTimeInterval(5*60))
+                try c.get().execute(task)
+                return try teamMembersResponse()
             }
         }
     }
@@ -621,7 +625,7 @@ extension Route.Gifts {
                 var g = gift
                 g.data.gifteeUserId = user.id
                 try c.get().execute(g.update())
-                return I.redirect(to: Route.register(couponCode: nil))
+                return I.redirect(to: Route.account(.register(couponCode: nil)))
             } else {
                 return I.write(try redeemGiftSub(context: context, giftId: id))
             }
