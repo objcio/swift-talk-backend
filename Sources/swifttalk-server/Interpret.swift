@@ -640,11 +640,12 @@ extension Route.Gifts {
                 try c.get().execute(g.update())
 
                 var u = user
-                if u.data.email == "" && !u.data.confirmedNameAndEmail {
+                if !u.data.confirmedNameAndEmail {
+                    u.data.name = g.data.gifteeName
                     u.data.email = g.data.gifteeEmail
                     try c.get().execute(u.update())
                 }
-                return I.redirect(to: Route.subscription(.new(couponCode: nil)))
+                return I.redirect(to: Route.home) // could be a special thank you page for the redeemer
             } else {
                 return I.write(try redeemGiftSub(context: context, gift: gift, plan: plan))
             }
