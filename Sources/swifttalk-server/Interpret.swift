@@ -193,7 +193,6 @@ extension Route {
             let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
             return I.write(index(episodesWithProgress, context: context))
         case .home:
-            print(session?.user.data)
             let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
             return .write(renderHome(episodes: episodesWithProgress, context: context))
         case .sitemap:
