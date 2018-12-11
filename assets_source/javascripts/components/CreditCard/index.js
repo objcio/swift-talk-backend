@@ -7,6 +7,7 @@ import CardNumber from './CardNumber'
 import CVV from './CVV'
 import Expiry from './Expiry'
 import Input from './Input'
+import NonRecurlyInput from './NonRecurlyInput'
 import Country from './Country'
 
 export default class CreditCard extends Component {
@@ -29,6 +30,7 @@ export default class CreditCard extends Component {
     state: PropTypes.string,
     zip: PropTypes.string,
     children: PropTypes.node,
+	showEmail: PropTypes.bool,
     payment_errors: PropTypes.arrayOf(PropTypes.string)
   }
 
@@ -244,6 +246,22 @@ export default class CreditCard extends Component {
       </div>
     )
 
+    const emailSection = this.props.showEmail ? (
+      <div>
+        <h2 className="ms1 color-blue bold mb+ mt++">
+          Email
+        </h2>
+
+        <NonRecurlyInput id='gifter_email'
+               label='Your Email'
+               ref='gifter_email'
+               error={errors.includes('gifter_email')}
+               defaultValue=""
+               disabled={false}
+               required />
+      </div>
+    ) : <div></div>
+
     const submitButton = (
       <div>
         <button type='submit'
@@ -273,6 +291,7 @@ export default class CreditCard extends Component {
               { this.showErrors(errors) }
               { cardSection }
               { billingSection }
+			  { emailSection }
             </div>
             <div className="col width-full m+|width-1/3">
               { this.props.children }

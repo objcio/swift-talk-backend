@@ -16,8 +16,8 @@ struct FileData: Codable, Insertable {
 }
 
 struct Gift: Codable, Insertable {
-    var gifterEmail: String
-    var gifterName: String
+    var gifterEmail: String?
+    var gifterName: String?
     var gifteeEmail: String
     var gifteeName: String
     var sendAt: Date
@@ -30,12 +30,6 @@ struct Gift: Codable, Insertable {
     
     func validate() -> [ValidationError] {
         var result: [(String,String)] = []
-        if gifterName.isEmpty {
-            result.append(("name", "Your name can't be empty."))
-        }
-        if !gifterEmail.isValidEmail {
-            result.append(("gifter_email", "Your email address is invalid."))
-        }
         if !gifteeEmail.isValidEmail {
             result.append(("giftee_email", "Their email address is invalid."))
         }

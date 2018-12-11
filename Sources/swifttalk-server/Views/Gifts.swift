@@ -104,8 +104,6 @@ func redeemGiftSub(context: Context, giftId: UUID) throws -> Node {
 
 
 struct GiftStep1Data: Codable {
-    var gifterEmail: String = ""
-    var gifterName: String = ""
     var gifteeEmail: String = ""
     var gifteeName: String = ""
     var day: String = ""
@@ -125,7 +123,7 @@ extension Gift {
             guard let date = Calendar.current.date(from: DateComponents(calendar: Calendar.current, timeZone: TimeZone(secondsFromGMT: 0), year: year, month: month, day: day)) else {
                 return .right([ValidationError(field: "day", message: "Invalid Date")])
             }
-            return .left(Gift(gifterEmail: data.gifterEmail, gifterName: data.gifterName, gifteeEmail: data.gifteeEmail, gifteeName: data.gifteeName, sendAt: date, message: data.message, gifterUserId: nil, gifteeUserId: nil, subscriptionId: nil, activated: false))
+            return .left(Gift(gifterEmail: nil, gifterName: nil, gifteeEmail: data.gifteeEmail, gifteeName: data.gifteeName, sendAt: date, message: data.message, gifterUserId: nil, gifteeUserId: nil, subscriptionId: nil, activated: false))
         case let .right(errs): return .right(errs)
         }
     }
@@ -133,18 +131,14 @@ extension Gift {
 
 func giftForm(submitTitle: String, action: Route) -> Form<GiftStep1Data> {
     return Form(parse: { dict in
-        // todo parse date
-        dump(dict)
-        guard let gifterEmail = dict["gifter_email"],
-            let gifterName = dict["gifter_name"],
-        	let gifteeEmail = dict["giftee_email"],
+        guard let gifteeEmail = dict["giftee_email"],
             let message = dict["message"],
             let gifteeName = dict["giftee_name"],
             let month = dict["month"],
         	let year = dict["year"],
         	let day = dict["day"]
             else { return nil }
-        return GiftStep1Data(gifterEmail: gifterEmail, gifterName: gifterName, gifteeEmail: gifteeEmail, gifteeName: gifteeName, day: day, month: month, year: year, message: message)
+        return GiftStep1Data(gifteeEmail: gifteeEmail, gifteeName: gifteeName, day: day, month: month, year: year, message: message)
         
     }, render: { data, csrf, errors in
         let form = FormView(fields: [
@@ -158,15 +152,12 @@ func giftForm(submitTitle: String, action: Route) -> Form<GiftStep1Data> {
                 .flex(.input(id: "year", value: data.year, type: "number", placeHolder: "YYYY", otherAttributes: ["min": "2018", "max": "2023"]), amount: 2),
             ], required: true, title: "Delivery Date", note: nil),
             .text(id: "message", required: false, title: "Your Message", value: "", multiline: 5),
-            .text(id: "gifter_name", title: "Your Name", value: data.gifterName),
-            .text(id: "gifter_email", title: "Your Email", value: data.gifterEmail),
             ], submitTitle: submitTitle, action: action, errors: errors)
         return .div(form.renderStacked(csrf: csrf))
     })
 }
 
 func giftForm(context: Context) -> Form<GiftStep1Data> {
-    // todo button color required fields.
     let form = giftForm(submitTitle: "Step 2: Plan and Payment", action: .gift(.new))
     return form.wrap { (node: Node) -> Node in
         let result: Node = LayoutConfig(context: context, contents: [
@@ -182,12 +173,14 @@ func giftForm(context: Context) -> Form<GiftStep1Data> {
 struct GiftResult {
     var token: String = ""
     var plan_id: String = ""
+    var gifter_email: String = ""
 }
 
 func payGiftForm(context: Context, route: Route) -> Form<GiftResult> {
     return Form.init(parse: { dict in
-        guard let d = dict["billing_info[token]"], let p = dict["plan_id"] else { return nil }
-        return GiftResult(token: d, plan_id: p)
+        dump(dict)
+        guard let d = dict["billing_info[token]"], let p = dict["plan_id"], let e = dict["gifter_email"] else { return nil }
+        return GiftResult(token: d, plan_id: p, gifter_email: e)
     }, render: { (_, csrf, errs) -> Node in
         let data = NewGiftSubscriptionData(action: route.path, public_key: env.recurlyPublicKey, plans: Plan.gifts.map { .init($0) }, payment_errors: errs.map { "\($0.field): \($0.message)" }, method: .post, csrf: csrf)
         return LayoutConfig(context: context,  contents: [

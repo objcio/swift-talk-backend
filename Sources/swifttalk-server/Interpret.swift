@@ -272,7 +272,7 @@ extension Route {
                                 if !gift.data.activated {
                                     let plan = Plan.gifts.first { $0.plan_code == s.plan.plan_code }
                                     let duration = plan?.prettyDuration ?? "unknown"
-                                    let email = sendgrid.send(to: gift.data.gifterEmail, name: gift.data.gifteeName, subject: "We have a gift for you...", text: gift.gifteeEmailText(duration: duration))
+                                    let email = sendgrid.send(to: gift.data.gifteeEmail, name: gift.data.gifteeName, subject: "We have a gift for you...", text: gift.gifteeEmailText(duration: duration))
                                     URLSession.shared.load(email) { result in
                                         log(error: "Can't send email for gift \(gift)")
                                     }
@@ -582,28 +582,33 @@ extension Route.Gifts {
             let f = payGiftForm(context: context, route: .gift(.pay(id)))
             return form(f, initial: .init(), csrf: sharedCSRF, validate: { _ in [] }, onPost: { (result: GiftResult) throws in
                 let plan = try Plan.gifts.first(where: { $0.plan_code == result.plan_id }) ?! ServerError.init(privateMessage: "Illegal plan: \(result.plan_id)", publicMessage: "Couldn't find the plan you selected.")
-                let userId = try c.get().execute(UserData(email: gift.data.gifterEmail, avatarURL: "", name: gift.data.gifterName).insert)
+                let userId = try c.get().execute(UserData(email: result.gifter_email, avatarURL: "", name: "").insert)
                 let start = gift.data.sendAt > Date() ? gift.data.sendAt : nil // no start date means starting immediately
-                let cr = CreateSubscription(plan_code: plan.plan_code, currency: "USD", coupon_code: nil, starts_at: start, account: .init(account_code: userId, email: gift.data.gifterEmail, billing_info: .init(token_id: result.token)))
+                let cr = CreateSubscription(plan_code: plan.plan_code, currency: "USD", coupon_code: nil, starts_at: start, account: .init(account_code: userId, email: result.gifter_email, billing_info: .init(token_id: result.token)))
                 return I.onSuccess(promise: recurly.createSubscription(cr).promise, message: "Something went wrong, please try again", do: { sub_ in
                     switch sub_ {
                     case .errors(let messages):
                         log(RecurlyErrors(messages))
                         let theMessages = messages.map { ($0.field ?? "", $0.message) } + [("", "There was a problem with the payment. You have not been charged. Please try again or contact us for assistance.")]
-                        let response = giftForm(context: context).render(GiftStep1Data(gifterEmail: gift.data.gifterEmail, gifterName: gift.data.gifterName, gifteeEmail: gift.data.gifteeEmail, gifteeName: gift.data.gifteeName, day: "", month: "", year: "", message: gift.data.message), sharedCSRF, theMessages)
+                        let response = giftForm(context: context).render(GiftStep1Data(gifteeEmail: gift.data.gifteeEmail, gifteeName: gift.data.gifteeName, day: "", month: "", year: "", message: gift.data.message), sharedCSRF, theMessages)
                         return I.write(response)
                     case .success(let sub):
-                        var copy = gift
-                        copy.data.gifterUserId = userId
-                        copy.data.subscriptionId = sub.uuid
-                        try c.get().execute(copy.update())
-                        if start != nil {
-                            let email = sendgrid.send(to: copy.data.gifterEmail, name: copy.data.gifterName, subject: "Thank you for gifting Swift Talk", text: copy.data.gifterEmailText)
-                            URLSession.shared.load(email) { result in
-                                myAssert(result != nil)
+                        return I.onSuccess(promise: zip(recurly.account(with: userId).promise, recurly.billingInfo(accountId: userId).promise).map(zip), do: { (x: (Account, BillingInfo)) in
+                            let (acc, billingInfo) = x
+                            var copy = gift
+                            copy.data.gifterUserId = userId
+                            copy.data.subscriptionId = sub.uuid
+                            copy.data.gifterEmail = acc.email
+                            copy.data.gifterName = "\(billingInfo.first_name ?? "") \(billingInfo.last_name ?? "")"
+                            try c.get().execute(copy.update())
+                            if start != nil {
+                                let email = sendgrid.send(to: acc.email, name: copy.data.gifterName ?? "", subject: "Thank you for gifting Swift Talk", text: copy.data.gifterEmailText)
+                                URLSession.shared.load(email) { result in
+                                    myAssert(result != nil)
+                                }
                             }
-                        }
-                        return I.redirect(to: .gift(.thankYou(id)))
+                            return I.redirect(to: .gift(.thankYou(id)))
+                        })
                     }
                 })
             })

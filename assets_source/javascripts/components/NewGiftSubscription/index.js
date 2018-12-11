@@ -73,6 +73,7 @@ export default class NewGiftSubscription extends Component {
       <CreditCard {...this.props}
                   onCountryChange={this.fetchTaxRate.bind(this)}
                   loading={this.state.loading}
+		          showEmail={true}
                   buttonText='Buy'>
 
         <div className="bgcolor-gray-95 color-gray-40 radius-5 overflow-hidden mb">
