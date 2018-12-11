@@ -101,8 +101,7 @@ extension FormView {
 			]
                 )
             case let .input(id, value, type, placeHolder, attributes):
-                let isErr = errors.contains { $0.field == id }
-                var atts = ["required": "required", "value": value, "placeholder": placeHolder]
+                let atts = ["required": "required", "value": value, "placeholder": placeHolder]
                 return Node.input(classes: "text-input block width-full max-width-6", name: id, type: type, attributes: atts.merging(attributes, uniquingKeysWith: { $1 }))
             case let .flex(field, amount):
                 return Node.div(classes: Class(stringLiteral: "flex-\(amount)"), [renderField(field)])
