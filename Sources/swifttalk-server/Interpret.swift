@@ -27,6 +27,12 @@ struct Session {
         return selfPremiumAccess || teamMemberPremiumAccess || gifterPremiumAccess
     }
     
+    var activeSubscription: Bool {
+        return (selfPremiumAccess && !user.data.canceled) ||
+            (gifterPremiumAccess && gifter?.data.canceled == false) ||
+            (teamMemberPremiumAccess && masterTeamUser?.data.canceled == false)
+    }
+    
     var teamMemberPremiumAccess: Bool {
         return masterTeamUser?.data.premiumAccess == true
     }

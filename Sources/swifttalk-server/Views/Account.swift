@@ -383,12 +383,12 @@ func billingView(context: Context, user: Row<UserData>, subscription: (Subscript
                 ]) : .none
             ])
     	])
-    ]} ?? [
+    ]} ?? (context.session?.activeSubscription == true ? [] : [
         Node.div(classes: "text-center", [
             Node.p(classes: "color-gray-30 ms1 mb", [.text("You don't have an active subscription.")]),
             Node.link(to: .subscribe, classes: "c-button", [.text("Become a Subscriber")])
         ])
-    ]
+    ])
    
     return billingLayout(context: context, content: [
         Node.div(subscriptionInfo),
