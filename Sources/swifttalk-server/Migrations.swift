@@ -7,16 +7,6 @@
 
 import Foundation
 
-struct MigrationError: Error {
-    let err: Error
-    let query: String
-}
-
-extension MigrationError: LocalizedError {
-    public var errorDescription: String? {
-        return "\(err), query: \(query)"
-    }
-}
 
 func runMigrations() throws {
     do {
@@ -25,7 +15,7 @@ func runMigrations() throws {
                 do {
 			try conn.execute(m)
                 } catch {
-                    throw MigrationError(err: error, query: m)
+                    throw DatabaseError(err: error, query: m)
                 }
             }
         }
