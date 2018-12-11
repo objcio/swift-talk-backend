@@ -59,7 +59,7 @@ extension Array where Element == Plan {
             pageHeader(.other(header: "Give Swift Talk as a Gift", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),
             .div(classes: "container pt0", [
                 .div(classes: "bgcolor-white pa- radius-8 max-width-8 box-sizing-content center", [
-                    .ul(classes: "ph cols m-|stack-", self.map { node(plan: $0) })
+                .ul(classes: "cols m-|stack-", attributes: ["style": "padding-left:0.75em; padding-right:0.75em;"], self.map { node(plan: $0) })
                 ]),
                 .div(classes: "max-width-7 center", [
                     .p(classes: "color-gray-50 lh-125 mt++", [.text("Simply select which subscription you’d like to give, then tell us who to send it to and when to send it. You can write a personal message, and we’ll make sure they receive an email on the day you choose with a link to activate their gift.")]),
