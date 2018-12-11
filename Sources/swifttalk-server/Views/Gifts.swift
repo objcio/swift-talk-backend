@@ -154,7 +154,7 @@ extension Gift {
     }
 }
 
-func giftForm(submitTitle: String, planCode: String, action: Route) -> Form<GiftStep1Data> {
+func giftForm(submitTitle: String, plan: Plan, action: Route) -> Form<GiftStep1Data> {
     return Form(parse: { dict in
         guard let gifteeEmail = dict["giftee_email"],
             let message = dict["message"],
@@ -163,12 +163,12 @@ func giftForm(submitTitle: String, planCode: String, action: Route) -> Form<Gift
         	let year = dict["year"],
         	let day = dict["day"]
             else { return nil }
-        return GiftStep1Data(gifteeEmail: gifteeEmail, gifteeName: gifteeName, day: day, month: month, year: year, message: message, planCode: planCode)
+        return GiftStep1Data(gifteeEmail: gifteeEmail, gifteeName: gifteeName, day: day, month: month, year: year, message: message, planCode: plan.plan_code)
         
     }, render: { data, csrf, errors in
         let form = FormView(fields: [
-            .text(id: "giftee_name", title: "The Recipients' Name", value: data.gifteeName),
-            .text(id: "giftee_email", title: "The Recipients' Email", value: data.gifteeEmail),
+            .text(id: "giftee_name", title: "The Recipient's Name", value: data.gifteeName),
+            .text(id: "giftee_email", title: "The Recipient's Email", value: data.gifteeEmail),
             .fieldSet([
 				.flex(.input(id: "day", value: data.day, type: "number", placeHolder: "DD", otherAttributes: ["min": "1", "max": "31"]), amount: 1),
                 .custom(Node.span(classes: "ph- color-gray-30 bold", [.text("/")])),
@@ -182,12 +182,13 @@ func giftForm(submitTitle: String, planCode: String, action: Route) -> Form<Gift
     })
 }
 
-func giftForm(planCode: String, context: Context) -> Form<GiftStep1Data> {
-    let form = giftForm(submitTitle: "Step 2: Plan and Payment", planCode: planCode, action: .gift(.new(planCode: planCode)))
+func giftForm(plan: Plan, context: Context) -> Form<GiftStep1Data> {
+    let form = giftForm(submitTitle: "Payment", plan: plan, action: .gift(.new(planCode: plan.plan_code)))
     return form.wrap { (node: Node) -> Node in
         let result: Node = LayoutConfig(context: context, contents: [
             .div(classes: "container", [
-                Node.h2(classes: "color-blue bold ms2 mb", [.text("New Gift Subscription (Step 1/2)")]),
+                Node.h2(classes: "color-blue bold ms2 mb", [.text("Your Gift 🎁")]),
+                Node.h3(classes: "color-orange bold mt- mb+", [.text("\(plan.prettyDuration) of Swift Talk")]),
                 node
             ])
         ]).layoutForCheckout
@@ -197,22 +198,22 @@ func giftForm(planCode: String, context: Context) -> Form<GiftStep1Data> {
 
 struct GiftResult {
     var token: String = ""
-    var plan_id: String = ""
     var gifter_email: String = ""
+    var gifter_name: String = ""
 }
 
-func payGiftForm(context: Context, route: Route) -> Form<GiftResult> {
+func payGiftForm(plan: Plan, gift: Gift, context: Context, route: Route) -> Form<GiftResult> {
     return Form.init(parse: { dict in
         dump(dict)
-        guard let d = dict["billing_info[token]"], let p = dict["plan_id"], let e = dict["gifter_email"] else { return nil }
-        return GiftResult(token: d, plan_id: p, gifter_email: e)
+        guard let d = dict["billing_info[token]"], let e = dict["gifter_email"], let n = dict["gifter_name"] else { return nil }
+        return GiftResult(token: d, gifter_email: e, gifter_name: n)
     }, render: { (_, csrf, errs) -> Node in
-        let data = NewGiftSubscriptionData(action: route.path, public_key: env.recurlyPublicKey, plans: Plan.gifts.map { .init($0) }, payment_errors: errs.map { "\($0.field): \($0.message)" }, method: .post, csrf: csrf)
+        let data = NewGiftSubscriptionData(action: route.path, public_key: env.recurlyPublicKey, plan: .init(plan), start_date: DateFormatter.fullPretty.string(from: gift.sendAt), payment_errors: errs.map { "\($0.field): \($0.message)" }, method: .post, csrf: csrf)
         return LayoutConfig(context: context,  contents: [
             .header([
                 .div(classes: "container-h pb+ pt+", [
-                    .h1(classes: "ms4 color-blue bold", ["Complete Your Purchase"])
-                    ])
+                    .h1(classes: "ms4 color-blue bold mb-", ["Your Details"])
+                ])
                 ]),
             .div(classes: "container", [
                 ReactComponent.newGiftSubscription.build(data)

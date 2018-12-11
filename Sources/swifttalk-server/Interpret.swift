@@ -566,7 +566,10 @@ extension Route.Gifts {
         case .home:
             return try I.write(giftHome(plans: Plan.gifts, context: context))
         case .new(let planCode):
-            return form(giftForm(planCode: planCode, context: context), initial: GiftStep1Data(planCode: planCode), csrf: sharedCSRF, convert: Gift.fromData, validate: { $0.validate() }, onPost: { gift in
+            guard let plan = Plan.gifts.first(where: { $0.plan_code == planCode }) else {
+                throw ServerError.init(privateMessage: "Illegal plan: \(planCode)", publicMessage: "Couldn't find the plan you selected.")
+            }
+            return form(giftForm(plan: plan, context: context), initial: GiftStep1Data(planCode: planCode), csrf: sharedCSRF, convert: Gift.fromData, validate: { $0.validate() }, onPost: { gift in
                 catchAndDisplayError {
                     let id = try c.get().execute(gift.insert)
                     return I.redirect(to: Route.gift(.pay(id)))
@@ -576,12 +579,12 @@ extension Route.Gifts {
             guard let gift = try c.get().execute(Row<Gift>.select(id)) else {
                 throw ServerError(privateMessage: "No such gift", publicMessage: "Something went wrong, please try again.")
             }
+            let plan = try Plan.gifts.first(where: { $0.plan_code == gift.data.planCode }) ?! ServerError.init(privateMessage: "Illegal plan: \(gift.data.planCode)", publicMessage: "Couldn't find the plan you selected.")
             guard gift.data.subscriptionId == nil else {
                 throw ServerError(privateMessage: "Already paid \(gift.id)", publicMessage: "You already paid this gift.")
             }
-            let f = payGiftForm(context: context, route: .gift(.pay(id)))
+            let f = payGiftForm(plan: plan, gift: gift.data, context: context, route: .gift(.pay(id)))
             return form(f, initial: .init(), csrf: sharedCSRF, validate: { _ in [] }, onPost: { (result: GiftResult) throws in
-                let plan = try Plan.gifts.first(where: { $0.plan_code == result.plan_id }) ?! ServerError.init(privateMessage: "Illegal plan: \(result.plan_id)", publicMessage: "Couldn't find the plan you selected.")
                 let userId = try c.get().execute(UserData(email: result.gifter_email, avatarURL: "", name: "").insert)
                 let start = gift.data.sendAt > Date() ? gift.data.sendAt : nil // no start date means starting immediately
                 let cr = CreateSubscription(plan_code: plan.plan_code, currency: "USD", coupon_code: nil, starts_at: start, account: .init(account_code: userId, email: result.gifter_email, billing_info: .init(token_id: result.token)))
@@ -590,25 +593,22 @@ extension Route.Gifts {
                     case .errors(let messages):
                         log(RecurlyErrors(messages))
                         let theMessages = messages.map { ($0.field ?? "", $0.message) } + [("", "There was a problem with the payment. You have not been charged. Please try again or contact us for assistance.")]
-                        let response = giftForm(planCode: plan.plan_code, context: context).render(GiftStep1Data(gifteeEmail: gift.data.gifteeEmail, gifteeName: gift.data.gifteeName, day: "", month: "", year: "", message: gift.data.message, planCode: plan.plan_code), sharedCSRF, theMessages)
+                        let response = giftForm(plan: plan, context: context).render(GiftStep1Data(gifteeEmail: gift.data.gifteeEmail, gifteeName: gift.data.gifteeName, day: "", month: "", year: "", message: gift.data.message, planCode: plan.plan_code), sharedCSRF, theMessages)
                         return I.write(response)
                     case .success(let sub):
-                        return I.onSuccess(promise: zip(recurly.account(with: userId).promise, recurly.billingInfo(accountId: userId).promise).map(zip), do: { (x: (Account, BillingInfo)) in
-                            let (acc, billingInfo) = x
-                            var copy = gift
-                            copy.data.gifterUserId = userId
-                            copy.data.subscriptionId = sub.uuid
-                            copy.data.gifterEmail = acc.email
-                            copy.data.gifterName = "\(billingInfo.first_name ?? "") \(billingInfo.last_name ?? "")"
-                            try c.get().execute(copy.update())
-                            if start != nil {
-                                let email = sendgrid.send(to: acc.email, name: copy.data.gifterName ?? "", subject: "Thank you for gifting Swift Talk", text: copy.data.gifterEmailText)
-                                URLSession.shared.load(email) { result in
-                                    myAssert(result != nil)
-                                }
+                        var copy = gift
+                        copy.data.gifterUserId = userId
+                        copy.data.subscriptionId = sub.uuid
+                        copy.data.gifterEmail = result.gifter_email
+                        copy.data.gifterName = result.gifter_name
+                        try c.get().execute(copy.update())
+                        if start != nil {
+                            let email = sendgrid.send(to: result.gifter_email, name: copy.data.gifterName ?? "", subject: "Thank you for gifting Swift Talk", text: copy.data.gifterEmailText)
+                            URLSession.shared.load(email) { result in
+                                myAssert(result != nil)
                             }
-                            return I.redirect(to: .gift(.thankYou(id)))
-                        })
+                        }
+                        return I.redirect(to: .gift(.thankYou(id)))
                     }
                 })
             })

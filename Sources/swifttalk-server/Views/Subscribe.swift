@@ -69,7 +69,6 @@ extension Array where Element == Plan {
         func node(plan: Plan, title: String) -> Node {
             let amount = Double(plan.discountedPrice(coupon: coupon).usdCents) / 100
             let amountStr =  amount.isInt ? "\(Int(amount))" : String(format: "%.2f", amount) // don't use a decimal point for integer numbers
-            // todo take coupon into account
             return .div(classes: "pb-", [
                 .div(classes: "smallcaps-large mb-", [.text(plan.prettyInterval)]),
                 .span(classes: "ms7", [
@@ -206,7 +205,8 @@ struct NewGiftSubscriptionData: Codable {
     }
     var action: String
     var public_key: String
-    var plans: [SubscriptionPlan]
+    var plan: SubscriptionPlan
+    var start_date: String
     var payment_errors: [String] // TODO verify type
     var method: HTTPMethod = .post
     var csrf: CSRFToken

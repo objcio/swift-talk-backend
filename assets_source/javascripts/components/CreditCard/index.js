@@ -18,6 +18,7 @@ export default class CreditCard extends Component {
     method: PropTypes.string,
     loading: PropTypes.bool,
     buttonText: PropTypes.string.isRequired,
+    belowButtonText: PropTypes.string,
     onCountryChange: PropTypes.func,
     month: PropTypes.number,
     year: PropTypes.number,
@@ -30,7 +31,7 @@ export default class CreditCard extends Component {
     state: PropTypes.string,
     zip: PropTypes.string,
     children: PropTypes.node,
-	showEmail: PropTypes.bool,
+	showEmailAndName: PropTypes.bool,
     payment_errors: PropTypes.arrayOf(PropTypes.string)
   }
 
@@ -246,12 +247,15 @@ export default class CreditCard extends Component {
       </div>
     )
 
-    const emailSection = this.props.showEmail ? (
-      <div>
-        <h2 className="ms1 color-blue bold mb+ mt++">
-          Email
-        </h2>
-
+    const emailSection = this.props.showEmailAndName ? (
+      <div class="mb+++">
+        <NonRecurlyInput id='gifter_name'
+               label='Your Name'
+               ref='gifter_name'
+               error={errors.includes('gifter_name')}
+               defaultValue=""
+               disabled={false}
+               required />
         <NonRecurlyInput id='gifter_email'
                label='Your Email'
                ref='gifter_email'
@@ -272,6 +276,8 @@ export default class CreditCard extends Component {
             : <span>{buttonText}</span>
           }
         </button>
+		{ this.props.belowButtonText ? <p className="mt color-gray-60 ms-1 text-center">{this.props.belowButtonText}</p> : <br/>
+		}
       </div>
     )
 
@@ -289,9 +295,9 @@ export default class CreditCard extends Component {
           <div className="cols m-|stack++">
             <div className="col m+|width-2/3">
               { this.showErrors(errors) }
+			  { emailSection }
               { cardSection }
               { billingSection }
-			  { emailSection }
             </div>
             <div className="col width-full m+|width-1/3">
               { this.props.children }

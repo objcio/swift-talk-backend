@@ -10,18 +10,19 @@ export default class NewGiftSubscription extends Component {
   static propTypes = {
     csrf: PropTypes.string.isRequired,
     public_key: PropTypes.string.isRequired,
+    start_date: PropTypes.string.isRequired,
     action: PropTypes.string.isRequired,
+    start_date: PropTypes.string.isRequired,
     payment_errors: PropTypes.arrayOf(PropTypes.string),
-    plans: PropTypes.arrayOf(PropTypes.shape({
+    plan: PropTypes.shape({
       id: PropTypes.string.isRequired,
       base_price: PropTypes.number.isRequired,
       interval: PropTypes.string.isRequired
-    })),
+    }),
   }
 
   state = {
     tax: null,
-    selected_plan_id: null
   }
 
   taxRequestPromise = null
@@ -29,8 +30,7 @@ export default class NewGiftSubscription extends Component {
   constructor(props) {
     super(props)
     this.state =  {
-        tax: null,
-        selected_plan_id: props.plans[0].id
+        tax: null
     }
   }
 
@@ -57,47 +57,25 @@ export default class NewGiftSubscription extends Component {
   }
 
 
-  handleSelectedPlanChange(event) {
-      this.setState({selected_plan_id: event.target.value})
-  }
-
 
   render () {
-    const { plans } = this.props
-    const { tax, selected_plan_id } = this.state
-    const selected_plan = plans.find(p => p.id === selected_plan_id)
-    const { base_price, interval } = selected_plan
+    const { plan } = this.props
+    const { tax } = this.state
+    const { base_price, interval } = plan
     const taxAmount = base_price * (tax ? tax.rate : 0)
     const total = base_price + taxAmount
     return (
       <CreditCard {...this.props}
                   onCountryChange={this.fetchTaxRate.bind(this)}
                   loading={this.state.loading}
-		          showEmail={true}
-                  buttonText='Buy'>
+		          showEmailAndName={true}
+                  buttonText='Buy'
+		          belowButtonText={"Your card will be billed on " + this.props.start_date + "."}>
 
         <div className="bgcolor-gray-95 color-gray-40 radius-5 overflow-hidden mb">
-          <div className="pv ph- border-bottom border-color-white border-2 flex">
-            {
-              this.props.plans.map((plan) => {
-                const key = "plan_id"+plan.id
-                const isChecked = plan.id === selected_plan_id
-                const optionClasses = classnames({
-                  'flex-1 block mh- pv ph-- radius-5 cursor-pointer border border-2 text-center': true,
-                  'color-gray-60 border-color-gray-90': !isChecked,
-                  'color-white border-color-transparent bgcolor-blue': isChecked
-                })
-                return (
-                  <div key={key} className={optionClasses}>
-                    <input type="radio" name="plan_id" value={plan.id} id={key} onChange={this.handleSelectedPlanChange.bind(this)} checked={isChecked} className="visuallyhidden" />
-                    <label htmlFor={key} className="block cursor-pointer">
-                      <div className="smallcaps mb">{ plan.interval }</div>
-                      <div className="ms3 bold">{ a.formatMoney(plan.base_price / 100, {symbol: '$', precision: 0}) }</div>
-                    </label>
-                  </div>
-                )
-              })
-            }
+          <div className="pa border-bottom border-color-white border-2 flex justify-between items-center">
+            <span className="smallcaps-large">Gift</span>
+            <span className="bold">{interval} of Swift Talk</span>
           </div>
           <div className="pa border-bottom border-color-white border-2 flex justify-between items-center">
             <span className="smallcaps-large">Price</span>

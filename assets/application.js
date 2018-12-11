@@ -1105,14 +1105,16 @@ var CreditCard = function (_Component) {
         )
       );
 
-      var emailSection = this.props.showEmail ? _react2.default.createElement(
+      var emailSection = this.props.showEmailAndName ? _react2.default.createElement(
         'div',
-        null,
-        _react2.default.createElement(
-          'h2',
-          { className: 'ms1 color-blue bold mb+ mt++' },
-          'Email'
-        ),
+        { 'class': 'mb+++' },
+        _react2.default.createElement(_NonRecurlyInput2.default, { id: 'gifter_name',
+          label: 'Your Name',
+          ref: 'gifter_name',
+          error: errors.includes('gifter_name'),
+          defaultValue: '',
+          disabled: false,
+          required: true }),
         _react2.default.createElement(_NonRecurlyInput2.default, { id: 'gifter_email',
           label: 'Your Email',
           ref: 'gifter_email',
@@ -1140,7 +1142,12 @@ var CreditCard = function (_Component) {
             null,
             buttonText
           )
-        )
+        ),
+        this.props.belowButtonText ? _react2.default.createElement(
+          'p',
+          { className: 'mt color-gray-60 ms-1 text-center' },
+          this.props.belowButtonText
+        ) : _react2.default.createElement('br', null)
       );
 
       return _react2.default.createElement(
@@ -1158,9 +1165,9 @@ var CreditCard = function (_Component) {
             'div',
             { className: 'col m+|width-2/3' },
             this.showErrors(errors),
+            emailSection,
             cardSection,
-            billingSection,
-            emailSection
+            billingSection
           ),
           _react2.default.createElement(
             'div',
@@ -1190,6 +1197,7 @@ CreditCard.propTypes = {
   method: _react.PropTypes.string,
   loading: _react.PropTypes.bool,
   buttonText: _react.PropTypes.string.isRequired,
+  belowButtonText: _react.PropTypes.string,
   onCountryChange: _react.PropTypes.func,
   month: _react.PropTypes.number,
   year: _react.PropTypes.number,
@@ -1202,7 +1210,7 @@ CreditCard.propTypes = {
   state: _react.PropTypes.string,
   zip: _react.PropTypes.string,
   children: _react.PropTypes.node,
-  showEmail: _react.PropTypes.bool,
+  showEmailAndName: _react.PropTypes.bool,
   payment_errors: _react.PropTypes.arrayOf(_react.PropTypes.string)
 };
 exports.default = CreditCard;
@@ -1213,6 +1221,8 @@ exports.default = CreditCard;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _NewGiftSubscription$;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -1238,6 +1248,8 @@ var _classnames2 = _interopRequireDefault(_classnames);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -1259,8 +1271,7 @@ var NewGiftSubscription = function (_Component) {
     _this.taxRequestPromise = null;
 
     _this.state = {
-      tax: null,
-      selected_plan_id: props.plans[0].id
+      tax: null
     };
     return _this;
   }
@@ -1298,18 +1309,12 @@ var NewGiftSubscription = function (_Component) {
   }, {
     key: 'render',
     value: function render() {
-      var _this3 = this;
-
-      var plans = this.props.plans;
+      var plan = this.props.plan;
       var _state = this.state,
           tax = _state.tax,
           selected_plan_id = _state.selected_plan_id;
-
-      var selected_plan = plans.find(function (p) {
-        return p.id === selected_plan_id;
-      });
-      var base_price = selected_plan.base_price,
-          interval = selected_plan.interval;
+      var base_price = plan.base_price,
+          interval = plan.interval;
 
       var taxAmount = base_price * (tax ? tax.rate : 0);
       var total = base_price + taxAmount;
@@ -1318,42 +1323,26 @@ var NewGiftSubscription = function (_Component) {
         _extends({}, this.props, {
           onCountryChange: this.fetchTaxRate.bind(this),
           loading: this.state.loading,
-          showEmail: true,
-          buttonText: 'Buy' }),
+          showEmailAndName: true,
+          buttonText: 'Buy',
+          belowButtonText: "Your card will be billed on " + this.props.start_date + "." }),
         _react2.default.createElement(
           'div',
           { className: 'bgcolor-gray-95 color-gray-40 radius-5 overflow-hidden mb' },
           _react2.default.createElement(
             'div',
-            { className: 'pv ph- border-bottom border-color-white border-2 flex' },
-            this.props.plans.map(function (plan) {
-              var key = "plan_id" + plan.id;
-              var isChecked = plan.id === selected_plan_id;
-              var optionClasses = (0, _classnames2.default)({
-                'flex-1 block mh- pv ph-- radius-5 cursor-pointer border border-2 text-center': true,
-                'color-gray-60 border-color-gray-90': !isChecked,
-                'color-white border-color-transparent bgcolor-blue': isChecked
-              });
-              return _react2.default.createElement(
-                'div',
-                { key: key, className: optionClasses },
-                _react2.default.createElement('input', { type: 'radio', name: 'plan_id', value: plan.id, id: key, onChange: _this3.handleSelectedPlanChange.bind(_this3), checked: isChecked, className: 'visuallyhidden' }),
-                _react2.default.createElement(
-                  'label',
-                  { htmlFor: key, className: 'block cursor-pointer' },
-                  _react2.default.createElement(
-                    'div',
-                    { className: 'smallcaps mb' },
-                    plan.interval
-                  ),
-                  _react2.default.createElement(
-                    'div',
-                    { className: 'ms3 bold' },
-                    _accountingJs2.default.formatMoney(plan.base_price / 100, { symbol: '$', precision: 0 })
-                  )
-                )
-              );
-            })
+            { className: 'pa border-bottom border-color-white border-2 flex justify-between items-center' },
+            _react2.default.createElement(
+              'span',
+              { className: 'smallcaps-large' },
+              'Gift'
+            ),
+            _react2.default.createElement(
+              'span',
+              { className: 'bold' },
+              interval,
+              ' of Swift Talk'
+            )
           ),
           _react2.default.createElement(
             'div',
@@ -1408,17 +1397,16 @@ var NewGiftSubscription = function (_Component) {
   return NewGiftSubscription;
 }(_react.Component);
 
-NewGiftSubscription.propTypes = {
+NewGiftSubscription.propTypes = (_NewGiftSubscription$ = {
   csrf: _react.PropTypes.string.isRequired,
   public_key: _react.PropTypes.string.isRequired,
-  action: _react.PropTypes.string.isRequired,
-  payment_errors: _react.PropTypes.arrayOf(_react.PropTypes.string),
-  plans: _react.PropTypes.arrayOf(_react.PropTypes.shape({
-    id: _react.PropTypes.string.isRequired,
-    base_price: _react.PropTypes.number.isRequired,
-    interval: _react.PropTypes.string.isRequired
-  }))
-};
+  start_date: _react.PropTypes.string.isRequired,
+  action: _react.PropTypes.string.isRequired
+}, _defineProperty(_NewGiftSubscription$, 'start_date', _react.PropTypes.string.isRequired), _defineProperty(_NewGiftSubscription$, 'payment_errors', _react.PropTypes.arrayOf(_react.PropTypes.string)), _defineProperty(_NewGiftSubscription$, 'plan', _react.PropTypes.shape({
+  id: _react.PropTypes.string.isRequired,
+  base_price: _react.PropTypes.number.isRequired,
+  interval: _react.PropTypes.string.isRequired
+})), _NewGiftSubscription$);
 exports.default = NewGiftSubscription;
 
 },{"../CreditCard":10,"accounting-js":26,"classnames":27,"react":310,"whatwg-fetch":313}],12:[function(require,module,exports){
