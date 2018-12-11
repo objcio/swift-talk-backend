@@ -212,13 +212,17 @@ extension Gift {
     var gifterEmailText: String {
         let prettyDate = DateFormatter.fullPretty.string(from: sendAt)
         return """
-        Hello \(gifterName),
+        Hello \(gifterName ?? "unkown"),
+
+        Thank you for gifting Swift Talk!
         
-        Thank you for gifting Swift Talk. The gift will be sent to \(gifteeName) (\(gifteeEmail)) on \(prettyDate).
+        \(gifteeName) will receive your gift on \(prettyDate), delivered by email to \(gifteeEmail).
         
-        Your credit card is not charged yet, but will be charged on \(prettyDate).
+        Your credit card will be charged on the day of delivery.
         
-        Thanks,
+        All the best,
+        
+        Chris and Florian
         objc.io
         """
     }
@@ -227,19 +231,21 @@ extension Gift {
 extension Row where Element == Gift {
     func gifteeEmailText(duration: String) -> String {
         let url = Route.gift(.redeem(id)).url.absoluteString
-        
         let theMessage: String = data.message.isEmpty ? "" : ("Here is their message: \n\n" + data.message)
-        
         return """
         Hello \(data.gifteeName),
         
-        \(data.gifterName) has sent you a gift Swift Talk subscription for \(duration). \(theMessage)
+        We’re pleased to say that \(data.gifterName ?? "unknown") has gifted you a \(duration) Swift Talk subscription, which starts today!
         
-        Your subscription start today, and you can activate your account at:
+        They also asked us to deliver this message:
         
-        \(url)
+        \(theMessage)
         
-        Thanks,
+        To activate your account, just visit: \(url)
+        
+        We hope you enjoy watching!
+        
+        Chris and Florian
         objc.io
         """
     }
