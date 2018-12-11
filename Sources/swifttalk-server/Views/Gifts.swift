@@ -230,7 +230,6 @@ struct GiftResult {
 
 func payGiftForm(plan: Plan, gift: Gift, context: Context, route: Route) -> Form<GiftResult> {
     return Form.init(parse: { dict in
-        dump(dict)
         guard let d = dict["billing_info[token]"], let e = dict["gifter_email"], let n = dict["gifter_name"] else { return nil }
         return GiftResult(token: d, gifter_email: e, gifter_name: n)
     }, render: { (_, csrf, errs) -> Node in

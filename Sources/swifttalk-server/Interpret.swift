@@ -288,6 +288,7 @@ extension Route {
                                     try c.get().execute(gift.update())
                                 }
                             }
+                            return I.write("", status: .ok)
                         } else {
                             log(error: "Got a recurly webhook but can't find gift \(s)")
                             return I.write("", status: .internalServerError)
