@@ -52,7 +52,7 @@ enum Route: Equatable {
     
     enum Gifts: Equatable {
         case home
-        case new
+        case new(planCode: String)
         case pay(UUID)
         case redeem(UUID)
         case thankYou(UUID)
@@ -247,7 +247,10 @@ private let internalRoutes: [Router<Route>] = [
 
 private let giftRoutes: [Router<Route.Gifts>] = [
     Router(.home),
-    .c("new", .new),
+    .c("new") / Router.string().transform({ .new(planCode: $0) }, { r in
+        guard case let .new(x) = r else { return nil }
+        return x
+    }),
     Router.uuid.transform({ .pay($0) }, { r in
         guard case let .pay(x) = r else { return nil }
         return x

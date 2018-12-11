@@ -207,5 +207,9 @@ fileprivate let migrations: [String] = [
         ALTER gifter_email DROP NOT NULL,
         ALTER gifter_name DROP NOT NULL
     """,
+    """
+    ALTER TABLE gifts
+        ADD COLUMN plan_code text NOT NULL
+    """
 ]
 

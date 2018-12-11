@@ -26,6 +26,7 @@ struct Gift: Codable, Insertable {
     var gifteeUserId: UUID?
     var subscriptionId: String?
     var activated: Bool
+    var planCode: String
     static let tableName: String = "gifts"
     
     func validate() -> [ValidationError] {

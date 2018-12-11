@@ -12,47 +12,58 @@ extension Array where Element == Plan {
         func node(plan: Plan) -> Node {
             let amount = Double(plan.unit_amount_in_cents.usdCents) / 100
             let amountStr =  amount.isInt ? "\(Int(amount))" : String(format: "%.2f", amount) // don't use a decimal point for integer numbers
-            return .div(classes: "pb-", [
-                .div(classes: "smallcaps-large mb-", [.text(plan.prettyDuration)]),
-                .span(classes: "ms7", [
-                    .span(classes: "opacity-50", ["$"]),
-                    .span(classes: "bold", [.text(amountStr)])
+            return .li(classes: "m+|col m+|width-1/3 ph--", [
+                Node.link(to: .gift(.new(planCode: plan.plan_code)), attributes: ["style": "text-decoration: none;"], [
+                    .div(classes: "pv++ ph+ pattern-gradient pattern-gradient--swifttalk radius-5", [
+                        .div(classes: "text-center color-white", [
+                            .div(classes: "smallcaps-large mb-", [.text(plan.prettyDuration)]),
+                            .span(classes: "ms7", [
+                                .span(classes: "opacity-50", ["$"]),
+                                .span(classes: "bold", [.text(amountStr)])
+                            ])
+                        ])
+                    ])
                 ])
             ])
         }
-        let continueLink = Node.link(to: .gift(.new), classes: "c-button c-button--big c-button--blue c-button--wide", ["Start Gifting"])
         let benefits: [Node] = [
-            Node.li(classes: "m+|col m+|width-1/2", [
+            Node.div(classes: "text-center mt+", [
                 .div(classes: "color-orange", [
                     .inlineSvg(path: "icon-benefit-gift.svg", classes: "svg-fill-current")
-                    ]),
+                ]),
                 .div([
-                    .h3(classes: "bold color-blue mt- mb---", [.text("The Perfect Gift for Swift Developers")]),
-                    .p(classes: "color-gray-50 lh-125", [.text("This needs some copy here...")]),
-                    ])
+                    .h3(classes: "bold color-blue mt- mb-", [.text("The Perfect Gift for Swift Developers")]),
+                    .p(classes: "color-gray-50 lh-125", [.text("Swift Talk is a weekly live-coding video series, following two experienced developers as they discuss and implement solutions to real-world problems, while you watch. No ordinary tutorial, each episode is conversational in style, helping you follow their thoughts as they develop, and understand why we make the decisions we do.")]),
+                ]),
             ]),
-            Node.li(classes: "m+|col m+|width-1/2", [
+            Node.div(classes: "text-center mt+", [
+                .div(classes: "color-orange", [
+                    .inlineSvg(path: "icon-play.svg", classes: "svg-fill-current")
+                ]),
+                .div([
+                    .h3(classes: "bold color-blue mt- mb-", [.text("Plenty of Content")]),
+                    .p(classes: "color-gray-50 lh-125", [.text("With over 130 episodes, and 20 collections, there’s plenty to watch and much to learn!")]),
+                    ]),
+                ]),
+            Node.div(classes: "text-center mt+", [
                 .div(classes: "color-orange", [
                     .inlineSvg(path: "icon-benefit-protect.svg", classes: "svg-fill-current")
                     ]),
                 .div([
-                    .h3(classes: "bold color-blue mt- mb---", [.text("Non-Renewing")]),
-                    .p(classes: "color-gray-50 lh-125", [.text("You choose the duration of the subscription up front and make a one-time payment. Gift subscriptions don't auto-renew.")]),
+                    .h3(classes: "bold color-blue mt- mb-", [.text("Non-Renewing")]),
+                .p(classes: "color-gray-50 lh-125", [.text("You select the subscription period, and make a one-time payment on the day it is delivered. Gift subscriptions don’t auto-renew.")]),
                 ])
             ])
         ]
         let contents: [Node] = [
-            pageHeader(.other(header: "Gift a Swift Talk Subscription", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),
+            pageHeader(.other(header: "Give Swift Talk as a Gift", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),
             .div(classes: "container pt0", [
-                .div(classes: "bgcolor-white pa- radius-8 max-width-7 box-sizing-content center stack-", [
-                    .div(classes: "pattern-gradient pattern-gradient--swifttalk pv++ ph+ radius-5", [
-                        .div(classes: "flex items-center justify-around text-center color-white", self.map { node(plan: $0) })
-                    ]),
-                    .div([
-                        continueLink
-                    ])
+                .div(classes: "bgcolor-white pa- radius-8 max-width-8 box-sizing-content center", [
+                    .ul(classes: "ph cols m-|stack-", self.map { node(plan: $0) })
                 ]),
-                Node.ul(classes: "lh-110 text-center cols max-width-9 center mb- pv++ m-|stack+", benefits),
+                .div(classes: "max-width-7 center", [
+                    .p(classes: "color-gray-50 lh-125 mt++", [.text("Simply select which subscription you’d like to give, then tell us who to send it to and when to send it. You can write a personal message, and we’ll make sure they receive an email on the day you choose with a link to activate their gift.")]),
+                ] + benefits),
                 .div(classes: "ms-1 color-gray-65 text-center pt+", [
                     .ul(classes: "stack pl", smallPrint().map { Node.li([.text($0)])})
                 ])
@@ -110,8 +121,14 @@ struct GiftStep1Data: Codable {
     var month: String = ""
     var year: String = ""
     var message: String = ""
+    var planCode: String
 }
 
+extension GiftStep1Data {
+    init(planCode: String) {
+        self.planCode = planCode
+    }
+}
 
 extension Gift {
     static func fromData(_ data: GiftStep1Data) -> Either<Gift, [ValidationError]> {
@@ -123,13 +140,13 @@ extension Gift {
             guard let date = Calendar.current.date(from: DateComponents(calendar: Calendar.current, timeZone: TimeZone(secondsFromGMT: 0), year: year, month: month, day: day)) else {
                 return .right([ValidationError(field: "day", message: "Invalid Date")])
             }
-            return .left(Gift(gifterEmail: nil, gifterName: nil, gifteeEmail: data.gifteeEmail, gifteeName: data.gifteeName, sendAt: date, message: data.message, gifterUserId: nil, gifteeUserId: nil, subscriptionId: nil, activated: false))
+            return .left(Gift(gifterEmail: nil, gifterName: nil, gifteeEmail: data.gifteeEmail, gifteeName: data.gifteeName, sendAt: date, message: data.message, gifterUserId: nil, gifteeUserId: nil, subscriptionId: nil, activated: false, planCode: data.planCode))
         case let .right(errs): return .right(errs)
         }
     }
 }
 
-func giftForm(submitTitle: String, action: Route) -> Form<GiftStep1Data> {
+func giftForm(submitTitle: String, planCode: String, action: Route) -> Form<GiftStep1Data> {
     return Form(parse: { dict in
         guard let gifteeEmail = dict["giftee_email"],
             let message = dict["message"],
@@ -138,7 +155,7 @@ func giftForm(submitTitle: String, action: Route) -> Form<GiftStep1Data> {
         	let year = dict["year"],
         	let day = dict["day"]
             else { return nil }
-        return GiftStep1Data(gifteeEmail: gifteeEmail, gifteeName: gifteeName, day: day, month: month, year: year, message: message)
+        return GiftStep1Data(gifteeEmail: gifteeEmail, gifteeName: gifteeName, day: day, month: month, year: year, message: message, planCode: planCode)
         
     }, render: { data, csrf, errors in
         let form = FormView(fields: [
@@ -157,8 +174,8 @@ func giftForm(submitTitle: String, action: Route) -> Form<GiftStep1Data> {
     })
 }
 
-func giftForm(context: Context) -> Form<GiftStep1Data> {
-    let form = giftForm(submitTitle: "Step 2: Plan and Payment", action: .gift(.new))
+func giftForm(planCode: String, context: Context) -> Form<GiftStep1Data> {
+    let form = giftForm(submitTitle: "Step 2: Plan and Payment", planCode: planCode, action: .gift(.new(planCode: planCode)))
     return form.wrap { (node: Node) -> Node in
         let result: Node = LayoutConfig(context: context, contents: [
             .div(classes: "container", [

@@ -565,8 +565,8 @@ extension Route.Gifts {
         switch self {
         case .home:
             return try I.write(Plan.gifts.gift(context: context))
-        case .new:
-            return form(giftForm(context: context), initial: GiftStep1Data(), csrf: sharedCSRF, convert: Gift.fromData, validate: { $0.validate() }, onPost: { gift in
+        case .new(let planCode):
+            return form(giftForm(planCode: planCode, context: context), initial: GiftStep1Data(planCode: planCode), csrf: sharedCSRF, convert: Gift.fromData, validate: { $0.validate() }, onPost: { gift in
                 catchAndDisplayError {
                     let id = try c.get().execute(gift.insert)
                     return I.redirect(to: Route.gift(.pay(id)))
@@ -590,7 +590,7 @@ extension Route.Gifts {
                     case .errors(let messages):
                         log(RecurlyErrors(messages))
                         let theMessages = messages.map { ($0.field ?? "", $0.message) } + [("", "There was a problem with the payment. You have not been charged. Please try again or contact us for assistance.")]
-                        let response = giftForm(context: context).render(GiftStep1Data(gifteeEmail: gift.data.gifteeEmail, gifteeName: gift.data.gifteeName, day: "", month: "", year: "", message: gift.data.message), sharedCSRF, theMessages)
+                        let response = giftForm(planCode: plan.plan_code, context: context).render(GiftStep1Data(gifteeEmail: gift.data.gifteeEmail, gifteeName: gift.data.gifteeName, day: "", month: "", year: "", message: gift.data.message, planCode: plan.plan_code), sharedCSRF, theMessages)
                         return I.write(response)
                     case .success(let sub):
                         return I.onSuccess(promise: zip(recurly.account(with: userId).promise, recurly.billingInfo(accountId: userId).promise).map(zip), do: { (x: (Account, BillingInfo)) in
