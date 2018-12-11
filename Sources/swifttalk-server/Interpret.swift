@@ -293,12 +293,10 @@ extension Route {
             return I.write("", status: .ok)
         case .rssFeed:
             return I.write(xml: Episode.all.released.rssView, status: .ok)
-        case .episodesJSON(_):
-            let json = episodesJSONView(showUnreleased: false)
-            return I.write(json: json)
-        case .collectionsJSON(_):
-            let json = collectionsJSONView(showUnreleased: false)
-            return I.write(json: json)
+        case .episodesJSON:
+            return I.write(json: episodesJSONView())
+        case .collectionsJSON:
+            return I.write(json: collectionsJSONView())
         case let .playProgress(episodeId):
             guard let s = try? requireSession() else { return I.write("", status: .ok)}
             return I.withPostBody(csrf: s.user.data.csrf) { body in

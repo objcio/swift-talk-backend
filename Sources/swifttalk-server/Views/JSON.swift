@@ -54,17 +54,14 @@ extension CollectionView {
     }
 }
 
-let encoder = JSONEncoder()
+private let encoder = JSONEncoder()
 
-func episodesJSONView(showUnreleased: Bool) -> Data {
-    let source = showUnreleased ? Episode.all : Episode.all.released
-    let eps = source.map(EpisodeView.init)
+func episodesJSONView() -> Data {
+    let eps = Episode.all.released.map(EpisodeView.init)
     return (try? encoder.encode(eps)) ?? Data()
 }
 
-
-func collectionsJSONView(showUnreleased: Bool) -> Data {
-    let source = showUnreleased ? Collection.all : Collection.all.filter { $0.public }
-    let colls = source.map(CollectionView.init)
+func collectionsJSONView() -> Data {
+    let colls = Collection.all.filter { $0.public }.map(CollectionView.init)
     return (try? encoder.encode(colls)) ?? Data()
 }
