@@ -10,7 +10,6 @@ import Foundation
 enum Accept: String {
     case json = "application/json"
     case xml = "application/xml"
-    case githubRaw = "application/vnd.github.v3.raw"
 }
 
 struct RemoteEndpoint<A> {
