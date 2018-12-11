@@ -193,6 +193,7 @@ extension Route {
             let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
             return I.write(index(episodesWithProgress, context: context))
         case .home:
+            print(session?.user.data)
             let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
             return .write(renderHome(episodes: episodesWithProgress, context: context))
         case .sitemap:
@@ -342,7 +343,6 @@ extension Route.Subscription {
                         return try newSubscription(couponCode: couponCode, errs: messages.map { $0.message })
                     case .success(let sub):
                         try c.get().execute(user.changeSubscriptionStatus(sub.state == .active))
-                        // todo flash
                         return I.redirect(to: .account(.thankYou))
                     }
                 })
@@ -611,8 +611,11 @@ extension Route.Gifts {
                 })
             })
         case .thankYou(let id):
-            // we can display the kind of gift, but shouldn't display any gifter-specific information. this is because the giftee also gets the id, and can construct this thank you URL manually...
-            return I.write("TODO thank you page for the gifter")
+            guard let gift = try c.get().execute(Row<Gift>.select(id)) else {
+                throw ServerError(privateMessage: "gift doesn't exist: \(id.uuidString)", publicMessage: "This gift subscription doesn't exist. Please get in touch to resolve this issue.")
+            }
+            
+            return I.write(giftThankYou(gift: gift.data, context: context))
         case .redeem(let id):
             guard let gift = try c.get().execute(Row<Gift>.select(id)) else {
                 throw ServerError(privateMessage: "gift doesn't exist: \(id.uuidString)", publicMessage: "This gift subscription doesn't exist. Please get in touch to resolve this issue.")

@@ -72,7 +72,7 @@ func giftHome(plans: [Plan], context: Context) throws -> Node {
     return LayoutConfig(context: context, pageTitle: "Gift a Swift Talk Subscription", contents: contents).layout
 }
 
-fileprivate let redeemheader = pageHeader(.other(header: "Redeem Your Gift", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb")
+fileprivate let redeemheader = pageHeader(.other(header: "Redeem Your Gift", blurb: nil, extraClasses: "ms4"), extraClasses: "text-center")
 
 func redeemGiftAlreadySubscribed(context: Context) throws -> Node {
     let contents: [Node] = [
@@ -119,6 +119,27 @@ func redeemGiftSub(context: Context, gift: Row<Gift>, plan: Plan) throws -> Node
         ])
     ]
     return LayoutConfig(context: context, pageTitle: "Redeem Your Gift", contents: contents).layout
+}
+
+func giftThankYou(gift: Gift, context: Context) -> Node {
+    let contents: [Node] = [
+        pageHeader(.other(header: "Thank You", blurb: nil, extraClasses: "ms4"), extraClasses: "text-center"),
+        .div(classes: "container pt0", [
+            .div(classes: "bgcolor-white pa- radius-8 max-width-7 box-sizing-content center stack-", [
+                Node.div(classes: "text-center mt+", [
+                    .div(classes: "color-orange", [
+                        .inlineSvg(path: "icon-benefit-gift.svg", classes: "svg-fill-current")
+                    ]),
+                    .div(classes: "color-gray-50 lh-125 mt mb-", [
+                        .p(classes: "mb-", [.text("Thank you for gifting Swift Talk!")]),
+                        .p(classes: "mb-", [.text("\(gift.gifteeName) will receive your gift \(gift.sendAt.isToday ? "today" : "on " + DateFormatter.fullPretty.string(from: gift.sendAt)), delivered by email to \(gift.gifteeEmail).")]),
+                        gift.sendAt.isToday ? .none :.p(classes: "mb-", [.text("Your credit card will be charged on the day of delivery.")]),
+                    ]),
+                ]),
+            ])
+        ])
+    ]
+    return LayoutConfig(context: context, pageTitle: "Thank you for gifting Swift Talk", contents: contents).layout
 }
 
 

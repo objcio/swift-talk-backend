@@ -249,7 +249,7 @@ private let giftRoutes: [Router<Route.Gifts>] = [
         guard case let .redeem(x) = r else { return nil }
         return x
     }),
-    .c("thankYou") / Router.uuid.transform({ .thankYou($0) }, { r in
+    .c("thank-you") / Router.uuid.transform({ .thankYou($0) }, { r in
         guard case let .thankYou(x) = r else { return nil }
         return x
     })
