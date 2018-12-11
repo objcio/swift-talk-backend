@@ -63,7 +63,7 @@ extension Array where Element == Plan {
     
     func subscribe(context: Context, coupon: Coupon? = nil) throws -> Node {
         guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
-            throw RenderingError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
+            throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
         }
         
         func node(plan: Plan, title: String) -> Node {
@@ -136,7 +136,7 @@ fileprivate func smallPrint(noTeamMemberDiscount: Bool) -> [String] {
 
 func newSub(context: Context, csrf: CSRFToken, coupon: Coupon?, errs: [String]) throws -> Node {
     guard let m = Plan.monthly, let y = Plan.yearly else {
-        throw RenderingError(privateMessage: "No monthly or yearly plan: \(Plan.all)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
+        throw ServerError(privateMessage: "No monthly or yearly plan: \(Plan.all)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
     }
     let data = NewSubscriptionData(action: Route.subscription(.create(couponCode: coupon?.coupon_code)).path, public_key: env.recurlyPublicKey, plans: [
         .init(m), .init(y)

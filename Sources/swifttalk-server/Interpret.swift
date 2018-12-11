@@ -44,7 +44,7 @@ struct Session {
 func requirePost<I: Interpreter>(csrf: CSRFToken, next: @escaping () throws -> I) throws -> I {
     return I.withPostBody(do: { body in
         guard body["csrf"] == csrf.stringValue else {
-            throw RenderingError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
+            throw ServerError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
         }
         return try next()
     })
@@ -81,7 +81,7 @@ extension Swift.Collection where Element == Episode {
 // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
 func form<A,B,I: Interpreter>(_ f: Form<A>, initial: A, csrf: CSRFToken, convert: @escaping (A) -> Either<B, [ValidationError]>, validate: @escaping (B) -> [ValidationError], onPost: @escaping (B) throws -> I) -> I {
     return I.withPostBody(do: { body in
-        guard let result = f.parse(csrf: csrf, body) else { throw RenderingError(privateMessage: "Couldn't parse form", publicMessage: "Something went wrong. Please try again.") }
+        guard let result = f.parse(csrf: csrf, body) else { throw ServerError(privateMessage: "Couldn't parse form", publicMessage: "Something went wrong. Please try again.") }
         switch convert(result) {
         case let .left(value):
             let errors = validate(value)
@@ -123,7 +123,7 @@ extension Route {
             session = nil
         }
         func requireSession() throws -> Session {
-            return try session ?! NotLoggedInError()
+            return try session ?! AuthorizationError()
         }
         
         let context = Context(path: path, route: self, message: nil, session: session)
@@ -155,11 +155,11 @@ extension Route {
             return I.redirect(path: path)
         case .githubCallback(let optionalCode, let origin):
             guard let code = optionalCode else {
-                throw RenderingError(privateMessage: "No auth code", publicMessage: "Something went wrong, please try again.")
+                throw ServerError(privateMessage: "No auth code", publicMessage: "Something went wrong, please try again.")
             }
             let loadToken = github.getAccessToken(code).promise.map({ $0?.access_token })
             return I.onComplete(promise: loadToken, do: { token in
-                let t = try token ?! RenderingError(privateMessage: "No github access token", publicMessage: "Couldn't access your Github profile.")
+                let t = try token ?! ServerError(privateMessage: "No github access token", publicMessage: "Couldn't access your Github profile.")
                 let loadProfile = Github(accessToken: t).profile.promise
                 return I.onSuccess(promise: loadProfile, message: "Couldn't access your Github profile", do: { profile in
                     let uid: UUID
@@ -200,7 +200,7 @@ extension Route {
         case .promoCode(let str):
             return I.onSuccess(promise: recurly.coupon(code: str).promise, message: "Can't find that coupon.", do: { coupon in
                 guard coupon.state == "redeemable" else {
-                    throw RenderingError(privateMessage: "not redeemable: \(str)", publicMessage: "This coupon is not redeemable anymore.")
+                    throw ServerError(privateMessage: "not redeemable: \(str)", publicMessage: "This coupon is not redeemable anymore.")
                 }
                 return try I.write(Plan.all.subscribe(context: context, coupon: coupon))
             })
@@ -329,9 +329,9 @@ extension Route.Subscription {
         case .create(let couponCode):
             return I.withPostBody(csrf: sess.user.data.csrf) { dict in
                 guard let planId = dict["plan_id"], let token = dict["billing_info[token]"] else {
-                    throw RenderingError(privateMessage: "Incorrect post data", publicMessage: "Something went wrong")
+                    throw ServerError(privateMessage: "Incorrect post data", publicMessage: "Something went wrong")
                 }
-                let plan = try Plan.all.first(where: { $0.plan_code == planId }) ?! RenderingError.init(privateMessage: "Illegal plan: \(planId)", publicMessage: "Couldn't find the plan you selected.")
+                let plan = try Plan.all.first(where: { $0.plan_code == planId }) ?! ServerError.init(privateMessage: "Illegal plan: \(planId)", publicMessage: "Couldn't find the plan you selected.")
                 let cr = CreateSubscription.init(plan_code: plan.plan_code, currency: "USD", coupon_code: couponCode, starts_at: nil, account: .init(account_code: user.id, email: user.data.email, billing_info: .init(token_id: token)))
                 return I.onSuccess(promise: recurly.createSubscription(cr).promise, message: "Something went wrong, please try again", do: { sub_ in
                     switch sub_ {
@@ -361,7 +361,7 @@ extension Route.Subscription {
             return try requirePost(csrf: user.data.csrf) {
                 return I.onSuccess(promise: user.currentSubscription.promise.map(flatten)) { sub in
                     guard sub.state == .active else {
-                        throw RenderingError(privateMessage: "cancel: no active sub \(user) \(sub)", publicMessage: "Can't find an active subscription.")
+                        throw ServerError(privateMessage: "cancel: no active sub \(user) \(sub)", publicMessage: "Can't find an active subscription.")
                     }
                     return I.onSuccess(promise: recurly.cancel(sub).promise) { result in
                         switch result {
@@ -375,7 +375,7 @@ extension Route.Subscription {
         case .upgrade:
             return try requirePost(csrf: sess.user.data.csrf) {
                 return I.onSuccess(promise: sess.user.currentSubscription.promise.map(flatten), do: { sub throws -> I in
-                    guard let u = sub.upgrade else { throw RenderingError(privateMessage: "no upgrade available \(sub)", publicMessage: "There's no upgrade available.")}
+                    guard let u = sub.upgrade else { throw ServerError(privateMessage: "no upgrade available \(sub)", publicMessage: "There's no upgrade available.")}
                     let teamMembers = try c.get().execute(sess.user.teamMembers)
                     return I.onSuccess(promise: recurly.updateSubscription(sub, plan_code: u.plan.plan_code, numberOfTeamMembers: teamMembers.count).promise, do: { result throws -> I in
                         return I.redirect(to: .account(.billing))
@@ -386,7 +386,7 @@ extension Route.Subscription {
             return try requirePost(csrf: user.data.csrf) {
                 return I.onSuccess(promise: user.currentSubscription.promise.map(flatten)) { sub in
                     guard sub.state == .canceled else {
-                        throw RenderingError(privateMessage: "cancel: no active sub \(user) \(sub)", publicMessage: "Can't find a cancelled subscription.")
+                        throw ServerError(privateMessage: "cancel: no active sub \(user) \(sub)", publicMessage: "Can't find a cancelled subscription.")
                     }
                     return I.onSuccess(promise: recurly.reactivate(sub).promise) { result in
                         switch result {
@@ -421,7 +421,7 @@ extension Route.Account {
         case .register(let couponCode):
             return I.withPostBody(do: { body in
                 guard let result = registerForm(context, couponCode: couponCode).parse(csrf: sess.user.data.csrf, body) else {
-                    throw RenderingError(privateMessage: "Failed to parse form data to create an account", publicMessage: "Something went wrong during account creation. Please try again.")
+                    throw ServerError(privateMessage: "Failed to parse form data to create an account", publicMessage: "Something went wrong during account creation. Please try again.")
                 }
                 var u = sess.user
                 u.data.email = result.email
@@ -474,7 +474,7 @@ extension Route.Account {
                     func cont(subAndAddOn: (Subscription, Plan.AddOn)?) throws -> I {
                         let redemptionsWithCoupon = try redemptions.map { (r) -> (Redemption, Coupon) in
                             guard let c = coupons.first(where: { $0.coupon_code == r.coupon_code }) else {
-                                throw RenderingError(privateMessage: "No coupon for \(r)!", publicMessage: "Something went wrong.")
+                                throw ServerError(privateMessage: "No coupon for \(r)!", publicMessage: "Something went wrong.")
                             }
                             return (r,c)
                         }
@@ -515,7 +515,7 @@ extension Route.Account {
             }
             return I.withPostBody(csrf: sess.user.data.csrf, do: { body in
                 guard let token = body["billing_info[token]"] else {
-                    throw RenderingError(privateMessage: "No billing_info[token]", publicMessage: "Something went wrong, please try again.")
+                    throw ServerError(privateMessage: "No billing_info[token]", publicMessage: "Something went wrong, please try again.")
                 }
                 return I.onSuccess(promise: sess.user.updateBillingInfo(token: token).promise, do: { (response: RecurlyResult<BillingInfo>) -> I in
                     switch response {
@@ -574,14 +574,14 @@ extension Route.Gifts {
             })
         case .pay(let id):
             guard let gift = try c.get().execute(Row<Gift>.select(id)) else {
-                throw RenderingError(privateMessage: "No such gift", publicMessage: "Something went wrong, please try again.")
+                throw ServerError(privateMessage: "No such gift", publicMessage: "Something went wrong, please try again.")
             }
             guard gift.data.subscriptionId == nil else {
-                throw RenderingError(privateMessage: "Already paid \(gift.id)", publicMessage: "You already paid this gift.")
+                throw ServerError(privateMessage: "Already paid \(gift.id)", publicMessage: "You already paid this gift.")
             }
             let f = payGiftForm(context: context, route: .gift(.pay(id)))
             return form(f, initial: .init(), csrf: sharedCSRF, validate: { _ in [] }, onPost: { (result: GiftResult) throws in
-                let plan = try Plan.gifts.first(where: { $0.plan_code == result.plan_id }) ?! RenderingError.init(privateMessage: "Illegal plan: \(result.plan_id)", publicMessage: "Couldn't find the plan you selected.")
+                let plan = try Plan.gifts.first(where: { $0.plan_code == result.plan_id }) ?! ServerError.init(privateMessage: "Illegal plan: \(result.plan_id)", publicMessage: "Couldn't find the plan you selected.")
                 let userId = try c.get().execute(UserData(email: gift.data.gifterEmail, avatarURL: "", name: gift.data.gifterName).insert)
                 let start = gift.data.sendAt > Date() ? gift.data.sendAt : nil // no start date means starting immediately
                 let cr = CreateSubscription(plan_code: plan.plan_code, currency: "USD", coupon_code: nil, starts_at: start, account: .init(account_code: userId, email: gift.data.gifterEmail, billing_info: .init(token_id: result.token)))
@@ -612,7 +612,7 @@ extension Route.Gifts {
             return I.write("TODO thank you page for the gifter")
         case .redeem(let id):
             guard let gift = try c.get().execute(Row<Gift>.select(id)) else {
-                throw RenderingError(privateMessage: "gift doesn't exist: \(id.uuidString)", publicMessage: "This gift subscription doesn't exist. Please get in touch to resolve this issue.")
+                throw ServerError(privateMessage: "gift doesn't exist: \(id.uuidString)", publicMessage: "This gift subscription doesn't exist. Please get in touch to resolve this issue.")
             }
             if session?.premiumAccess == true {
                 return try I.write(redeemGiftAlreadySubscribed(context: context))
