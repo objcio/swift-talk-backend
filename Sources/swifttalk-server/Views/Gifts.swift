@@ -10,18 +10,20 @@ import Foundation
 extension Array where Element == Plan {
     func gift(context: Context) throws -> Node {
         func node(plan: Plan) -> Node {
+            let target = Route.gift(.new(planCode: plan.plan_code))
             let amount = Double(plan.unit_amount_in_cents.usdCents) / 100
             let amountStr =  amount.isInt ? "\(Int(amount))" : String(format: "%.2f", amount) // don't use a decimal point for integer numbers
             return .li(classes: "m+|col m+|width-1/3 ph--", [
-                Node.link(to: .gift(.new(planCode: plan.plan_code)), attributes: ["style": "text-decoration: none;"], [
-                    .div(classes: "pv++ ph+ pattern-gradient pattern-gradient--swifttalk radius-5", [
+                Node.link(to: target, attributes: ["style": "text-decoration: none;"], [
+                    .div(classes: "pt++ pb ph+ pattern-gradient pattern-gradient--swifttalk radius-5 text-center", [
                         .div(classes: "text-center color-white", [
                             .div(classes: "smallcaps-large mb-", [.text(plan.prettyDuration)]),
                             .span(classes: "ms7", [
                                 .span(classes: "opacity-50", ["$"]),
                                 .span(classes: "bold", [.text(amountStr)])
-                            ])
-                        ])
+                            ]),
+                        ]),
+                        Node.link(to: target, classes: "mt+ c-button c-button--small c-button--wide", ["Start Gifting"])
                     ])
                 ])
             ])
@@ -59,25 +61,18 @@ extension Array where Element == Plan {
             pageHeader(.other(header: "Give Swift Talk as a Gift", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),
             .div(classes: "container pt0", [
                 .div(classes: "bgcolor-white pa- radius-8 max-width-8 box-sizing-content center", [
-                .ul(classes: "cols m-|stack-", attributes: ["style": "padding-left:0.75em; padding-right:0.75em;"], self.map { node(plan: $0) })
+                    .ul(classes: "cols m-|stack-", attributes: ["style": "padding-left:0.75em; padding-right:0.75em;"], self.map { node(plan: $0) })
+                ]),
+                .div(classes: "ms-1 color-gray-65 text-center pt+", [
+                    .p([.text("All prices shown excluding VAT. VAT only applies to EU customers.")])
                 ]),
                 .div(classes: "max-width-7 center", [
                     .p(classes: "color-gray-50 lh-125 mt++", [.text("Simply select which subscription you’d like to give, then tell us who to send it to and when to send it. You can write a personal message, and we’ll make sure they receive an email on the day you choose with a link to activate their gift.")]),
                 ] + benefits),
-                .div(classes: "ms-1 color-gray-65 text-center pt+", [
-                    .ul(classes: "stack pl", smallPrint().map { Node.li([.text($0)])})
-                ])
             ]),
         ]
         return LayoutConfig(context: context, pageTitle: "Gift a Swift Talk Subscription", contents: contents).layout
     }
-}
-
-fileprivate func smallPrint() -> [String] {
-    return [
-        "All prices shown excluding VAT.",
-        "VAT only applies to EU customers."
-    ]
 }
 
 fileprivate let redeemheader = pageHeader(.other(header: "Redeem Your Gift Subscription", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb")
