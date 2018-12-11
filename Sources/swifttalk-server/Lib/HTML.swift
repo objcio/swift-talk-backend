@@ -23,7 +23,7 @@ extension UnicodeScalar {
         default: return String(self)
         }
         
-    }    
+    }
 }
 
 
@@ -32,6 +32,10 @@ extension String {
         var result = ""
         result.reserveCapacity(count)
         return unicodeScalars.reduce(into: result, { $0.append($1.escapingIfNeeded) })
+    }
+    
+    var escapeForAttributeValue: String {
+        return self.replacingOccurrences(of: "\"", with: "&quot;")
     }
 }
 
@@ -74,7 +78,7 @@ struct El<I> {
 extension Dictionary where Key == String, Value == String {
     var asAttributes: String {
         return isEmpty ? "" : " " + map { (k,v) in
-            "\(k)=\"\(v.addingUnicodeEntities)\""
+            "\(k)=\"\(v.escapeForAttributeValue)\""
             }.joined(separator: " ")
 
     }
