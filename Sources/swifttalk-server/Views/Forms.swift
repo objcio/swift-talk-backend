@@ -36,14 +36,21 @@ extension Form {
 
 struct FormView {
     indirect enum Field {
-        case input(id: String, value: String, type: String, placeHolder: String, otherAttributes: [String:String])
+        case input(id: String, value: String, type: String, placeHolder: String?, otherAttributes: [String:String])
+        case textarea(id: String, value: String, placeHolder: String?, lines: Int, otherAttributes: [String:String])
         case fieldSet([Field], required: Bool, title: String, note: String?)
         case flex(Field, amount: Int)
         case custom(Node)
 
 
-        static func text(id: String, required: Bool = true, title: String, value: String, placeHolder: String = "", note: String? = nil) -> Field {
-            return .fieldSet([.input(id: id, value: value, type: "text", placeHolder: placeHolder, otherAttributes: [:])], required: required, title: title, note: note)
+        static func text(id: String, required: Bool = true, title: String, value: String, multiline: Int? = nil, placeHolder: String? = nil, note: String? = nil) -> Field {
+            let child: Field
+            if let lines = multiline {
+                child = .textarea(id: id, value: value, placeHolder: placeHolder, lines: lines, otherAttributes: [:])
+            } else {
+                child = .input(id: id, value: value, type: "text", placeHolder: placeHolder, otherAttributes: [:])
+            }
+            return .fieldSet([child], required: required, title: title, note: note)
         }
     }
 
@@ -77,6 +84,8 @@ extension Swift.Collection where Element == FormView.Field {
                 if let id = [f].firstId { return id }
             case .custom(_):
                 continue
+            case .textarea(let id, _, _, _, _):
+                return id
             }
         }
         return nil
@@ -101,11 +110,16 @@ extension FormView {
 			]
                 )
             case let .input(id, value, type, placeHolder, attributes):
-                let atts = ["required": "required", "value": value, "placeholder": placeHolder]
+                var atts = ["required": "required", "value": value]
+                if let p = placeHolder {
+                    atts["placeholder"] = p
+                }
                 return Node.input(classes: "text-input block width-full max-width-6", name: id, type: type, attributes: atts.merging(attributes, uniquingKeysWith: { $1 }))
             case let .flex(field, amount):
                 return Node.div(classes: Class(stringLiteral: "flex-\(amount)"), [renderField(field)])
             case let .custom(n): return n
+            case .textarea(let id, let value, let placeHolder, let lines, let otherAttributes):
+                return Node.textArea(classes: "text-input block width-full max-width-6", name: id, value: value, placeHolder: placeHolder, rows: lines, attributes: otherAttributes)
             }
         }
         
