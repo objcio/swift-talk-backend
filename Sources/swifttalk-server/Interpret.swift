@@ -622,16 +622,16 @@ extension Route.Gifts {
             guard let plan = Plan.gifts.first(where: { $0.plan_code == gift.data.planCode }) else {
                 throw ServerError(privateMessage: "plan \(gift.data.planCode) for gift \(id.uuidString) does not exist", publicMessage: "This gift subscription doesn't exist. Please get in touch to resolve this issue.")
             }
-//            if session?.premiumAccess == true {
-//                return try I.write(redeemGiftAlreadySubscribed(context: context))
-//            } else if let user = session?.user {
-//                var g = gift
-//                g.data.gifteeUserId = user.id
-//                try c.get().execute(g.update())
-//                return I.redirect(to: Route.account(.register(couponCode: nil)))
-//            } else {
+            if session?.premiumAccess == true {
+                return try I.write(redeemGiftAlreadySubscribed(context: context))
+            } else if let user = session?.user {
+                var g = gift
+                g.data.gifteeUserId = user.id
+                try c.get().execute(g.update())
+                return I.redirect(to: Route.account(.register(couponCode: nil)))
+            } else {
                 return I.write(try redeemGiftSub(context: context, gift: gift, plan: plan))
-//            }
+            }
         }
     }
 }
