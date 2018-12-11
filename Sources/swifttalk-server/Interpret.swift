@@ -564,7 +564,7 @@ extension Route.Gifts {
     func interpret<I: Interpreter>(session: Session?, context: Context, connection c: Lazy<Connection>) throws -> I {
         switch self {
         case .home:
-            return try I.write(Plan.gifts.gift(context: context))
+            return try I.write(giftHome(plans: Plan.gifts, context: context))
         case .new(let planCode):
             return form(giftForm(planCode: planCode, context: context), initial: GiftStep1Data(planCode: planCode), csrf: sharedCSRF, convert: Gift.fromData, validate: { $0.validate() }, onPost: { gift in
                 catchAndDisplayError {
@@ -619,16 +619,19 @@ extension Route.Gifts {
             guard let gift = try c.get().execute(Row<Gift>.select(id)) else {
                 throw ServerError(privateMessage: "gift doesn't exist: \(id.uuidString)", publicMessage: "This gift subscription doesn't exist. Please get in touch to resolve this issue.")
             }
-            if session?.premiumAccess == true {
-                return try I.write(redeemGiftAlreadySubscribed(context: context))
-            } else if let user = session?.user {
-                var g = gift
-                g.data.gifteeUserId = user.id
-                try c.get().execute(g.update())
-                return I.redirect(to: Route.account(.register(couponCode: nil)))
-            } else {
-                return I.write(try redeemGiftSub(context: context, giftId: id))
+            guard let plan = Plan.gifts.first(where: { $0.plan_code == gift.data.planCode }) else {
+                throw ServerError(privateMessage: "plan \(gift.data.planCode) for gift \(id.uuidString) does not exist", publicMessage: "This gift subscription doesn't exist. Please get in touch to resolve this issue.")
             }
+//            if session?.premiumAccess == true {
+//                return try I.write(redeemGiftAlreadySubscribed(context: context))
+//            } else if let user = session?.user {
+//                var g = gift
+//                g.data.gifteeUserId = user.id
+//                try c.get().execute(g.update())
+//                return I.redirect(to: Route.account(.register(couponCode: nil)))
+//            } else {
+                return I.write(try redeemGiftSub(context: context, gift: gift, plan: plan))
+//            }
         }
     }
 }

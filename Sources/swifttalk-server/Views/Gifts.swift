@@ -7,75 +7,72 @@
 
 import Foundation
 
-extension Array where Element == Plan {
-    func gift(context: Context) throws -> Node {
-        func node(plan: Plan) -> Node {
-            let target = Route.gift(.new(planCode: plan.plan_code))
-            let amount = Double(plan.unit_amount_in_cents.usdCents) / 100
-            let amountStr =  amount.isInt ? "\(Int(amount))" : String(format: "%.2f", amount) // don't use a decimal point for integer numbers
-            return .li(classes: "m+|col m+|width-1/3 ph--", [
-                Node.link(to: target, attributes: ["style": "text-decoration: none;"], [
-                    .div(classes: "pt++ pb ph+ pattern-gradient pattern-gradient--swifttalk radius-5 text-center", [
-                        .div(classes: "text-center color-white", [
-                            .div(classes: "smallcaps-large mb-", [.text(plan.prettyDuration)]),
-                            .span(classes: "ms7", [
-                                .span(classes: "opacity-50", ["$"]),
-                                .span(classes: "bold", [.text(amountStr)])
-                            ]),
+func giftHome(plans: [Plan], context: Context) throws -> Node {
+    func node(plan: Plan) -> Node {
+        let target = Route.gift(.new(planCode: plan.plan_code))
+        let amount = Double(plan.unit_amount_in_cents.usdCents) / 100
+        let amountStr =  amount.isInt ? "\(Int(amount))" : String(format: "%.2f", amount) // don't use a decimal point for integer numbers
+        return .li(classes: "m+|col m+|width-1/3 ph--", [
+            Node.link(to: target, attributes: ["style": "text-decoration: none;"], [
+                .div(classes: "pt++ pb ph+ pattern-gradient pattern-gradient--swifttalk radius-5 text-center", [
+                    .div(classes: "text-center color-white", [
+                        .span(classes: "ms7", [
+                            .span(classes: "opacity-50", ["$"]),
+                            .span(classes: "bold", [.text(amountStr)])
                         ]),
-                        Node.link(to: target, classes: "mt+ c-button c-button--small c-button--wide", ["Start Gifting"])
-                    ])
+                    ]),
+                    Node.link(to: target, classes: "mt+ c-button c-button--small c-button--wide", [.text(plan.prettyDuration)])
                 ])
             ])
-        }
-        let benefits: [Node] = [
-            Node.div(classes: "text-center mt+", [
-                .div(classes: "color-orange", [
-                    .inlineSvg(path: "icon-benefit-gift.svg", classes: "svg-fill-current")
-                ]),
-                .div([
-                    .h3(classes: "bold color-blue mt- mb-", [.text("The Perfect Gift for Swift Developers")]),
-                    .p(classes: "color-gray-50 lh-125", [.text("Swift Talk is a weekly live-coding video series, following two experienced developers as they discuss and implement solutions to real-world problems, while you watch. No ordinary tutorial, each episode is conversational in style, helping you follow their thoughts as they develop, and understand why we make the decisions we do.")]),
-                ]),
-            ]),
-            Node.div(classes: "text-center mt+", [
-                .div(classes: "color-orange", [
-                    .inlineSvg(path: "icon-play.svg", classes: "svg-fill-current")
-                ]),
-                .div([
-                    .h3(classes: "bold color-blue mt- mb-", [.text("Plenty of Content")]),
-                    .p(classes: "color-gray-50 lh-125", [.text("With over 130 episodes, and 20 collections, there’s plenty to watch and much to learn!")]),
-                    ]),
-                ]),
-            Node.div(classes: "text-center mt+", [
-                .div(classes: "color-orange", [
-                    .inlineSvg(path: "icon-benefit-protect.svg", classes: "svg-fill-current")
-                    ]),
-                .div([
-                    .h3(classes: "bold color-blue mt- mb-", [.text("Non-Renewing")]),
-                .p(classes: "color-gray-50 lh-125", [.text("You select the subscription period, and make a one-time payment on the day it is delivered. Gift subscriptions don’t auto-renew.")]),
-                ])
-            ])
-        ]
-        let contents: [Node] = [
-            pageHeader(.other(header: "Give Swift Talk as a Gift", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),
-            .div(classes: "container pt0", [
-                .div(classes: "bgcolor-white pa- radius-8 max-width-8 box-sizing-content center", [
-                    .ul(classes: "cols m-|stack-", attributes: ["style": "padding-left:0.75em; padding-right:0.75em;"], self.map { node(plan: $0) })
-                ]),
-                .div(classes: "ms-1 color-gray-65 text-center pt+", [
-                    .p([.text("All prices shown excluding VAT. VAT only applies to EU customers.")])
-                ]),
-                .div(classes: "max-width-7 center", [
-                    .p(classes: "color-gray-50 lh-125 mt++", [.text("Simply select which subscription you’d like to give, then tell us who to send it to and when to send it. You can write a personal message, and we’ll make sure they receive an email on the day you choose with a link to activate their gift.")]),
-                ] + benefits),
-            ]),
-        ]
-        return LayoutConfig(context: context, pageTitle: "Gift a Swift Talk Subscription", contents: contents).layout
+        ])
     }
+    let benefits: [Node] = [
+        Node.div(classes: "text-center mt+", [
+            .div(classes: "color-orange", [
+                .inlineSvg(path: "icon-benefit-gift.svg", classes: "svg-fill-current")
+            ]),
+            .div([
+                .h3(classes: "bold color-blue mt- mb-", [.text("The Perfect Gift for Swift Developers")]),
+                .p(classes: "color-gray-50 lh-125", [.text("Swift Talk is a weekly live-coding video series, following two experienced developers as they discuss and implement solutions to real-world problems, while you watch. No ordinary tutorial, each episode is conversational in style, helping you follow their thoughts as they develop, and understand why we make the decisions we do.")]),
+            ]),
+        ]),
+        Node.div(classes: "text-center mt+", [
+            .div(classes: "color-orange", [
+                .inlineSvg(path: "icon-play.svg", classes: "svg-fill-current")
+            ]),
+            .div([
+                .h3(classes: "bold color-blue mt- mb-", [.text("Plenty of Content")]),
+                .p(classes: "color-gray-50 lh-125", [.text("With over 130 episodes, and 20 collections, there’s plenty to watch and much to learn!")]),
+                ]),
+            ]),
+        Node.div(classes: "text-center mt+", [
+            .div(classes: "color-orange", [
+                .inlineSvg(path: "icon-benefit-protect.svg", classes: "svg-fill-current")
+                ]),
+            .div([
+                .h3(classes: "bold color-blue mt- mb-", [.text("Non-Renewing")]),
+            .p(classes: "color-gray-50 lh-125", [.text("You select the subscription period, and make a one-time payment on the day it is delivered. Gift subscriptions don’t auto-renew.")]),
+            ])
+        ])
+    ]
+    let contents: [Node] = [
+        pageHeader(.other(header: "Give Swift Talk as a Gift", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),
+        .div(classes: "container pt0", [
+            .div(classes: "bgcolor-white pa- radius-8 max-width-8 box-sizing-content center", [
+                .ul(classes: "cols m-|stack-", attributes: ["style": "padding-left:0.75em; padding-right:0.75em;"], plans.map { node(plan: $0) })
+            ]),
+            .div(classes: "ms-1 color-gray-65 text-center pt+", [
+                .p([.text("All prices shown excluding VAT. VAT only applies to EU customers.")])
+            ]),
+            .div(classes: "max-width-7 center", [
+                .p(classes: "color-gray-50 lh-125 mt++", [.text("Simply select which subscription you’d like to give, then tell us who to send it to and when to send it. You can write a personal message, and we’ll make sure they receive an email on the day you choose with a link to activate their gift.")]),
+            ] + benefits),
+        ]),
+    ]
+    return LayoutConfig(context: context, pageTitle: "Gift a Swift Talk Subscription", contents: contents).layout
 }
 
-fileprivate let redeemheader = pageHeader(.other(header: "Redeem Your Gift Subscription", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb")
+fileprivate let redeemheader = pageHeader(.other(header: "Redeem Your Gift", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb")
 
 func redeemGiftAlreadySubscribed(context: Context) throws -> Node {
     let contents: [Node] = [
@@ -91,21 +88,37 @@ func redeemGiftAlreadySubscribed(context: Context) throws -> Node {
             ])
         ])
     ]
-    return LayoutConfig(context: context, pageTitle: "Redeem Your Gift Subscription", contents: contents).layout
+    return LayoutConfig(context: context, pageTitle: "Redeem Your Gift", contents: contents).layout
 }
 
-func redeemGiftSub(context: Context, giftId: UUID) throws -> Node {
+func redeemGiftSub(context: Context, gift: Row<Gift>, plan: Plan) throws -> Node {
+    var message: [Node] = []
+    if !gift.data.message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        message = [
+            .p(classes: "mb-", [.text("They also asked us to deliver this message:")]),
+            .p([.text(gift.data.message)]),
+        ]
+    }
+
     let contents: [Node] = [
         redeemheader,
         .div(classes: "container pt0", [
             .div(classes: "bgcolor-white pa- radius-8 max-width-7 box-sizing-content center stack-", [
+                Node.div(classes: "text-center mt+", [
+                    .div(classes: "color-orange", [
+                        .inlineSvg(path: "icon-benefit-gift.svg", classes: "svg-fill-current")
+                    ]),
+                    .div(classes: "color-gray-50 lh-125 mt mb-", [
+                        .p(classes: "mb-", [.text("We’re pleased to say that \(gift.data.gifterName ?? "unknown") has gifted you a \(plan.prettyDuration.lowercased()) Swift Talk subscription, which starts today!")]),
+                    ] + message),
+                ]),
                 .div([
-                    Node.link(to: .login(continue: Route.gift(.redeem(giftId)).path), classes: "c-button c-button--big c-button--blue c-button--wide", ["Login with GitHub"])
+                    Node.link(to: .login(continue: Route.gift(.redeem(gift.id)).path), classes: "mt+ c-button c-button--big c-button--blue c-button--wide", ["Start By Logging In With GitHub"])
                 ])
             ])
         ])
     ]
-    return LayoutConfig(context: context, pageTitle: "Redeem Your Gift Subscription", contents: contents).layout
+    return LayoutConfig(context: context, pageTitle: "Redeem Your Gift", contents: contents).layout
 }
 
 
@@ -231,16 +244,18 @@ extension Gift {
 extension Row where Element == Gift {
     func gifteeEmailText(duration: String) -> String {
         let url = Route.gift(.redeem(id)).url.absoluteString
-        let theMessage: String = data.message.isEmpty ? "" : ("Here is their message: \n\n" + data.message)
+        let message = data.message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "" : """
+        
+        They also asked us to deliver this message:
+        
+        \(data.message)
+        
+        """
         return """
         Hello \(data.gifteeName),
         
         We’re pleased to say that \(data.gifterName ?? "unknown") has gifted you a \(duration) Swift Talk subscription, which starts today!
-        
-        They also asked us to deliver this message:
-        
-        \(theMessage)
-        
+        \(message)
         To activate your account, just visit: \(url)
         
         We hope you enjoy watching!
