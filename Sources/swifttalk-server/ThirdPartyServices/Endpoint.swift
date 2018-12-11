@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum Accept: String {
+enum ContentType: String {
     case json = "application/json"
     case xml = "application/xml"
 }
@@ -26,12 +26,15 @@ struct RemoteEndpoint<A> {
         })
     }
 
-    public init(_ method: Method, url: URL, accept: Accept? = nil, body: Data? = nil, headers: [String:String] = [:], timeOutInterval: TimeInterval = 10, query: [String:String] = [:], parse: @escaping (Data) -> A?) {
+    public init(_ method: Method, url: URL, accept: ContentType? = nil, contentType: ContentType? = nil, body: Data? = nil, headers: [String:String] = [:], timeOutInterval: TimeInterval = 10, query: [String:String] = [:], parse: @escaping (Data) -> A?) {
         var comps = URLComponents(string: url.absoluteString)!
         comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
         request = URLRequest(url: comps.url!)
         if let a = accept {
             request.setValue(a.rawValue, forHTTPHeaderField: "Accept")
+        }
+        if let ct = contentType {
+            request.setValue(ct.rawValue, forHTTPHeaderField: "Content-Type")
         }
         for (key, value) in headers {
             request.setValue(value, forHTTPHeaderField: key)
@@ -63,31 +66,27 @@ extension RemoteEndpoint.Method {
 }
 
 extension RemoteEndpoint where A == () {
-    init(_ method: Method, url: URL, accept: Accept? = nil, headers: [String:String] = [:], query: [String:String] = [:]) {
+    init(_ method: Method, url: URL, accept: ContentType? = nil, headers: [String:String] = [:], query: [String:String] = [:]) {
         self.init(method, url: url, accept: accept, headers: headers, query: query, parse: { _ in () })
     }
 
-    init<B: Codable>(json method: Method, url: URL, accept: Accept? = .json, body: B, headers: [String:String] = [:], query: [String:String] = [:]) {
+    init<B: Codable>(json method: Method, url: URL, accept: ContentType? = .json, body: B, headers: [String:String] = [:], query: [String:String] = [:]) {
         let b = try! JSONEncoder().encode(body)
-        var h = headers
-        h["Content-Type"] = "application/json"
-        self.init(method, url: url, accept: accept, body: b, headers: h, query: query, parse: { _ in () })
+        self.init(method, url: url, accept: accept, contentType: .json, body: b, headers: headers, query: query, parse: { _ in () })
     }
 }
 
 extension RemoteEndpoint where A: Decodable {
-    init(json method: Method, url: URL, accept: Accept = .json, headers: [String: String] = [:], query: [String: String] = [:], decoder: JSONDecoder? = nil) {
+    init(json method: Method, url: URL, accept: ContentType = .json, headers: [String: String] = [:], query: [String: String] = [:], decoder: JSONDecoder? = nil) {
         let d = decoder ?? JSONDecoder()
         self.init(method, url: url, accept: accept, body: nil, headers: headers, query: query) { data in
             return try? d.decode(A.self, from: data)
         }
     }
 
-    init<B: Codable>(json method: Method, url: URL, accept: Accept = .json, body: B? = nil, headers: [String: String] = [:], query: [String: String] = [:]) {
+    init<B: Codable>(json method: Method, url: URL, accept: ContentType = .json, body: B? = nil, headers: [String: String] = [:], query: [String: String] = [:]) {
         let b = body.map { try! JSONEncoder().encode($0) }
-        var h = headers
-        h["Content-Type"] = "application/json"
-        self.init(method, url: url, accept: accept, body: b, headers: headers, query: query) { data in
+        self.init(method, url: url, accept: accept, contentType: .json, body: b, headers: headers, query: query) { data in
             return try? JSONDecoder().decode(A.self, from: data)
         }
     }
