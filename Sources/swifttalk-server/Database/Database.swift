@@ -8,6 +8,15 @@
 import Foundation
 import PostgreSQL
 
+struct DatabaseError: Error, LocalizedError {
+    let err: Error
+    let query: String
+
+    public var errorDescription: String? {
+        return "\(err), query: \(query)"
+    }
+}
+
 
 let postgresConfig = env.databaseURL.map { url in ConnInfo.raw(url) } ?? ConnInfo.params([
     "host": env.databaseHost,
@@ -71,7 +80,13 @@ extension Connection {
     @discardableResult
     func execute<A>(_ query: Query<A>, loggingTreshold: TimeInterval = 0.1) throws -> A {
 //        print(query.query)
-        let node = try measure(message: "query: \(query.query)", treshold: loggingTreshold) { try execute(query.query, query.values) }
+        let node = try measure(message: "query: \(query.query)", treshold: loggingTreshold) { () throws -> PostgreSQL.Node in
+            do {
+                return try execute(query.query, query.values)
+            } catch {
+                throw DatabaseError(err: error, query: query.query)
+            }
+        }
         return query.parse(node)
     }
 }

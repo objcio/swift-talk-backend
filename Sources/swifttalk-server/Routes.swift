@@ -12,18 +12,9 @@ enum Route: Equatable {
     case episodes
     case sitemap
     case subscribe
-    case register(couponCode: String?)
     case collections
     case login(continue: String?)
-    case logout
-    case thankYou
-    case createSubscription(couponCode: String?)
-    case newSubscription(couponCode: String?)
-    case accountProfile
-    case accountBilling
-    case accountTeamMembers
-    case accountDeleteTeamMember(UUID)
-    case githubCallback(String, origin: String?)
+    case githubCallback(code: String?, origin: String?)
     case collection(Id<Collection>)
     case episode(Id<Episode>, playPosition: Int?)
     case download(Id<Episode>)
@@ -32,15 +23,42 @@ enum Route: Equatable {
     case recurlyWebhook
     case githubWebhook
     case error
-    case cancelSubscription
-    case reactivateSubscription
-    case upgradeSubscription
-    case accountUpdatePayment
     case promoCode(String)
     case rssFeed
-    case episodesJSON(showUnreleased: String?)
-    case collectionsJSON(showUnreleased: String?)
+    case episodesJSON
+    case collectionsJSON
+    case gift(Gifts)
+    case account(Account)
+    case subscription(Subscription)
+    
+    enum Subscription: Equatable {
+        case cancel
+        case reactivate
+        case upgrade
+        case create(couponCode: String?)
+        case new(couponCode: String?)
+    }
+   
+    enum Account: Equatable {
+        case register(couponCode: String?)
+        case thankYou
+        case profile
+        case billing
+        case teamMembers
+        case deleteTeamMember(UUID)
+        case updatePayment
+        case logout
+    }
+    
+    enum Gifts: Equatable {
+        case home
+        case new(planCode: String)
+        case pay(UUID)
+        case redeem(UUID)
+        case thankYou(UUID)
+    }
 }
+
 
 extension Route {
     var path: String {
@@ -72,12 +90,32 @@ extension Route {
     }
 }
 
+private extension Array where Element == Router<Route.Subscription> {
+    func choice() -> Router<Route.Subscription> {
+        assert(!isEmpty)
+        return dropFirst().reduce(self[0], { $0.or($1) })
+    }
+}
+
+
+private extension Array where Element == Router<Route.Gifts> {
+    func choice() -> Router<Route.Gifts> {
+        assert(!isEmpty)
+        return dropFirst().reduce(self[0], { $0.or($1) })
+    }
+}
 
 private extension Array where Element == Router<Route> {
     func choice() -> Router<Route> {
         assert(!isEmpty)
         return dropFirst().reduce(self[0], { $0.or($1) })
     }
+}
+
+extension Router where A == UUID {
+    static let uuid: Router<UUID> = Router<String>.string().transform({ return UUID(uuidString: $0)}, { uuid in
+        return uuid.uuidString
+    })
 }
 
 private let episode: Router<Route> = (Router<()>.c("episodes") / .string() / Router<String>.optionalQueryParam(name: "t")).transform({
@@ -88,16 +126,6 @@ private let episode: Router<Route> = (Router<()>.c("episodes") / .string() / Rou
 }, { r in
     guard case let .episode(num, playPosition) = r else { return nil }
     return (num.rawValue, playPosition.map { "\($0)s" })
-})
-
-private let episodesJSON: Router<Route> = (Router<()>.c("episodes.json") / Router<String>.optionalQueryParam(name: "show_unreleased")).transform({ Route.episodesJSON(showUnreleased: $0) }, { r in
-    guard case let .episodesJSON(x) = r else { return nil }
-    return x
-})
-
-private let collectionsJSON: Router<Route> = (Router<()>.c("collections.json") / Router<String>.optionalQueryParam(name: "show_unreleased")).transform({ Route.collectionsJSON(showUnreleased: $0) }, { r in
-    guard case let .collectionsJSON(x) = r else { return nil }
-    return x
 })
 
 private let episodeDownload: Router<Route> = (Router<()>.c("episodes") / .string() / Router<()>.c("download")).transform({ Route.download(Id(rawValue: $0.0)) }, { r in
@@ -115,7 +143,7 @@ private let collection: Router<Route> = (Router<()>.c("collections") / .string()
     return name.rawValue
 })
 
-private let callbackRoute: Router<Route> = .c("users") / .c("auth") / .c("github") / .c("callback") / ((Router<String>.queryParam(name: "code") / Router.optionalQueryParam(name: "origin")).transform({ Route.githubCallback($0.0, origin: $0.1) }, { r in
+private let callbackRoute: Router<Route> = .c("users") / .c("auth") / .c("github") / .c("callback") / ((Router.optionalQueryParam(name: "code") / Router.optionalQueryParam(name: "origin")).transform({ Route.githubCallback(code: $0.0, origin: $0.1) }, { r in
     guard case let .githubCallback(x, y) = r else { return nil }
     return (x,y)
 }))
@@ -130,17 +158,11 @@ private let loginRoute: Router<Route> = (.c("users") / .c("auth") / .c("github")
     return x
 })
 
-private let deleteTeamMember: Router<Route> = (Router<()>.c("team_members") / .c("delete") / .string()).transform({
-    let id = UUID(uuidString: $0)
-    return id.map { Route.accountDeleteTeamMember($0) }
-}, { r in
-    guard case let .accountDeleteTeamMember(id) = r else { return nil }
-    return id.uuidString
-})
 
-private let createSubRoute: Router<Route> = .c("subscription") / Router.optionalString().transform(Route.createSubscription, { r in
-	guard case let  Route.createSubscription(s) = r else { return nil }
-    return s
+
+private let deleteTeamMember: Router<Route> = (Router<()>.c("team_members") / .c("delete") / Router.uuid).transform({ Route.account(.deleteTeamMember($0))}, { r in
+    guard case let .account(.deleteTeamMember(id)) = r else { return nil }
+    return id
 })
 
 private let externalRoutes: [Router<Route>] = [
@@ -148,32 +170,46 @@ private let externalRoutes: [Router<Route>] = [
     .c("sitemap", .sitemap)
 ]
 
+private let register: Router<Route> = .c("register") / Router.optionalString().transform({ Route.account(.register(couponCode: $0)) }, { (route: Route) -> String?? in
+    guard case let Route.account(.register(x)) = route else { return nil }
+    return x
+})
+
 private let accountRoutes: [Router<Route>] = [
     callbackRoute,
     loginRoute,
-    .c("logout", .logout),
-    .c("account") / .c("profile", .accountProfile),
-    .c("account") / .c("billing", .accountBilling),
-    .c("account") / .c("payment", .accountUpdatePayment),
-    deleteTeamMember,
-    .c("account") / .c("team_members", .accountTeamMembers),
+    .c("account") / [
+      .c("thankYou", .account(.thankYou)),
+      .c("logout", .account(.logout)),
+      .c("profile", .account(.profile)),
+      .c("billing", .account(.billing)),
+      .c("payment", .account(.updatePayment)),
+      .c("team_members", .account(.teamMembers)),
+      register,
+      deleteTeamMember,
+    ].choice()
+]
+
+private let subscriptionRoutes2: [Router<Route.Subscription>] = [
+    .c("new") / Router.optionalString().transform(Route.Subscription.new, { route in
+        guard case let .new(x) = route else { return nil }
+        return x
+    }),
+    .c("cancel", .cancel),
+    .c("reactivate", .reactivate),
+    .c("upgrade", .upgrade),
+    Router.optionalString().transform(Route.Subscription.create, { r in
+        guard case let .create(s) = r else { return nil }
+        return s
+    }),
 ]
 
 private let subscriptionRoutes: [Router<Route>] = [
     .c("subscribe", .subscribe),
-    .c("registration") / Router.optionalString().transform(Route.register, { route in
-        guard case let .register(x) = route else { return nil }
+    .c("subscription") / subscriptionRoutes2.choice().transform(Route.subscription, { r in
+        guard case let .subscription(x) = r else { return nil }
         return x
     }),
-    .c("subscription") / .c("new") / Router.optionalString().transform(Route.newSubscription, { route in
-        guard case let .newSubscription(x) = route else { return nil }
-        return x
-    }),
-    .c("subscription") / .c("cancel", .cancelSubscription),
-    .c("subscription") / .c("reactivate", .reactivateSubscription),
-    .c("subscription") / .c("upgrade", .upgradeSubscription),
-    createSubRoute,
-    .c("thankYou", .thankYou),
 ]
 
 private let otherRoutes: [Router<Route>] = [
@@ -185,6 +221,7 @@ private let otherRoutes: [Router<Route>] = [
     episodePlayProgress,
     episode,
     collection,
+    giftRoute,
     .c("episodes.rss", .rssFeed),
     .c("promo") / (Router.string().transform(Route.promoCode, { r in
         guard case let .promoCode(s) = r else { return nil }
@@ -193,11 +230,36 @@ private let otherRoutes: [Router<Route>] = [
 ]
 
 private let internalRoutes: [Router<Route>] = [
-    .c("hooks") / .c("recurly", .recurlyWebhook),
-    .c("hooks") / .c("github", .githubWebhook),
-    episodesJSON,
-    collectionsJSON
+    .c("hooks") / [.c("recurly", .recurlyWebhook), .c("github", .githubWebhook)].choice(),
+    .c("episodes.json", .episodesJSON),
+    .c("collections.json", .collectionsJSON)
 ]
+
+private let giftRoutes: [Router<Route.Gifts>] = [
+    Router(.home),
+    .c("new") / Router.string().transform({ .new(planCode: $0) }, { r in
+        guard case let .new(x) = r else { return nil }
+        return x
+    }),
+    Router.uuid.transform({ .pay($0) }, { r in
+        guard case let .pay(x) = r else { return nil }
+        return x
+    }),
+    .c("redeem") / Router.uuid.transform({ .redeem($0) }, { r in
+        guard case let .redeem(x) = r else { return nil }
+        return x
+    }),
+    .c("thank-you") / Router.uuid.transform({ .thankYou($0) }, { r in
+        guard case let .thankYou(x) = r else { return nil }
+        return x
+    })
+]
+
+private let giftRoute: Router<Route> =
+    .c("gift") / giftRoutes.choice().transform(Route.gift, { r in
+        guard case let .gift(x) = r else { return nil }
+        return x
+    })
 
 let allRoutes = externalRoutes + accountRoutes + subscriptionRoutes + otherRoutes + internalRoutes
 let router = allRoutes.choice()

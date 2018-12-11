@@ -36,9 +36,7 @@ extension Interpreter {
     static func writeFile(path: String) -> Self {
         return .writeFile(path: path, maxAge: 60)
     }
-}
 
-extension Interpreter {
     static func notFound(_ string: String = "Not found") -> Self {
         return .write(string, status: .notFound)
     }
@@ -95,7 +93,7 @@ extension Interpreter {
         return onComplete(promise: promise, do: { value in
             catchAndDisplayError {
                 guard let v = value else {
-                    throw RenderingError(privateMessage: "Expected non-nil value, but got nil (\(file):\(line)).", publicMessage: message)
+                    throw ServerError(privateMessage: "Expected non-nil value, but got nil (\(file):\(line)).", publicMessage: message)
                 }
                 return try cont(v)
             }
@@ -136,7 +134,7 @@ extension Interpreter {
     static func withPostBody(csrf: CSRFToken, do cont: @escaping ([String:String]) throws -> Self, or: @escaping () throws -> Self) -> Self {
         return .withPostBody(do: { body in
             guard body["csrf"] == csrf.stringValue else {
-                throw RenderingError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
+                throw ServerError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
             }
             return try cont(body)
         }, or: or)
@@ -145,7 +143,7 @@ extension Interpreter {
     static func withPostBody(csrf: CSRFToken, do cont: @escaping ([String:String]) throws -> Self) -> Self {
         return .withPostBody(do: { body in
             guard body["csrf"] == csrf.stringValue else {
-                throw RenderingError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
+                throw ServerError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
             }
             return try cont(body)
         })

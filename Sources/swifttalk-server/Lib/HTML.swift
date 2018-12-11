@@ -222,9 +222,23 @@ extension ANode {
         a["name"] = name
         a["id"] = id ?? name
         a["type"] = type
+        if type == "number" {
+            a["inputmode"] = "numeric"
+            a["pattern"] = "[0-9]*"
+        }
         return .node(El(name: "input", classes: classes, attributes: a, children: children))
     }
     
+    static func textArea(classes: Class? = nil, name: String, id: String? = nil, value: String? = nil, placeHolder: String? = nil, rows: Int? = nil, cols: Int? = nil,  attributes: [String:String] = [:]) -> ANode {
+        var a = attributes
+        a["name"] = name
+        a["id"] = id ?? name
+        if let r = rows { a["rows"] = "\(r)" }
+        if let c = cols { a["cols"] = "\(c)" }
+        if let p = placeHolder { a["placeholder"] = p }
+        return .node(El(name: "textarea", classes: classes, attributes: a, children: [.text(value ?? "")]))
+    }
+
     static func form(classes: Class? = nil, action: String, acceptCharset: String = "UTF-8", method: HTTPMethod = .post, attributes: [String:String] = [:], _ children: [ANode] = []) -> ANode {
         var a = attributes
         a["action"] = action

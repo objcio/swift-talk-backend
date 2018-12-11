@@ -11,12 +11,12 @@ fileprivate let accountHeader = pageHeader(.other(header: "Account", blurb: nil,
 
 func accountContainer(context: Context, content: Node, forRoute: Route) -> Node {
     var items: [(Route, title: String)] = [
-        (Route.accountProfile, title: "Profile"),
-        (Route.accountBilling, title: "Billing"),
-        (Route.logout, title: "Logout"),
+        (Route.account(.profile), title: "Profile"),
+        (Route.account(.billing), title: "Billing"),
+        (Route.account(.logout), title: "Logout"),
     ]
     if context.session?.selfPremiumAccess == true {
-        items.insert((Route.accountTeamMembers, title: "Team Members"), at: 2)
+        items.insert((Route.account(.teamMembers), title: "Team Members"), at: 2)
     }
     return .div(classes: "container pb0", [
         .div(classes: "cols m-|stack++", [
@@ -187,7 +187,7 @@ extension Subscription.Upgrade {
                         teamMemberText +
                     ". You'll be charged immediately, and credited for the remainder of the current billing period."
                     )]),
-                button(to: .upgradeSubscription, csrf: csrf, text: "Upgrade Subscription", classes: "color-invalid")
+                button(to: .subscription(.upgrade), csrf: csrf, text: "Upgrade Subscription", classes: "color-invalid")
             ]
     }
 }
@@ -249,7 +249,7 @@ func updatePaymentView(context: Context, data: PaymentViewData) -> Node {
             .div(classes: "container", [
                ReactComponent.creditCard.build(data)
             ])
-        ]), forRoute: .accountUpdatePayment)
+        ]), forRoute: .account(.updatePayment))
     ], includeRecurlyJS: true).layout
 }
 
@@ -276,7 +276,7 @@ extension BillingInfo {
                         ]),
                 ])
             ]),
-            Node.link(to: .accountUpdatePayment, classes: "color-blue no-decoration border-bottom border-1 hover-color-black bold", [.text("Update Payment Method")])
+            Node.link(to: .account(.updatePayment), classes: "color-blue no-decoration border-bottom border-1 hover-color-black bold", [.text("Update Payment Method")])
         ]
     }
 }
@@ -296,7 +296,7 @@ fileprivate func value(text: String, classes: Class = "") -> Node {
 func billingLayout(context: Context, content: [Node]) -> Node {
     return LayoutConfig(context: context, contents: [
         accountHeader,
-        accountContainer(context: context, content: Node.div(classes: "stack++", content), forRoute: .accountBilling)
+        accountContainer(context: context, content: Node.div(classes: "stack++", content), forRoute: .account(.billing))
     ]).layout
 }
 
@@ -305,6 +305,15 @@ func teamMemberBilling(context: Context) -> Node {
         Node.div(classes: "c-text", [
             heading("Billing"),
             Node.p([.text("You have a team member account, which doesn't have its own billing details. To manage billing details and to download invoices, please contact the person managing the organization account with the GitHub handle \"\(context.session?.masterTeamUser?.data.githubLogin ?? "<unknown>")\".")])
+        ])
+    ])
+}
+
+func gifteeBilling(context: Context) -> Node {
+    return billingLayout(context: context, content: [
+        Node.div(classes: "c-text", [
+            heading("Billing"),
+            Node.p([.text("You currently have an active gift subscription, which doesn't have its own billing details.")])
         ])
     ])
 }
@@ -318,7 +327,7 @@ func unsubscribedBilling(context: Context) -> Node {
     ])
 }
 
-func billing(context: Context, user: Row<UserData>, subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo, redemptions: [(Redemption, Coupon)]) -> Node {
+func billingView(context: Context, user: Row<UserData>, subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo, redemptions: [(Redemption, Coupon)]) -> Node {
     let subscriptionInfo: [Node] = subscription.map { (x) -> [Node] in
         let (sub, addOn) = x
         return [
@@ -333,6 +342,12 @@ func billing(context: Context, user: Row<UserData>, subscription: (Subscription,
                     label(text: "State"),
                     value(text: sub.state.pretty)
                 ]),
+                sub.trial_ends_at.map { trialEndDate in
+                    Node.li(classes: "flex", [
+                        label(text: "Trial Ends At"),
+                        value(text: DateFormatter.fullPretty.string(from: trialEndDate))
+                    ])
+                } ?? Node.none,
                 sub.state == .active ? Node.li(classes: "flex", [
                     label(text: "Next Billing"),
                     Node.div(classes: "flex-auto color-gray-30 stack-", [
@@ -348,7 +363,7 @@ func billing(context: Context, user: Row<UserData>, subscription: (Subscription,
                              return Node.text("Due to a technical limation, the displayed price does not take your active coupon (\(coupon.billingDescription), started at \(start)) into account.")
                             }
                         ),
-                        button(to: .cancelSubscription, csrf: user.data.csrf, text: "Cancel Subscription", classes: "color-invalid")
+                        button(to: .subscription(.cancel), csrf: user.data.csrf, text: "Cancel Subscription", classes: "color-invalid")
                     ])
                 ]) : .none,
                 sub.upgrade.map { upgrade in
@@ -362,7 +377,7 @@ func billing(context: Context, user: Row<UserData>, subscription: (Subscription,
                     label(text: "Expires on"),
                     Node.div(classes: "flex-auto color-gray-30 stack-", [
                         .text(sub.expires_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "<unknown date>"),
-                        button(to: .reactivateSubscription, csrf: user.data.csrf, text: "Reactivate Subscription", classes: "color-invalid")
+                        button(to: .subscription(.reactivate), csrf: user.data.csrf, text: "Reactivate Subscription", classes: "color-invalid")
                     ])
                     
                 ]) : .none
@@ -384,11 +399,11 @@ func billing(context: Context, user: Row<UserData>, subscription: (Subscription,
 
 func accountForm(context: Context) -> Form<ProfileFormData> {
     // todo button color required fields.
-    let form = profile(submitTitle: "Update Profile", action: .accountProfile)
+    let form = profile(submitTitle: "Update Profile", action: .account(.profile))
     return form.wrap { node in
         LayoutConfig(context: context, contents: [
             accountHeader,
-            accountContainer(context: context, content: node, forRoute: .accountProfile)
+            accountContainer(context: context, content: node, forRoute: .account(.profile))
         ]).layout
     }
 }
@@ -404,22 +419,23 @@ func addTeamMemberForm() -> Form<TeamMemberFormData> {
         return TeamMemberFormData(githubUsername: username)
     }, render: { data, csrf, errors in
         let form = FormView(fields: [
-            FormView.Field(id: "github_username", title: "Github Username", value: data.githubUsername, note: "Your new team member won’t be notified, as we don’t have their email address yet."),
-            ], submitTitle: "Add Team Member", submitNote: "Team members cost $10/month or $100/year, depending on your subscription. All prices excluding VAT.", action: .accountTeamMembers, errors: errors)
+            .text(id: "github_username", title: "Github Username", value: data.githubUsername, note: "Your new team member won’t be notified, as we don’t have their email address yet."),
+            ], submitTitle: "Add Team Member", submitNote: "Team members cost $10/month or $100/year, depending on your subscription. All prices excluding VAT.", action: .account(.teamMembers), errors: errors)
         return .div(form.renderStacked(csrf: csrf))
     })
 }
 
-func teamMembers(context: Context, csrf: CSRFToken, addForm: Node, teamMembers: [Row<UserData>]) -> Node {
-    let currentTeamMembers = teamMembers.isEmpty ? Node.p([.raw("No team members added yet.")]) : Node.div(teamMembers.map { tm in
-        .div(classes: "flex items-center pv- border-top border-1 border-color-gray-90", [
+func teamMembersView(context: Context, csrf: CSRFToken, addForm: Node, teamMembers: [Row<UserData>]) -> Node {
+    let currentTeamMembers = teamMembers.isEmpty ? Node.p([.raw("No team members added yet.")]) : Node.div(teamMembers.compactMap { tm in
+        guard let githubLogin = tm.data.githubLogin else { return nil }
+        return .div(classes: "flex items-center pv- border-top border-1 border-color-gray-90", [
             .div(classes: "block radius-full ms-2 width-2 mr", [
                 .img(src: tm.data.avatarURL, classes: "block radius-full ms-2 width-2 mr")
             ]),
             .div(classes: "flex-grow type-mono", [
-                .link(to: URL(string: "https://github.com/\(tm.data.githubLogin)")!, classes: "color-gray-30 no-decoration hover-color-blue", [.text(tm.data.githubLogin)])
+                .link(to: URL(string: "https://github.com/\(githubLogin)")!, classes: "color-gray-30 no-decoration hover-color-blue", [.text(githubLogin)])
             ]),
-            Node.button(to: .accountDeleteTeamMember(tm.id), csrf: csrf, [.raw("&times;")], classes: "button-input ms-1")
+            Node.button(to: .account(.deleteTeamMember(tm.id)), csrf: csrf, [.raw("&times;")], classes: "button-input ms-1")
         ])
     })
     
@@ -440,6 +456,6 @@ func teamMembers(context: Context, csrf: CSRFToken, addForm: Node, teamMembers: 
         accountHeader,
         accountContainer(context: context, content: Node.div(classes: "stack++", [
             Node.div(content)
-        ]), forRoute: .accountTeamMembers)
+        ]), forRoute: .account(.teamMembers))
     ]).layout
 }

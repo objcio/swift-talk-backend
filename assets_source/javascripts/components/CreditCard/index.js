@@ -7,6 +7,7 @@ import CardNumber from './CardNumber'
 import CVV from './CVV'
 import Expiry from './Expiry'
 import Input from './Input'
+import NonRecurlyInput from './NonRecurlyInput'
 import Country from './Country'
 
 export default class CreditCard extends Component {
@@ -17,6 +18,7 @@ export default class CreditCard extends Component {
     method: PropTypes.string,
     loading: PropTypes.bool,
     buttonText: PropTypes.string.isRequired,
+    belowButtonText: PropTypes.string,
     onCountryChange: PropTypes.func,
     month: PropTypes.number,
     year: PropTypes.number,
@@ -29,6 +31,7 @@ export default class CreditCard extends Component {
     state: PropTypes.string,
     zip: PropTypes.string,
     children: PropTypes.node,
+	showEmailAndName: PropTypes.bool,
     payment_errors: PropTypes.arrayOf(PropTypes.string)
   }
 
@@ -244,6 +247,25 @@ export default class CreditCard extends Component {
       </div>
     )
 
+    const emailSection = this.props.showEmailAndName ? (
+      <div class="mb+++">
+        <NonRecurlyInput id='gifter_name'
+               label='Your Name'
+               ref='gifter_name'
+               error={errors.includes('gifter_name')}
+               defaultValue=""
+               disabled={false}
+               required />
+        <NonRecurlyInput id='gifter_email'
+               label='Your Email'
+               ref='gifter_email'
+               error={errors.includes('gifter_email')}
+               defaultValue=""
+               disabled={false}
+               required />
+      </div>
+    ) : <div></div>
+
     const submitButton = (
       <div>
         <button type='submit'
@@ -254,6 +276,8 @@ export default class CreditCard extends Component {
             : <span>{buttonText}</span>
           }
         </button>
+		{ this.props.belowButtonText ? <p className="mt color-gray-60 ms-1 text-center">{this.props.belowButtonText}</p> : <br/>
+		}
       </div>
     )
 
@@ -271,6 +295,7 @@ export default class CreditCard extends Component {
           <div className="cols m-|stack++">
             <div className="col m+|width-2/3">
               { this.showErrors(errors) }
+			  { emailSection }
               { cardSection }
               { billingSection }
             </div>

@@ -39,15 +39,15 @@ func profile(submitTitle: String, action: Route) -> Form<ProfileFormData> {
         return ProfileFormData(email: e, name: n)
     }, render: { data, csrf, errors in
         let form = FormView(fields: [
-            FormView.Field(id: "name", title: "Name", value: data.name, note: nil),
-            FormView.Field(id: "email", title: "Email", value: data.email, note: nil)
+            .text(id: "name", title: "Name", value: data.name, note: nil),
+            .text(id: "email", title: "Email", value: data.email, note: nil)
         ], submitTitle: submitTitle, action: action, errors: errors)
         return .div(form.renderStacked(csrf: csrf))
     })
 }
 
 func registerForm(_ context: Context, couponCode: String?) -> Form<ProfileFormData> {
-    return profile(submitTitle: "Create Account", action: .register(couponCode: couponCode)).wrap { node in
+    return profile(submitTitle: "Create Account", action: .account(.register(couponCode: couponCode))).wrap { node in
         LayoutConfig(context: context, contents: [
             Node.header([
                 Node.div(classes: "container-h pb+ pt-", [
@@ -63,13 +63,12 @@ extension Array where Element == Plan {
     
     func subscribe(context: Context, coupon: Coupon? = nil) throws -> Node {
         guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
-            throw RenderingError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
+            throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
         }
         
         func node(plan: Plan, title: String) -> Node {
             let amount = Double(plan.discountedPrice(coupon: coupon).usdCents) / 100
             let amountStr =  amount.isInt ? "\(Int(amount))" : String(format: "%.2f", amount) // don't use a decimal point for integer numbers
-            // todo take coupon into account
             return .div(classes: "pb-", [
                 .div(classes: "smallcaps-large mb-", [.text(plan.prettyInterval)]),
                 .span(classes: "ms7", [
@@ -83,15 +82,14 @@ extension Array where Element == Plan {
         let linkClasses: Class = "c-button c-button--big c-button--blue c-button--wide"
         if context.session.premiumAccess {
             if let d = context.session?.user.data, d.canceled {
-                continueLink = Node.button(to: .reactivateSubscription, csrf: d.csrf, [.text("Reactivate Subscription")], classes: linkClasses + "c-button--ghost")
+                continueLink = Node.button(to: .subscription(.reactivate), csrf: d.csrf, [.text("Reactivate Subscription")], classes: linkClasses + "c-button--ghost")
             } else {
-                continueLink = Node.link(to: .accountProfile, classes: linkClasses + "c-button--ghost", ["You're already subscribed"])
+                continueLink = Node.link(to: .account(.profile), classes: linkClasses + "c-button--ghost", ["You're already subscribed"])
             }
         } else if context.session?.user != nil {
-//            print(session?.user)
-            continueLink = Node.link(to: .newSubscription(couponCode: coupon?.coupon_code), classes: linkClasses, ["Proceed to payment"])
+            continueLink = Node.link(to: .subscription(.new(couponCode: coupon?.coupon_code)), classes: linkClasses, ["Proceed to payment"])
         } else {
-            continueLink = Node.link(to: .login(continue: Route.newSubscription(couponCode: coupon?.coupon_code).path), classes: linkClasses, ["Sign in with Github"])
+            continueLink = Node.link(to: .login(continue: Route.subscription(.new(couponCode: coupon?.coupon_code)).path), classes: linkClasses, ["Sign in with Github"])
         }
         let contents: [Node] = [
             pageHeader(.other(header: "Subscribe to Swift Talk", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),
@@ -124,7 +122,7 @@ extension Array where Element == Plan {
     }
 }
 
-func smallPrint(noTeamMemberDiscount: Bool) -> [String] {
+fileprivate func smallPrint(noTeamMemberDiscount: Bool) -> [String] {
     return
         (noTeamMemberDiscount ? ["The discount doesn’t apply to added team members."] : []) +
             [
@@ -136,9 +134,9 @@ func smallPrint(noTeamMemberDiscount: Bool) -> [String] {
 
 func newSub(context: Context, csrf: CSRFToken, coupon: Coupon?, errs: [String]) throws -> Node {
     guard let m = Plan.monthly, let y = Plan.yearly else {
-        throw RenderingError(privateMessage: "No monthly or yearly plan: \(Plan.all)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
+        throw ServerError(privateMessage: "No monthly or yearly plan: \(Plan.all)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
     }
-    let data = NewSubscriptionData(action: Route.createSubscription(couponCode: coupon?.coupon_code).path, public_key: env.recurlyPublicKey, plans: [
+    let data = NewSubscriptionData(action: Route.subscription(.create(couponCode: coupon?.coupon_code)).path, public_key: env.recurlyPublicKey, plans: [
         .init(m), .init(y)
         ], payment_errors: errs, method: .post, coupon: coupon.map(NewSubscriptionData.Coupon.init), csrf: csrf)
     return LayoutConfig(context: context,  contents: [
@@ -157,6 +155,11 @@ extension ReactComponent where A == NewSubscriptionData {
     static let newSubscription: ReactComponent<A> = ReactComponent(name: "NewSubscription")
 }
 
+
+extension ReactComponent where A == NewGiftSubscriptionData {
+    static let newGiftSubscription: ReactComponent<A> = ReactComponent(name: "NewGiftSubscription")
+}
+
 extension Plan {
     var prettyInterval: String {
         switch  plan_interval_unit {
@@ -168,7 +171,46 @@ extension Plan {
             return "every \(plan_interval_length) \(plan_interval_unit.rawValue)"
         }
     }
+    
+    var prettyDuration: String {
+        switch  plan_interval_unit {
+        case .days:
+            return "\(plan_interval_length) Days"
+        case .months:
+            if plan_interval_length == 12 {
+                return "One Year"
+            } else if plan_interval_length == 1 {
+            	return "1 Month"
+            } else {
+                return "\(plan_interval_length) Months"
+            }
+        }
+    }
 }
+
+struct NewGiftSubscriptionData: Codable {
+    struct SubscriptionPlan: Codable {
+        var id: String
+        var base_price: Int
+        var interval: String
+        
+        init(_ plan: Plan) {
+            id = plan.plan_code
+            base_price = plan.unit_amount_in_cents.usdCents
+            interval = plan.prettyDuration
+            // todo make sure we don't renew
+//            myAssert(plan.total_billing_cycles == 1) // we don't support other plans yet
+        }
+    }
+    var action: String
+    var public_key: String
+    var plan: SubscriptionPlan
+    var start_date: String
+    var payment_errors: [String] // TODO verify type
+    var method: HTTPMethod = .post
+    var csrf: CSRFToken
+}
+
 struct NewSubscriptionData: Codable {
     struct SubscriptionPlan: Codable {
         var id: String

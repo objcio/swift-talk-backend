@@ -487,6 +487,8 @@ final class RecurlyXMLEncoder: Encoder {
         mutating func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
             if let uuid = value as? UUID {
                 encoder.add(child: El(key.stringValue, contents: uuid.uuidString))
+            } else if let date = value as? Date {
+                encoder.add(child: El(key.stringValue, contents: DateFormatter.iso8601WithTimeZone.string(from: date)))
             } else {
                 let childEncoder = RecurlyXMLEncoder(key.stringValue)
                 try value.encode(to: childEncoder)

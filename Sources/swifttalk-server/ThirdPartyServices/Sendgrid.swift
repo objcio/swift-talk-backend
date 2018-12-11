@@ -39,6 +39,9 @@ struct Sendgrid {
         let url = base.appendingPathComponent("mail/send")
         let objcio = Payload.Person(email: emailFrom, name: emailName)
         let body = Payload(personalizations: [Payload.Personalization(to: [Payload.Person(email: email, name: name)], subject: subject)], from: objcio, content: [Payload.Content(type: "text/plain", value: text)])
+        if apiKey == "test" {
+            dump(body)
+        }
         return RemoteEndpoint(json: .post, url: url, body: body, headers: headers)
     }
 }

@@ -7,11 +7,16 @@
 
 import Foundation
 
+
 func runMigrations() throws {
     do {
         _ = try withConnection { conn in
-            for m in migrations { // global variable, but we could inject it at some point.
-                try conn.execute(m)
+            for m in migrations {
+                do {
+			try conn.execute(m)
+                } catch {
+                    throw DatabaseError(err: error, query: m)
+                }
             }
         }
     } catch {
@@ -175,6 +180,41 @@ fileprivate let migrations: [String] = [
     """
     ALTER TABLE USERS
         ADD COLUMN IF NOT EXISTS download_credits_offset integer DEFAULT 0 NOT NULL;
+    """,
+    """
+    CREATE TABLE IF NOT exists gifts (
+    	id uuid DEFAULT public.uuid_generate_v4() PRIMARY KEY,
+        gifter_email text NOT NULL,
+        gifter_name text NOT NULL,
+        gifter_user_id uuid REFERENCES users,
+        giftee_email text NOT NULL,
+        giftee_name text NOT NULL,
+        giftee_user_id uuid REFERENCES users,
+        send_at timestamp NOT NULL,
+        message text NOT NULL
+    )
+    """,
+    """
+    ALTER TABLE USERS
+        ALTER github_login DROP NOT NULL,
+        ALTER github_uid DROP NOT NULL
+    """,
+    """
+    ALTER TABLE gifts
+        ADD COLUMN IF NOT EXISTS subscription_id text;
+    """,
+    """
+    ALTER TABLE gifts
+        ADD COLUMN IF NOT EXISTS activated boolean DEFAULT FALSE NOT NULL;
+    """,
+    """
+    ALTER TABLE gifts
+        ALTER gifter_email DROP NOT NULL,
+        ALTER gifter_name DROP NOT NULL
+    """,
+    """
+    ALTER TABLE gifts
+        ADD COLUMN IF NOT EXISTS plan_code text NOT NULL
     """
 ]
 

@@ -15,6 +15,32 @@ struct FileData: Codable, Insertable {
     static let tableName: String = "files"
 }
 
+struct Gift: Codable, Insertable {
+    var gifterEmail: String?
+    var gifterName: String?
+    var gifteeEmail: String
+    var gifteeName: String
+    var sendAt: Date
+    var message: String
+    var gifterUserId: UUID?
+    var gifteeUserId: UUID?
+    var subscriptionId: String?
+    var activated: Bool
+    var planCode: String
+    static let tableName: String = "gifts"
+    
+    func validate() -> [ValidationError] {
+        var result: [(String,String)] = []
+        if !gifteeEmail.isValidEmail {
+            result.append(("giftee_email", "Their email address is invalid."))
+        }
+        if sendAt < Date() && !sendAt.isToday {
+            result.append(("send_at", "The date cannot be in the past."))
+        }
+        return result
+    }
+}
+
 extension FileData {
     init(repository: String, path: String, value: String) {
         self.init(key: FileData.key(forRepository: repository, path: path), value: value)
@@ -75,8 +101,8 @@ struct CSRFToken: Codable, Equatable, Hashable {
 
 struct UserData: Codable, Insertable {
     var email: String
-    var githubUID: Int
-    var githubLogin: String
+    var githubUID: Int?
+    var githubLogin: String?
     var githubToken: String?
     var avatarURL: String
     var admin: Bool = false
@@ -96,7 +122,7 @@ struct UserData: Codable, Insertable {
     var csrf: CSRFToken
 
     
-    init(email: String, githubUID: Int, githubLogin: String, githubToken: String? = nil, avatarURL: String, name: String, createdAt: Date? = nil, rememberCreatedAt: Date? = nil, updatedAt: Date? = nil, collaborator: Bool = false, downloadCredits: Int = 0, canceled: Bool = false, confirmedNameAndEmail: Bool = false) {
+    init(email: String, githubUID: Int? = nil, githubLogin: String? = nil, githubToken: String? = nil, avatarURL: String, name: String, createdAt: Date? = nil, rememberCreatedAt: Date? = nil, updatedAt: Date? = nil, collaborator: Bool = false, downloadCredits: Int = 0, canceled: Bool = false, confirmedNameAndEmail: Bool = false) {
         self.email = email
         self.githubUID = githubUID
         self.githubLogin = githubLogin
@@ -124,16 +150,22 @@ struct TeamMemberData: Codable, Insertable {
     static let tableName: String = "team_members"
 }
 
+fileprivate let emailRegex = try! NSRegularExpression(pattern: "^[^@]+@(?:[^@.]+?\\.)+.{2,}$", options: [.caseInsensitive])
+
+extension String {
+    var isValidEmail: Bool {
+        return !emailRegex.matches(in: self, options: [], range: NSRange(startIndex..<endIndex, in: self)).isEmpty
+    }
+}
+
 extension UserData {
     var premiumAccess: Bool {
         return admin || collaborator || subscriber
     }
     
-    static let emailRegex = try! NSRegularExpression(pattern: "^[^@]+@(?:[^@.]+?\\.)+.{2,}$", options: [.caseInsensitive])
-    
     func validate() -> [ValidationError] {
         var result: [(String,String)] = []
-        if UserData.emailRegex.matches(in: email, options: [], range: NSRange(email.startIndex..<email.endIndex, in: email)).isEmpty {
+        if !email.isValidEmail {
             result.append(("email", "Invalid email address"))
         }
         if name.isEmpty {

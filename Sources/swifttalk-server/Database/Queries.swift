@@ -152,6 +152,12 @@ extension Row where Element == FileData {
     }
 }
 
+extension Row where Element == Gift {
+    static func select(subscriptionId id: String) -> Query<Row<Element>?> {
+        return Row<Gift>.selectOne.appending(parameters: [id]) { "WHERE subscription_id=\($0[0])" }
+    }
+}
+
 extension Row where Element == UserData {
     static func select(githubId id: Int) -> Query<Row<Element>?> {
         return Row<UserData>.selectOne.appending(parameters: [id]) { "WHERE github_uid=\($0[0])" }
@@ -167,13 +173,23 @@ extension Row where Element == UserData {
             "SELECT u.id,\(fields) FROM \(UserData.tableName) AS u INNER JOIN \(SessionData.tableName) AS s ON s.user_id = u.id WHERE s.id=\($0[0])"
         }
     }
-    
+
     var masterTeamUser: Query<Row<UserData>?> {
         let fields = UserData.fieldNames.map { "u.\($0)" }.sqlJoined
         return .build(parameters: [id], parse: Element.parseFirst) { """
             SELECT u.id,\(fields) FROM \(UserData.tableName) AS u
             INNER JOIN \(TeamMemberData.tableName) AS t ON t.user_id = u.id
-            WHERE t.team_member_id=\($0[0])
+            WHERE t.team_member_id=\($0[0]) AND u.subscriber=true
+            """
+        }
+    }
+    
+    var gifter: Query<Row<UserData>?> {
+        let fields = UserData.fieldNames.map { "u.\($0)" }.sqlJoined
+        return .build(parameters: [id], parse: Element.parseFirst) { """
+            SELECT u.id,\(fields) FROM \(UserData.tableName) AS u
+            INNER JOIN \(Gift.tableName) AS g ON g.gifter_user_id = u.id
+            WHERE g.giftee_user_id=\($0[0]) AND u.subscriber=true
             """
         }
     }
@@ -192,6 +208,16 @@ extension Row where Element == UserData {
         }
     }
     
+    var giftees: Query<[Row<UserData>]> {
+        let fields = UserData.fieldNames.map { "u.\($0)" }.sqlJoined
+        return .build(parameters: [id], parse: Element.parse) { """
+            SELECT u.id,\(fields) FROM \(UserData.tableName) AS u
+            INNER JOIN \(Gift.tableName) AS g ON g.giftee_user_id = u.id
+            WHERE g.gifter_user_id=\($0[0])
+            """
+        }
+    }
+
     func deleteSession(_ sessionId: UUID) -> Query<()> {
         return Row<SessionData>.delete.appending(parameters: [id, sessionId]) { "WHERE user_id=\($0[0]) AND id=\($0[1])" }
     }

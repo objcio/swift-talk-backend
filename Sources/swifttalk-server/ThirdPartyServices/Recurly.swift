@@ -52,9 +52,22 @@ struct Plan: Codable {
     var plan_interval_length: Int
     var plan_interval_unit: IntervalUnit
     var unit_amount_in_cents: Amount
+    var total_billing_cycles: Int?
+}
+
+fileprivate extension Plan {
+    var sortDuration: Int {
+        switch self.plan_interval_unit {
+        case .days: return plan_interval_length
+        case .months: return plan_interval_length * 30
+        }
+    }
 }
 
 extension Plan {
+    static var gifts: [Plan] {
+        return all.filter { $0.plan_code.hasPrefix("gift") }.sorted { $0.sortDuration < $1.sortDuration } // TODO
+    }
     static var monthly: Plan? {
         return all.first(where: { $0.plan_interval_unit == .months && $0.plan_interval_length == 1 })
     }
@@ -115,6 +128,7 @@ struct Subscription: Codable {
     var activated_at: Date?
     var expires_at: Date?
     var current_period_ends_at: Date?
+    var trial_ends_at: Date?
     var plan: PlanInfo
     var quantity: Int
     var unit_amount_in_cents: Int
@@ -287,6 +301,17 @@ extension Account {
 
 struct Webhook: Codable {
     var account: WebhookAccount
+    var subscription: Subscription?
+    struct Subscription: Codable {
+        var plan: Plan
+        var uuid: String
+        var state: String
+        var activated_at: Date?
+    }
+    struct Plan: Codable {
+        var plan_code: String
+        var name: String
+    }
 }
 
 struct WebhookAccount: Codable {
@@ -398,6 +423,7 @@ struct CreateSubscription: Codable, RootElement {
     var plan_code: String
     var currency: String = "USD"
     var coupon_code: String? = nil
+    var starts_at: Date? = nil
     var account: CreateAccount
 }
 
@@ -448,13 +474,6 @@ extension RecurlyResult: Decodable where A: Decodable {
 }
 
 extension Row where Element == UserData {
-    var monthsOfActiveSubscription: Promise<UInt?> {
-        return recurly.subscriptionStatus(for: self.id).map { status in
-            guard let s = status else { log(error: "Couldn't fetch subscription status for user \(self.id) from Recurly"); return nil }
-            return s.months
-        }
-    }
-    
     var account: RemoteEndpoint<Account> {
         return recurly.account(with: id)
     }
@@ -578,12 +597,12 @@ struct Recurly {
         return RemoteEndpoint(xml: .get, url: url, headers: headers)
     }
 
-    func subscriptionStatus(for accountId: UUID) -> Promise<(subscriber: Bool, canceled: Bool, months: UInt)?> {
+    func subscriptionStatus(for accountId: UUID) -> Promise<(subscriber: Bool, canceled: Bool, downloadCredits: UInt)?> {
         return Promise { cb in
             URLSession.shared.load(self.account(with: accountId)) { result in
                 guard let acc = result else { cb(nil); return }
                 URLSession.shared.load(recurly.listSubscriptions(accountId: acc.account_code)) { subs in
-                    let hasActiveSubscription = subs?.contains(where:  { $0.state == .active }) ?? false
+                    let hasActiveSubscription = subs?.contains(where: { $0.state == .active }) ?? false
                     cb((acc.subscriber, canceled: !hasActiveSubscription, (subs?.activeMonths ?? 0) * 4))
                 }
             }
@@ -602,7 +621,8 @@ extension RemoteEndpoint where A: Decodable {
     }
 
     init<B: Encodable & RootElement>(xml method: Method, url: URL, value: B, headers: [String:String], query: [String:String] = [:]) {
-        self.init(method, url: url, accept: .xml, body: try! encodeXML(value).data(using: .utf8)!, headers: headers, query: query, parse: parseRecurlyResponse(url))
+        let data = try! encodeXML(value).data(using: .utf8)!
+        self.init(method, url: url, accept: .xml, body: data, headers: headers, query: query, parse: parseRecurlyResponse(url))
     }
 }
 

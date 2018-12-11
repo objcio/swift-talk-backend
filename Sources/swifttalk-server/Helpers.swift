@@ -78,6 +78,22 @@ extension Scanner {
     }
 }
 
+func zip<A,B,R>(_ a: Either<A, [R]>, _ b: Either<B, [R]>) -> Either<(A,B), [R]> {
+    guard case let .left(x) = a, case let .left(y) = b else {
+        return .right((a.err ?? []) + (b.err ?? []))
+    }
+    return .left((x,y))
+}
+
+
+func zip<A,B,C,R>(_ a: Either<A, [R]>, _ b: Either<B, [R]>, _ c: Either<C, [R]>) -> Either<(A,B,C), [R]> {
+    guard case let .left(x) = a, case let .left(y) = b, case let .left(z) = c else {
+        return .right((a.err ?? []) + (b.err ?? []) + (c.err ?? []))
+    }
+    return .left((x,y,z))
+}
+
+
 func zip<A,B>(_ a: A?, b: B?) -> (A,B)? {
     guard let x = a, let y = b else { return nil }
     return (x,y)
@@ -181,4 +197,32 @@ func measure<A>(message: String, file: StaticString = #file, line: UInt = #line,
         log(file: file, line: line, info: "measure: \(time*1000)ms \(message)")
     }
     return result
+}
+
+enum Either<A, B> {
+    case left(A)
+    case right(B)
+}
+
+extension Either {
+    init(_ value: A?, or: @autoclosure () -> B) {
+        if let x = value {
+            self = .left(x)
+        } else {
+            self = .right(or())
+        }
+    }
+    
+    var err: B? {
+        guard case let .right(e) = self else { return nil }
+        return e
+    }
+}
+
+extension Date {
+    var isToday: Bool {
+        let components = Calendar.current.dateComponents([.month,.year,.day], from: self)
+        let components2 = Calendar.current.dateComponents([.month,.year,.day], from: Date())
+        return components.year == components2.year && components.month == components2.month && components.day == components2.day
+    }
 }
