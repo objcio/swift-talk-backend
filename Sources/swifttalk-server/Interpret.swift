@@ -638,7 +638,13 @@ extension Route.Gifts {
                 var g = gift
                 g.data.gifteeUserId = user.id
                 try c.get().execute(g.update())
-                return I.redirect(to: Route.account(.register(couponCode: nil)))
+
+                var u = user
+                if u.data.email == "" && !u.data.confirmedNameAndEmail {
+                    u.data.email = g.data.gifteeEmail
+                    try c.get().execute(u.update())
+                }
+                return I.redirect(to: Route.subscription(.new(couponCode: nil)))
             } else {
                 return I.write(try redeemGiftSub(context: context, gift: gift, plan: plan))
             }
