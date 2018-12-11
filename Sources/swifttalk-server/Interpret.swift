@@ -10,8 +10,6 @@ import PostgreSQL
 import NIOHTTP1
 
 
-struct NotLoggedInError: Error { }
-
 struct Context {
     var path: String
     var route: Route

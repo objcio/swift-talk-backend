@@ -8,6 +8,20 @@
 import Foundation
 
 
+struct RenderingError: LocalizedError {
+    /// Private message for logging
+    let privateMessage: String
+    /// Message shown to the user
+    let publicMessage: String
+    
+    var errorDescription: String? {
+        return "RenderingError: \(privateMessage)"
+    }
+}
+
+struct NotLoggedInError: Error { }
+
+
 func catchAndDisplayError<I: Interpreter>(line: UInt = #line, file: StaticString = #file, _ f: () throws -> I) -> I {
     do {
         return try f()
@@ -15,8 +29,10 @@ func catchAndDisplayError<I: Interpreter>(line: UInt = #line, file: StaticString
         log(file: file, line: line, error)
         if let e = error as? RenderingError {
             return .write(errorView(e.publicMessage), status: .internalServerError)
+        } else if let _ = error as? NotLoggedInError {
+            return .write(errorView("You're not authorized to view this page. Please login and try again."), status: .unauthorized)
         } else {
-            return .write(errorView("Something went wrong."), status: .internalServerError)
+            return .write(errorView("Something went wrong — please contact us if the problem persists."), status: .internalServerError)
         }
     }
 }

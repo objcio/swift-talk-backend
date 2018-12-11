@@ -36,9 +36,7 @@ extension Interpreter {
     static func writeFile(path: String) -> Self {
         return .writeFile(path: path, maxAge: 60)
     }
-}
 
-extension Interpreter {
     static func notFound(_ string: String = "Not found") -> Self {
         return .write(string, status: .notFound)
     }
