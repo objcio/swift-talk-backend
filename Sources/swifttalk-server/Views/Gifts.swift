@@ -78,7 +78,7 @@ func redeemGiftAlreadySubscribed(context: Context) throws -> Node {
     let contents: [Node] = [
         redeemheader,
         .section(classes: "container", [
-            .div(classes: "lh-125 color-gray-30 text-center cols max-width-8 center pv++", [
+            .div(classes: "c-text text-center cols max-width-8 center", [
                 .p([.text("You already have an active subscription at this moment.")]),
                 .p([
                     .text("Please email us at"),
@@ -95,7 +95,7 @@ func redeemGiftSub(context: Context, gift: Row<Gift>, plan: Plan) throws -> Node
     var message: [Node] = []
     if !gift.data.message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
         message = [
-            .p(classes: "mb-", [.text("They also asked us to deliver this message:")]),
+            .p([.text("They also asked us to deliver this message:")]),
             .p([.text(gift.data.message)]),
         ]
     }
@@ -108,8 +108,8 @@ func redeemGiftSub(context: Context, gift: Row<Gift>, plan: Plan) throws -> Node
                     .div(classes: "color-orange", [
                         .inlineSvg(path: "icon-benefit-gift.svg", classes: "svg-fill-current")
                     ]),
-                    .div(classes: "color-gray-50 lh-125 mt mb-", [
-                        .p(classes: "mb-", [.text("We’re pleased to say that \(gift.data.gifterName ?? "unknown") has gifted you a \(plan.prettyDuration.lowercased()) Swift Talk subscription, which starts today!")]),
+                    .div(classes: "c-text mt mb-", [
+                        .p([.text("We’re pleased to say that \(gift.data.gifterName ?? "unknown") has gifted you a \(plan.prettyDuration.lowercased()) Swift Talk subscription, which starts today!")]),
                     ] + message),
                 ]),
                 .div([
@@ -130,12 +130,17 @@ func giftThankYou(gift: Gift, context: Context) -> Node {
                     .div(classes: "color-orange", [
                         .inlineSvg(path: "icon-benefit-gift.svg", classes: "svg-fill-current")
                     ]),
-                    .div(classes: "color-gray-50 lh-125 mt mb-", [
-                        .p(classes: "mb-", [.text("Thank you for gifting Swift Talk!")]),
-                        .p(classes: "mb-", [.text("\(gift.gifteeName) will receive your gift \(gift.sendAt.isToday ? "today" : "on " + DateFormatter.fullPretty.string(from: gift.sendAt)), delivered by email to \(gift.gifteeEmail).")]),
-                        gift.sendAt.isToday ? .none :.p(classes: "mb-", [.text("Your credit card will be charged on the day of delivery.")]),
-                    ]),
-                ]),
+                    .div(classes: "c-text mt mb-", [
+                        .p([.text("Thank you for gifting Swift Talk!")]),
+                        .p([.text("\(gift.gifteeName) will receive your gift \(gift.sendAt.isToday ? "today" : "on " + DateFormatter.fullPretty.string(from: gift.sendAt)), delivered by email to \(gift.gifteeEmail).")]),
+                        gift.sendAt.isToday ? .none :.p([.text("Your credit card will be charged on the day of delivery.")]),
+                        .p([
+                            .text("If you have any questions, feel free to contact us at"),
+                            .link(to: URL(string: "mailto:\(email)")!, [.text("\(email)")]),
+                            .text(".")
+                        ])
+                    ])
+                ])
             ])
         ])
     ]
@@ -254,6 +259,8 @@ extension Gift {
         \(gifteeName) will receive your gift on \(prettyDate), delivered by email to \(gifteeEmail).
         
         Your credit card will be charged on the day of delivery.
+        
+        If you have any questions, fell free to contact us at \(email).
         
         All the best,
         
