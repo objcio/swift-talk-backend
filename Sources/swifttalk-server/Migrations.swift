@@ -7,11 +7,26 @@
 
 import Foundation
 
+struct MigrationError: Error {
+    let err: Error
+    let query: String
+}
+
+extension MigrationError: LocalizedError {
+    public var errorDescription: String? {
+        return "\(err), query: \(query)"
+    }
+}
+
 func runMigrations() throws {
     do {
         _ = try withConnection { conn in
-            for m in migrations { // global variable, but we could inject it at some point.
-                try conn.execute(m)
+            for m in migrations {
+                do {
+			try conn.execute(m)
+                } catch {
+                    throw MigrationError(err: error, query: m)
+                }
             }
         }
     } catch {
@@ -209,7 +224,7 @@ fileprivate let migrations: [String] = [
     """,
     """
     ALTER TABLE gifts
-        ADD COLUMN plan_code text NOT NULL
+        ADD COLUMN IF NOT EXISTS plan_code text NOT NULL
     """
 ]
 
