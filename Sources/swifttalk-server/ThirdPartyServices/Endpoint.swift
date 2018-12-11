@@ -18,7 +18,7 @@ struct RemoteEndpoint<A> {
     }
     
     var request: URLRequest
-    var parse: (Data) -> A?
+    var parse: (Data?) -> A?
     
     func map<B>(_ f: @escaping (A) -> B) -> RemoteEndpoint<B> {
         return RemoteEndpoint<B>(request: request, parse: { value in
@@ -26,7 +26,7 @@ struct RemoteEndpoint<A> {
         })
     }
 
-    public init(_ method: Method, url: URL, accept: ContentType? = nil, contentType: ContentType? = nil, body: Data? = nil, headers: [String:String] = [:], timeOutInterval: TimeInterval = 10, query: [String:String] = [:], parse: @escaping (Data) -> A?) {
+    public init(_ method: Method, url: URL, accept: ContentType? = nil, contentType: ContentType? = nil, body: Data? = nil, headers: [String:String] = [:], timeOutInterval: TimeInterval = 10, query: [String:String] = [:], parse: @escaping (Data?) -> A?) {
         var comps = URLComponents(string: url.absoluteString)!
         comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
         request = URLRequest(url: comps.url!)
@@ -45,10 +45,10 @@ struct RemoteEndpoint<A> {
         // body *needs* to be the last property that we set, because of this bug: https://bugs.swift.org/browse/SR-6687
         request.httpBody = body
 
-        self.parse = parse
+        self.parse = { $0.flatMap(parse) }
     }
     
-    public init(request: URLRequest, parse: @escaping (Data) -> A?) {
+    public init(request: URLRequest, parse: @escaping (Data?) -> A?) {
         self.request = request
         self.parse = parse
     }
@@ -80,14 +80,16 @@ extension RemoteEndpoint where A: Decodable {
     init(json method: Method, url: URL, accept: ContentType = .json, headers: [String: String] = [:], query: [String: String] = [:], decoder: JSONDecoder? = nil) {
         let d = decoder ?? JSONDecoder()
         self.init(method, url: url, accept: accept, body: nil, headers: headers, query: query) { data in
-            return try? d.decode(A.self, from: data)
+            guard let dat = data else { return nil }
+            return try? d.decode(A.self, from: dat)
         }
     }
 
     init<B: Codable>(json method: Method, url: URL, accept: ContentType = .json, body: B? = nil, headers: [String: String] = [:], query: [String: String] = [:]) {
         let b = body.map { try! JSONEncoder().encode($0) }
         self.init(method, url: url, accept: accept, contentType: .json, body: b, headers: headers, query: query) { data in
-            return try? JSONDecoder().decode(A.self, from: data)
+            guard let dat = data else { return nil }
+            return try? JSONDecoder().decode(A.self, from: dat)
         }
     }
 }
@@ -97,12 +99,11 @@ extension URLSession {
     func load<A>(_ e: RemoteEndpoint<A>, callback: @escaping (A?) -> ()) {
         let r = e.request
         dataTask(with: r, completionHandler: { data, resp, err in
-            guard let d = data else { callback(nil); return }
             guard let h = resp as? HTTPURLResponse, h.statusCode >= 200 && h.statusCode <= 400 else {
                 log(error: "\(r) response: \(String(describing: resp))")
                 callback(nil); return
             }
-            return callback(e.parse(d))
+            return callback(e.parse(data))
         }).resume()
     }
     
