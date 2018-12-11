@@ -263,6 +263,7 @@ extension Route {
                 return catchAndDisplayError {
                     if let s = webhook.subscription, s.plan.plan_code.hasPrefix("gift") {
                         if var gift = flatten(try? c.get().execute(Row<Gift>.select(subscriptionId: s.uuid))) {
+                            log(info: "gift update \(s) \(gift)")
                             if s.state == "future", let a = s.activated_at {
                                 if gift.data.sendAt != a {
                                     gift.data.sendAt = a
@@ -273,6 +274,7 @@ extension Route {
                                     let plan = Plan.gifts.first { $0.plan_code == s.plan.plan_code }
                                     let duration = plan?.prettyDuration ?? "unknown"
                                     let email = sendgrid.send(to: gift.data.gifteeEmail, name: gift.data.gifteeName, subject: "We have a gift for you...", text: gift.gifteeEmailText(duration: duration))
+                                    log(info: "Sending gift email to \(gift.data.gifteeEmail)")
                                     URLSession.shared.load(email) { result in
                                         log(error: "Can't send email for gift \(gift)")
                                     }
@@ -282,6 +284,7 @@ extension Route {
                             }
                         } else {
                             log(error: "Got a recurly webhook but can't find gift \(s)")
+                            return I.write("", status: .internalServerError)
                         }
                     }
                     return I.write("", status: .ok)
