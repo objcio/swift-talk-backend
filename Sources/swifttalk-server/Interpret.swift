@@ -47,7 +47,7 @@ struct Session {
 }
 
 
-func requirePost<I: Interpreter>(csrf: CSRFToken, next: @escaping () throws -> I) throws -> I {
+func requirePost<I: SwiftTalkInterpreter>(csrf: CSRFToken, next: @escaping () throws -> I) throws -> I {
     return I.withPostBody(do: { body in
         guard body["csrf"] == csrf.stringValue else {
             throw ServerError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
@@ -63,15 +63,7 @@ extension ProfileFormData {
     }
 }
 
-extension Interpreter {
-    static func write(_ html: Node, status: HTTPResponseStatus = .ok) -> Self {
-        return Self.write(html.htmlDocument(input: LayoutDependencies(hashedAssetName: { file in
-            guard let remainder = file.drop(prefix: "/assets/") else { return file }
-            let rep = assets.fileToHash[remainder]
-            return rep.map { "/assets/" + $0 } ?? file
-        })), status: status)
-    }
-}
+extension SwiftTalkInterpreter {}
  
 extension Swift.Collection where Element == Episode {
     func withProgress(for userId: UUID?, connection: Lazy<Connection>) throws -> [EpisodeWithProgress] {
@@ -85,7 +77,7 @@ extension Swift.Collection where Element == Episode {
 }
 
 // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
-func form<A,B,I: Interpreter>(_ f: Form<A>, initial: A, csrf: CSRFToken, convert: @escaping (A) -> Either<B, [ValidationError]>, validate: @escaping (B) -> [ValidationError], onPost: @escaping (B) throws -> I) -> I {
+func form<A,B,I: SwiftTalkInterpreter>(_ f: Form<A>, initial: A, csrf: CSRFToken, convert: @escaping (A) -> Either<B, [ValidationError]>, validate: @escaping (B) -> [ValidationError], onPost: @escaping (B) throws -> I) -> I {
     return I.withPostBody(do: { body in
         guard let result = f.parse(csrf: csrf, body) else { throw ServerError(privateMessage: "Couldn't parse form", publicMessage: "Something went wrong. Please try again.") }
         switch convert(result) {
@@ -107,12 +99,12 @@ func form<A,B,I: Interpreter>(_ f: Form<A>, initial: A, csrf: CSRFToken, convert
     
 }
 
-func form<A, I: Interpreter>(_ f: Form<A>, initial: A, csrf: CSRFToken, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> I) -> I {
+func form<A, I: SwiftTalkInterpreter>(_ f: Form<A>, initial: A, csrf: CSRFToken, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> I) -> I {
     return form(f, initial: initial, csrf: csrf, convert: { .left($0) }, validate: validate, onPost: onPost)
 }
 
 extension Route {
-    func interpret<I: Interpreter>(sessionId: UUID?, connection c: Lazy<Connection>) throws -> I {
+    func interpret<I: SwiftTalkInterpreter>(sessionId: UUID?, connection c: Lazy<Connection>) throws -> I {
         let session: Session?
         if self.loadSession, let sId = sessionId {
             let user = try c.get().execute(Row<UserData>.select(sessionId: sId))
@@ -321,7 +313,7 @@ extension Route {
 }
 
 extension Route.Subscription {
-    func interpret<I: Interpreter>(sesssion sess: Session, context: Context, connection c: Lazy<Connection>) throws -> I {
+    func interpret<I: SwiftTalkInterpreter>(sesssion sess: Session, context: Context, connection c: Lazy<Connection>) throws -> I {
         let user = sess.user
         func newSubscription(couponCode: String?, errs: [String]) throws -> I {
             if let c = couponCode {
@@ -409,7 +401,7 @@ extension Route.Subscription {
 }
 
 extension Route.Account {
-    func interpret<I: Interpreter>(sesssion sess: Session, context: Context, connection c: Lazy<Connection>) throws -> I {
+    func interpret<I: SwiftTalkInterpreter>(sesssion sess: Session, context: Context, connection c: Lazy<Connection>) throws -> I {
         func teamMembersResponse(_ data: TeamMemberFormData? = nil,_ errors: [ValidationError] = []) throws -> I {
             let renderedForm = addTeamMemberForm().render(data ?? TeamMemberFormData(githubUsername: ""), sess.user.data.csrf, errors)
             let members = try c.get().execute(sess.user.teamMembers)
@@ -568,7 +560,7 @@ extension Route.Account {
 }
 
 extension Route.Gifts {
-    func interpret<I: Interpreter>(session: Session?, context: Context, connection c: Lazy<Connection>) throws -> I {
+    func interpret<I: SwiftTalkInterpreter>(session: Session?, context: Context, connection c: Lazy<Connection>) throws -> I {
         switch self {
         case .home:
             return try I.write(giftHome(plans: Plan.gifts, context: context))

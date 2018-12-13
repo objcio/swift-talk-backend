@@ -8,6 +8,9 @@ try runMigrations()
 refreshStaticData()
 let timer = scheduleTaskTimer()
 
+extension NIOInterpreter: SwiftTalkInterpreter {
+}
+
 let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
 let resourcePaths = [currentDir.appendingPathComponent("assets"), currentDir.appendingPathComponent("node_modules")]
 
