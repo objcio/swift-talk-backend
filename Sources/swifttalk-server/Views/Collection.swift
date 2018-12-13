@@ -8,11 +8,11 @@
 import Foundation
 
 
-func index(_ items: [Collection], context: Context) -> Node {
+func index(_ items: [Collection]) -> Node {
     let lis: [Node] = items.map({ (coll: Collection) -> Node in
-        return Node.li(attributes: ["class": "col width-full s+|width-1/2 l+|width-1/3 mb++"], coll.render(.init(episodes: true), context: context))
+        return Node.li(attributes: ["class": "col width-full s+|width-1/2 l+|width-1/3 mb++"], coll.render(.init(episodes: true)))
     })
-    return LayoutConfig(context: context, contents: [
+    return LayoutConfig(contents: [
         pageHeader(HeaderContent.link(header: "All Collections", backlink: .home, label: "Swift Talk")),
         .div(classes: "container pb0", [
             .h2(attributes: ["class": "bold lh-100 mb+"], [Node.text("\(items.count) Collections")]),
@@ -22,9 +22,9 @@ func index(_ items: [Collection], context: Context) -> Node {
 }
 
 extension Collection {
-    func show(episodes: [EpisodeWithProgress], context: Context) -> Node {
+    func show(episodes: [EpisodeWithProgress]) -> Node {
         let bgImage = "background-image: url('/assets/images/collections/\(title)@4x.png');"
-        return LayoutConfig(context: context, contents: [
+        return LayoutConfig(contents: [
             Node.div(attributes: ["class": "pattern-illustration overflow-hidden", "style": bgImage], [
                 Node.div(classes: "wrapper", [
                     .header(attributes: ["class": "offset-content offset-header pv++ bgcolor-white"], [
@@ -47,7 +47,7 @@ extension Collection {
                 Node.ul(attributes: ["class": "offset-content"], episodes.map { e in
                     Node.li(attributes: ["class": "flex justify-center mb++ m+|mb+++"], [
                         Node.div(classes: "width-1 ms1 mr- color-theme-highlight bold lh-110 m-|hide", [.raw("&rarr;")]),
-                        e.episode.render(.init(wide: true, synopsis: true, watched: e.watched, canWatch: e.episode.canWatch(session: context.session), collection: false))
+                        Node.withContext { context in e.episode.render(.init(wide: true, synopsis: true, watched: e.watched, canWatch: e.episode.canWatch(session: context.session), collection: false)) }
                     ])
                 })
             ]),
@@ -64,22 +64,23 @@ extension Collection {
             self.whiteBackground = whiteBackground
         }
     }
-    func render(_ options: ViewOptions = ViewOptions(), context: Context) -> [Node] {
+    func render(_ options: ViewOptions = ViewOptions()) -> [Node] {
         let figureStyle = "background-color: " + (options.whiteBackground ? "#FCFDFC" : "#F2F4F2")
-        let eps = episodes(for: context.session?.user.data)
+        let eps: (Context) -> [Episode] = { self.episodes(for: $0.session?.user.data) }
         let episodes_: [Node] = options.episodes ? [
-            .ul(attributes: ["class": "mt-"],
-                eps.map { e in
-                    let title = e.title(in: self)
-                    return Node.li(attributes: ["class": "flex items-baseline justify-between ms-1 line-125"], [
-                        Node.span(attributes: ["class": "nowrap overflow-hidden text-overflow-ellipsis pv- color-gray-45"], [
-                            Node.link(to: .episode(e.id, .view(playPosition: nil)), attributes: ["class": "no-decoration color-inherit hover-underline"], [.text(title + (e.released ? "" : " (unreleased)"))])
-                            ]),
-                        .span(attributes: ["class": "flex-none pl- pv- color-gray-70"], [.text(e.mediaDuration.timeString)])
-                        ])
-                }
+            Node.withContext { context in
+                .ul(attributes: ["class": "mt-"],
+                    eps(context).map { e in
+                        let title = e.title(in: self)
+                        return Node.li(attributes: ["class": "flex items-baseline justify-between ms-1 line-125"], [
+                            Node.span(attributes: ["class": "nowrap overflow-hidden text-overflow-ellipsis pv- color-gray-45"], [
+                                Node.link(to: .episode(e.id, .view(playPosition: nil)), attributes: ["class": "no-decoration color-inherit hover-underline"], [.text(title + (e.released ? "" : " (unreleased)"))])
+                                ]),
+                            .span(attributes: ["class": "flex-none pl- pv- color-gray-70"], [.text(e.mediaDuration.timeString)])
+                            ])
+                    }
             )
-            ] : []
+        }] : []
         return [
             Node.article(attributes: [:], [
                 Node.link(to: .collection(id), [
@@ -92,11 +93,14 @@ extension Collection {
                 ] + (new ? [
                     Node.span(attributes: ["class": "flex-none label smallcaps color-white bgcolor-blue nowrap ml-"], [Node.text("New")])
                 ] : [])),
-                Node.p(attributes: ["class": "ms-1 color-gray-55 lh-125 mt--"], [
-                    .text("\(eps.count) \("Episode".pluralize(eps.count))"),
-                    .span(attributes: ["class": "ph---"], [Node.raw("&middot;")]),
-                    .text(eps.totalDuration.hoursAndMinutes)
-                ] as [Node])
+                Node.withContext { context in
+                    let e = eps(context)
+                    return Node.p(attributes: ["class": "ms-1 color-gray-55 lh-125 mt--"], [
+                        .text("\(e.count) \("Episode".pluralize(e.count))"),
+                        .span(attributes: ["class": "ph---"], [Node.raw("&middot;")]),
+                        .text(e.totalDuration.hoursAndMinutes)
+                    ] as [Node])
+                }
             ] + episodes_)
         ]
     }

@@ -9,25 +9,27 @@ import Foundation
 
 fileprivate let accountHeader = pageHeader(.other(header: "Account", blurb: nil, extraClasses: "ms4"))
 
-func accountContainer(context: Context, content: Node, forRoute: Route) -> Node {
-    var items: [(Route, title: String)] = [
-        (Route.account(.profile), title: "Profile"),
-        (Route.account(.billing), title: "Billing"),
-        (Route.account(.logout), title: "Logout"),
-    ]
-    if context.session?.selfPremiumAccess == true {
-        items.insert((Route.account(.teamMembers), title: "Team Members"), at: 2)
-    }
-    return .div(classes: "container pb0", [
-        .div(classes: "cols m-|stack++", [
-            .div(classes: "col width-full m+|width-1/4", [
-                Node.div(classes: "submenu", items.map { item in
-                    Node.link(to: item.0, classes: "submenu__item" + (item.0 == forRoute ? "is-active" : ""), attributes: [:], [.text(item.title)])
-                })
-            ]),
-            .div(classes: "col width-full m+|width-3/4", [content])
+func accountContainer(content: Node, forRoute: Route) -> Node {
+    return .withContext { context in
+        var items: [(Route, title: String)] = [
+            (Route.account(.profile), title: "Profile"),
+            (Route.account(.billing), title: "Billing"),
+            (Route.account(.logout), title: "Logout"),
+            ]
+        if context.session?.selfPremiumAccess == true {
+            items.insert((Route.account(.teamMembers), title: "Team Members"), at: 2)
+        }
+        return .div(classes: "container pb0", [
+            .div(classes: "cols m-|stack++", [
+                .div(classes: "col width-full m+|width-1/4", [
+                    Node.div(classes: "submenu", items.map { item in
+                        Node.link(to: item.0, classes: "submenu__item" + (item.0 == forRoute ? "is-active" : ""), attributes: [:], [.text(item.title)])
+                    })
+                    ]),
+                .div(classes: "col width-full m+|width-3/4", [content])
+                ])
         ])
-    ])
+    }
 }
 
 // Icon from font-awesome
@@ -112,7 +114,7 @@ func table(columns: [Column], cells: [[Cell]]) -> Node {
         ])
 }
 
-func invoicesView(context: Context, user: Row<UserData>, invoices: [(Invoice, pdfURL: URL)]) -> [Node] {
+func invoicesView(user: Row<UserData>, invoices: [(Invoice, pdfURL: URL)]) -> [Node] {
     guard !invoices.isEmpty else { return  [
         Node.div(classes: "text-center", [
         	Node.p(classes: "color-gray-30 ms1 mb", [.text("No invoices yet.")])
@@ -241,10 +243,10 @@ extension ReactComponent where A == PaymentViewData {
     static let creditCard: ReactComponent<A> = ReactComponent(name: "CreditCard")
 }
 
-func updatePaymentView(context: Context, data: PaymentViewData) -> Node {
-    return LayoutConfig(context: context, contents: [
+func updatePaymentView(data: PaymentViewData) -> Node {
+    return LayoutConfig(contents: [
         accountHeader,
-        accountContainer(context: context, content: Node.div([
+        accountContainer(content: Node.div([
             heading("Update Payment Method"),
             .div(classes: "container", [
                ReactComponent.creditCard.build(data)
@@ -293,24 +295,26 @@ fileprivate func value(text: String, classes: Class = "") -> Node {
     return Node.span(classes: "flex-auto color-gray-30" + classes, [.text(text)])
 }
 
-func billingLayout(context: Context, content: [Node]) -> Node {
-    return LayoutConfig(context: context, contents: [
+func billingLayout(content: [Node]) -> Node {
+    return LayoutConfig(contents: [
         accountHeader,
-        accountContainer(context: context, content: Node.div(classes: "stack++", content), forRoute: .account(.billing))
+        accountContainer(content: Node.div(classes: "stack++", content), forRoute: .account(.billing))
     ]).layout
 }
 
-func teamMemberBilling(context: Context) -> Node {
-    return billingLayout(context: context, content: [
-        Node.div(classes: "c-text", [
-            heading("Billing"),
-            Node.p([.text("You have a team member account, which doesn't have its own billing details. To manage billing details and to download invoices, please contact the person managing the organization account with the GitHub handle \"\(context.session?.masterTeamUser?.data.githubLogin ?? "<unknown>")\".")])
-        ])
+func teamMemberBilling() -> Node {
+    return billingLayout(content: [
+        .withContext { context in
+            Node.div(classes: "c-text", [
+                heading("Billing"),
+                Node.p([.text("You have a team member account, which doesn't have its own billing details. To manage billing details and to download invoices, please contact the person managing the organization account with the GitHub handle \"\(context.session?.masterTeamUser?.data.githubLogin ?? "<unknown>")\".")])
+            ])
+        }
     ])
 }
 
-func gifteeBilling(context: Context) -> Node {
-    return billingLayout(context: context, content: [
+func gifteeBilling() -> Node {
+    return billingLayout(content: [
         Node.div(classes: "c-text", [
             heading("Billing"),
             Node.p([.text("You currently have an active gift subscription, which doesn't have its own billing details.")])
@@ -318,8 +322,8 @@ func gifteeBilling(context: Context) -> Node {
     ])
 }
 
-func unsubscribedBilling(context: Context) -> Node {
-    return billingLayout(context: context, content: [
+func unsubscribedBilling() -> Node {
+    return billingLayout(content: [
         Node.div(classes: "c-text", [
             heading("Billing"),
             Node.p([.text("You haven't subscribed yet. Please use the Subscribe button in the upper right to start your Swift Talk subscription.")])
@@ -327,83 +331,85 @@ func unsubscribedBilling(context: Context) -> Node {
     ])
 }
 
-func billingView(context: Context, user: Row<UserData>, subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo, redemptions: [(Redemption, Coupon)]) -> Node {
-    let subscriptionInfo: [Node] = subscription.map { (x) -> [Node] in
-        let (sub, addOn) = x
-        return [
-        heading("Subscription"),
-        Node.div([
-            Node.ul(classes: "stack- mb", [
-                Node.li(classes: "flex", [
-                    label(text: "Plan"),
-                    value(text: sub.plan.name)
-                ]),
-                Node.li(classes: "flex", [
-                    label(text: "State"),
-                    value(text: sub.state.pretty)
-                ]),
-                sub.trial_ends_at.map { trialEndDate in
+func billingView(user: Row<UserData>, subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo, redemptions: [(Redemption, Coupon)]) -> Node {
+    return Node.withContext { context in
+        let subscriptionInfo: [Node] = subscription.map { (x) -> [Node] in
+            let (sub, addOn) = x
+            return [
+            heading("Subscription"),
+            Node.div([
+                Node.ul(classes: "stack- mb", [
                     Node.li(classes: "flex", [
-                        label(text: "Trial Ends At"),
-                        value(text: DateFormatter.fullPretty.string(from: trialEndDate))
-                    ])
-                } ?? Node.none,
-                sub.state == .active ? Node.li(classes: "flex", [
-                    label(text: "Next Billing"),
-                    Node.div(classes: "flex-auto color-gray-30 stack-", [
-                        Node.p([
-                            Node.text(dollarAmount(cents: sub.totalAtRenewal(addOn: addOn))),
-                            Node.text(" on "),
-                            .text(sub.current_period_ends_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "n/a"),
-                        ]),
-                        redemptions.isEmpty ? .none : Node.p(classes: " input-note mt-",
-                            [Node.span(classes: "bold", [.text("Note:")])] + redemptions.map { x in
-                             let (redemption, coupon) = x
-                            let start = DateFormatter.fullPretty.string(from: redemption.created_at)
-                             return Node.text("Due to a technical limation, the displayed price does not take your active coupon (\(coupon.billingDescription), started at \(start)) into account.")
-                            }
-                        ),
-                        button(to: .subscription(.cancel), csrf: user.data.csrf, text: "Cancel Subscription", classes: "color-invalid")
-                    ])
-                ]) : .none,
-                sub.upgrade.map { upgrade in
+                        label(text: "Plan"),
+                        value(text: sub.plan.name)
+                    ]),
+                    Node.li(classes: "flex", [
+                        label(text: "State"),
+                        value(text: sub.state.pretty)
+                    ]),
+                    sub.trial_ends_at.map { trialEndDate in
                         Node.li(classes: "flex", [
-                            label(text: "Upgrade"),
-                            Node.div(classes: "flex-auto color-gray-30 stack--", upgrade.pretty(csrf: user.data.csrf))
+                            label(text: "Trial Ends At"),
+                            value(text: DateFormatter.fullPretty.string(from: trialEndDate))
                         ])
-                    } ?? .none,
+                    } ?? Node.none,
+                    sub.state == .active ? Node.li(classes: "flex", [
+                        label(text: "Next Billing"),
+                        Node.div(classes: "flex-auto color-gray-30 stack-", [
+                            Node.p([
+                                Node.text(dollarAmount(cents: sub.totalAtRenewal(addOn: addOn))),
+                                Node.text(" on "),
+                                .text(sub.current_period_ends_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "n/a"),
+                            ]),
+                            redemptions.isEmpty ? .none : Node.p(classes: " input-note mt-",
+                                [Node.span(classes: "bold", [.text("Note:")])] + redemptions.map { x in
+                                 let (redemption, coupon) = x
+                                let start = DateFormatter.fullPretty.string(from: redemption.created_at)
+                                 return Node.text("Due to a technical limation, the displayed price does not take your active coupon (\(coupon.billingDescription), started at \(start)) into account.")
+                                }
+                            ),
+                            button(to: .subscription(.cancel), csrf: user.data.csrf, text: "Cancel Subscription", classes: "color-invalid")
+                        ])
+                    ]) : .none,
+                    sub.upgrade.map { upgrade in
+                            Node.li(classes: "flex", [
+                                label(text: "Upgrade"),
+                                Node.div(classes: "flex-auto color-gray-30 stack--", upgrade.pretty(csrf: user.data.csrf))
+                            ])
+                        } ?? .none,
 
-                sub.state == .canceled ? Node.li(classes: "flex", [
-                    label(text: "Expires on"),
-                    Node.div(classes: "flex-auto color-gray-30 stack-", [
-                        .text(sub.expires_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "<unknown date>"),
-                        button(to: .subscription(.reactivate), csrf: user.data.csrf, text: "Reactivate Subscription", classes: "color-invalid")
-                    ])
-                    
-                ]) : .none
+                    sub.state == .canceled ? Node.li(classes: "flex", [
+                        label(text: "Expires on"),
+                        Node.div(classes: "flex-auto color-gray-30 stack-", [
+                            .text(sub.expires_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "<unknown date>"),
+                            button(to: .subscription(.reactivate), csrf: user.data.csrf, text: "Reactivate Subscription", classes: "color-invalid")
+                        ])
+                        
+                    ]) : .none
+                ])
             ])
-    	])
-    ]} ?? (context.session?.activeSubscription == true ? [] : [
-        Node.div(classes: "text-center", [
-            Node.p(classes: "color-gray-30 ms1 mb", [.text("You don't have an active subscription.")]),
-            Node.link(to: .subscribe, classes: "c-button", [.text("Become a Subscriber")])
+        ]} ?? (context.session?.activeSubscription == true ? [] : [
+            Node.div(classes: "text-center", [
+                Node.p(classes: "color-gray-30 ms1 mb", [.text("You don't have an active subscription.")]),
+                Node.link(to: .subscribe, classes: "c-button", [.text("Become a Subscriber")])
+            ])
         ])
-    ])
-   
-    return billingLayout(context: context, content: [
-        Node.div(subscriptionInfo),
-        Node.div(billingInfo.show),
-        Node.div(invoicesView(context: context, user: user, invoices: invoices))
-    ])
+       
+        return billingLayout(content: [
+            Node.div(subscriptionInfo),
+            Node.div(billingInfo.show),
+            Node.div(invoicesView(user: user, invoices: invoices))
+        ])
+    }
 }
 
-func accountForm(context: Context) -> Form<ProfileFormData> {
+func accountForm() -> Form<ProfileFormData> {
     // todo button color required fields.
     let form = profile(submitTitle: "Update Profile", action: .account(.profile))
     return form.wrap { node in
-        LayoutConfig(context: context, contents: [
+        LayoutConfig(contents: [
             accountHeader,
-            accountContainer(context: context, content: node, forRoute: .account(.profile))
+            accountContainer(content: node, forRoute: .account(.profile))
         ]).layout
     }
 }
@@ -425,7 +431,7 @@ func addTeamMemberForm() -> Form<TeamMemberFormData> {
     })
 }
 
-func teamMembersView(context: Context, csrf: CSRFToken, addForm: Node, teamMembers: [Row<UserData>]) -> Node {
+func teamMembersView(csrf: CSRFToken, addForm: Node, teamMembers: [Row<UserData>]) -> Node {
     let currentTeamMembers = teamMembers.isEmpty ? Node.p([.raw("No team members added yet.")]) : Node.div(teamMembers.compactMap { tm in
         guard let githubLogin = tm.data.githubLogin else { return nil }
         return .div(classes: "flex items-center pv- border-top border-1 border-color-gray-90", [
@@ -452,9 +458,9 @@ func teamMembersView(context: Context, csrf: CSRFToken, addForm: Node, teamMembe
         ])
     ]
 
-    return LayoutConfig(context: context, contents: [
+    return LayoutConfig(contents: [
         accountHeader,
-        accountContainer(context: context, content: Node.div(classes: "stack++", [
+        accountContainer(content: Node.div(classes: "stack++", [
             Node.div(content)
         ]), forRoute: .account(.teamMembers))
     ]).layout

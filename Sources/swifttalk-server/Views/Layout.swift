@@ -7,12 +7,25 @@
 
 import Foundation
 
-// todo: we can move routing in here as well
-struct LayoutDependencies {
+
+struct Environment {
     var hashedAssetName: (String) -> String = { $0 }
+    private let _session: Lazy<Session?>
+    let route: Route
+    init(route: Route, hashedAssetName: @escaping (String) -> String, buildSession: @escaping () -> Session?) {
+        self.hashedAssetName = hashedAssetName
+        self._session = Lazy(buildSession, cleanup: { _ in () })
+        self.route = route
+    }
+    
+    var session: Session? { return flatten(try? _session.get()) }
+    
+    var context: Context {
+        return Context(route: route, message: nil, session: session)
+    }
 }
 
-extension ANode where I == LayoutDependencies {
+extension ANode where I == Environment {
     static func hashedStylesheet(media: String = "all", href: String) -> Node {
         return ANode.withInput { deps in
             return Node.stylesheet(media: media, href: deps.hashedAssetName(href))
@@ -30,9 +43,13 @@ extension ANode where I == LayoutDependencies {
             return Node.img(src: deps.hashedAssetName(src), alt: alt, classes: classes, attributes: attributes)
         }
     }
+    
+    static func withContext(_ f: @escaping (Context) -> ANode) -> ANode {
+        return .withInput { f($0.context) }
+    }
 }
 
-typealias Node = ANode<LayoutDependencies>
+typealias Node = ANode<Environment>
 
 struct LayoutConfig {
     var pageTitle: String
@@ -41,11 +58,9 @@ struct LayoutConfig {
     var footerContent: [Node]
     var preFooter: [Node]
     var structuredData: StructuredData?
-    var context: Context
     var includeRecurlyJS: Bool = false
     
-    init(context: Context, pageTitle: String = "objc.io", contents: [Node], theme: String = "default", preFooter: [Node] = [], footerContent: [Node] = [], structuredData: StructuredData? = nil, includeRecurlyJS: Bool = false) {
-        self.context = context
+    init(pageTitle: String = "objc.io", contents: [Node], theme: String = "default", preFooter: [Node] = [], footerContent: [Node] = [], structuredData: StructuredData? = nil, includeRecurlyJS: Bool = false) {
         self.pageTitle = pageTitle
         self.contents = contents
         self.theme = theme
@@ -164,14 +179,14 @@ extension LayoutConfig {
                 .div(classes: "container-h flex-grow flex", [
                     logo,
                     navigation,
-                    userHeader(context)
+                    .withContext(userHeader)
                 ])
             ])
         ])
         var bodyChildren: [Node] = [
             header,
             .main(
-                [context.message.map(flash) ?? .none] +
+                [.withContext { $0.message.map(flash) ?? .none }] +
                 contents
             )]
         // these are appends because of compile time
@@ -268,7 +283,7 @@ func userHeader(_ context: Context) -> Node {
         let logout = link(to: .account(.logout), text: "Log out")
         items = s.activeSubscription ? [account, logout] : [account, subscribeButton]
     } else {
-        items = [link(to: .login(continue: context.path), text: "Log in"), subscribeButton]
+        items = [link(to: .login(continue: context.route.path), text: "Log in"), subscribeButton]
     }
     return .nav(classes: "flex-none self-center border-left border-1 border-color-gray-85 flex ml+", [
         .ul(classes: "flex items-stretch", items)

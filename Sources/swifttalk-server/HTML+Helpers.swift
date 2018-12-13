@@ -16,7 +16,7 @@ extension Route: LinkTarget {
     var absoluteString: String { return path }
 }
 
-extension ANode where I == LayoutDependencies {
+extension ANode where I == Environment {
     static func link(to: Route, classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
         return Node.a(classes: classes, attributes: attributes, children, href: to.path)
     }

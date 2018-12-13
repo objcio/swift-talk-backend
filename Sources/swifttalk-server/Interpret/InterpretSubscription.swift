@@ -9,21 +9,27 @@ import Foundation
 import PostgreSQL
 
 extension Route.Subscription {
-    func interpret<I: SwiftTalkInterpreter>(sesssion sess: Session, context: Context, connection c: Lazy<Connection>) throws -> I {
+    func interpret<I: Interp>(connection c: Lazy<Connection>) throws -> I {
+        return I.requireSession { sess in
+            try self.interpret2(sesssion: sess, connection: c)
+        }
+    }
+
+    func interpret2<I: Interp>(sesssion sess: Session, connection c: Lazy<Connection>) throws -> I {
         let user = sess.user
         func newSubscription(couponCode: String?, errs: [String]) throws -> I {
             if let c = couponCode {
                 return I.onSuccess(promise: recurly.coupon(code: c).promise, do: { coupon in
-                    return try I.write(newSub(context: context, csrf: sess.user.data.csrf, coupon: coupon, errs: errs))
+                    return try I.write(newSub(csrf: sess.user.data.csrf, coupon: coupon, errs: errs))
                 })
             } else {
-                return try I.write(newSub(context: context, csrf: sess.user.data.csrf, coupon: nil, errs: errs))
+                return try I.write(newSub(csrf: sess.user.data.csrf, coupon: nil, errs: errs))
             }
         }
         
         switch self {
         case .create(let couponCode):
-            return I.withPostBody(csrf: sess.user.data.csrf) { dict in
+            return I.catchWithPostBody(csrf: sess.user.data.csrf) { dict in
                 guard let planId = dict["plan_id"], let token = dict["billing_info[token]"] else {
                     throw ServerError(privateMessage: "Incorrect post data", publicMessage: "Something went wrong")
                 }
@@ -34,7 +40,7 @@ extension Route.Subscription {
                     case .errors(let messages):
                         log(RecurlyErrors(messages))
                         if messages.contains(where: { $0.field == "subscription.account.email" && $0.symbol == "invalid_email" }) {
-                            let response = registerForm(context, couponCode: couponCode).render(.init(user.data), user.data.csrf, [ValidationError("email", "Please provide a valid email address and try again.")])
+                            let response = registerForm(couponCode: couponCode).render(.init(user.data), user.data.csrf, [ValidationError("email", "Please provide a valid email address and try again.")])
                             return I.write(response)
                         }
                         return try newSubscription(couponCode: couponCode, errs: messages.map { $0.message })
@@ -46,14 +52,14 @@ extension Route.Subscription {
             }
         case .new(let couponCode):
             if !user.data.confirmedNameAndEmail {
-                let resp = registerForm(context, couponCode: couponCode).render(.init(user.data), user.data.csrf, [])
+                let resp = registerForm(couponCode: couponCode).render(.init(user.data), user.data.csrf, [])
                 return I.write(resp)
             } else {
                 try c.get().execute(Task.unfinishedSubscriptionReminder(userId: user.id).schedule(weeks: 1))
                 return try newSubscription(couponCode: couponCode, errs: [])
             }
         case .cancel:
-            return I.withPostBody(csrf: user.data.csrf) { _ in
+            return I.catchWithPostBody(csrf: user.data.csrf) { _ in
                 return I.onSuccess(promise: user.currentSubscription.promise.map(flatten)) { sub in
                     guard sub.state == .active else {
                         throw ServerError(privateMessage: "cancel: no active sub \(user) \(sub)", publicMessage: "Can't find an active subscription.")
@@ -68,7 +74,7 @@ extension Route.Subscription {
                 }
             }
         case .upgrade:
-            return I.withPostBody(csrf: sess.user.data.csrf) { _ in
+            return I.catchWithPostBody(csrf: sess.user.data.csrf) { _ in
                 return I.onSuccess(promise: sess.user.currentSubscription.promise.map(flatten), do: { sub throws -> I in
                     guard let u = sub.upgrade else { throw ServerError(privateMessage: "no upgrade available \(sub)", publicMessage: "There's no upgrade available.")}
                     let teamMembers = try c.get().execute(sess.user.teamMembers)
@@ -78,7 +84,7 @@ extension Route.Subscription {
                 })
             }
         case .reactivate:
-            return I.withPostBody(csrf: user.data.csrf) { _ in
+            return I.catchWithPostBody(csrf: user.data.csrf) { _ in
                 return I.onSuccess(promise: user.currentSubscription.promise.map(flatten)) { sub in
                     guard sub.state == .canceled else {
                         throw ServerError(privateMessage: "cancel: no active sub \(user) \(sub)", publicMessage: "Can't find a cancelled subscription.")

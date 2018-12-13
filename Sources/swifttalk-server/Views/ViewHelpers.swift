@@ -22,7 +22,7 @@ struct ServerError: LocalizedError {
 struct AuthorizationError: Error { }
 
 
-func catchAndDisplayError<I: SwiftTalkInterpreter>(line: UInt = #line, file: StaticString = #file, _ f: () throws -> I) -> I {
+func catchAndDisplayError<I: SwiftTalkInterpreter & HTML>(line: UInt = #line, file: StaticString = #file, _ f: () throws -> I) -> I {
     do {
         return try f()
     } catch {

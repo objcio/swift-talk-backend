@@ -20,10 +20,10 @@ func questionFormHelper(action: Route) -> Form<String> {
     })
 }
 
-func questionForm(episode: Episode, context: Context) -> Form<String> {
+func questionForm(episode: Episode) -> Form<String> {
     let form = questionFormHelper(action: .episode(episode.id, .question))
     return form.wrap { (node: Node) -> Node in
-        let result: Node = LayoutConfig(context: context, contents: [
+        let result: Node = LayoutConfig(contents: [
             .div(classes: "container", [
                 Node.h2(classes: "color-blue bold ms2 mb", [.text("Your Question")]),
                 Node.h3(classes: "color-orange bold mt- mb+", [.text(episode.fullTitle)]),
@@ -34,8 +34,8 @@ func questionForm(episode: Episode, context: Context) -> Form<String> {
     }
 }
 
-func index(_ episodes: [EpisodeWithProgress], context: Context) -> Node {
-    return LayoutConfig(context: context, contents: [
+func index(_ episodes: [EpisodeWithProgress]) -> Node {
+    return LayoutConfig( contents: [
         pageHeader(.link(header: "All Episodes", backlink: .home, label: "Swift Talk")),
         .div(classes: "container pb0", [
             .div([
@@ -47,7 +47,7 @@ func index(_ episodes: [EpisodeWithProgress], context: Context) -> Node {
             ]),
             .ul(attributes: ["class": "cols s+|cols--2n m+|cols--3n xl+|cols--4n"], episodes.map { e in
                 Node.li(attributes: ["class": "col mb++ width-full s+|width-1/2 m+|width-1/3 xl+|width-1/4"], [
-                    e.episode.render(.init(synopsis: true, watched: e.watched, canWatch: e.episode.canWatch(session: context.session)))
+                    Node.withContext { context in e.episode.render(.init(synopsis: true, watched: e.watched, canWatch: e.episode.canWatch(session: context.session))) }
                 ])
             })
         ])
@@ -220,7 +220,11 @@ extension Episode {
         ])
     }
     
-    func show(playPosition: Int?, downloadStatus: DownloadStatus, otherEpisodes: [EpisodeWithProgress], context: Context) -> Node {
+    func show(playPosition: Int?, downloadStatus: DownloadStatus, otherEpisodes: [EpisodeWithProgress]) -> Node {
+        return Node.withContext { self.show_(context: $0, playPosition: playPosition, downloadStatus: downloadStatus, otherEpisodes: otherEpisodes) }
+    }
+    
+    private func show_(context: Context, playPosition: Int?, downloadStatus: DownloadStatus, otherEpisodes: [EpisodeWithProgress]) -> Node {
         let canWatch = !subscriptionOnly || context.session.premiumAccess
         
         let scroller = Node.aside(attributes: ["class": "bgcolor-pale-gray pt++ js-scroller"], [
@@ -300,7 +304,7 @@ extension Episode {
                 Node.section(classes: "pb++", [
                     smallBlueH3("In Collection")
                 ] +
-                coll.render(.init(episodes: true), context: context)
+                coll.render(.init(episodes: true))
                 + [
                     Node.p(classes: "ms-1 mt text-right", [
                         Node.link(to: .collections, classes: "no-decoration color-blue hover-cascade", [
@@ -481,7 +485,7 @@ extension Episode {
         ])
         
         let data = StructuredData(title: title, description: synopsis, url: Route.episode(id, .view(playPosition: nil)).url, image: posterURL(width: 600, height: 338), type: .video(duration: Int(mediaDuration), releaseDate: releaseAt))
-        return LayoutConfig(context: context, contents: [main, scroller] + (context.session.premiumAccess ? [] : [subscribeBanner()]), footerContent: scripts, structuredData: data).layout
+        return LayoutConfig(contents: [main, scroller] + (context.session.premiumAccess ? [] : [subscribeBanner()]), footerContent: scripts, structuredData: data).layout
     }
 }
 

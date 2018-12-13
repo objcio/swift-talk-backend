@@ -7,7 +7,7 @@
 
 import Foundation
 
-func giftHome(plans: [Plan], context: Context) throws -> Node {
+func giftHome(plans: [Plan]) throws -> Node {
     func node(plan: Plan) -> Node {
         let target = Route.gift(.new(planCode: plan.plan_code))
         let amount = Double(plan.unit_amount_in_cents.usdCents) / 100
@@ -69,12 +69,12 @@ func giftHome(plans: [Plan], context: Context) throws -> Node {
             ] + benefits),
         ]),
     ]
-    return LayoutConfig(context: context, pageTitle: "Gift a Swift Talk Subscription", contents: contents).layout
+    return LayoutConfig(pageTitle: "Gift a Swift Talk Subscription", contents: contents).layout
 }
 
 fileprivate let redeemheader = pageHeader(.other(header: "Redeem Your Gift", blurb: nil, extraClasses: "ms4"), extraClasses: "text-center")
 
-func redeemGiftAlreadySubscribed(context: Context) throws -> Node {
+func redeemGiftAlreadySubscribed() throws -> Node {
     let contents: [Node] = [
         redeemheader,
         .section(classes: "container", [
@@ -88,10 +88,10 @@ func redeemGiftAlreadySubscribed(context: Context) throws -> Node {
             ])
         ])
     ]
-    return LayoutConfig(context: context, pageTitle: "Redeem Your Gift", contents: contents).layout
+    return LayoutConfig(pageTitle: "Redeem Your Gift", contents: contents).layout
 }
 
-func redeemGiftSub(context: Context, gift: Row<Gift>, plan: Plan) throws -> Node {
+func redeemGiftSub(gift: Row<Gift>, plan: Plan) throws -> Node {
     var message: [Node] = []
     if !gift.data.message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
         message = [
@@ -118,10 +118,10 @@ func redeemGiftSub(context: Context, gift: Row<Gift>, plan: Plan) throws -> Node
             ])
         ])
     ]
-    return LayoutConfig(context: context, pageTitle: "Redeem Your Gift", contents: contents).layout
+    return LayoutConfig(pageTitle: "Redeem Your Gift", contents: contents).layout
 }
 
-func giftThankYou(gift: Gift, context: Context) -> Node {
+func giftThankYou(gift: Gift) -> Node {
     let contents: [Node] = [
         pageHeader(.other(header: "Thank You", blurb: nil, extraClasses: "ms4"), extraClasses: "text-center"),
         .div(classes: "container pt0", [
@@ -144,7 +144,7 @@ func giftThankYou(gift: Gift, context: Context) -> Node {
             ])
         ])
     ]
-    return LayoutConfig(context: context, pageTitle: "Thank you for gifting Swift Talk", contents: contents).layout
+    return LayoutConfig(pageTitle: "Thank you for gifting Swift Talk", contents: contents).layout
 }
 
 
@@ -210,10 +210,10 @@ func giftForm(submitTitle: String, plan: Plan, action: Route) -> Form<GiftStep1D
     })
 }
 
-func giftForm(plan: Plan, context: Context) -> Form<GiftStep1Data> {
+func giftForm(plan: Plan) -> Form<GiftStep1Data> {
     let form = giftForm(submitTitle: "Payment", plan: plan, action: .gift(.new(planCode: plan.plan_code)))
     return form.wrap { (node: Node) -> Node in
-        let result: Node = LayoutConfig(context: context, contents: [
+        let result: Node = LayoutConfig(contents: [
             .div(classes: "container", [
                 Node.h2(classes: "color-blue bold ms2 mb", [.text("Your Gift 🎁")]),
                 Node.h3(classes: "color-orange bold mt- mb+", [.text("\(plan.prettyDuration) of Swift Talk")]),
@@ -230,13 +230,13 @@ struct GiftResult {
     var gifter_name: String = ""
 }
 
-func payGiftForm(plan: Plan, gift: Gift, context: Context, route: Route) -> Form<GiftResult> {
+func payGiftForm(plan: Plan, gift: Gift, route: Route) -> Form<GiftResult> {
     return Form.init(parse: { dict in
         guard let d = dict["billing_info[token]"], let e = dict["gifter_email"], let n = dict["gifter_name"] else { return nil }
         return GiftResult(token: d, gifter_email: e, gifter_name: n)
     }, render: { (_, csrf, errs) -> Node in
         let data = NewGiftSubscriptionData(action: route.path, public_key: env.recurlyPublicKey, plan: .init(plan), start_date: DateFormatter.fullPretty.string(from: gift.sendAt), payment_errors: errs.map { "\($0.field): \($0.message)" }, method: .post, csrf: csrf)
-        return LayoutConfig(context: context,  contents: [
+        return LayoutConfig(contents: [
             .header([
                 .div(classes: "container-h pb+ pt+", [
                     .h1(classes: "ms4 color-blue bold mb-", ["Your Details"])

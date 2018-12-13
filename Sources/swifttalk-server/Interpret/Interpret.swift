@@ -10,7 +10,6 @@ import PostgreSQL
 import NIOHTTP1
 
 struct Context {
-    var path: String
     var route: Route
     var message: (String, FlashType)?
     var session: Session?
@@ -62,53 +61,43 @@ extension Swift.Collection where Element == Episode {
         }
     }
 }
-
-extension Optional where Wrapped == Session {
-    func require() throws -> Session {
-        return try self ?! AuthorizationError()
-    }
-}
+//
+//extension Optional where Wrapped == Session {
+//    func require() throws -> Session {
+//        return try self ?! AuthorizationError()
+//    }
+//}
 
 extension Route {
-    func interpret<I: SwiftTalkInterpreter>(sessionId: UUID?, connection c: Lazy<Connection>) throws -> I {
-        let session: Session?
-        if self.loadSession, let sId = sessionId {
-            let user = try c.get().execute(Row<UserData>.select(sessionId: sId))
-            session = try user.map { u in
-                if u.data.premiumAccess {
-                    return Session(sessionId: sId, user: u, masterTeamUser: nil, gifter: nil)
-                } else {
-                    let masterTeamUser: Row<UserData>? = try c.get().execute(u.masterTeamUser)
-                    let gifter: Row<UserData>? = try c.get().execute(u.gifter)
-                    return Session(sessionId: sId, user: u, masterTeamUser: masterTeamUser, gifter: gifter)
-                }
-            }
-        } else {
-            session = nil
-        }
-        
-        let context = Context(path: path, route: self, message: nil, session: session)
+    func interpret<I: Interp>(sessionId: UUID?, connection c: Lazy<Connection>) throws -> I {        
         switch self {
         case .error:
             return .write(errorView("Not found"), status: .notFound)
         case .collections:
-            return I.write(index(Collection.all.filter { !$0.episodes(for: session?.user.data).isEmpty }, context: context))
+            return I.withSession { session in
+                I.write(index(Collection.all.filter { !$0.episodes(for: session?.user.data).isEmpty }))
+            }
         case .subscription(let s):
-            return try s.interpret(sesssion: session.require(), context: context, connection: c)
+            return try s.interpret(connection: c)
         case .account(let action):
-            return try action.interpret(sesssion: session.require(), context: context, connection: c)
+            return try action.interpret(connection: c)
         case .gift(let g):
-            return try g.interpret(session: session, context: context, connection: c)
+            return try g.interpret(connection: c)
         case let .episode(id, action):
-            return try  action.interpret(id: id, session: session, context: context, connection: c)
+            return try action.interpret(id: id, connection: c)
         case .subscribe:
-            return try I.write(Plan.all.subscribe(context: context))
+            guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
+                throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
+            }
+            return I.write(Plan.all.subscribe(monthly: monthly, yearly: yearly))
         case .collection(let name):
             guard let coll = Collection.all.first(where: { $0.id == name }) else {
                 return .write(errorView("No such collection"), status: .notFound)
             }
-            let episodesWithProgress = try coll.episodes(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
-            return .write(coll.show(episodes: episodesWithProgress, context: context))
+            return I.withSession { session in
+                let episodesWithProgress = try coll.episodes(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
+                return .write(coll.show(episodes: episodesWithProgress))
+            }
         case .login(let cont):
             var path = "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(github.clientId)"
             if let c = cont {
@@ -144,11 +133,15 @@ extension Route {
             })
 
         case .episodes:
-            let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
-            return I.write(index(episodesWithProgress, context: context))
+            return I.withSession { session in
+                let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
+                return I.write(index(episodesWithProgress))
+            }
         case .home:
-            let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
-            return .write(renderHome(episodes: episodesWithProgress, context: context))
+            return I.withSession { session in                
+                let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
+                return .write(renderHome(episodes: episodesWithProgress))
+            }
         case .sitemap:
             return .write(Route.siteMap)
         case .promoCode(let str):
@@ -156,7 +149,10 @@ extension Route {
                 guard coupon.state == "redeemable" else {
                     throw ServerError(privateMessage: "not redeemable: \(str)", publicMessage: "This coupon is not redeemable anymore.")
                 }
-                return try I.write(Plan.all.subscribe(context: context, coupon: coupon))
+                guard let m = Plan.monthly, let y = Plan.yearly else {
+                    throw ServerError(privateMessage: "Plans not loaded", publicMessage: "A small hiccup. Please try again in a little while.")
+                }
+                return I.write(Plan.all.subscribe(monthly: m, yearly: y, coupon: coupon))
             })
        
         case let .staticFile(path: p):

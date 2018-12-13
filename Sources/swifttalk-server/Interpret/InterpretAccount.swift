@@ -8,26 +8,31 @@
 import Foundation
 import PostgreSQL
 
+typealias Interp = SwiftTalkInterpreter & HTML & HasSession
+
 extension Route.Account {
-    func interpret<I: SwiftTalkInterpreter>(sesssion sess: Session, context: Context, connection c: Lazy<Connection>) throws -> I {
+    func interpret<I: Interp>(connection c: Lazy<Connection>) throws -> I {
+        return I.requireSession { try self.interpret2(session: $0, connection: c)}
+    }
+    
+    func interpret2<I: Interp>(session sess: Session, connection c: Lazy<Connection>) throws -> I {
         func teamMembersResponse(_ data: TeamMemberFormData? = nil,_ errors: [ValidationError] = []) throws -> I {
             let renderedForm = addTeamMemberForm().render(data ?? TeamMemberFormData(githubUsername: ""), sess.user.data.csrf, errors)
             let members = try c.get().execute(sess.user.teamMembers)
-            return I.write(teamMembersView(context: context, csrf: sess.user.data.csrf, addForm: renderedForm, teamMembers: members))
+            return I.write(teamMembersView(csrf: sess.user.data.csrf, addForm: renderedForm, teamMembers: members))
         }
         
         switch self {
         case .thankYou:
             let episodesWithProgress = try Episode.all.scoped(for: sess.user.data).withProgress(for: sess.user.id, connection: c)
-            var cont = context
-            cont.message = ("Thank you for supporting us.", .notice)
-            return .write(renderHome(episodes: episodesWithProgress, context: cont))
+            // todo: flash: "Thank you for supporting us
+            return .write(renderHome(episodes: episodesWithProgress))
         case .logout:
             try c.get().execute(sess.user.deleteSession(sess.sessionId))
             return I.redirect(to: .home)
         case .register(let couponCode):
-            return I.withPostBody(do: { body in
-                guard let result = registerForm(context, couponCode: couponCode).parse(csrf: sess.user.data.csrf, body) else {
+            return I.catchWithPostBody(do: { body in
+                guard let result = registerForm(couponCode: couponCode).parse(csrf: sess.user.data.csrf, body) else {
                     throw ServerError(privateMessage: "Failed to parse form data to create an account", publicMessage: "Something went wrong during account creation. Please try again.")
                 }
                 var u = sess.user
@@ -43,14 +48,14 @@ extension Route.Account {
                         return I.redirect(to: .subscription(.new(couponCode: couponCode)))
                     }
                 } else {
-                    let result = registerForm(context, couponCode: couponCode).render(result, u.data.csrf, errors)
+                    let result = registerForm(couponCode: couponCode).render(result, u.data.csrf, errors)
                     return I.write(result)
                 }
             })
         case .profile:
             var u = sess.user
             let data = ProfileFormData(email: u.data.email, name: u.data.name)
-            let f = accountForm(context: context)
+            let f = accountForm()
             return I.form(f, initial: data, csrf: u.data.csrf, validate: { _ in [] }, onPost: { result in
                 // todo: this is almost the same as the new account logic... can we abstract this?
                 u.data.email = result.email
@@ -85,7 +90,7 @@ extension Route.Account {
                             }
                             return (r,c)
                         }
-                        let result = billingView(context: context, user: sess.user, subscription: subAndAddOn, invoices: invoicesAndPDFs, billingInfo: billingInfo, redemptions: redemptionsWithCoupon)
+                        let result = billingView(user: sess.user, subscription: subAndAddOn, invoices: invoicesAndPDFs, billingInfo: billingInfo, redemptions: redemptionsWithCoupon)
                         return I.write(result)
                     }
                     if let s = sub, let p = Plan.all.first(where: { $0.plan_code == s.plan.plan_code }) {
@@ -104,11 +109,11 @@ extension Route.Account {
                     return renderBilling(recurlyToken: acc.hosted_login_token)
                 }, or: {
                     if sess.teamMemberPremiumAccess {
-                        return I.write(teamMemberBilling(context: context))
+                        return I.write(teamMemberBilling())
                     } else if sess.gifterPremiumAccess {
-                        return I.write(gifteeBilling(context: context))
+                        return I.write(gifteeBilling())
                     } else {
-                        return I.write(unsubscribedBilling(context: context))
+                        return I.write(unsubscribedBilling())
                     }
                 })
             }
@@ -116,7 +121,7 @@ extension Route.Account {
         case .updatePayment:
             func renderForm(errs: [RecurlyError]) -> I {
                 return I.onSuccess(promise: sess.user.billingInfo.promise, do: { billingInfo in
-                    let view = updatePaymentView(context: context, data: PaymentViewData(billingInfo, action: Route.account(.updatePayment).path, csrf: sess.user.data.csrf, publicKey: env.recurlyPublicKey, buttonText: "Update", paymentErrors: errs.map { $0.message }))
+                    let view = updatePaymentView(data: PaymentViewData(billingInfo, action: Route.account(.updatePayment).path, csrf: sess.user.data.csrf, publicKey: env.recurlyPublicKey, buttonText: "Update", paymentErrors: errs.map { $0.message }))
                     return I.write(view)
                 })
             }
@@ -136,7 +141,7 @@ extension Route.Account {
             
         case .teamMembers:
             let csrf = sess.user.data.csrf
-            return I.withPostBody(do: { params in
+            return I.catchWithPostBody(do: { params in
                 guard let formData = addTeamMemberForm().parse(csrf: csrf, params), sess.selfPremiumAccess else { return try teamMembersResponse() }
                 let promise = github.profile(username: formData.githubUsername).promise
                 return I.onCompleteThrows(promise: promise) { profile in
@@ -157,7 +162,7 @@ extension Route.Account {
                 return try teamMembersResponse()
             })
         case .deleteTeamMember(let id):
-            return I.withPostBody (csrf: sess.user.data.csrf) { _ in
+            return I.catchWithPostBody (csrf: sess.user.data.csrf) { _ in
                 try c.get().execute(sess.user.deleteTeamMember(id))
                 let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: Date().addingTimeInterval(5*60))
                 try c.get().execute(task)
