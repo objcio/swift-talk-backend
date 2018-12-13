@@ -20,7 +20,7 @@ protocol SwiftTalkInterpreter: Interpreter {
     static func redirect(path: String) -> Self
     static func redirect(to route: Route, headers: [String: String]) -> Self
     
-    static func onComplete<A>(promise: Promise<A>, do cont: @escaping (A) throws -> Self) -> Self
+    static func onCompleteThrows<A>(promise: Promise<A>, do cont: @escaping (A) throws -> Self) -> Self
     
     static func onSuccess<A>(promise: Promise<A?>, file: StaticString, line: UInt, message: String, do cont: @escaping (A) throws -> Self) -> Self
     static func onSuccess<A>(promise: Promise<A?>, file: StaticString, line: UInt, message: String, do cont: @escaping (A) throws -> Self, or: @escaping () throws -> Self) -> Self
@@ -84,7 +84,7 @@ extension SwiftTalkInterpreter {
         }
     }
     
-    static func onComplete<A>(promise: Promise<A>, do cont: @escaping (A) throws -> Self) -> Self {
+    static func onCompleteThrows<A>(promise: Promise<A>, do cont: @escaping (A) throws -> Self) -> Self {
         return onComplete(promise: promise, do: { value in
             catchAndDisplayError { try cont(value) }
         })

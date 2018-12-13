@@ -156,7 +156,7 @@ extension Route {
                 throw ServerError(privateMessage: "No auth code", publicMessage: "Something went wrong, please try again.")
             }
             let loadToken = github.getAccessToken(code).promise.map({ $0?.access_token })
-            return I.onComplete(promise: loadToken, do: { token in
+            return I.onCompleteThrows(promise: loadToken, do: { token in
                 let t = try token ?! ServerError(privateMessage: "No github access token", publicMessage: "Couldn't access your Github profile.")
                 let loadProfile = Github(accessToken: t).profile.promise
                 return I.onSuccess(promise: loadProfile, message: "Couldn't access your Github profile", do: { profile in
@@ -207,7 +207,7 @@ extension Route {
             guard let ep = Episode.all.findEpisode(with: id, scopedFor: session?.user.data) else {
                 return .write(errorView("No such episode"), status: .notFound)
             }
-            return .onComplete(promise: vimeo.downloadURL(for: ep.vimeoId).promise) { downloadURL in
+            return .onCompleteThrows(promise: vimeo.downloadURL(for: ep.vimeoId).promise) { downloadURL in
                 guard let result = downloadURL, let url = result else { return .redirect(to: .episode(ep.id, playPosition: nil)) }
                 let downloads = try c.get().execute(s.user.downloads)
                 switch s.user.data.downloadStatus(for: ep, downloads: downloads) {
@@ -531,7 +531,7 @@ extension Route.Account {
             return I.withPostBody(do: { params in
                 guard let formData = addTeamMemberForm().parse(csrf: csrf, params), sess.selfPremiumAccess else { return try teamMembersResponse() }
                 let promise = github.profile(username: formData.githubUsername).promise
-                return I.onComplete(promise: promise) { profile in
+                return I.onCompleteThrows(promise: promise) { profile in
                     guard let p = profile else {
                         return try teamMembersResponse(formData, [(field: "github_username", message: "No user with this username exists on GitHub")])
                     }
