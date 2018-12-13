@@ -31,7 +31,7 @@ extension Swift.Collection where Element == Episode {
                 .xml("language", [.text("en")]),
                 ] +
                 map { (item: Episode) -> ANode<()> in
-                    let link = Route.episode(item.id, playPosition: nil).url.absoluteString
+                    let link = Route.episode(item.id, .view(playPosition: nil)).url.absoluteString
                 return .xml("item", [
                     .xml("guid", [.text(link)]),
                     .xml("title", [.text(item.title)]),

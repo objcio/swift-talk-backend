@@ -33,7 +33,7 @@ extension EpisodeView {
         self.number = e.number
         self.title = e.title
         self.synopsis = e.synopsis
-        self.url = Route.episode(e.id, playPosition: nil).url
+        self.url = Route.episode(e.id, .view(playPosition: nil)).url
         self.small_poster_url = e.posterURL(width: 590, height: 270)
         self.media_duration = Int(e.mediaDuration)
         self.released_at = e.releaseAt

@@ -103,6 +103,12 @@ func form<A, I: SwiftTalkInterpreter>(_ f: Form<A>, initial: A, csrf: CSRFToken,
     return form(f, initial: initial, csrf: csrf, convert: { .left($0) }, validate: validate, onPost: onPost)
 }
 
+extension Optional where Wrapped == Session {
+    func require() throws -> Session {
+        return try self ?! AuthorizationError()
+    }
+}
+
 extension Route {
     func interpret<I: SwiftTalkInterpreter>(sessionId: UUID?, connection c: Lazy<Connection>) throws -> I {
         let session: Session?
@@ -120,9 +126,6 @@ extension Route {
         } else {
             session = nil
         }
-        func requireSession() throws -> Session {
-            return try session ?! AuthorizationError()
-        }
         
         let context = Context(path: path, route: self, message: nil, session: session)
         switch self {
@@ -131,11 +134,13 @@ extension Route {
         case .collections:
             return I.write(index(Collection.all.filter { !$0.episodes(for: session?.user.data).isEmpty }, context: context))
         case .subscription(let s):
-            return try s.interpret(sesssion: requireSession(), context: context, connection: c)
+            return try s.interpret(sesssion: session.require(), context: context, connection: c)
         case .account(let action):
-            return try action.interpret(sesssion: requireSession(), context: context, connection: c)
+            return try action.interpret(sesssion: session.require(), context: context, connection: c)
         case .gift(let g):
             return try g.interpret(session: session, context: context, connection: c)
+        case let .episode(id, action):
+            return try  action.interpret(id: id, session: session, context: context, connection: c)
         case .subscribe:
             return try I.write(Plan.all.subscribe(context: context))
         case .collection(let name):
@@ -177,16 +182,7 @@ extension Route {
                     return I.redirect(path: destination, headers: ["Set-Cookie": "sessionid=\"\(sid.uuidString)\"; HttpOnly; Path=/"]) // TODO secure
                 })
             })
-        case let .episode(id, playPosition):
-            guard let ep = Episode.all.findEpisode(with: id, scopedFor: session?.user.data) else {
-                return .write(errorView("No such episode"), status: .notFound)
-            }
-            let downloads = try (session?.user.downloads).map { try c.get().execute($0) } ?? []
-            let status = session?.user.data.downloadStatus(for: ep, downloads: downloads) ?? .notSubscribed
-            let allEpisodes = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
-            let featuredEpisodes = Array(allEpisodes.filter { $0.episode != ep }.prefix(8))
-            let position = playPosition ?? allEpisodes.first { $0.episode == ep }?.progress
-            return .write(ep.show(playPosition: position, downloadStatus: status, otherEpisodes: featuredEpisodes, context: context))
+
         case .episodes:
             let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
             return I.write(index(episodesWithProgress, context: context))
@@ -202,24 +198,7 @@ extension Route {
                 }
                 return try I.write(Plan.all.subscribe(context: context, coupon: coupon))
             })
-        case .download(let id):
-            let s = try requireSession()
-            guard let ep = Episode.all.findEpisode(with: id, scopedFor: session?.user.data) else {
-                return .write(errorView("No such episode"), status: .notFound)
-            }
-            return .onCompleteThrows(promise: vimeo.downloadURL(for: ep.vimeoId).promise) { downloadURL in
-                guard let result = downloadURL, let url = result else { return .redirect(to: .episode(ep.id, playPosition: nil)) }
-                let downloads = try c.get().execute(s.user.downloads)
-                switch s.user.data.downloadStatus(for: ep, downloads: downloads) {
-                case .reDownload:
-                    return .redirect(path: url.absoluteString)
-                case .canDownload:
-                    try c.get().execute(DownloadData(user: s.user.id, episode: ep.number).insert)
-                    return .redirect(path: url.absoluteString)
-                default:
-                    return .redirect(to: .episode(ep.id, playPosition: nil)) // just redirect back to episode page if somebody tries this without download credits
-                }
-            }
+       
         case let .staticFile(path: p):
             let name = p.map { $0.removingPercentEncoding ?? "" }.joined(separator: "/")
             if let n = assets.hashToFile[name] {
@@ -299,10 +278,54 @@ extension Route {
             return I.write(json: episodesJSONView())
         case .collectionsJSON:
             return I.write(json: collectionsJSONView())
-        case let .playProgress(episodeId):
-            guard let s = try? requireSession() else { return I.write("", status: .ok)}
+        }
+    }
+}
+
+extension Route.EpisodeR {
+    func interpret<I: SwiftTalkInterpreter>(id: Id<Episode>, session: Session?, context: Context, connection c: Lazy<Connection>) throws -> I {
+        guard let ep = Episode.all.findEpisode(with: id, scopedFor: session?.user.data) else {
+            return .write(errorView("No such episode"), status: .notFound)
+        }
+        switch self {
+        case .question:
+            return form(questionForm(episode: ep, context: context), initial: "", csrf: sharedCSRF, convert: { (str: String) -> Either<Question, [ValidationError]> in
+                guard !str.isEmpty else {
+                    return .right([(field: "question", message: "Empty question.")])
+                }
+                return Either.left(Question(userId: session?.user.id, episodeNumber: ep.number, createdAt: Date(), question: str))
+            }, validate: { _ in [] }, onPost: { (question: Question) in
+                dump(question)
+                try c.get().execute(question.insert)
+                return I.write("\(question)")
+            })
+            
+        case .view(let playPosition):
+            let downloads = try (session?.user.downloads).map { try c.get().execute($0) } ?? []
+            let status = session?.user.data.downloadStatus(for: ep, downloads: downloads) ?? .notSubscribed
+            let allEpisodes = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
+            let featuredEpisodes = Array(allEpisodes.filter { $0.episode != ep }.prefix(8))
+            let position = playPosition ?? allEpisodes.first { $0.episode == ep }?.progress
+            return .write(ep.show(playPosition: position, downloadStatus: status, otherEpisodes: featuredEpisodes, context: context))
+        case .download:
+            let s = try session.require()
+            return .onCompleteThrows(promise: vimeo.downloadURL(for: ep.vimeoId).promise) { downloadURL in
+                guard let result = downloadURL, let url = result else { return .redirect(to: .episode(ep.id, .view(playPosition: nil))) }
+                let downloads = try c.get().execute(s.user.downloads)
+                switch s.user.data.downloadStatus(for: ep, downloads: downloads) {
+                case .reDownload:
+                    return .redirect(path: url.absoluteString)
+                case .canDownload:
+                    try c.get().execute(DownloadData(user: s.user.id, episode: ep.number).insert)
+                    return .redirect(path: url.absoluteString)
+                default:
+                    return .redirect(to: .episode(ep.id, .view(playPosition: nil))) // just redirect back to episode page if somebody tries this without download credits
+                }
+            }
+        case .playProgress:
+            guard let s = try? session.require() else { return I.write("", status: .ok)}
             return I.withPostBody(csrf: s.user.data.csrf) { body in
-                if let progress = body["progress"].flatMap(Int.init), let ep = Episode.all.findEpisode(with: episodeId, scopedFor: s.user.data) {
+                if let progress = body["progress"].flatMap(Int.init) {
                     let data = PlayProgressData.init(userId: s.user.id, episodeNumber: ep.number, progress: progress, furthestWatched: progress)
                     try c.get().execute(data.insertOrUpdate(uniqueKey: "user_id, episode_number"))
                 }
@@ -311,7 +334,7 @@ extension Route {
         }
     }
 }
-
+    
 extension Route.Subscription {
     func interpret<I: SwiftTalkInterpreter>(sesssion sess: Session, context: Context, connection c: Lazy<Connection>) throws -> I {
         let user = sess.user

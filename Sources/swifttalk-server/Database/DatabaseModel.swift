@@ -99,6 +99,17 @@ struct CSRFToken: Codable, Equatable, Hashable {
     }
 }
 
+struct Question: Codable, Insertable {
+    static let tableName = "questions"
+    
+    var userId: UUID?
+    var episodeNumber: Int
+    var createdAt: Date
+    var question: String
+    
+    
+}
+
 struct UserData: Codable, Insertable {
     var email: String
     var githubUID: Int?

@@ -15,10 +15,12 @@ enum Route: Equatable {
     case collections
     case login(continue: String?)
     case githubCallback(code: String?, origin: String?)
+    case episode(Id<Episode>, EpisodeR)
     case collection(Id<Collection>)
-    case episode(Id<Episode>, playPosition: Int?)
-    case download(Id<Episode>)
-    case playProgress(Id<Episode>)
+//    case episode(Id<Episode>, playPosition: Int?)
+//    case question(Id<Episode>)
+//    case download(Id<Episode>)
+//    case playProgress(Id<Episode>)
     case staticFile(path: [String])
     case recurlyWebhook
     case githubWebhook
@@ -30,6 +32,13 @@ enum Route: Equatable {
     case gift(Gifts)
     case account(Account)
     case subscription(Subscription)
+    
+    enum EpisodeR: Equatable {
+        case download
+        case question
+        case view(playPosition: Int?)
+        case playProgress
+    }
     
     enum Subscription: Equatable {
         case cancel
@@ -97,6 +106,13 @@ private extension Array where Element == Router<Route.Subscription> {
     }
 }
 
+private extension Array where Element == Router<Route.EpisodeR> {
+    func choice() -> Router<Route.EpisodeR> {
+        assert(!isEmpty)
+        return dropFirst().reduce(self[0], { $0.or($1) })
+    }
+}
+
 
 private extension Array where Element == Router<Route.Gifts> {
     func choice() -> Router<Route.Gifts> {
@@ -118,25 +134,27 @@ extension Router where A == UUID {
     })
 }
 
-private let episode: Router<Route> = (Router<()>.c("episodes") / .string() / Router<String>.optionalQueryParam(name: "t")).transform({
-    let playPosition = $0.1.flatMap { str in
-        Int(str.trimmingCharacters(in: CharacterSet.decimalDigits.inverted))
-    }
-    return Route.episode(Id(rawValue: $0.0), playPosition: playPosition)
-}, { r in
-    guard case let .episode(num, playPosition) = r else { return nil }
-    return (num.rawValue, playPosition.map { "\($0)s" })
-})
+extension Router where A == Id<Episode> {
+    static let episodeId: Router<Id<Episode>> = Router<String>.string().transform({ return Id(rawValue: $0)}, { id in
+        return id.rawValue
+    })
 
-private let episodeDownload: Router<Route> = (Router<()>.c("episodes") / .string() / Router<()>.c("download")).transform({ Route.download(Id(rawValue: $0.0)) }, { r in
-    guard case let .download(num) = r else { return nil }
-    return (num.rawValue, ())
-})
+}
 
-private let episodePlayProgress: Router<Route> = (Router<()>.c("episodes") / .string() / Router<()>.c("play-progress")).transform({ Route.playProgress(Id(rawValue: $0.0)) }, { r in
-    guard case let .playProgress(num) = r else { return nil }
-    return (num.rawValue, ())
-})
+private let episodeHelper: [Router<Route.EpisodeR>] = [
+    Router<String>.optionalQueryParam(name: "t").transform({ str in
+        let playPosition = str.flatMap { str in
+            Int(str.trimmingCharacters(in: CharacterSet.decimalDigits.inverted))
+        }
+        return .view(playPosition: playPosition)
+    }, { r in
+        guard case let .view(t) = r else { return nil }
+        return t.map { "\($0)s" } ?? .some(nil)
+    }),
+    .c("download", .download),
+    .c("question", .question),
+    .c("play-progress", .playProgress)
+]
 
 private let collection: Router<Route> = (Router<()>.c("collections") / .string()).transform({ Route.collection(Id(rawValue: $0)) }, { r in
     guard case let .collection(name) = r else { return nil }
@@ -200,7 +218,7 @@ private let subscriptionRoutes2: [Router<Route.Subscription>] = [
     .c("upgrade", .upgrade),
     Router.optionalString().transform(Route.Subscription.create, { r in
         guard case let .create(s) = r else { return nil }
-        return s
+        return s 
     }),
 ]
 
@@ -217,9 +235,10 @@ private let otherRoutes: [Router<Route>] = [
     assetsRoute,
     .c("favicon.ico", Route.staticFile(path: ["favicon.ico"])),
     .c("collections", .collections),
-    episodeDownload,
-    episodePlayProgress,
-    episode,
+    (.c("episode") / .episodeId / episodeHelper.choice()).transform({ .episode($0.0, $0.1) }, { route in
+        guard case let .episode(x,y) = route else { return nil }
+        return (x,y)
+    }),
     collection,
     giftRoute,
     .c("episodes.rss", .rssFeed),

@@ -7,6 +7,34 @@
 
 import Foundation
 
+func questionFormHelper(action: Route) -> Form<String> {
+    return Form(parse: { dict in
+        guard let question = dict["message"]
+            else { return nil }
+        return question.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+    }, render: { data, csrf, errors in
+        let form = FormView(fields: [
+            .text(id: "message", required: false, title: "Your Message", value: "", multiline: 5)
+        ], submitTitle: "Submit", action: action, errors: errors)
+        return .div(form.renderStacked(csrf: csrf))
+    })
+}
+
+func questionForm(episode: Episode, context: Context) -> Form<String> {
+    let form = questionFormHelper(action: .episode(episode.id, .question))
+    return form.wrap { (node: Node) -> Node in
+        let result: Node = LayoutConfig(context: context, contents: [
+            .div(classes: "container", [
+                Node.h2(classes: "color-blue bold ms2 mb", [.text("Your Question")]),
+                Node.h3(classes: "color-orange bold mt- mb+", [.text(episode.fullTitle)]),
+                node
+                ])
+            ]).layout
+        return result
+    }
+}
+
 func index(_ episodes: [EpisodeWithProgress], context: Context) -> Node {
     return LayoutConfig(context: context, contents: [
         pageHeader(.link(header: "All Episodes", backlink: .home, label: "Swift Talk")),
@@ -91,7 +119,7 @@ extension Episode {
         
         return Node.article(classes: classes, [
             Node.div(classes: pictureClasses, [
-                .link(to: .episode(id, playPosition: nil), classes: pictureLinkClasses, [
+                .link(to: .episode(id, .view(playPosition: nil)), classes: pictureLinkClasses, [
                     Node.div(attributes: ["class": "ratio__container bg-center bg-cover", "style": "background-image: url('\(poster)')"]),
                     Node.div(attributes: ["class": "absolute position-stretch opacity-60 blend-darken gradient-episode-black"]),
                     Node.div(classes: "absolute position-stretch flex flex-column", [
@@ -103,7 +131,7 @@ extension Episode {
             ]),
             Node.div(classes: contentClasses, [
                 Node.header(coll + ([
-                    Node.h3([Node.link(to: .episode(id, playPosition: nil), classes: titleClasses, [Node.text(title + (released ? "" : " (unreleased)"))])])
+                    Node.h3([Node.link(to: .episode(id, .view(playPosition: nil)), classes: titleClasses, [Node.text(title + (released ? "" : " (unreleased)"))])])
                 ] as [Node])),
             ] + synopsisNode + [
                 .p(classes: footerClasses, [
@@ -251,11 +279,11 @@ extension Episode {
             [
                 Node.div(classes: "flex-none mr-", [
                     downloadStatus.allowed
-                        ? Node.link(to: Route.download(id), classes: "block bgcolor-orange radius-5 hover-bgcolor-blue", [downloadImage])
+                        ? Node.link(to: Route.episode(id, .download), classes: "block bgcolor-orange radius-5 hover-bgcolor-blue", [downloadImage])
                         : Node.span(classes: "block bgcolor-orange radius-5 cursor-not-allowed", [downloadImage])
                 ]),
                 Node.div(classes: "ms-1 lh-125", [
-                    smallH4(.text("Episode Video"), link: downloadStatus.allowed ? Route.download(id) : nil),
+                    smallH4(.text("Episode Video"), link: downloadStatus.allowed ? Route.episode(id, .download) : nil),
                     .p(classes: "color-gray-50", [.text(downloadStatus.text)])
                 ])
             ]
@@ -403,7 +431,7 @@ extension Episode {
                         var playedUntil = 0
                     
                         function postProgress(time) {
-                            $.post(\"\(Route.playProgress(id).absoluteString)\", {
+                            $.post(\"\(Route.episode(id, .playProgress).absoluteString)\", {
                                 \"csrf\": \"\(token.stringValue)\",
                                 \"progress": Math.floor(time)
                             }, function(data, status) {
@@ -453,7 +481,7 @@ extension Episode {
             ])
         ])
         
-        let data = StructuredData(title: title, description: synopsis, url: Route.episode(id, playPosition: nil).url, image: posterURL(width: 600, height: 338), type: .video(duration: Int(mediaDuration), releaseDate: releaseAt))
+        let data = StructuredData(title: title, description: synopsis, url: Route.episode(id, .view(playPosition: nil)).url, image: posterURL(width: 600, height: 338), type: .video(duration: Int(mediaDuration), releaseDate: releaseAt))
         return LayoutConfig(context: context, contents: [main, scroller] + (context.session.premiumAccess ? [] : [subscribeBanner()]), footerContent: scripts, structuredData: data).layout
     }
 }

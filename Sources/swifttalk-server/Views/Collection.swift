@@ -73,7 +73,7 @@ extension Collection {
                     let title = e.title(in: self)
                     return Node.li(attributes: ["class": "flex items-baseline justify-between ms-1 line-125"], [
                         Node.span(attributes: ["class": "nowrap overflow-hidden text-overflow-ellipsis pv- color-gray-45"], [
-                            Node.link(to: .episode(e.id, playPosition: nil), attributes: ["class": "no-decoration color-inherit hover-underline"], [.text(title + (e.released ? "" : " (unreleased)"))])
+                            Node.link(to: .episode(e.id, .view(playPosition: nil)), attributes: ["class": "no-decoration color-inherit hover-underline"], [.text(title + (e.released ? "" : " (unreleased)"))])
                             ]),
                         .span(attributes: ["class": "flex-none pl- pv- color-gray-70"], [.text(e.mediaDuration.timeString)])
                         ])

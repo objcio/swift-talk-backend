@@ -99,7 +99,7 @@ struct Mailchimp {
 
 
 private func plainText(_ episode: Episode) -> String {
-    let url = env.baseURL.absoluteString + Route.episode(episode.id, playPosition: nil).path
+    let url = env.baseURL.absoluteString + Route.episode(episode.id, .view(playPosition: nil)).path
     return """
     Dear Swift Talk Subscribers,
     
@@ -127,7 +127,7 @@ private func plainText(_ episode: Episode) -> String {
 }
 
 private func html(_ episode: Episode) -> String {
-    let url = env.baseURL.absoluteString + Route.episode(episode.id, playPosition: nil).path
+    let url = env.baseURL.absoluteString + Route.episode(episode.id, .view(playPosition: nil)).path
     return """
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
     <html xmlns="http://www.w3.org/1999/xhtml">
