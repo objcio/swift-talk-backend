@@ -76,31 +76,30 @@ extension Swift.Collection where Element == Episode {
     }
 }
 
-// Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
-func form<A,B,I: SwiftTalkInterpreter>(_ f: Form<A>, initial: A, csrf: CSRFToken, convert: @escaping (A) -> Either<B, [ValidationError]>, validate: @escaping (B) -> [ValidationError], onPost: @escaping (B) throws -> I) -> I {
-    return I.withPostBody(do: { body in
-        guard let result = f.parse(csrf: csrf, body) else { throw ServerError(privateMessage: "Couldn't parse form", publicMessage: "Something went wrong. Please try again.") }
-        switch convert(result) {
-        case let .left(value):
-            let errors = validate(value)
-            if errors.isEmpty {
+extension SwiftTalkInterpreter {
+    // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
+    static func form<A,B>(_ f: Form<A>, initial: A, csrf: CSRFToken, convert: @escaping (A) -> Either<B, [ValidationError]>, onPost: @escaping (B) throws -> Self) -> Self {
+        return .withPostBody(do: { body in
+            guard let result = f.parse(csrf: csrf, body) else { throw ServerError(privateMessage: "Couldn't parse form", publicMessage: "Something went wrong. Please try again.") }
+            switch convert(result) {
+            case let .left(value):
                 return try onPost(value)
-            } else {
-                return .write(f.render(result, csrf, errors))
+            case let .right(errs):
+                return .write(f.render(result, csrf, errs))
             }
             
-        case let .right(errs):
-            return .write(f.render(result, csrf, errs))
-        }
+        }, or: {
+            return .write(f.render(initial, csrf, []))
+        })
         
-    }, or: {
-        return .write(f.render(initial, csrf, []))
-    })
-    
-}
+    }
 
-func form<A, I: SwiftTalkInterpreter>(_ f: Form<A>, initial: A, csrf: CSRFToken, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> I) -> I {
-    return form(f, initial: initial, csrf: csrf, convert: { .left($0) }, validate: validate, onPost: onPost)
+    static func form<A>(_ f: Form<A>, initial: A, csrf: CSRFToken, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> Self) -> Self {
+        return form(f, initial: initial, csrf: csrf, convert: { (a: A) -> Either<A, [ValidationError]> in
+            let errs = validate(a)
+            return errs.isEmpty ? .left(a) : .right(errs)
+        }, onPost: onPost)
+    }
 }
 
 extension Optional where Wrapped == Session {
@@ -289,12 +288,12 @@ extension Route.EpisodeR {
         }
         switch self {
         case .question:
-            return form(questionForm(episode: ep, context: context), initial: "", csrf: sharedCSRF, convert: { (str: String) -> Either<Question, [ValidationError]> in
+            return I.form(questionForm(episode: ep, context: context), initial: "", csrf: sharedCSRF, convert: { (str: String) -> Either<Question, [ValidationError]> in
                 guard !str.isEmpty else {
                     return .right([(field: "question", message: "Empty question.")])
                 }
                 return Either.left(Question(userId: session?.user.id, episodeNumber: ep.number, createdAt: Date(), question: str))
-            }, validate: { _ in [] }, onPost: { (question: Question) in
+            }, onPost: { (question: Question) in
                 dump(question)
                 try c.get().execute(question.insert)
                 return I.write("\(question)")
@@ -466,7 +465,7 @@ extension Route.Account {
             var u = sess.user
             let data = ProfileFormData(email: u.data.email, name: u.data.name)
             let f = accountForm(context: context)
-            return form(f, initial: data, csrf: u.data.csrf, validate: { _ in [] }, onPost: { result in
+            return I.form(f, initial: data, csrf: u.data.csrf, validate: { _ in [] }, onPost: { result in
                 // todo: this is almost the same as the new account logic... can we abstract this?
                 u.data.email = result.email
                 u.data.name = result.name
@@ -591,7 +590,7 @@ extension Route.Gifts {
             guard let plan = Plan.gifts.first(where: { $0.plan_code == planCode }) else {
                 throw ServerError.init(privateMessage: "Illegal plan: \(planCode)", publicMessage: "Couldn't find the plan you selected.")
             }
-            return form(giftForm(plan: plan, context: context), initial: GiftStep1Data(planCode: planCode), csrf: sharedCSRF, convert: Gift.fromData, validate: { $0.validate() }, onPost: { gift in
+            return I.form(giftForm(plan: plan, context: context), initial: GiftStep1Data(planCode: planCode), csrf: sharedCSRF, convert: Gift.fromData, onPost: { gift in
                 catchAndDisplayError {
                     let id = try c.get().execute(gift.insert)
                     return I.redirect(to: Route.gift(.pay(id)))
@@ -606,7 +605,7 @@ extension Route.Gifts {
                 throw ServerError(privateMessage: "Already paid \(gift.id)", publicMessage: "You already paid this gift.")
             }
             let f = payGiftForm(plan: plan, gift: gift.data, context: context, route: .gift(.pay(id)))
-            return form(f, initial: .init(), csrf: sharedCSRF, validate: { _ in [] }, onPost: { (result: GiftResult) throws in
+            return I.form(f, initial: .init(), csrf: sharedCSRF, validate: { _ in [] }, onPost: { (result: GiftResult) throws in
                 let userId = try c.get().execute(UserData(email: result.gifter_email, avatarURL: "", name: "").insert)
                 let start = gift.data.sendAt > Date() ? gift.data.sendAt : nil // no start date means starting immediately
                 let cr = CreateSubscription(plan_code: plan.plan_code, currency: "USD", coupon_code: nil, starts_at: start, account: .init(account_code: userId, email: result.gifter_email, billing_info: .init(token_id: result.token)))
