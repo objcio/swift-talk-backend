@@ -30,6 +30,10 @@ protocol SwiftTalkInterpreter: Interpreter {
     static func withPostBody(do cont: @escaping ([String:String]) throws -> Self) -> Self
     static func withPostBody(csrf: CSRFToken, do cont: @escaping ([String:String]) throws -> Self, or: @escaping () throws -> Self) -> Self
     static func withPostBody(csrf: CSRFToken, do cont: @escaping ([String:String]) throws -> Self) -> Self
+    
+    // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
+    static func form<A,B>(_ f: Form<A>, initial: A, csrf: CSRFToken, convert: @escaping (A) -> Either<B, [ValidationError]>, onPost: @escaping (B) throws -> Self) -> Self    
+    static func form<A>(_ f: Form<A>, initial: A, csrf: CSRFToken, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> Self) -> Self
 }
 
 
@@ -156,6 +160,30 @@ extension SwiftTalkInterpreter {
             let rep = assets.fileToHash[remainder]
             return rep.map { "/assets/" + $0 } ?? file
         })), status: status)
+    }
+    
+    // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
+    static func form<A,B>(_ f: Form<A>, initial: A, csrf: CSRFToken, convert: @escaping (A) -> Either<B, [ValidationError]>, onPost: @escaping (B) throws -> Self) -> Self {
+        return .withPostBody(do: { body in
+            guard let result = f.parse(csrf: csrf, body) else { throw ServerError(privateMessage: "Couldn't parse form", publicMessage: "Something went wrong. Please try again.") }
+            switch convert(result) {
+            case let .left(value):
+                return try onPost(value)
+            case let .right(errs):
+                return .write(f.render(result, csrf, errs))
+            }
+            
+        }, or: {
+            return .write(f.render(initial, csrf, []))
+        })
+        
+    }
+    
+    static func form<A>(_ f: Form<A>, initial: A, csrf: CSRFToken, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> Self) -> Self {
+        return form(f, initial: initial, csrf: csrf, convert: { (a: A) -> Either<A, [ValidationError]> in
+            let errs = validate(a)
+            return errs.isEmpty ? .left(a) : .right(errs)
+        }, onPost: onPost)
     }
 
 }

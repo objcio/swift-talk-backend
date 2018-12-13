@@ -11,8 +11,7 @@ func questionFormHelper(action: Route) -> Form<String> {
     return Form(parse: { dict in
         guard let question = dict["message"]
             else { return nil }
-        return question.trimmingCharacters(in: .whitespacesAndNewlines)
-        
+        return question.trimmingCharacters(in: .whitespacesAndNewlines)        
     }, render: { data, csrf, errors in
         let form = FormView(fields: [
             .text(id: "message", required: false, title: "Your Message", value: "", multiline: 5)
