@@ -22,7 +22,7 @@ extension Route.EpisodeR {
         }
         switch self {
         case .question:
-            return I.form(questionForm(episode: ep), initial: "", csrf: sharedCSRF, convert: { (str: String) -> Either<Question, [ValidationError]> in
+            return I.form(questionForm(episode: ep), initial: "", convert: { (str: String) -> Either<Question, [ValidationError]> in
                 guard !str.isEmpty else {
                     return .right([(field: "message", message: "Empty question.")])
                 }
@@ -64,7 +64,7 @@ extension Route.EpisodeR {
         case .playProgress:
             return I.withSession { sess in
                 guard let s = sess else { return I.write("", status: .ok) }
-                return I.catchWithPostBody(csrf: s.user.data.csrf) { body in
+                return I.verifiedPost { body in
                     if let progress = body["progress"].flatMap(Int.init) {
                         let data = PlayProgressData.init(userId: s.user.id, episodeNumber: ep.number, progress: progress, furthestWatched: progress)
                         return I.query(data.insertOrUpdate(uniqueKey: "user_id, episode_number")) { _ in
@@ -73,7 +73,6 @@ extension Route.EpisodeR {
                     }
                     return I.write("", status: .ok)
                 }
-
             }
         }
     }

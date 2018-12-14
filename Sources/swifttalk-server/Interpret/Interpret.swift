@@ -13,6 +13,10 @@ struct Context {
     var route: Route
     var message: (String, FlashType)?
     var session: Session?
+    
+    var csrf: CSRFToken {
+        return session?.user.data.csrf ?? sharedCSRF
+    }
 }
 
 struct Session {

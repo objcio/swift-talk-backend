@@ -193,7 +193,7 @@ func giftForm(submitTitle: String, plan: Plan, action: Route) -> Form<GiftStep1D
             else { return nil }
         return GiftStep1Data(gifteeEmail: gifteeEmail, gifteeName: gifteeName, day: day, month: month, year: year, message: message, planCode: plan.plan_code)
         
-    }, render: { data, csrf, errors in
+    }, render: { data, errors in
         let form = FormView(fields: [
             .text(id: "giftee_name", title: "The Recipient's Name", value: data.gifteeName),
             .text(id: "giftee_email", title: "The Recipient's Email", value: data.gifteeEmail),
@@ -206,7 +206,7 @@ func giftForm(submitTitle: String, plan: Plan, action: Route) -> Form<GiftStep1D
             ], required: true, title: "Delivery Date", note: nil),
             .text(id: "message", required: false, title: "Your Message", value: "", multiline: 5),
             ], submitTitle: submitTitle, action: action, errors: errors)
-        return .div(form.renderStacked(csrf: csrf))
+        return .div(form.renderStacked())
     })
 }
 
@@ -234,8 +234,8 @@ func payGiftForm(plan: Plan, gift: Gift, route: Route) -> Form<GiftResult> {
     return Form.init(parse: { dict in
         guard let d = dict["billing_info[token]"], let e = dict["gifter_email"], let n = dict["gifter_name"] else { return nil }
         return GiftResult(token: d, gifter_email: e, gifter_name: n)
-    }, render: { (_, csrf, errs) -> Node in
-        let data = NewGiftSubscriptionData(action: route.path, public_key: env.recurlyPublicKey, plan: .init(plan), start_date: DateFormatter.fullPretty.string(from: gift.sendAt), payment_errors: errs.map { "\($0.field): \($0.message)" }, method: .post, csrf: csrf)
+    }, render: { (_, errs) -> Node in
+        let data = NewGiftSubscriptionData(action: route.path, public_key: env.recurlyPublicKey, plan: .init(plan), start_date: DateFormatter.fullPretty.string(from: gift.sendAt), payment_errors: errs.map { "\($0.field): \($0.message)" }, method: .post)
         return LayoutConfig(contents: [
             .header([
                 .div(classes: "container-h pb+ pt+", [

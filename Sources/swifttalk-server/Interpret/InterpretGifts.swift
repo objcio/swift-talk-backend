@@ -17,7 +17,7 @@ extension Route.Gifts {
             guard let plan = Plan.gifts.first(where: { $0.plan_code == planCode }) else {
                 throw ServerError.init(privateMessage: "Illegal plan: \(planCode)", publicMessage: "Couldn't find the plan you selected.")
             }
-            return I.form(giftForm(plan: plan), initial: GiftStep1Data(planCode: planCode), csrf: sharedCSRF, convert: Gift.fromData, onPost: { gift in
+            return I.form(giftForm(plan: plan), initial: GiftStep1Data(planCode: planCode), convert: Gift.fromData, onPost: { gift in
                 catchAndDisplayError {
                     I.query(gift.insert) { id in
                         I.redirect(to: Route.gift(.pay(id)))
@@ -34,7 +34,7 @@ extension Route.Gifts {
                     throw ServerError(privateMessage: "Already paid \(gift.id)", publicMessage: "You already paid this gift.")
                 }
                 let f = payGiftForm(plan: plan, gift: gift.data, route: .gift(.pay(id)))
-                return I.form(f, initial: .init(), csrf: sharedCSRF, validate: { _ in [] }, onPost: { (result: GiftResult) throws in
+                return I.form(f, initial: .init(), validate: { _ in [] }, onPost: { (result: GiftResult) throws in
                     return I.query(UserData(email: result.gifter_email, avatarURL: "", name: "").insert) { userId in
                         let start = gift.data.sendAt > Date() ? gift.data.sendAt : nil // no start date means starting immediately
                         let cr = CreateSubscription(plan_code: plan.plan_code, currency: "USD", coupon_code: nil, starts_at: start, account: .init(account_code: userId, email: result.gifter_email, billing_info: .init(token_id: result.token)))
@@ -43,7 +43,7 @@ extension Route.Gifts {
                             case .errors(let messages):
                                 log(RecurlyErrors(messages))
                                 let theMessages = messages.map { ($0.field ?? "", $0.message) } + [("", "There was a problem with the payment. You have not been charged. Please try again or contact us for assistance.")]
-                                let response = giftForm(plan: plan).render(GiftStep1Data(gifteeEmail: gift.data.gifteeEmail, gifteeName: gift.data.gifteeName, day: "", month: "", year: "", message: gift.data.message, planCode: plan.plan_code), sharedCSRF, theMessages)
+                                let response = giftForm(plan: plan).render(GiftStep1Data(gifteeEmail: gift.data.gifteeEmail, gifteeName: gift.data.gifteeName, day: "", month: "", year: "", message: gift.data.message, planCode: plan.plan_code), theMessages)
                                 return I.write(response)
                             case .success(let sub):
                                 var copy = gift

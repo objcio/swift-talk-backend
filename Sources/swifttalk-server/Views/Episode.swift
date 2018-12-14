@@ -12,11 +12,11 @@ func questionFormHelper(action: Route) -> Form<String> {
         guard let question = dict["message"]
             else { return nil }
         return question.trimmingCharacters(in: .whitespacesAndNewlines)        
-    }, render: { data, csrf, errors in
+    }, render: { data, errors in
         let form = FormView(fields: [
             .text(id: "message", required: false, title: "Your Message", value: "", multiline: 5)
         ], submitTitle: "Submit", action: action, errors: errors)
-        return .div(form.renderStacked(csrf: csrf))
+        return .div(form.renderStacked())
     })
 }
 

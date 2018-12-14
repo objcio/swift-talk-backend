@@ -32,6 +32,10 @@ extension ANode where I == RequestEnvironment {
     static func withContext(_ f: @escaping (Context) -> ANode) -> ANode {
         return .withInput { f($0.context) }
     }
+    
+    static func withCSRF(_ f: @escaping (CSRFToken) -> ANode) -> ANode {
+        return .withInput { f($0.context.csrf) }
+    }
 }
 
 typealias Node = ANode<RequestEnvironment>

@@ -284,7 +284,9 @@ extension BillingInfo {
 }
 
 fileprivate func button(to route: Route, csrf: CSRFToken, text: String, classes: Class = "") -> Node {
-    return Node.button(to: route, csrf: csrf, [.text(text)], classes: "bold reset-button border-bottom border-1 hover-color-black" + classes)
+    return Node.withCSRF { csrf in
+    	Node.button(to: route, [.text(text)], classes: "bold reset-button border-bottom border-1 hover-color-black" + classes)
+    }
 }
 
 fileprivate func label(text: String, classes: Class = "") -> Node {
@@ -423,15 +425,15 @@ func addTeamMemberForm() -> Form<TeamMemberFormData> {
     return Form<TeamMemberFormData>(parse: { dict in
         guard let username = dict["github_username"] else { return nil }
         return TeamMemberFormData(githubUsername: username)
-    }, render: { data, csrf, errors in
+    }, render: { data, errors in
         let form = FormView(fields: [
             .text(id: "github_username", title: "Github Username", value: data.githubUsername, note: "Your new team member won’t be notified, as we don’t have their email address yet."),
             ], submitTitle: "Add Team Member", submitNote: "Team members cost $10/month or $100/year, depending on your subscription. All prices excluding VAT.", action: .account(.teamMembers), errors: errors)
-        return .div(form.renderStacked(csrf: csrf))
+        return .div(form.renderStacked())
     })
 }
 
-func teamMembersView(csrf: CSRFToken, addForm: Node, teamMembers: [Row<UserData>]) -> Node {
+func teamMembersView(addForm: Node, teamMembers: [Row<UserData>]) -> Node {
     let currentTeamMembers = teamMembers.isEmpty ? Node.p([.raw("No team members added yet.")]) : Node.div(teamMembers.compactMap { tm in
         guard let githubLogin = tm.data.githubLogin else { return nil }
         return .div(classes: "flex items-center pv- border-top border-1 border-color-gray-90", [
@@ -441,7 +443,7 @@ func teamMembersView(csrf: CSRFToken, addForm: Node, teamMembers: [Row<UserData>
             .div(classes: "flex-grow type-mono", [
                 .link(to: URL(string: "https://github.com/\(githubLogin)")!, classes: "color-gray-30 no-decoration hover-color-blue", [.text(githubLogin)])
             ]),
-            Node.button(to: .account(.deleteTeamMember(tm.id)), csrf: csrf, [.raw("&times;")], classes: "button-input ms-1")
+            Node.button(to: .account(.deleteTeamMember(tm.id)), [.raw("&times;")], classes: "button-input ms-1")
         ])
     })
     

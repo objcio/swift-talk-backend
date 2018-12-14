@@ -37,12 +37,12 @@ func profile(submitTitle: String, action: Route) -> Form<ProfileFormData> {
     return Form(parse: { dict in
         guard let e = dict["email"], let n = dict["name"] else { return nil }
         return ProfileFormData(email: e, name: n)
-    }, render: { data, csrf, errors in
+    }, render: { data, errors in
         let form = FormView(fields: [
             .text(id: "name", title: "Name", value: data.name, note: nil),
             .text(id: "email", title: "Email", value: data.email, note: nil)
         ], submitTitle: submitTitle, action: action, errors: errors)
-        return .div(form.renderStacked(csrf: csrf))
+        return .div(form.renderStacked())
     })
 }
 
@@ -78,7 +78,7 @@ extension Array where Element == Plan {
             let linkClasses: Class = "c-button c-button--big c-button--blue c-button--wide"
             if context.session.premiumAccess {
                 if let d = context.session?.user.data, d.canceled {
-                    continueLink = Node.button(to: .subscription(.reactivate), csrf: d.csrf, [.text("Reactivate Subscription")], classes: linkClasses + "c-button--ghost")
+                    continueLink = Node.button(to: .subscription(.reactivate), [.text("Reactivate Subscription")], classes: linkClasses + "c-button--ghost")
                 } else {
                     continueLink = Node.link(to: .account(.profile), classes: linkClasses + "c-button--ghost", ["You're already subscribed"])
                 }
@@ -205,7 +205,6 @@ struct NewGiftSubscriptionData: Codable {
     var start_date: String
     var payment_errors: [String] // TODO verify type
     var method: HTTPMethod = .post
-    var csrf: CSRFToken
 }
 
 struct NewSubscriptionData: Codable {

@@ -10,7 +10,7 @@ import Foundation
 typealias ValidationError = (field: String, message: String)
 
 struct Form<A> {
-    typealias Render = (A, _ csrf: CSRFToken, [ValidationError]) -> Node
+    typealias Render = (A, [ValidationError]) -> Node
     typealias Parse = ([String:String]) -> A?
     let _parse: Parse
     let render: Render
@@ -28,8 +28,8 @@ struct Form<A> {
 
 extension Form {
     func wrap(_ f: @escaping (Node) -> Node) -> Form<A> {
-        return Form(parse: _parse, render: { value, csrf, err in
-            f(self.render(value, csrf, err))
+        return Form(parse: _parse, render: { value, err in
+            f(self.render(value, err))
         })
     }
 }
@@ -93,7 +93,7 @@ extension Swift.Collection where Element == FormView.Field {
 }
 
 extension FormView {
-    func renderStacked(csrf: CSRFToken) -> [Node] {
+    func renderStacked() -> [Node] {
         func renderField(_ field: Field) -> Node {
             switch field {
             case let .fieldSet(fields, required, title, note):
@@ -127,7 +127,7 @@ extension FormView {
             errors.isEmpty ? .none : Node.ul(classes: "mb++ bgcolor-invalid color-white ms-1 pa radius-3 bold", errors.map { Node.li([Node.text($0.message)]) }),
             Node.div(classes: "", [
                 Node.form(classes: classes, action: action.path, attributes: ["id": id], [
-                    Node.input(name: "csrf", id: "csrf", type: "hidden", attributes: ["value": csrf.stringValue], []),
+                    Node.withCSRF { csrf in Node.input(name: "csrf", id: "csrf", type: "hidden", attributes: ["value": csrf.stringValue], []) },
                     Node.div(classes: "stack+", fields.map(renderField) + [
                             .div([
                                 Node.input(classes: "c-button c-button--blue", name: "commit", type: "submit", attributes: ["value": submitTitle, "data-disable-with": submitTitle], []),

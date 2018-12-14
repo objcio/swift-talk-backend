@@ -17,9 +17,9 @@ extension Route.Account {
     
     private func interpret2<I: Interp>(session sess: Session) throws -> I {
         func teamMembersResponse(_ data: TeamMemberFormData? = nil,_ errors: [ValidationError] = []) throws -> I {
-            let renderedForm = addTeamMemberForm().render(data ?? TeamMemberFormData(githubUsername: ""), sess.user.data.csrf, errors)
+            let renderedForm = addTeamMemberForm().render(data ?? TeamMemberFormData(githubUsername: ""), errors)
             return I.query(sess.user.teamMembers) { members in
-                I.write(teamMembersView(csrf: sess.user.data.csrf, addForm: renderedForm, teamMembers: members))
+                I.write(teamMembersView(addForm: renderedForm, teamMembers: members))
             }
         }
         
@@ -54,7 +54,7 @@ extension Route.Account {
                         }
                     }
                 } else {
-                    let result = registerForm(couponCode: couponCode).render(result, u.data.csrf, errors)
+                    let result = registerForm(couponCode: couponCode).render(result, errors)
                     return I.write(result)
                 }
             })
@@ -62,7 +62,7 @@ extension Route.Account {
             var u = sess.user
             let data = ProfileFormData(email: u.data.email, name: u.data.name)
             let f = accountForm()
-            return I.form(f, initial: data, csrf: u.data.csrf, validate: { _ in [] }, onPost: { result in
+            return I.form(f, initial: data, validate: { _ in [] }, onPost: { result in
                 // todo: this is almost the same as the new account logic... can we abstract this?
                 u.data.email = result.email
                 u.data.name = result.name
@@ -73,7 +73,7 @@ extension Route.Account {
                     	I.redirect(to: .account(.profile))
                     }
                 } else {
-                    return I.write(f.render(result, u.data.csrf, errors))
+                    return I.write(f.render(result, errors))
                 }
             })
         case .billing:
@@ -127,13 +127,14 @@ extension Route.Account {
             }
             return renderBilling(recurlyToken: t)
         case .updatePayment:
+            // todo use the form helper
             func renderForm(errs: [RecurlyError]) -> I {
                 return I.onSuccess(promise: sess.user.billingInfo.promise, do: { billingInfo in
                     let view = updatePaymentView(data: PaymentViewData(billingInfo, action: Route.account(.updatePayment).path, csrf: sess.user.data.csrf, publicKey: env.recurlyPublicKey, buttonText: "Update", paymentErrors: errs.map { $0.message }))
                     return I.write(view)
                 })
             }
-            return I.withPostBody(csrf: sess.user.data.csrf, do: { body in
+            return I.verifiedPost(do: { body in
                 guard let token = body["billing_info[token]"] else {
                     throw ServerError(privateMessage: "No billing_info[token]", publicMessage: "Something went wrong, please try again.")
                 }
@@ -148,6 +149,7 @@ extension Route.Account {
             })
             
         case .teamMembers:
+            // todo use the form helper
             let csrf = sess.user.data.csrf
             return I.catchWithPostBody(do: { params in
                 guard let formData = addTeamMemberForm().parse(csrf: csrf, params), sess.selfPremiumAccess else { return try teamMembersResponse() }
@@ -176,7 +178,7 @@ extension Route.Account {
                 return try teamMembersResponse()
             })
         case .deleteTeamMember(let id):
-            return I.catchWithPostBody (csrf: sess.user.data.csrf) { _ in
+            return I.verifiedPost { _ in
                 I.query(sess.user.deleteTeamMember(id)) {
                     let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: Date().addingTimeInterval(5*60))
                     return I.query(task) {

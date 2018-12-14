@@ -145,6 +145,7 @@ extension SwiftTalkInterpreter where Self: HTML, Self: HasSession {
 
 protocol HTML {
     static func write(_ html: Node, status: HTTPResponseStatus) -> Self
+    static func withCSRF(_ cont: @escaping (CSRFToken) -> Self) -> Self
 }
 
 extension HTML {
@@ -157,6 +158,12 @@ extension Reader: HTML where Result: SwiftTalkInterpreter, Value == RequestEnvir
     static func write(_ html: Node, status: HTTPResponseStatus) -> Reader {
         return Reader { value in
             return .write(html.htmlDocument(input: value))
+        }
+    }
+    
+    static func withCSRF(_ cont: @escaping (CSRFToken) -> Reader) -> Reader {
+        return Reader { value in
+            return cont(value.context.csrf).run(value)
         }
     }
 }
@@ -264,23 +271,32 @@ extension SwiftTalkInterpreter where Self: HTML {
         }
     }
     
-    static func withPostBody(csrf: CSRFToken, do cont: @escaping ([String:String]) throws -> Self, or: @escaping () throws -> Self) -> Self {
+    static func verifiedPost(do cont: @escaping ([String:String]) throws -> Self, or: @escaping () throws -> Self) -> Self {
         return .catchWithPostBody(do: { body in
-            guard body["csrf"] == csrf.stringValue else {
-                throw ServerError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
+            return withCSRF { csrf in
+                catchAndDisplayError {
+                    guard body["csrf"] == csrf.stringValue else {
+                        throw ServerError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
+                    }
+                    return try cont(body)
+                }
             }
-            return try cont(body)
         }, or: or)
     }
     
-    static func catchWithPostBody(csrf: CSRFToken, do cont: @escaping ([String:String]) throws -> Self) -> Self {
+    static func verifiedPost(do cont: @escaping ([String:String]) throws -> Self) -> Self {
         return .catchWithPostBody(do: { body in
-            guard body["csrf"] == csrf.stringValue else {
-                throw ServerError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
+        	return withCSRF { csrf in
+        		catchAndDisplayError {
+                    guard body["csrf"] == csrf.stringValue else {
+                        throw ServerError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
+                    }
+                    return try cont(body)
+                }
             }
-            return try cont(body)
         })
     }
+        
     static func onCompleteThrows<A>(promise: Promise<A>, do cont: @escaping (A) throws -> Self) -> Self {
         return onComplete(promise: promise, do: { value in
             catchAndDisplayError { try cont(value) }
@@ -288,24 +304,27 @@ extension SwiftTalkInterpreter where Self: HTML {
     }
 
     // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
-    static func form<A,B>(_ f: Form<A>, initial: A, csrf: CSRFToken, convert: @escaping (A) -> Either<B, [ValidationError]>, onPost: @escaping (B) throws -> Self) -> Self {
+    static func form<A,B>(_ f: Form<A>, initial: A, convert: @escaping (A) -> Either<B, [ValidationError]>, onPost: @escaping (B) throws -> Self) -> Self {
         return .catchWithPostBody(do: { body in
-            guard let result = f.parse(csrf: csrf, body) else { throw ServerError(privateMessage: "Couldn't parse form", publicMessage: "Something went wrong. Please try again.") }
-            switch convert(result) {
-            case let .left(value):
-                return try onPost(value)
-            case let .right(errs):
-                return .write(f.render(result, csrf, errs))
+            withCSRF { csrf in
+            	catchAndDisplayError {
+                    guard let result = f.parse(csrf: csrf, body) else { throw ServerError(privateMessage: "Couldn't parse form", publicMessage: "Something went wrong. Please try again.") }
+                    switch convert(result) {
+                    case let .left(value):
+                        return try onPost(value)
+                    case let .right(errs):
+                        return .write(f.render(result, errs))
+                    }
+        		}
             }
-            
         }, or: {
-            return .write(f.render(initial, csrf, []))
+            return .write(f.render(initial, []))
         })
         
     }
     
-    static func form<A>(_ f: Form<A>, initial: A, csrf: CSRFToken, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> Self) -> Self {
-        return form(f, initial: initial, csrf: csrf, convert: { (a: A) -> Either<A, [ValidationError]> in
+    static func form<A>(_ f: Form<A>, initial: A, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> Self) -> Self {
+        return form(f, initial: initial, convert: { (a: A) -> Either<A, [ValidationError]> in
             let errs = validate(a)
             return errs.isEmpty ? .left(a) : .right(errs)
         }, onPost: onPost)
