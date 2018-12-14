@@ -8,7 +8,12 @@
 import Foundation
 import PostgreSQL
 
-typealias Interp = SwiftTalkInterpreter & HTML & HasSession & HasDatabase
+extension ProfileFormData {
+    init(_ data: UserData) {
+        email = data.email
+        name = data.name
+    }
+}
 
 extension Route.Account {
     func interpret<I: Interp>() throws -> I {
@@ -36,27 +41,24 @@ extension Route.Account {
                 return I.redirect(to: .home)
             }
         case .register(let couponCode):
-            // todo use form helper
-            return I.verifiedPost(do: { body in
-                guard let result = registerForm(couponCode: couponCode).parse(body) else {
-                    throw ServerError(privateMessage: "Failed to parse form data to create an account", publicMessage: "Something went wrong during account creation. Please try again.")
-                }
+            return I.form(registerForm(couponCode: couponCode), initial: ProfileFormData(sess.user.data), convert: { profile in
                 var u = sess.user
-                u.data.email = result.email
-                u.data.name = result.name
+                u.data.email = profile.email
+                u.data.name = profile.name
                 u.data.confirmedNameAndEmail = true
                 let errors = u.data.validate()
                 if errors.isEmpty {
-                    return I.query(u.update()) {
-                        if sess.premiumAccess {
-                            return I.redirect(to: .home)
-                        } else {
-                            return I.redirect(to: .subscription(.new(couponCode: couponCode)))
-                        }
-                    }
+                    return .left(u)
                 } else {
-                    let result = registerForm(couponCode: couponCode).render(result, errors)
-                    return I.write(result)
+                    return .right(errors)
+                }
+            }, onPost: { (user: Row<UserData>) in
+                return I.query(user.update()) {
+                    if sess.premiumAccess {
+                        return I.redirect(to: .home)
+                    } else {
+                        return I.redirect(to: .subscription(.new(couponCode: couponCode)))
+                    }
                 }
             })
         case .profile:

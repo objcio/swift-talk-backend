@@ -9,52 +9,6 @@ import Foundation
 import PostgreSQL
 import NIOHTTP1
 
-struct Context {
-    var route: Route
-    var message: (String, FlashType)?
-    var session: Session?
-    
-    var csrf: CSRFToken {
-        return session?.user.data.csrf ?? sharedCSRF
-    }
-}
-
-struct Session {
-    var sessionId: UUID
-    var user: Row<UserData>
-    var masterTeamUser: Row<UserData>?
-    var gifter: Row<UserData>?
-    
-    var premiumAccess: Bool {
-        return selfPremiumAccess || teamMemberPremiumAccess || gifterPremiumAccess
-    }
-    
-    var activeSubscription: Bool {
-        return (selfPremiumAccess && !user.data.canceled) ||
-            (gifterPremiumAccess && gifter?.data.canceled == false) ||
-            (teamMemberPremiumAccess && masterTeamUser?.data.canceled == false)
-    }
-    
-    var teamMemberPremiumAccess: Bool {
-        return masterTeamUser?.data.premiumAccess == true
-    }
-    
-    var gifterPremiumAccess: Bool {
-        return gifter?.data.premiumAccess == true
-    }
-    
-    var selfPremiumAccess: Bool {
-        return user.data.premiumAccess
-    }
-}
-
-extension ProfileFormData {
-    init(_ data: UserData) {
-        email = data.email
-        name = data.name
-    }
-}
-
 extension Swift.Collection where Element == Episode {
     func withProgress(for userId: UUID?, connection: Connection) throws -> [EpisodeWithProgress] {
         guard let id = userId else { return map { EpisodeWithProgress(episode: $0, progress: nil) } }
@@ -65,12 +19,8 @@ extension Swift.Collection where Element == Episode {
         }
     }
 }
-//
-//extension Optional where Wrapped == Session {
-//    func require() throws -> Session {
-//        return try self ?! AuthorizationError()
-//    }
-//}
+
+typealias Interp = SwiftTalkInterpreter & HTML & HasSession & HasDatabase
 
 extension Route {
     func interpret<I: Interp>() throws -> I {
@@ -93,7 +43,7 @@ extension Route {
             guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
                 throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
             }
-            return I.write(Plan.all.subscribe(monthly: monthly, yearly: yearly))
+            return I.write(Plan.subscribe(monthly: monthly, yearly: yearly))
         case .collection(let name):
             guard let coll = Collection.all.first(where: { $0.id == name }) else {
                 return .write(errorView("No such collection"), status: .notFound)
@@ -110,7 +60,7 @@ extension Route {
                 let encoded = env.baseURL.absoluteString + Route.githubCallback(code: nil, origin: c).path
                 path.append("&redirect_uri=" + encoded.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)
             }
-            return I.redirect(path: path)
+            return I.redirect(path: path, headers: [:])
         case .githubCallback(let optionalCode, let origin):
             guard let code = optionalCode else {
                 throw ServerError(privateMessage: "No auth code", publicMessage: "Something went wrong, please try again.")
@@ -169,7 +119,7 @@ extension Route {
                 guard let m = Plan.monthly, let y = Plan.yearly else {
                     throw ServerError(privateMessage: "Plans not loaded", publicMessage: "A small hiccup. Please try again in a little while.")
                 }
-                return I.write(Plan.all.subscribe(monthly: m, yearly: y, coupon: coupon))
+                return I.write(Plan.subscribe(monthly: m, yearly: y, coupon: coupon))
             })
        
         case let .staticFile(path: p):

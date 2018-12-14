@@ -50,10 +50,10 @@ extension Route.EpisodeR {
                     return I.query(s.user.downloads) { (downloads: [Row<DownloadData>]) in
                         switch s.user.data.downloadStatus(for: ep, downloads: downloads) {
                         case .reDownload:
-                            return .redirect(path: url.absoluteString)
+                            return .redirect(path: url.absoluteString, headers: [:])
                         case .canDownload:
                             return I.query(DownloadData(user: s.user.id, episode: ep.number).insert) { _ in
-	                            return .redirect(path: url.absoluteString)
+                                return .redirect(path: url.absoluteString, headers: [:])
                             }
                         default:
                             return .redirect(to: .episode(ep.id, .view(playPosition: nil))) // just redirect back to episode page if somebody tries this without download credits

@@ -175,7 +175,6 @@ protocol SwiftTalkInterpreter: Interpreter {
     static func write(_ string: String, status: HTTPResponseStatus) -> Self
     static func write(rss: ANode<()>, status: HTTPResponseStatus) -> Self
     static func write(json: Data, status: HTTPResponseStatus) -> Self
-    static func redirect(path: String) -> Self
     static func redirect(to route: Route, headers: [String: String]) -> Self
 }
 
@@ -199,10 +198,6 @@ extension SwiftTalkInterpreter {
     
     static func write(json: Data, status: HTTPResponseStatus = .ok) -> Self {
         return .write(json, status: status, headers: ["Content-Type": "application/json"])
-    }
-    
-    static func redirect(path: String) -> Self {
-        return .redirect(path: path, headers: [:])
     }
     
     static func redirect(to route: Route, headers: [String: String] = [:]) -> Self {

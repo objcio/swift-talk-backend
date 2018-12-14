@@ -59,8 +59,8 @@ func registerForm(couponCode: String?) -> Form<ProfileFormData> {
     }
 }
 
-extension Array where Element == Plan {    
-    func subscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node {
+extension Plan {
+    static func subscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node {
         return .withContext { context in
             func node(plan: Plan, title: String) -> Node {
                 let amount = Double(plan.discountedPrice(coupon: coupon).usdCents) / 100
