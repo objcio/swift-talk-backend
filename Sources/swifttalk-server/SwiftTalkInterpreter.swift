@@ -94,7 +94,7 @@ extension HTML {
 extension Reader: HTML where Result: SwiftTalkInterpreter, Value == Environment {
     static func write(_ html: Node, status: HTTPResponseStatus) -> Reader {
         return Reader { value in
-            return Result.write(html, input: value, status: status)
+            return .write(html.htmlDocument(input: value))
         }
     }
 }
@@ -104,27 +104,11 @@ protocol SwiftTalkInterpreter: Interpreter {
     static func writeFile(path: String) -> Self
     static func notFound(_ string: String) -> Self
     static func write(_ string: String, status: HTTPResponseStatus) -> Self
-    static func write<I>(_ html: ANode<I>, input: I, status: HTTPResponseStatus) -> Self
     static func write(xml: ANode<()>, status: HTTPResponseStatus) -> Self
     static func write(json: Data, status: HTTPResponseStatus) -> Self
 
     static func redirect(path: String) -> Self
-    static func redirect(to route: Route, headers: [String: String]) -> Self
-    
-//    static func onCompleteThrows<A>(promise: Promise<A>, do cont: @escaping (A) throws -> Self) -> Self
-    
-//    static func onSuccess<A>(promise: Promise<A?>, file: StaticString, line: UInt, message: String, do cont: @escaping (A) throws -> Self) -> Self
-//    static func onSuccess<A>(promise: Promise<A?>, file: StaticString, line: UInt, message: String, do cont: @escaping (A) throws -> Self, or: @escaping () throws -> Self) -> Self
-    
-//    static func withPostBody(do cont: @escaping ([String:String]) -> Self) -> Self
-//    static func withPostBody(do cont: @escaping ([String:String]) -> Self, or: @escaping () -> Self) -> Self
-//    static func withPostBody(do cont: @escaping ([String:String]) throws -> Self) -> Self
-//    static func withPostBody(csrf: CSRFToken, do cont: @escaping ([String:String]) throws -> Self, or: @escaping () throws -> Self) -> Self
-//    static func withPostBody(csrf: CSRFToken, do cont: @escaping ([String:String]) throws -> Self) -> Self
-    
-//    // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
-//    static func form<A,B>(_ f: Form<A>, initial: A, csrf: CSRFToken, convert: @escaping (A) -> Either<B, [ValidationError]>, onPost: @escaping (B) throws -> Self) -> Self    
-//    static func form<A>(_ f: Form<A>, initial: A, csrf: CSRFToken, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> Self) -> Self
+    static func redirect(to route: Route, headers: [String: String]) -> Self    
 }
 
 
@@ -139,10 +123,6 @@ extension SwiftTalkInterpreter {
     
     static func write(_ string: String, status: HTTPResponseStatus = .ok) -> Self {
         return .write(string, status: status, headers: [:])
-    }
-    
-    static func write<I>(_ html: ANode<I>, input: I, status: HTTPResponseStatus = .ok) -> Self {
-        return .write(html.htmlDocument(input: input))
     }
     
     static func write(xml: ANode<()>, status: HTTPResponseStatus = .ok) -> Self {
