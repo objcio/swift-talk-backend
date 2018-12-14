@@ -8,28 +8,33 @@
 import Foundation
 import PostgreSQL
 
-typealias Interp = SwiftTalkInterpreter & HTML & HasSession
+typealias Interp = SwiftTalkInterpreter & HTML & HasSession & HasDatabase
 
 extension Route.Account {
-    func interpret<I: Interp>(connection c: Lazy<Connection>) throws -> I {
-        return I.requireSession { try self.interpret2(session: $0, connection: c)}
+    func interpret<I: Interp>() throws -> I {
+        return I.requireSession { try self.interpret2(session: $0)}
     }
     
-    func interpret2<I: Interp>(session sess: Session, connection c: Lazy<Connection>) throws -> I {
+    private func interpret2<I: Interp>(session sess: Session) throws -> I {
         func teamMembersResponse(_ data: TeamMemberFormData? = nil,_ errors: [ValidationError] = []) throws -> I {
             let renderedForm = addTeamMemberForm().render(data ?? TeamMemberFormData(githubUsername: ""), sess.user.data.csrf, errors)
-            let members = try c.get().execute(sess.user.teamMembers)
-            return I.write(teamMembersView(csrf: sess.user.data.csrf, addForm: renderedForm, teamMembers: members))
+            return I.query(sess.user.teamMembers) { members in
+                I.write(teamMembersView(csrf: sess.user.data.csrf, addForm: renderedForm, teamMembers: members))
+            }
         }
         
         switch self {
         case .thankYou:
-            let episodesWithProgress = try Episode.all.scoped(for: sess.user.data).withProgress(for: sess.user.id, connection: c)
-            // todo: flash: "Thank you for supporting us
-            return .write(renderHome(episodes: episodesWithProgress))
+            return I.withConnection { c in
+                // todo: change how we load the episodes (should be a Query<X>, rather than take a connection)
+                let episodesWithProgress = try Episode.all.scoped(for: sess.user.data).withProgress(for: sess.user.id, connection: c)
+                // todo: flash: "Thank you for supporting us
+                return .write(renderHome(episodes: episodesWithProgress))
+            }
         case .logout:
-            try c.get().execute(sess.user.deleteSession(sess.sessionId))
-            return I.redirect(to: .home)
+            return I.query(sess.user.deleteSession(sess.sessionId)) {
+                return I.redirect(to: .home)
+            }
         case .register(let couponCode):
             return I.catchWithPostBody(do: { body in
                 guard let result = registerForm(couponCode: couponCode).parse(csrf: sess.user.data.csrf, body) else {
@@ -41,11 +46,12 @@ extension Route.Account {
                 u.data.confirmedNameAndEmail = true
                 let errors = u.data.validate()
                 if errors.isEmpty {
-                    try c.get().execute(u.update())
-                    if sess.premiumAccess {
-                        return I.redirect(to: .home)
-                    } else {
-                        return I.redirect(to: .subscription(.new(couponCode: couponCode)))
+                    return I.query(u.update()) {
+                        if sess.premiumAccess {
+                            return I.redirect(to: .home)
+                        } else {
+                            return I.redirect(to: .subscription(.new(couponCode: couponCode)))
+                        }
                     }
                 } else {
                     let result = registerForm(couponCode: couponCode).render(result, u.data.csrf, errors)
@@ -63,8 +69,9 @@ extension Route.Account {
                 u.data.confirmedNameAndEmail = true
                 let errors = u.data.validate()
                 if errors.isEmpty {
-                    try c.get().execute(u.update())
-                    return I.redirect(to: .account(.profile))
+                    return I.query(u.update()) {
+                    	I.redirect(to: .account(.profile))
+                    }
                 } else {
                     return I.write(f.render(result, u.data.csrf, errors))
                 }
@@ -105,8 +112,9 @@ extension Route.Account {
             guard let t = sess.user.data.recurlyHostedLoginToken else {
                 return I.onSuccess(promise: sess.user.account.promise, do: { acc in
                     user.data.recurlyHostedLoginToken = acc.hosted_login_token
-                    try c.get().execute(user.update())
-                    return renderBilling(recurlyToken: acc.hosted_login_token)
+                    return I.query(user.update()) {
+                    	renderBilling(recurlyToken: acc.hosted_login_token)
+                    }
                 }, or: {
                     if sess.teamMemberPremiumAccess {
                         return I.write(teamMemberBilling())
@@ -149,24 +157,32 @@ extension Route.Account {
                         return try teamMembersResponse(formData, [(field: "github_username", message: "No user with this username exists on GitHub")])
                     }
                     let newUserData = UserData(email: p.email ?? "", githubUID: p.id, githubLogin: p.login, avatarURL: p.avatar_url, name: p.name ?? "")
-                    let newUserid = try c.get().execute(newUserData.findOrInsert(uniqueKey: "github_uid", value: p.id))
-                    let teamMemberData = TeamMemberData(userId: sess.user.id, teamMemberId: newUserid)
-                    guard let _ = try? c.get().execute(teamMemberData.insert) else {
-                        return try teamMembersResponse(formData, [(field: "github_username", message: "Team member already exists")])
+                    return I.query(newUserData.findOrInsert(uniqueKey: "github_uid", value: p.id)) { (newUserId: UUID) in
+                        let teamMemberData = TeamMemberData(userId: sess.user.id, teamMemberId: newUserId)
+                        return I.execute(teamMemberData.insert) { (result: Either<UUID, Error>) in
+                            switch result {
+                            case .right: return try teamMembersResponse(formData, [(field: "github_username", message: "Team member already exists")])
+                            case .left:
+                                let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(minutes: 5)
+                                return I.query(task) {
+                                    try teamMembersResponse()
+                                }
+
+                            }
+                        }
                     }
-                    let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(minutes: 5)
-                    try c.get().execute(task)
-                    return try teamMembersResponse()
                 }
             }, or: {
                 return try teamMembersResponse()
             })
         case .deleteTeamMember(let id):
             return I.catchWithPostBody (csrf: sess.user.data.csrf) { _ in
-                try c.get().execute(sess.user.deleteTeamMember(id))
-                let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: Date().addingTimeInterval(5*60))
-                try c.get().execute(task)
-                return try teamMembersResponse()
+                I.query(sess.user.deleteTeamMember(id)) {
+                    let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: Date().addingTimeInterval(5*60))
+                    return I.query(task) {
+                    	try teamMembersResponse()
+                    }
+                }
             }
         }
     }

@@ -8,24 +8,9 @@
 import Foundation
 
 
-struct Environment {
-    var hashedAssetName: (String) -> String = { $0 }
-    private let _session: Lazy<Session?>
-    let route: Route
-    init(route: Route, hashedAssetName: @escaping (String) -> String, buildSession: @escaping () -> Session?) {
-        self.hashedAssetName = hashedAssetName
-        self._session = Lazy(buildSession, cleanup: { _ in () })
-        self.route = route
-    }
-    
-    var session: Session? { return flatten(try? _session.get()) }
-    
-    var context: Context {
-        return Context(route: route, message: nil, session: session)
-    }
-}
 
-extension ANode where I == Environment {
+
+extension ANode where I == RequestEnvironment {
     static func hashedStylesheet(media: String = "all", href: String) -> Node {
         return ANode.withInput { deps in
             return Node.stylesheet(media: media, href: deps.hashedAssetName(href))
@@ -49,7 +34,7 @@ extension ANode where I == Environment {
     }
 }
 
-typealias Node = ANode<Environment>
+typealias Node = ANode<RequestEnvironment>
 
 struct LayoutConfig {
     var pageTitle: String

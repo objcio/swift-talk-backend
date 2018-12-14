@@ -52,9 +52,9 @@ extension ProfileFormData {
 }
 
 extension Swift.Collection where Element == Episode {
-    func withProgress(for userId: UUID?, connection: Lazy<Connection>) throws -> [EpisodeWithProgress] {
+    func withProgress(for userId: UUID?, connection: Connection) throws -> [EpisodeWithProgress] {
         guard let id = userId else { return map { EpisodeWithProgress(episode: $0, progress: nil) } }
-        let progresses = try connection.get().execute(Row<PlayProgressData>.sortedDesc(for: id)).map { $0.data }
+        let progresses = try connection.execute(Row<PlayProgressData>.sortedDesc(for: id)).map { $0.data }
         return map { episode in
             // todo this is (n*m), we should use the fact that `progresses` is sorted!
             EpisodeWithProgress(episode: episode, progress: progresses.first { $0.episodeNumber == episode.number }?.progress)
@@ -69,7 +69,7 @@ extension Swift.Collection where Element == Episode {
 //}
 
 extension Route {
-    func interpret<I: Interp>(sessionId: UUID?, connection c: Lazy<Connection>) throws -> I {        
+    func interpret<I: Interp>() throws -> I {
         switch self {
         case .error:
             return .write(errorView("Not found"), status: .notFound)
@@ -78,13 +78,13 @@ extension Route {
                 I.write(index(Collection.all.filter { !$0.episodes(for: session?.user.data).isEmpty }))
             }
         case .subscription(let s):
-            return try s.interpret(connection: c)
+            return try s.interpret()
         case .account(let action):
-            return try action.interpret(connection: c)
+            return try action.interpret()
         case .gift(let g):
-            return try g.interpret(connection: c)
+            return try g.interpret()
         case let .episode(id, action):
-            return try action.interpret(id: id, connection: c)
+            return try action.interpret(id: id)
         case .subscribe:
             guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
                 throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
@@ -95,8 +95,10 @@ extension Route {
                 return .write(errorView("No such collection"), status: .notFound)
             }
             return I.withSession { session in
-                let episodesWithProgress = try coll.episodes(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
-                return .write(coll.show(episodes: episodesWithProgress))
+                I.withConnection { c in
+                    let episodesWithProgress = try coll.episodes(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
+                    return .write(coll.show(episodes: episodesWithProgress))
+                }
             }
         case .login(let cont):
             var path = "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(github.clientId)"
@@ -115,32 +117,43 @@ extension Route {
                 let loadProfile = Github(accessToken: t).profile.promise
                 return I.onSuccess(promise: loadProfile, message: "Couldn't access your Github profile", do: { profile in
                     let uid: UUID
-                    if let user = try c.get().execute(Row<UserData>.select(githubId: profile.id)) {
-                        uid = user.id
-                    } else {
-                        let userData = UserData(email: profile.email ?? "", githubUID: profile.id, githubLogin: profile.login, githubToken: t, avatarURL: profile.avatar_url, name: profile.name ?? "")
-                        uid = try c.get().execute(userData.insert)
+                    return I.query(Row<UserData>.select(githubId: profile.id)) {
+                        func createSession(uid: UUID) -> I {
+                            return I.query(SessionData(userId: uid).insert) { sid in
+                                let destination: String
+                                if let o = origin?.removingPercentEncoding, o.hasPrefix("/") {
+                                    destination = o
+                                } else {
+                                    destination = "/"
+                                }
+                                return I.redirect(path: destination, headers: ["Set-Cookie": "sessionid=\"\(sid.uuidString)\"; HttpOnly; Path=/"]) // TODO secure
+                            }
+                        }
+                        if let user = $0 {
+                            return createSession(uid: user.id)
+                        } else {
+                            let userData = UserData(email: profile.email ?? "", githubUID: profile.id, githubLogin: profile.login, githubToken: t, avatarURL: profile.avatar_url, name: profile.name ?? "")
+                            return I.query(userData.insert, createSession)
+                        }
+                        
+                        
                     }
-                    let sid = try c.get().execute(SessionData(userId: uid).insert)
-                    let destination: String
-                    if let o = origin?.removingPercentEncoding, o.hasPrefix("/") {
-                        destination = o
-                    } else {
-                        destination = "/"
-                    }
-                    return I.redirect(path: destination, headers: ["Set-Cookie": "sessionid=\"\(sid.uuidString)\"; HttpOnly; Path=/"]) // TODO secure
                 })
             })
 
         case .episodes:
             return I.withSession { session in
-                let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
-                return I.write(index(episodesWithProgress))
+                return I.withConnection { c in
+                    let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
+                    return I.write(index(episodesWithProgress))
+                }
             }
         case .home:
-            return I.withSession { session in                
-                let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
-                return .write(renderHome(episodes: episodesWithProgress))
+            return I.withSession { session in
+                return I.withConnection { c in
+                    let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
+                    return .write(renderHome(episodes: episodesWithProgress))
+                }
             }
         case .sitemap:
             return .write(Route.siteMap)
@@ -167,6 +180,7 @@ extension Route {
                 guard let webhook: Webhook = try? decodeXML(from: data) else { return I.write("", status: .ok) }
                 let id = webhook.account.account_code
                 recurly.subscriptionStatus(for: webhook.account.account_code).run { status in
+                    let c = lazyConnection()
                     guard let s = status else {
                         return log(error: "Received Recurly webhook for account id \(id), but couldn't load this account from Recurly")
                     }
@@ -195,30 +209,33 @@ extension Route {
                 
                 return catchAndDisplayError {
                     if let s = webhook.subscription, s.plan.plan_code.hasPrefix("gift") {
-                        if var gift = flatten(try? c.get().execute(Row<Gift>.select(subscriptionId: s.uuid))) {
-                            log(info: "gift update \(s) \(gift)")
-                            if s.state == "future", let a = s.activated_at {
-                                if gift.data.sendAt != a {
-                                    gift.data.sendAt = a
-                                    try c.get().execute(gift.update())
-                                }
-                            } else if s.state == "active" {
-                                if !gift.data.activated {
-                                    let plan = Plan.gifts.first { $0.plan_code == s.plan.plan_code }
-                                    let duration = plan?.prettyDuration ?? "unknown"
-                                    let email = sendgrid.send(to: gift.data.gifteeEmail, name: gift.data.gifteeName, subject: "We have a gift for you...", text: gift.gifteeEmailText(duration: duration))
-                                    log(info: "Sending gift email to \(gift.data.gifteeEmail)")
-                                    URLSession.shared.load(email) { result in
-                                        log(error: "Can't send email for gift \(gift)")
+                        return I.query(Row<Gift>.select(subscriptionId: s.uuid)) {
+                            if var gift = flatten($0) {
+                                log(info: "gift update \(s) \(gift)")
+                                let ok = { I.write("", status: .ok) }
+                                if s.state == "future", let a = s.activated_at {
+                                    if gift.data.sendAt != a {
+                                        gift.data.sendAt = a
+                                        return I.query(gift.update(), ok)
                                     }
-                                    gift.data.activated = true
-                                    try c.get().execute(gift.update())
+                                } else if s.state == "active" {
+                                    if !gift.data.activated {
+                                        let plan = Plan.gifts.first { $0.plan_code == s.plan.plan_code }
+                                        let duration = plan?.prettyDuration ?? "unknown"
+                                        let email = sendgrid.send(to: gift.data.gifteeEmail, name: gift.data.gifteeName, subject: "We have a gift for you...", text: gift.gifteeEmailText(duration: duration))
+                                        log(info: "Sending gift email to \(gift.data.gifteeEmail)")
+                                        URLSession.shared.load(email) { result in
+                                            log(error: "Can't send email for gift \(gift)")
+                                        }
+                                        gift.data.activated = true
+                                        return I.query(gift.update(), ok)
+                                    }
                                 }
+                                return ok()
+                            } else {
+                                log(error: "Got a recurly webhook but can't find gift \(s)")
+                                return I.write("", status: .internalServerError)
                             }
-                            return I.write("", status: .ok)
-                        } else {
-                            log(error: "Got a recurly webhook but can't find gift \(s)")
-                            return I.write("", status: .internalServerError)
                         }
                     }
                     return I.write("", status: .ok)

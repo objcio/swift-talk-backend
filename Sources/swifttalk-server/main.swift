@@ -42,10 +42,10 @@ let server = Server(handle: { request in
             return nil
         }
     }
-    let deps = Environment(route: route, hashedAssetName: hashedAssetName, buildSession: buildSession)
+    let deps = RequestEnvironment(route: route, hashedAssetName: hashedAssetName, buildSession: buildSession, connection: conn)
 
-    let reader: Reader<Environment, NIOInterpreter> = catchAndDisplayError {
-        return try route.interpret(sessionId: sessionId, connection: conn)
+    let reader: Reader<RequestEnvironment, NIOInterpreter> = catchAndDisplayError {
+        return try route.interpret()
     }
     return reader.run(deps)
 }, resourcePaths: resourcePaths)

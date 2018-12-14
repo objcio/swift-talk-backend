@@ -55,6 +55,68 @@ protocol HasSession {
     static func withSession(_ cont: @escaping (Session?) -> Self) -> Self
 }
 
+import PostgreSQL
+protocol HasDatabase {
+    static func execute<A>(_ query: Query<A>, _ cont: @escaping (Either<A, Error>) -> Self) -> Self
+    @available(*, deprecated) static func withConnection(_ cont: @escaping (Either<PostgreSQL.Connection, Error>) -> Self) -> Self
+}
+
+extension Reader: HasDatabase where Value == RequestEnvironment {
+    static func execute<A>(_ query: Query<A>, _ cont: @escaping (Either<A, Error>) -> Reader<RequestEnvironment, Result>) -> Reader<RequestEnvironment, Result> {
+        return Reader { env in
+            do {
+                return cont(try .left(env.connection().execute(query, loggingTreshold: 0.1))).run(env)
+            } catch {
+                return cont(.right(error)).run(env)
+            }
+        }
+    }
+    
+    static func withConnection(_ cont: @escaping (Either<Connection, Error>) -> Reader<RequestEnvironment, Result>) -> Reader<RequestEnvironment, Result> {
+        return Reader { env in
+            do {
+                return cont(.left(try env.connection())).run(env)
+            } catch {
+                return cont(.right(error)).run(env)
+            }
+        }
+    }
+    
+}
+
+extension SwiftTalkInterpreter where Self: HTML, Self: HasDatabase {
+    static func query<A>(_ query: Query<A>, _ cont: @escaping (A) throws -> Self) -> Self {
+        return Self.execute(query) { (result: Either<A, Error>) in
+            catchAndDisplayError {
+                switch result {
+                case let .left(value): return try cont(value)
+                case let .right(err): throw err
+                }
+            }
+        }
+    }
+    
+    static func execute<A>(_ query: Query<A>, _ cont: @escaping (Either<A, Error>) throws -> Self) -> Self {
+        return Self.execute(query) { (result: Either<A, Error>) in
+            catchAndDisplayError {
+                return try cont(result)
+            }
+        }
+
+    }
+    
+    @available(*, deprecated) static func withConnection(_ cont: @escaping (Connection) throws -> Self) -> Self {
+        return Self.withConnection { (result: Either<Connection,Error>) in
+            catchAndDisplayError {
+                switch result {
+                case .left(let c): return try cont(c)
+                case .right(let e): throw e
+                }
+            }
+        }
+    }
+}
+
 extension SwiftTalkInterpreter where Self: HasSession, Self: HTML {
     static func requireSession(_ cont: @escaping (Session) throws -> Self) -> Self {
         return withSession { sess in
@@ -65,7 +127,7 @@ extension SwiftTalkInterpreter where Self: HasSession, Self: HTML {
     }
 }
 
-extension Reader: HasSession where Value == Environment {
+extension Reader: HasSession where Value == RequestEnvironment {
     static func withSession(_ cont: @escaping (Session?) -> Reader<Value, Result>) -> Reader<Value, Result> {
         return Reader { value in
             cont(value.session).run(value)
@@ -91,7 +153,7 @@ extension HTML {
     }
 }
 
-extension Reader: HTML where Result: SwiftTalkInterpreter, Value == Environment {
+extension Reader: HTML where Result: SwiftTalkInterpreter, Value == RequestEnvironment {
     static func write(_ html: Node, status: HTTPResponseStatus) -> Reader {
         return Reader { value in
             return .write(html.htmlDocument(input: value))
@@ -106,9 +168,8 @@ protocol SwiftTalkInterpreter: Interpreter {
     static func write(_ string: String, status: HTTPResponseStatus) -> Self
     static func write(xml: ANode<()>, status: HTTPResponseStatus) -> Self
     static func write(json: Data, status: HTTPResponseStatus) -> Self
-
     static func redirect(path: String) -> Self
-    static func redirect(to route: Route, headers: [String: String]) -> Self    
+    static func redirect(to route: Route, headers: [String: String]) -> Self
 }
 
 

@@ -9,13 +9,13 @@ import Foundation
 import PostgreSQL
 
 extension Route.Subscription {
-    func interpret<I: Interp>(connection c: Lazy<Connection>) throws -> I {
+    func interpret<I: Interp>() throws -> I {
         return I.requireSession { sess in
-            try self.interpret2(sesssion: sess, connection: c)
+            try self.interpret2(sesssion: sess)
         }
     }
 
-    func interpret2<I: Interp>(sesssion sess: Session, connection c: Lazy<Connection>) throws -> I {
+    private func interpret2<I: Interp>(sesssion sess: Session) throws -> I {
         let user = sess.user
         func newSubscription(couponCode: String?, errs: [String]) throws -> I {
             if let c = couponCode {
@@ -45,8 +45,9 @@ extension Route.Subscription {
                         }
                         return try newSubscription(couponCode: couponCode, errs: messages.map { $0.message })
                     case .success(let sub):
-                        try c.get().execute(user.changeSubscriptionStatus(sub.state == .active))
-                        return I.redirect(to: .account(.thankYou))
+                        return I.query(user.changeSubscriptionStatus(sub.state == .active)) {
+                        	I.redirect(to: .account(.thankYou))
+                        }
                     }
                 })
             }
@@ -55,8 +56,9 @@ extension Route.Subscription {
                 let resp = registerForm(couponCode: couponCode).render(.init(user.data), user.data.csrf, [])
                 return I.write(resp)
             } else {
-                try c.get().execute(Task.unfinishedSubscriptionReminder(userId: user.id).schedule(weeks: 1))
-                return try newSubscription(couponCode: couponCode, errs: [])
+                return I.query(Task.unfinishedSubscriptionReminder(userId: user.id).schedule(weeks: 1)) {
+                	try newSubscription(couponCode: couponCode, errs: [])
+                }
             }
         case .cancel:
             return I.catchWithPostBody(csrf: user.data.csrf) { _ in
@@ -77,10 +79,11 @@ extension Route.Subscription {
             return I.catchWithPostBody(csrf: sess.user.data.csrf) { _ in
                 return I.onSuccess(promise: sess.user.currentSubscription.promise.map(flatten), do: { sub throws -> I in
                     guard let u = sub.upgrade else { throw ServerError(privateMessage: "no upgrade available \(sub)", publicMessage: "There's no upgrade available.")}
-                    let teamMembers = try c.get().execute(sess.user.teamMembers)
-                    return I.onSuccess(promise: recurly.updateSubscription(sub, plan_code: u.plan.plan_code, numberOfTeamMembers: teamMembers.count).promise, do: { result throws -> I in
-                        return I.redirect(to: .account(.billing))
-                    })
+                    return I.query(sess.user.teamMembers) { teamMembers in
+                        I.onSuccess(promise: recurly.updateSubscription(sub, plan_code: u.plan.plan_code, numberOfTeamMembers: teamMembers.count).promise, do: { result throws -> I in
+                            I.redirect(to: .account(.billing))
+                        })
+                    }
                 })
             }
         case .reactivate:
