@@ -45,7 +45,7 @@ extension Route.EpisodeR {
             }
         case .download:
             return I.requireSession { s in
-                return .onCompleteThrows(promise: vimeo.downloadURL(for: ep.vimeoId).promise) { downloadURL in
+                return .onCompleteOrCatch(promise: vimeo.downloadURL(for: ep.vimeoId).promise) { downloadURL in
                     guard let result = downloadURL, let url = result else { return .redirect(to: .episode(ep.id, .view(playPosition: nil))) }
                     return I.query(s.user.downloads) { (downloads: [Row<DownloadData>]) in
                         switch s.user.data.downloadStatus(for: ep, downloads: downloads) {

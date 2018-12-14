@@ -116,7 +116,7 @@ extension Route.Account {
                     return I.query(user.update()) {
                     	renderBilling(recurlyToken: acc.hosted_login_token)
                     }
-                }, or: {
+                }, else: {
                     if sess.teamMemberPremiumAccess {
                         return I.write(teamMemberBilling())
                     } else if sess.gifterPremiumAccess {
@@ -154,7 +154,7 @@ extension Route.Account {
             return I.verifiedPost(do: { params in
                 guard let formData = addTeamMemberForm().parse(params), sess.selfPremiumAccess else { return try teamMembersResponse() }
                 let promise = github.profile(username: formData.githubUsername).promise
-                return I.onCompleteThrows(promise: promise) { profile in
+                return I.onCompleteOrCatch(promise: promise) { profile in
                     guard let p = profile else {
                         return try teamMembersResponse(formData, [(field: "github_username", message: "No user with this username exists on GitHub")])
                     }

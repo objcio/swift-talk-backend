@@ -116,7 +116,7 @@ extension Route {
                 throw ServerError(privateMessage: "No auth code", publicMessage: "Something went wrong, please try again.")
             }
             let loadToken = github.getAccessToken(code).promise.map({ $0?.access_token })
-            return I.onCompleteThrows(promise: loadToken, do: { token in
+            return I.onCompleteOrCatch(promise: loadToken, do: { token in
                 let t = try token ?! ServerError(privateMessage: "No github access token", publicMessage: "Couldn't access your Github profile.")
                 let loadProfile = Github(accessToken: t).profile.promise
                 return I.onSuccess(promise: loadProfile, message: "Couldn't access your Github profile", do: { profile in
@@ -242,15 +242,15 @@ extension Route {
                             }
                         }
                     }
-                    return I.write("", status: .ok)
+                    return I.write("")
                 }
             }
         case .githubWebhook:
             // This could be done more fine grained, but this works just fine for now
             refreshStaticData()
-            return I.write("", status: .ok)
+            return I.write("")
         case .rssFeed:
-            return I.write(xml: Episode.all.released.rssView, status: .ok)
+            return I.write(rss: Episode.all.released.rssView)
         case .episodesJSON:
             return I.write(json: episodesJSONView())
         case .collectionsJSON:

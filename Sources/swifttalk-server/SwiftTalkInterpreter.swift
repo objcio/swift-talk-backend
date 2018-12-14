@@ -173,7 +173,7 @@ protocol SwiftTalkInterpreter: Interpreter {
     static func writeFile(path: String) -> Self
     static func notFound(_ string: String) -> Self
     static func write(_ string: String, status: HTTPResponseStatus) -> Self
-    static func write(xml: ANode<()>, status: HTTPResponseStatus) -> Self
+    static func write(rss: ANode<()>, status: HTTPResponseStatus) -> Self
     static func write(json: Data, status: HTTPResponseStatus) -> Self
     static func redirect(path: String) -> Self
     static func redirect(to route: Route, headers: [String: String]) -> Self
@@ -193,12 +193,12 @@ extension SwiftTalkInterpreter {
         return .write(string, status: status, headers: [:])
     }
     
-    static func write(xml: ANode<()>, status: HTTPResponseStatus = .ok) -> Self {
-        return Self.write(xml.xmlDocument, status: .ok, headers: ["Content-Type": "application/rss+xml; charset=utf-8"])
+    static func write(rss: ANode<()>, status: HTTPResponseStatus = .ok) -> Self {
+        return .write(rss.xmlDocument, status: status, headers: ["Content-Type": "application/rss+xml; charset=utf-8"])
     }
     
     static func write(json: Data, status: HTTPResponseStatus = .ok) -> Self {
-        return Self.write(json, status: .ok, headers: ["Content-Type": "application/json"])
+        return .write(json, status: status, headers: ["Content-Type": "application/json"])
     }
     
     static func redirect(path: String) -> Self {
@@ -208,96 +208,50 @@ extension SwiftTalkInterpreter {
     static func redirect(to route: Route, headers: [String: String] = [:]) -> Self {
         return .redirect(path: route.path, headers: headers)
     }
-    
-    static func withPostBody(do cont: @escaping ([String:String]) -> Self) -> Self {
-        return .withPostData { data in
-            let result = String(data: data, encoding: .utf8)?.parseAsQueryPart
-            return cont(result ?? [:])
-        }
-    }
-    
-    static func withPostBody(do cont: @escaping ([String:String]) -> Self, or: @escaping () -> Self) -> Self {
-        return .withPostData { data in
-            let result = String(data: data, encoding: .utf8)?.parseAsQueryPart
-            if let r = result {
-                return cont(r)
-            } else {
-                return or()
-            }
-        }
-    }
 }
 
 extension SwiftTalkInterpreter where Self: HTML {
     static func onSuccess<A>(promise: Promise<A?>, file: StaticString = #file, line: UInt = #line, message: String = "Something went wrong.", do cont: @escaping (A) throws -> Self) -> Self {
-        return onComplete(promise: promise, do: { value in
-            catchAndDisplayError {
-                guard let v = value else {
-                    throw ServerError(privateMessage: "Expected non-nil value, but got nil (\(file):\(line)).", publicMessage: message)
-                }
-                return try cont(v)
-            }
+        return onSuccess(promise: promise, file: file, line: line, message: message, do: cont, else: {
+            throw ServerError(privateMessage: "Expected non-nil value, but got nil (\(file):\(line)).", publicMessage: message)
         })
     }
     
-    static func onSuccess<A>(promise: Promise<A?>, file: StaticString = #file, line: UInt = #line, message: String = "Something went wrong.", do cont: @escaping (A) throws -> Self, or: @escaping () throws -> Self) -> Self {
+    static func onSuccess<A>(promise: Promise<A?>, file: StaticString = #file, line: UInt = #line, message: String = "Something went wrong.", do cont: @escaping (A) throws -> Self, else: @escaping () throws -> Self) -> Self {
         return onComplete(promise: promise, do: { value in
             catchAndDisplayError {
                 if let v = value {
                     return try cont(v)
                 } else {
-                    return try or()
+                    return try `else`()
                 }
             }
         })
-    }
-    
-    static func catchWithPostBody(do cont: @escaping ([String:String]) throws -> Self) -> Self {
-        return Self.withPostBody { dict in
-            return catchAndDisplayError { try cont(dict) }
-        }
-    }
-    
-    static func catchWithPostBody(do cont: @escaping ([String:String]) throws -> Self, or: @escaping () throws -> Self) -> Self {
-        return .withPostData { data in
-            return catchAndDisplayError {
-                // TODO instead of checking whether data is empty, we should check whether it was a post?
-                if !data.isEmpty, let r = String(data: data, encoding: .utf8)?.parseAsQueryPart {
-                    return try cont(r)
-                } else {
-                    return try or()
-                }
-            }
-        }
-    }
-    
-    static func verifiedPost(do cont: @escaping ([String:String]) throws -> Self, or: @escaping () throws -> Self) -> Self {
-        return .catchWithPostBody(do: { body in
-            return withCSRF { csrf in
-                catchAndDisplayError {
-                    guard body["csrf"] == csrf.stringValue else {
-                        throw ServerError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
-                    }
-                    return try cont(body)
-                }
-            }
-        }, or: or)
     }
     
     static func verifiedPost(do cont: @escaping ([String:String]) throws -> Self) -> Self {
-        return .catchWithPostBody(do: { body in
-        	return withCSRF { csrf in
-        		catchAndDisplayError {
-                    guard body["csrf"] == csrf.stringValue else {
-                        throw ServerError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
-                    }
-                    return try cont(body)
-                }
-            }
+        return verifiedPost(do: cont, or: {
+            throw ServerError(privateMessage: "Expected POST", publicMessage: "Something went wrong.")
         })
     }
-        
-    static func onCompleteThrows<A>(promise: Promise<A>, do cont: @escaping (A) throws -> Self) -> Self {
+    static func verifiedPost(do cont: @escaping ([String:String]) throws -> Self, or: @escaping () throws -> Self) -> Self {
+        return .withPostData { data in
+        	if !data.isEmpty, let body = String(data: data, encoding: .utf8)?.parseAsQueryPart {
+                return withCSRF { csrf in
+                    catchAndDisplayError {
+                        guard body["csrf"] == csrf.stringValue else {
+                            throw ServerError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
+                        }
+                        return try cont(body)
+                    }
+                }
+        	} else {
+            	return catchAndDisplayError(or)
+        	}
+        }
+    }
+
+    static func onCompleteOrCatch<A>(promise: Promise<A>, do cont: @escaping (A) throws -> Self) -> Self {
         return onComplete(promise: promise, do: { value in
             catchAndDisplayError { try cont(value) }
         })
