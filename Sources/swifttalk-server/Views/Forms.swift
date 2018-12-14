@@ -20,8 +20,7 @@ struct Form<A> {
     }
 
     //
-    func parse(csrf: CSRFToken, _ data: [String:String]) -> A? {
-        guard data["csrf"] == csrf.stringValue else { return nil } // csrf token failure
+    func parse(_ data: [String:String]) -> A? {
         return _parse(data)
     }
 }

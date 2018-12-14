@@ -36,8 +36,9 @@ extension Route.Account {
                 return I.redirect(to: .home)
             }
         case .register(let couponCode):
-            return I.catchWithPostBody(do: { body in
-                guard let result = registerForm(couponCode: couponCode).parse(csrf: sess.user.data.csrf, body) else {
+            // todo use form helper
+            return I.verifiedPost(do: { body in
+                guard let result = registerForm(couponCode: couponCode).parse(body) else {
                     throw ServerError(privateMessage: "Failed to parse form data to create an account", publicMessage: "Something went wrong during account creation. Please try again.")
                 }
                 var u = sess.user
@@ -150,9 +151,8 @@ extension Route.Account {
             
         case .teamMembers:
             // todo use the form helper
-            let csrf = sess.user.data.csrf
-            return I.catchWithPostBody(do: { params in
-                guard let formData = addTeamMemberForm().parse(csrf: csrf, params), sess.selfPremiumAccess else { return try teamMembersResponse() }
+            return I.verifiedPost(do: { params in
+                guard let formData = addTeamMemberForm().parse(params), sess.selfPremiumAccess else { return try teamMembersResponse() }
                 let promise = github.profile(username: formData.githubUsername).promise
                 return I.onCompleteThrows(promise: promise) { profile in
                     guard let p = profile else {

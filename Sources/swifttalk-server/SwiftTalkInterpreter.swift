@@ -305,10 +305,10 @@ extension SwiftTalkInterpreter where Self: HTML {
 
     // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
     static func form<A,B>(_ f: Form<A>, initial: A, convert: @escaping (A) -> Either<B, [ValidationError]>, onPost: @escaping (B) throws -> Self) -> Self {
-        return .catchWithPostBody(do: { body in
+        return verifiedPost(do: { body in
             withCSRF { csrf in
             	catchAndDisplayError {
-                    guard let result = f.parse(csrf: csrf, body) else { throw ServerError(privateMessage: "Couldn't parse form", publicMessage: "Something went wrong. Please try again.") }
+                    guard let result = f.parse(body) else { throw ServerError(privateMessage: "Couldn't parse form", publicMessage: "Something went wrong. Please try again.") }
                     switch convert(result) {
                     case let .left(value):
                         return try onPost(value)

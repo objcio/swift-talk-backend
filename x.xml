@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<new_subscription_notification>
+  <account>
+    <account_code>F186B66B-2763-4719-90DE-CB2946A28388</account_code>
+    <username nil="true"/>
+    <email>chris@eidhof.nl</email>
+    <first_name nil="true"/>
+    <last_name nil="true"/>
+    <company_name nil="true"/>
+    <phone nil="true"/>
+  </account>
+  <subscription>
+    <plan>
+      <plan_code>gift_three_months</plan_code>
+      <name>Gift Three Months</name>
+    </plan>
+    <uuid>490d0fda7c3bb3751f22b94160a7f42c</uuid>
+    <state>active</state>
+    <quantity type="integer">1</quantity>
+    <total_amount_in_cents type="integer">4500</total_amount_in_cents>
+    <subscription_add_ons type="array"/>
+    <activated_at type="datetime">2018-12-11T17:15:55Z</activated_at>
+    <canceled_at type="datetime" nil="true"></canceled_at>
+    <expires_at type="datetime" nil="true"></expires_at>
+    <current_period_started_at type="datetime">2018-12-11T17:15:55Z</current_period_started_at>
+    <current_period_ends_at type="datetime">2019-03-11T17:15:55Z</current_period_ends_at>
+    <trial_started_at type="datetime" nil="true"></trial_started_at>
+    <trial_ends_at type="datetime" nil="true"></trial_ends_at>
+    <paused_at type="datetime" nil="true"></paused_at>
+    <resume_at type="datetime" nil="true"></resume_at>
+    <remaining_pause_cycles nil="true"/>
+  </subscription>
+</new_subscription_notification>
