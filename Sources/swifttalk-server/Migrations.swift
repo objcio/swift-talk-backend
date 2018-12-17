@@ -216,14 +216,5 @@ fileprivate let migrations: [String] = [
     ALTER TABLE gifts
         ADD COLUMN IF NOT EXISTS plan_code text NOT NULL
     """,
-    """
-    CREATE TABLE IF NOT exists questions (
-        id uuid DEFAULT public.uuid_generate_v4() PRIMARY KEY,
-        user_id uuid REFERENCES users,
-        episode_number integer NOT NULL,
-        created_at timestamp NOT NULL,
-        question text NOT NULL
-    )
-    """
 ]
 

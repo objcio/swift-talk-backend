@@ -7,33 +7,6 @@
 
 import Foundation
 
-func questionFormHelper(action: Route) -> Form<String> {
-    return Form(parse: { dict in
-        guard let question = dict["message"]
-            else { return nil }
-        return question.trimmingCharacters(in: .whitespacesAndNewlines)        
-    }, render: { data, errors in
-        let form = FormView(fields: [
-            .text(id: "message", required: false, title: "Your Message", value: "", multiline: 5)
-        ], submitTitle: "Submit", action: action, errors: errors)
-        return .div(form.renderStacked())
-    })
-}
-
-func questionForm(episode: Episode) -> Form<String> {
-    let form = questionFormHelper(action: .episode(episode.id, .question))
-    return form.wrap { (node: Node) -> Node in
-        let result: Node = LayoutConfig(contents: [
-            .div(classes: "container", [
-                Node.h2(classes: "color-blue bold ms2 mb", [.text("Your Question")]),
-                Node.h3(classes: "color-orange bold mt- mb+", [.text(episode.fullTitle)]),
-                node
-                ])
-            ]).layout
-        return result
-    }
-}
-
 func index(_ episodes: [EpisodeWithProgress]) -> Node {
     return LayoutConfig( contents: [
         pageHeader(.link(header: "All Episodes", backlink: .home, label: "Swift Talk")),

@@ -35,7 +35,6 @@ enum Route: Equatable {
     
     enum EpisodeR: Equatable {
         case download
-        case question
         case view(playPosition: Int?)
         case playProgress
     }
@@ -152,7 +151,6 @@ private let episodeHelper: [Router<Route.EpisodeR>] = [
         return t.map { "\($0)s" } ?? .some(nil)
     }),
     .c("download", .download),
-    .c("question", .question),
     .c("play-progress", .playProgress)
 ]
 

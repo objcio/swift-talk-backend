@@ -21,19 +21,6 @@ extension Route.EpisodeR {
             return .write(errorView("No such episode"), status: .notFound)
         }
         switch self {
-        case .question:
-            return I.form(questionForm(episode: ep), initial: "", convert: { (str: String) -> Either<Question, [ValidationError]> in
-                guard !str.isEmpty else {
-                    return .right([(field: "message", message: "Empty question.")])
-                }
-                return Either.left(Question(userId: session?.user.id, episodeNumber: ep.number, createdAt: Date(), question: str))
-            }, onPost: { (question: Question) in
-                dump(question)
-                return I.execute(question.insert) { id in
-                	I.write("\(question) \(id)")
-                }
-            })
-            
         case .view(let playPosition):
             return I.withConnection { c in
                 let downloads = try (session?.user.downloads).map { try c.execute($0) } ?? []
