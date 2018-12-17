@@ -95,8 +95,8 @@ extension Route.Account {
                     let (sub, invoicesAndPDFs, redemptions, billingInfo, coupons) = p
                     func cont(subAndAddOn: (Subscription, Plan.AddOn)?) throws -> I {
                         let redemptionsWithCoupon = try redemptions.map { (r) -> (Redemption, Coupon) in
-                            guard let c = coupons.first(where: { $0.coupon_code == r.coupon_code }) else {
-                                throw ServerError(privateMessage: "No coupon for \(r)!", publicMessage: "Something went wrong.")
+                            guard let c = coupons.first(where: { $0.matches(r.coupon_code) }) else {
+                                throw ServerError(privateMessage: "No coupon for \(r)!", publicMessage: "Something went wrong while loading your account details. Please contact us at \(email) to resolve this issue.")
                             }
                             return (r,c)
                         }

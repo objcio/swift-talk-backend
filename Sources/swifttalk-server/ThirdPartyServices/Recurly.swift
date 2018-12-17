@@ -349,6 +349,10 @@ struct Coupon: Codable {
         case single_use
         case temporal
     }
+    enum CouponType: String, Codable, Equatable {
+        case single_code
+        case bulk
+    }
     var id: Int
     var coupon_code: String
     var name: String
@@ -374,7 +378,8 @@ struct Coupon: Codable {
     var applies_to_non_plan_charges: Bool
     var redemption_resource: String
     var max_redemptions_per_account: Int?
-    var coupon_type: String
+    var coupon_type: CouponType
+    var unique_code_template: String?
     var plan_codes: [String]
 }
 
@@ -406,6 +411,45 @@ extension Coupon {
             return "Free trial for \(u.prettyDuration(units: a))"
         } else {
             return description
+        }
+    }
+    
+    private var uniqueCodeRegex: NSRegularExpression? {
+        guard let template = unique_code_template else { return nil }
+        var pattern = ""
+        var fixed = false
+        for c in template {
+            switch c {
+            case "'":
+                fixed.toggle()
+            case "a"..."z", "A"..."Z", "0"..."9":
+                if fixed {
+                    pattern.append(c)
+                } else {
+                    switch c {
+                    case "x", "X": pattern.append("[a-zA-Z]")
+                    case "9": pattern.append("\\d")
+                    default: break
+                    }
+                }
+            case "-" where fixed, "_" where fixed, "+" where fixed:
+                pattern.append("\\\(c)")
+            case "*" where !fixed:
+                pattern.append("[a-zA-Z0-9]")
+            default:
+                break
+            }
+        }
+        return try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive])
+    }
+    
+    func matches(_ code: String) -> Bool {
+        switch coupon_type {
+        case .single_code:
+            return coupon_code == code
+        case .bulk:
+            let range = NSRange(code.startIndex..<code.endIndex, in: code)
+            return uniqueCodeRegex?.matches(in: code, options: [], range: range).first != nil
         }
     }
 }
