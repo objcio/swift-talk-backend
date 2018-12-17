@@ -7,9 +7,6 @@
 
 import Foundation
 
-
-
-
 extension ANode where I == RequestEnvironment {
     static func hashedStylesheet(media: String = "all", href: String) -> Node {
         return ANode.withInput { deps in
@@ -35,6 +32,10 @@ extension ANode where I == RequestEnvironment {
     
     static func withCSRF(_ f: @escaping (CSRFToken) -> ANode) -> ANode {
         return .withInput { f($0.context.csrf) }
+    }
+    
+    static func withResourcePaths(_ f: @escaping ([URL]) -> ANode) -> ANode {
+        return .withInput { f($0.resourcePaths) }
     }
 }
 

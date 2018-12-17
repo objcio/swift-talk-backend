@@ -13,11 +13,13 @@ struct RequestEnvironment {
     private let _session: Lazy<Session?>
     let route: Route
     private let _connection: Lazy<Connection>
-    init(route: Route, hashedAssetName: @escaping (String) -> String, buildSession: @escaping () -> Session?, connection: Lazy<Connection>) {
+    let resourcePaths: [URL]
+    init(route: Route, hashedAssetName: @escaping (String) -> String, buildSession: @escaping () -> Session?, connection: Lazy<Connection>, resourcePaths: [URL]) {
         self.hashedAssetName = hashedAssetName
         self._session = Lazy(buildSession, cleanup: { _ in () })
         self.route = route
         self._connection = connection
+        self.resourcePaths = resourcePaths
     }
     
     var session: Session? { return flatten(try? _session.get()) }

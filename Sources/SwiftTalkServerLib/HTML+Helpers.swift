@@ -39,14 +39,16 @@ extension ANode where I == RequestEnvironment {
     }
     
     static func inlineSvg(path: String, preserveAspectRatio: String? = nil, classes: Class? = nil, attributes: [String:String] = [:]) -> Node {
-        let name = resourcePaths.resolve("images/" + path)!
-        var a = attributes
-        if let c = classes {
-            a["class", default: ""] += c.classes
-        }
-        // NOTE This has worked fine so far, but could be done with proper xml parsing if necessary
-        let contents = try! String(contentsOf: name).replacingOccurrences(of: "<svg", with: "<svg " + a.asAttributes)
-        return .raw(contents)
+        return Node.withResourcePaths { resourcePaths in
+            let name = resourcePaths.resolve("images/" + path)!
+            var a = attributes
+            if let c = classes {
+                a["class", default: ""] += c.classes
+            }
+            // NOTE This has worked fine so far, but could be done with proper xml parsing if necessary
+            let contents = try! String(contentsOf: name).replacingOccurrences(of: "<svg", with: "<svg " + a.asAttributes)
+            return .raw(contents)
+    	}
     }
     
     static func markdown(_ string: String) -> Node {

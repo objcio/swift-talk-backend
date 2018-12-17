@@ -14,7 +14,7 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "swifttalk-server",
+            name: "SwiftTalkServerLib",
             dependencies: [
                 "NIO",
                 "NIOHTTP1",
@@ -24,9 +24,15 @@ let package = Package(
                 "PerfectXML",
 				"Cryptor",
 		]),
+        .target(
+            name: "swifttalk-server",
+        	dependencies: [
+                "SwiftTalkServerLib"
+        	]
+        ),
         .testTarget(
             name: "SwiftTalkTests",
-        	dependencies: ["swifttalk-server"]
+        	dependencies: ["SwiftTalkServerLib"]
         )
     ]
 )

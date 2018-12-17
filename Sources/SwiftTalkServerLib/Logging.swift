@@ -8,23 +8,23 @@
 import Foundation
 
 
-func log(file: StaticString = #file, line: UInt = #line, _ e: Error) {
+public func log(file: StaticString = #file, line: UInt = #line, _ e: Error) {
     print("ERROR \(file):\(line) " + e.localizedDescription, to: &standardError)
     standardError.synchronizeFile()
 }
 
-func log(file: StaticString = #file, line: UInt = #line, error: String) {
+public func log(file: StaticString = #file, line: UInt = #line, error: String) {
     print("ERROR \(file):\(line): \(error)", to: &standardError)
     standardError.synchronizeFile()
 }
 
-func log(file: StaticString = #file, line: UInt = #line, info: String) {
+public func log(file: StaticString = #file, line: UInt = #line, info: String) {
     print("INFO \(file):\(line): \(info)")
     FileHandle.standardOutput.synchronizeFile()
 }
 
 @discardableResult
-func tryOrLog<A>(file: StaticString = #file, line: UInt = #line, _ message: String = "", _ f: () throws -> A) -> A? {
+public func tryOrLog<A>(file: StaticString = #file, line: UInt = #line, _ message: String = "", _ f: () throws -> A) -> A? {
     do {
         return try f()
     } catch {
