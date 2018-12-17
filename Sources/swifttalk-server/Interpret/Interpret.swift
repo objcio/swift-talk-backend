@@ -39,7 +39,7 @@ extension Route {
             return try g.interpret()
         case let .episode(id, action):
             return try action.interpret(id: id)
-        case .subscribe:
+        case .subscribe: // this isn't in .subscribe because it doesn't require a session.
             guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
                 throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
             }
