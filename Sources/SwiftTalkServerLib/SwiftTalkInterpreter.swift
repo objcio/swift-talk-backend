@@ -157,7 +157,7 @@ extension HTML {
 extension Reader: HTML where Result: SwiftTalkInterpreter, Value == RequestEnvironment {
     static func write(_ html: Node, status: HTTPResponseStatus) -> Reader {
         return Reader { value in
-            return .write(html.htmlDocument(input: value))
+            return .write(html: html.ast(input: value), status: status)
         }
     }
     
@@ -168,12 +168,21 @@ extension Reader: HTML where Result: SwiftTalkInterpreter, Value == RequestEnvir
     }
 }
 
+extension Reader where Result == NIOInterpreter, Value == RequestEnvironment {
+    static func write(_ html: Node, status: HTTPResponseStatus) -> Reader {
+        return Reader { value in
+            return .write(html.htmlDocument(input: value), status: status)
+        }
+    }
+}
+
 
 protocol SwiftTalkInterpreter: Interpreter {
     static func writeFile(path: String) -> Self
     static func notFound(_ string: String) -> Self
     static func write(_ string: String, status: HTTPResponseStatus) -> Self
     static func write(rss: ANode<()>, status: HTTPResponseStatus) -> Self
+    static func write(html: ANode<()>, status: HTTPResponseStatus) -> Self
     static func write(json: Data, status: HTTPResponseStatus) -> Self
     static func redirect(to route: Route, headers: [String: String]) -> Self
 }
@@ -194,6 +203,10 @@ extension SwiftTalkInterpreter {
     
     static func write(rss: ANode<()>, status: HTTPResponseStatus = .ok) -> Self {
         return .write(rss.xmlDocument, status: status, headers: ["Content-Type": "application/rss+xml; charset=utf-8"])
+    }
+    
+    static func write(html: ANode<()>, status: HTTPResponseStatus = .ok) -> Self {
+        return .write(html.htmlDocument(input: ()), status: status, headers: ["Content-Type": "text/html; charset=utf-8"])
     }
     
     static func write(json: Data, status: HTTPResponseStatus = .ok) -> Self {

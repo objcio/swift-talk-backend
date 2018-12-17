@@ -40,7 +40,10 @@ extension ANode where I == RequestEnvironment {
     
     static func inlineSvg(path: String, preserveAspectRatio: String? = nil, classes: Class? = nil, attributes: [String:String] = [:]) -> Node {
         return Node.withResourcePaths { resourcePaths in
-            let name = resourcePaths.resolve("images/" + path)!
+            guard let name = resourcePaths.resolve("images/" + path) else {
+                log(info: "Couldn't find svg")
+                return .none
+            }
             var a = attributes
             if let c = classes {
                 a["class", default: ""] += c.classes

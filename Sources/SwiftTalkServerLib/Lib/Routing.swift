@@ -68,6 +68,10 @@ extension RouteDescription {
 }
 
 extension Router {
+    func route(forURI uri: String) -> A? {
+        return route(for: Request(uri))
+    }
+    
     func route(for request: Request) -> A? {
         var copy = request
         let result = parse(&copy)

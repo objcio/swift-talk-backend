@@ -23,6 +23,16 @@ struct Request {
     var cookies: [(String, String)]
 }
 
+extension Request {
+    init(_ uri: String, method: HTTPMethod = .get, cookies: [(String,String)] = []) {
+        let (p,q) = uri.parseQuery
+        path = p.split(separator: "/").map(String.init)
+        query = q
+        self.method = method
+        self.cookies = cookies
+    }
+}
+
 protocol Interpreter {
     static func write(_ string: String, status: HTTPResponseStatus, headers: [String: String]) -> Self
     static func write(_ data: Data, status: HTTPResponseStatus, headers: [String: String]) -> Self
@@ -218,7 +228,7 @@ final class RouteHandler: ChannelInboundHandler {
         switch reqPart {
         case .head(let header):
             accumData = Data()
-            let (path, query) = header.uri.parseQuery
+            
             let cookies = header.headers["Cookie"].first.map {
                 $0.split(separator: ";").compactMap { $0.trimmingCharacters(in: .whitespaces).keyAndValue }
             } ?? []
@@ -230,7 +240,7 @@ final class RouteHandler: ChannelInboundHandler {
             }
             
             guard let method = HTTPMethod(header.method) else { notFound(); return }
-            let r = Request(path: path.split(separator: "/").map(String.init), query: query, method: method, cookies: cookies)
+            let r = Request(header.uri, method: method, cookies: cookies)
             if let i = handle(r) {
                 if let c = i.run(env) {
                     postCont = (c, header)

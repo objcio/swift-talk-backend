@@ -95,6 +95,10 @@ extension El {
             return "<\(name)\(atts)>" + children.map { $0.render(input: input, encodeText: encodeText) }.joined(separator: "") + "</\(name)>"
         }
     }
+    
+    func ast(input: I) -> El<()> {
+        return El<()>(name: name, block: block, attributes: attributes, children: children.map { $0.ast(input: input) })
+    }
 }
 extension ANode {
     func render(input: I, encodeText: (String) -> String = { $0.addingUnicodeEntities }) -> String {
@@ -104,6 +108,21 @@ extension ANode {
         case .raw(let s): return s
         case .withInput(let f): return f(input).render(input: input, encodeText: encodeText)
         case .node(let n): return n.render(input: input, encodeText: encodeText)
+        }
+    }
+    
+    func ast(input: I) -> ANode<()> {
+        switch self {
+        case .none:
+            return .none
+        case let .node(n):
+            return .node(n.ast(input: input))
+        case let .withInput(f):
+            return f(input).ast(input: input)
+        case let .text(t):
+            return .text(t)
+        case let .raw(r):
+            return .raw(r)
         }
     }
     
@@ -387,3 +406,72 @@ fileprivate extension String {
         return result
     }
 }
+
+extension El where I == () {
+    // todo: we might want to check for forms as well
+    func linkTargets() -> [String] {
+        guard name == "a", let href = attributes["href"] else { return children.flatMap { $0.linkTargets() } }
+        return [href]
+    }
+    
+    func forms() -> [(action: String, inputs: [(String,String)])] {
+        return children.flatMap { $0.forms() }
+    }
+    
+    func inputs() -> [(String,String)] {
+        return children.flatMap { $0.inputs() }
+    }
+}
+
+extension ANode where I == () {
+    // Searches for a's and forms
+    func linkTargets() -> [String] {
+        switch self {
+        case .none:
+            return []
+        case let .node(n):
+            return n.linkTargets()
+        case let .withInput(f):
+            return f(()).linkTargets()
+        case .text:
+            return []
+        case .raw(_):
+            return []
+        }
+    }
+    
+    func forms() -> [(action: String, inputs: [(String,String)])] {
+        switch self {
+        case .none:
+            return []
+        case let .node(n) where n.name == "form":
+            guard let a = n.attributes["action"] else { fatalError() }
+            return [(action: a, inputs: n.inputs())] // todo a.inputs
+        case .node(let n): return n.forms()
+        case let .withInput(f):
+            return f(()).forms()
+        case .text:
+            return []
+        case .raw(_):
+            return []
+        }
+    }
+    
+    func inputs() -> [(String,String)] {
+        switch self {
+        case .none:
+            return []
+        case let .node(n) where n.name == "input":
+            return [(n.attributes["name"] ?? "", n.attributes["value"] ?? "")]
+        case .node(let n):
+            return n.inputs()
+        case let .withInput(f):
+            return f(()).inputs()
+        case .text:
+            return []
+        case .raw(_):
+            return []
+        }
+    }
+}
+

@@ -57,7 +57,7 @@ extension Route {
         case .login(let cont):
             var path = "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(github.clientId)"
             if let c = cont {
-                let encoded = env.baseURL.absoluteString + Route.githubCallback(code: nil, origin: c).path
+                let encoded = env.baseURL.absoluteString + Route.githubCallback(code: nil, origin: c.path).path
                 path.append("&redirect_uri=" + encoded.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)
             }
             return I.redirect(path: path, headers: [:])

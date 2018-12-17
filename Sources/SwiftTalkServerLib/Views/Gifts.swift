@@ -113,7 +113,7 @@ func redeemGiftSub(gift: Row<Gift>, plan: Plan) throws -> Node {
                     ] + message),
                 ]),
                 .div([
-                    Node.link(to: .login(continue: Route.gift(.redeem(gift.id)).path), classes: "mt+ c-button c-button--big c-button--blue c-button--wide", ["Start By Logging In With GitHub"])
+                    Node.link(to: .login(continue: Route.gift(.redeem(gift.id))), classes: "mt+ c-button c-button--big c-button--blue c-button--wide", ["Start By Logging In With GitHub"])
                 ])
             ])
         ])

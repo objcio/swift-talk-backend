@@ -7,13 +7,13 @@
 
 import Foundation
 
-enum Route: Equatable {
+indirect enum Route: Equatable {
     case home
     case episodes
     case sitemap
     case subscribe
     case collections
-    case login(continue: String?)
+    case login(continue: Route?)
     case githubCallback(code: String?, origin: String?)
     case collection(Id<Collection>)
     case staticFile(path: [String])
@@ -165,9 +165,9 @@ private let assetsRoute: Router<Route> = (.c("assets") / .path()).transform({ Ro
     return path
 })
 
-private let loginRoute: Router<Route> = (.c("users") / .c("auth") / .c("github") / Router.optionalQueryParam(name: "origin")).transform({ Route.login(continue: $0)}, { r in
+private let loginRoute: Router<Route> = (.c("users") / .c("auth") / .c("github") / Router.optionalQueryParam(name: "origin")).transform({ origin in Route.login(continue: origin.flatMap {router.route(forURI: $0)})}, { r in
     guard case .login(let x) = r else { return nil }
-    return x
+    return x?.path
 })
 
 

@@ -85,7 +85,7 @@ extension Plan {
             } else if context.session?.user != nil {
                 continueLink = Node.link(to: .subscription(.new(couponCode: coupon?.coupon_code)), classes: linkClasses, ["Proceed to payment"])
             } else {
-                continueLink = Node.link(to: .login(continue: Route.subscription(.new(couponCode: coupon?.coupon_code)).path), classes: linkClasses, ["Sign in with Github"])
+                continueLink = Node.link(to: .login(continue: Route.subscription(.new(couponCode: coupon?.coupon_code))), classes: linkClasses, ["Sign in with Github"])
             }
             let contents: [Node] = [
                 pageHeader(.other(header: "Subscribe to Swift Talk", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),

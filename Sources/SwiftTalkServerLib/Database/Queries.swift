@@ -38,6 +38,11 @@ struct Row<Element: Codable>: Codable {
     var id: UUID
     var data: Element
     
+    init(id: UUID, data: Element) {
+        self.id = id
+        self.data = data
+    }
+    
     // For importing
 
     init(from decoder: Decoder) throws {
