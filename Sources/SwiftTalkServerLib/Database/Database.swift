@@ -28,7 +28,28 @@ let postgresConfig = env.databaseURL.map { url in ConnInfo.raw(url) } ?? ConnInf
 
 let postgreSQL = try! PostgreSQL.Database(connInfo: postgresConfig)
 
-func withConnection<A>(_ x: (Connection) throws -> A) throws -> A {
+protocol ConnectionProtocol {
+    func execute(_ query: String, _ values: [PostgreSQL.Node]) throws -> PostgreSQL.Node
+    func execute<A>(_ query: Query<A>) throws -> A
+}
+    
+extension ConnectionProtocol {
+    public func execute(_ query: String) throws -> PostgreSQL.Node {
+        return try execute(query, [])
+    }
+}
+
+extension Connection: ConnectionProtocol { }
+
+var testConnection: ConnectionProtocol? = nil
+func pushTestConnection(_ c: ConnectionProtocol) {
+    testConnection = c
+}
+
+func withConnection<A>(_ x: (ConnectionProtocol) throws -> A) throws -> A {
+    if let t = testConnection {
+        return try x(t)
+    }
     let conn = try postgreSQL.makeConnection()
     let result = try x(conn)
     try conn.close()
@@ -77,8 +98,12 @@ extension CSRFToken: NodeRepresentable {
 
 
 extension Connection {
+    @discardableResult func execute<A>(_ query: Query<A>) throws -> A {
+        return try execute(query, loggingTreshold: 0.1)
+    }
+    
     @discardableResult
-    func execute<A>(_ query: Query<A>, loggingTreshold: TimeInterval = 0.1) throws -> A {
+    func execute<A>(_ query: Query<A>, loggingTreshold: TimeInterval) throws -> A {
 //        print(query.query)
         let node = try measure(message: "query: \(query.query)", treshold: loggingTreshold) { () throws -> PostgreSQL.Node in
             do {

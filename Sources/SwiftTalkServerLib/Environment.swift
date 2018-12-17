@@ -8,7 +8,17 @@
 import Foundation
 
 
-let env = Env()
+fileprivate var _env: Env? = nil
+var env: Env {
+    if _env == nil {
+        _env = Env(readDotEnv().merging(ProcessInfo.processInfo.environment, uniquingKeysWith: { $1 }))
+    }
+    return _env!
+}
+
+func pushTestEnv() {
+    _env = Env(Dictionary(Env.required.map { ($0, $0 + "_testing")}, uniquingKeysWith: { $1 }))
+}
 
 func readDotEnv() -> [String:String] {
     guard let c = try? String(contentsOfFile: ".env") else { return [:] }
@@ -16,29 +26,31 @@ func readDotEnv() -> [String:String] {
 }
 
 struct Env {
-    let env: [String:String] = readDotEnv().merging(ProcessInfo.processInfo.environment, uniquingKeysWith: { $1 })
+    static let required: [String] = [
+        "BASE_URL",
+        "GITHUB_CLIENT_ID",
+        "GITHUB_CLIENT_SECRET",
+        "GITHUB_ACCESS_TOKEN",
+        "RECURLY_SUBDOMAIN",
+        "RECURLY_PUBLIC_KEY",
+        "RECURLY_API_KEY",
+        "CIRCLE_API_KEY",
+        "MAILCHIMP_API_KEY",
+        "MAILCHIMP_LIST_ID",
+        "VIMEO_ACCESS_TOKEN",
+        "SENDGRID_API_KEY"
+    ]
+    let env: [String:String]
     
-    init() {
+    init(_ values: [String:String]) {
+        env = values
         typealias ErrorMessage = String
         func verify(_ name: String) -> ErrorMessage? {
             if env[name] == nil { return name }
             return nil
         }
 
-        let messages = [
-		  "BASE_URL",
-          "GITHUB_CLIENT_ID",
-          "GITHUB_CLIENT_SECRET",
-          "GITHUB_ACCESS_TOKEN",
-          "RECURLY_SUBDOMAIN",
-          "RECURLY_PUBLIC_KEY",
-          "RECURLY_API_KEY",
-          "CIRCLE_API_KEY",
-          "MAILCHIMP_API_KEY",
-          "MAILCHIMP_LIST_ID",
-          "VIMEO_ACCESS_TOKEN",
-          "SENDGRID_API_KEY"
-		].compactMap(verify)
+        let messages = Env.required.compactMap(verify)
 		guard messages.isEmpty else {
 			fatalError("Missing environment variables: \(messages)")
 		}

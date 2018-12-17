@@ -152,8 +152,10 @@ fileprivate var plans = plansO.atomic
 
 // Public properties
 
+var testPlans: [Plan]? = nil
+
 extension Plan {
-    static var all: [Plan] { return plans.value }
+    static var all: [Plan] { return testPlans ?? plans.value }
 }
 
 extension Episode {
