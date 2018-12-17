@@ -15,12 +15,7 @@ enum Route: Equatable {
     case collections
     case login(continue: String?)
     case githubCallback(code: String?, origin: String?)
-    case episode(Id<Episode>, EpisodeR)
     case collection(Id<Collection>)
-//    case episode(Id<Episode>, playPosition: Int?)
-//    case question(Id<Episode>)
-//    case download(Id<Episode>)
-//    case playProgress(Id<Episode>)
     case staticFile(path: [String])
     case recurlyWebhook
     case githubWebhook
@@ -29,6 +24,7 @@ enum Route: Equatable {
     case rssFeed
     case episodesJSON
     case collectionsJSON
+    case episode(Id<Episode>, EpisodeR)
     case gift(Gifts)
     case account(Account)
     case subscription(Subscription)
