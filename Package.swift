@@ -24,5 +24,9 @@ let package = Package(
                 "PerfectXML",
 				"Cryptor",
 		]),
+        .testTarget(
+            name: "SwiftTalkTests",
+        	dependencies: ["swifttalk-server"]
+        )
     ]
 )

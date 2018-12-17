@@ -8,13 +8,13 @@
 import Foundation
 
 
-struct Promise<A> {
+public struct Promise<A> {
     public let run: (@escaping (A) -> ()) -> ()
-    init(_ run: @escaping ((@escaping (A) -> ()) -> ())) {
+    public init(_ run: @escaping ((@escaping (A) -> ()) -> ())) {
         self.run = run
     }
     
-    func map<B>(_ f: @escaping (A) -> B) -> Promise<B> {
+    public func map<B>(_ f: @escaping (A) -> B) -> Promise<B> {
         return Promise<B> { cb in
             self.run { a in
                 cb(f(a))
@@ -22,7 +22,7 @@ struct Promise<A> {
         }
     }
     
-    func flatMap<B>(_ f: @escaping (A) -> Promise<B>) -> Promise<B> {
+    public func flatMap<B>(_ f: @escaping (A) -> Promise<B>) -> Promise<B> {
         return Promise<B> { cb in
             self.run { a in
                 let p = f(a)
