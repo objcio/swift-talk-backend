@@ -9,9 +9,10 @@ import Foundation
 
 import XCTest
 import NIOHTTP1
+import PostgreSQL
 @testable import SwiftTalkServerLib
 
-enum TestInterpreter: Interpreter {
+enum TestInterpreter: Interpreter, SwiftTalkInterpreter {
     case _write(String, status: HTTPResponseStatus, headers: [String:String])
     case _writeData(Data, status: HTTPResponseStatus, headers: [String:String])
     case _writeFile(path: String, maxAge: UInt64?)
@@ -50,8 +51,6 @@ enum TestInterpreter: Interpreter {
         return ._redirect(path: path, headers: headers)
     }
 }
-
-extension TestInterpreter: SwiftTalkInterpreter {}
 
 extension TestInterpreter {
     func linkTargets(file: StaticString = #file, line: UInt = #line) -> [Route] {
@@ -105,18 +104,3 @@ struct TestConnection: ConnectionProtocol {
 
 struct TestErr: Error { }
 
-import PostgreSQL
-extension TestInterpreter: HasDatabase {
-    static func withConnection(_ cont: @escaping (Either<Connection, Error>) -> TestInterpreter) -> TestInterpreter {
-        return cont(.right(TestErr()))
-    }
-    
-    static func execute<A>(_ query: Query<A>, _ cont: @escaping (Either<A, Error>) -> TestInterpreter) -> TestInterpreter {
-        return ._execute(query.map { $0 }, cont: { x in
-            switch x {
-            case let .left(any): return cont(.left(any as! A))
-            case let .right(r): return cont(.right(r))
-            }
-        })
-    }
-}

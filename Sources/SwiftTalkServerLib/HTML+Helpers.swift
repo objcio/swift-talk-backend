@@ -39,6 +39,10 @@ extension ANode where I == RequestEnvironment {
     }
     
     static func inlineSvg(path: String, preserveAspectRatio: String? = nil, classes: Class? = nil, attributes: [String:String] = [:]) -> Node {
+        // don't render inline svg's in tests
+        if ProcessInfo.processInfo.environment.keys.contains("IDEiPhoneInternalTestBundleName") {
+            return Node.none
+        }
         return Node.withResourcePaths { resourcePaths in
             guard let name = resourcePaths.resolve("images/" + path) else {
                 log(info: "Couldn't find svg")

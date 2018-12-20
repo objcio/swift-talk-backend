@@ -86,3 +86,15 @@ struct Env {
     var vimeoAccessToken: String { return env["VIMEO_ACCESS_TOKEN"]! }
 }
 
+struct Globals {
+    let currentDate: () -> Date
+    
+    init(currentDate: @escaping () -> Date = { Date() }) {
+        self.currentDate = currentDate
+    }
+}
+
+private(set) var globals = Globals()
+func pushGlobals(_ newValue: Globals) {
+    globals = newValue
+}

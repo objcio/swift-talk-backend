@@ -105,12 +105,12 @@ extension Task {
     }
 
     func schedule(minutes: Int) -> Query<()> {
-        let date = Date().addingTimeInterval(60 * TimeInterval(minutes))
+        let date = globals.currentDate().addingTimeInterval(60 * TimeInterval(minutes))
         return schedule(at: date)
     }
 
     func schedule(weeks: Int) -> Query<()> {
-        let date = Calendar.current.date(byAdding: DateComponents(day: weeks * 7), to: Date())!
+        let date = Calendar.current.date(byAdding: DateComponents(day: weeks * 7), to: globals.currentDate())!
         return schedule(at: date)
     }
     

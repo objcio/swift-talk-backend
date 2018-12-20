@@ -36,7 +36,7 @@ extension Route.Gifts {
                 let f = payGiftForm(plan: plan, gift: gift.data, route: .gift(.pay(id)))
                 return I.form(f, initial: .init(), validate: { _ in [] }, onPost: { (result: GiftResult) throws in
                     return I.query(UserData(email: result.gifter_email, avatarURL: "", name: "").insert) { userId in
-                        let start = gift.data.sendAt > Date() ? gift.data.sendAt : nil // no start date means starting immediately
+                        let start = gift.data.sendAt > globals.currentDate() ? gift.data.sendAt : nil // no start date means starting immediately
                         let cr = CreateSubscription(plan_code: plan.plan_code, currency: "USD", coupon_code: nil, starts_at: start, account: .init(account_code: userId, email: result.gifter_email, billing_info: .init(token_id: result.token)))
                         return I.onSuccess(promise: recurly.createSubscription(cr).promise, message: "Something went wrong, please try again", do: { sub_ in
                             switch sub_ {

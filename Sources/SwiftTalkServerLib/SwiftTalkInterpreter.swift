@@ -61,24 +61,37 @@ protocol HasDatabase {
     @available(*, deprecated) static func withConnection(_ cont: @escaping (Either<PostgreSQL.Connection, Error>) -> Self) -> Self
 }
 
-extension Reader: HasDatabase where Value == RequestEnvironment {
-    static func execute<A>(_ query: Query<A>, _ cont: @escaping (Either<A, Error>) -> Reader<RequestEnvironment, Result>) -> Reader<RequestEnvironment, Result> {
-        return Reader { env in
-            do {
-                return cont(try .left(env.connection().execute(query, loggingTreshold: 0.1))).run(env)
-            } catch {
-                return cont(.right(error)).run(env)
-            }
+protocol CanQuery {
+    func execute<A>(_ query: Query<A>) -> Either<A, Error>
+    @available(*, deprecated) func getConnection() -> Either<PostgreSQL.Connection, Error>
+
+}
+
+extension RequestEnvironment: CanQuery {
+    func execute<A>(_ query: Query<A>) -> Either<A, Error> {
+        do {
+            return try .left(connection().execute(query))
+        } catch {
+            return .right(error)
         }
     }
     
-    static func withConnection(_ cont: @escaping (Either<Connection, Error>) -> Reader<RequestEnvironment, Result>) -> Reader<RequestEnvironment, Result> {
+    func getConnection() -> Either<Connection, Error> {
+        do { return try .left(connection()) }
+        catch { return .right(error) }
+    }
+}
+
+extension Reader: HasDatabase where Value: CanQuery {
+    static func execute<A>(_ query: Query<A>, _ cont: @escaping (Either<A, Error>) -> Reader<Value, Result>) -> Reader<Value, Result> {
         return Reader { env in
-            do {
-                return cont(.left(try env.connection())).run(env)
-            } catch {
-                return cont(.right(error)).run(env)
-            }
+            return cont(env.execute(query)).run(env)
+        }
+    }
+    
+    static func withConnection(_ cont: @escaping (Either<Connection, Error>) -> Reader<Value, Result>) -> Reader<Value, Result> {
+        return Reader { env in
+            return cont(env.getConnection()).run(env)
         }
     }
     
@@ -127,7 +140,13 @@ extension SwiftTalkInterpreter where Self: HasSession, Self: HTML {
     }
 }
 
-extension Reader: HasSession where Value == RequestEnvironment {
+protocol ContainsSession {
+    var session: Session? { get }
+}
+
+extension RequestEnvironment: ContainsSession { }
+
+extension Reader: HasSession where Value: ContainsSession {
     static func withSession(_ cont: @escaping (Session?) -> Reader<Value, Result>) -> Reader<Value, Result> {
         return Reader { value in
             cont(value.session).run(value)
@@ -154,16 +173,24 @@ extension HTML {
     }
 }
 
-extension Reader: HTML where Result: SwiftTalkInterpreter, Value == RequestEnvironment {
+protocol ContainsRequestEnvironment {
+    var requestEnvironment: RequestEnvironment { get }
+}
+
+extension RequestEnvironment: ContainsRequestEnvironment {
+    var requestEnvironment: RequestEnvironment { return self }
+}
+
+extension Reader: HTML where Result: SwiftTalkInterpreter, Value: ContainsRequestEnvironment {
     static func write(_ html: Node, status: HTTPResponseStatus) -> Reader {
         return Reader { value in
-            return .write(html: html.ast(input: value), status: status)
+            return Result.write(html: html.ast(input: value.requestEnvironment), status: status)
         }
     }
     
     static func withCSRF(_ cont: @escaping (CSRFToken) -> Reader) -> Reader {
         return Reader { value in
-            return cont(value.context.csrf).run(value)
+            return cont(value.requestEnvironment.context.csrf).run(value)
         }
     }
 }

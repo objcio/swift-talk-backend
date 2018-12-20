@@ -95,7 +95,7 @@ extension Episode {
     }
     
     var released: Bool {
-        return releaseAt < Date()
+        return releaseAt < globals.currentDate()
     }
     
     func posterURL(width: Int, height: Int) -> URL {

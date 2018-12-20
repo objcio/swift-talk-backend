@@ -131,7 +131,7 @@ extension DateFormatter {
 extension Date {
     var pretty: String {
         let cal = NSCalendar.current
-        if cal.component(.year, from: Date()) == cal.component(.year, from: self) {
+        if cal.component(.year, from: globals.currentDate()) == cal.component(.year, from: self) {
             return DateFormatter.withoutYear.string(from: self)
         } else {
             return DateFormatter.withYear.string(from: self)

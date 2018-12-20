@@ -34,7 +34,7 @@ struct Gift: Codable, Insertable {
         if !gifteeEmail.isValidEmail {
             result.append(("giftee_email", "Their email address is invalid."))
         }
-        if sendAt < Date() && !sendAt.isToday {
+        if sendAt < globals.currentDate() && !sendAt.isToday {
             result.append(("send_at", "The date cannot be in the past."))
         }
         return result
@@ -62,7 +62,7 @@ struct SessionData: Codable, Insertable {
     
     init(userId: UUID) {
         self.userId = userId
-        self.createdAt = Date()
+        self.createdAt = globals.currentDate()
         self.updatedAt = self.createdAt
     }
     
@@ -76,7 +76,7 @@ struct DownloadData: Codable, Insertable {
     init(user: UUID, episode: Int) {
         self.userId = user
         self.episodeNumber = episode
-        self.createdAt = Date()
+        self.createdAt = globals.currentDate()
     }
     
     static let tableName: String = "downloads"
@@ -129,7 +129,7 @@ struct UserData: Codable, Insertable {
         self.githubToken = githubToken
         self.avatarURL = avatarURL
         self.name = name
-        let now = Date()
+        let now = globals.currentDate()
         self.rememberCreatedAt = rememberCreatedAt ?? now
         self.updatedAt = updatedAt ?? now
         self.createdAt = createdAt ?? now
