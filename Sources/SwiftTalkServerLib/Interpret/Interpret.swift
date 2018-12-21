@@ -179,7 +179,9 @@ extension Route {
                                         let email = sendgrid.send(to: gift.data.gifteeEmail, name: gift.data.gifteeName, subject: "We have a gift for you...", text: gift.gifteeEmailText(duration: duration))
                                         log(info: "Sending gift email to \(gift.data.gifteeEmail)")
                                         URLSession.shared.load(email) { result in
-                                            log(error: "Can't send email for gift \(gift)")
+                                            if result == nil {
+                                                log(error: "Can't send email for gift \(gift)")
+                                            }
                                         }
                                         gift.data.activated = true
                                         return I.query(gift.update(), ok)
