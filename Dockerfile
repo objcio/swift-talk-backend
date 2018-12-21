@@ -34,7 +34,7 @@ RUN swift package update
 COPY Sources ./Sources
 COPY Tests ./Tests
 
-RUN swift build --product swifttalk-server --configuration release
+RUN swift test && swift build --product swifttalk-server --configuration release
 
 COPY data ./data
 
