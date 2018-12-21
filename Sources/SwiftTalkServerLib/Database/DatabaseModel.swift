@@ -107,12 +107,8 @@ struct UserData: Codable, Insertable {
     var avatarURL: String
     var admin: Bool = false
     var name: String
-    var rememberCreatedAt: Date
     var createdAt: Date
-    var updatedAt: Date
     var recurlyHostedLoginToken: String?
-    var paymentMethodId: UUID?
-    var lastReconciledAt: Date?
     var collaborator: Bool = false
     var downloadCredits: Int = 0
     var downloadCreditsOffset: Int = 0
@@ -122,7 +118,7 @@ struct UserData: Codable, Insertable {
     var csrf: CSRFToken
 
     
-    init(email: String, githubUID: Int? = nil, githubLogin: String? = nil, githubToken: String? = nil, avatarURL: String, name: String, createdAt: Date? = nil, rememberCreatedAt: Date? = nil, updatedAt: Date? = nil, collaborator: Bool = false, downloadCredits: Int = 0, canceled: Bool = false, confirmedNameAndEmail: Bool = false, subscriber: Bool = false) {
+    init(email: String, githubUID: Int? = nil, githubLogin: String? = nil, githubToken: String? = nil, avatarURL: String, name: String, createdAt: Date? = nil, collaborator: Bool = false, downloadCredits: Int = 0, canceled: Bool = false, confirmedNameAndEmail: Bool = false, subscriber: Bool = false) {
         self.email = email
         self.githubUID = githubUID
         self.githubLogin = githubLogin
@@ -130,8 +126,6 @@ struct UserData: Codable, Insertable {
         self.avatarURL = avatarURL
         self.name = name
         let now = globals.currentDate()
-        self.rememberCreatedAt = rememberCreatedAt ?? now
-        self.updatedAt = updatedAt ?? now
         self.createdAt = createdAt ?? now
         self.collaborator = collaborator
         self.downloadCredits = downloadCredits

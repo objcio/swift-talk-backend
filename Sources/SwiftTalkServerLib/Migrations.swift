@@ -216,5 +216,12 @@ fileprivate let migrations: [String] = [
     ALTER TABLE gifts
         ADD COLUMN IF NOT EXISTS plan_code text NOT NULL
     """,
+    """
+    ALTER TABLE users
+        DROP COLUMN IF EXISTS remember_created_at,
+        DROP COLUMN IF EXISTS payment_method_id,
+        DROP COLUMN IF EXISTS last_reconciled_at,
+        DROP COLUMN IF EXISTS updated_at
+    """
 ]
 
