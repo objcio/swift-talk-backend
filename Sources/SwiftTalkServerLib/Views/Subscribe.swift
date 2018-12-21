@@ -204,6 +204,7 @@ struct NewGiftSubscriptionData: Codable {
     var plan: SubscriptionPlan
     var start_date: String
     var payment_errors: [String] // TODO verify type
+    var csrf: String
     var method: HTTPMethod = .post
 }
 

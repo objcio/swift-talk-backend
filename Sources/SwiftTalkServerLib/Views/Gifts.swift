@@ -235,17 +235,19 @@ func payGiftForm(plan: Plan, gift: GiftData, route: Route) -> Form<GiftResult> {
         guard let d = dict["billing_info[token]"], let e = dict["gifter_email"], let n = dict["gifter_name"] else { return nil }
         return GiftResult(token: d, gifter_email: e, gifter_name: n)
     }, render: { (_, errs) -> Node in
-        let data = NewGiftSubscriptionData(action: route.path, public_key: env.recurlyPublicKey, plan: .init(plan), start_date: DateFormatter.fullPretty.string(from: gift.sendAt), payment_errors: errs.map { "\($0.field): \($0.message)" }, method: .post)
-        return LayoutConfig(contents: [
-            .header([
-                .div(classes: "container-h pb+ pt+", [
-                    .h1(classes: "ms4 color-blue bold mb-", ["Your Details"])
-                ])
-                ]),
-            .div(classes: "container", [
-                ReactComponent.newGiftSubscription.build(data)
-                ])
-		], includeRecurlyJS: true).layoutForCheckout
+        return Node.withCSRF { csrf in
+            let data = NewGiftSubscriptionData(action: route.path, public_key: env.recurlyPublicKey, plan: .init(plan), start_date: DateFormatter.fullPretty.string(from: gift.sendAt), payment_errors: errs.map { "\($0.field): \($0.message)" }, csrf: csrf.stringValue, method: .post)
+            return LayoutConfig(contents: [
+                .header([
+                    .div(classes: "container-h pb+ pt+", [
+                        .h1(classes: "ms4 color-blue bold mb-", ["Your Details"])
+                    ])
+                    ]),
+                .div(classes: "container", [
+                    ReactComponent.newGiftSubscription.build(data)
+                    ])
+            ], includeRecurlyJS: true).layoutForCheckout
+        }
     })
 }
 
