@@ -100,16 +100,20 @@ struct CSRFToken: Codable, Equatable, Hashable {
 }
 
 struct UserData: Codable, Insertable {
+    enum Role: Int, Codable {
+        case user = 0
+        case collaborator = 1
+        case admin = 2
+    }
     var email: String
     var githubUID: Int?
     var githubLogin: String?
     var githubToken: String?
     var avatarURL: String
-    var admin: Bool = false
+    var role: Role = .user
     var name: String
     var createdAt: Date
     var recurlyHostedLoginToken: String?
-    var collaborator: Bool = false
     var downloadCredits: Int = 0
     var downloadCreditsOffset: Int = 0
     var subscriber: Bool = false
@@ -127,7 +131,6 @@ struct UserData: Codable, Insertable {
         self.name = name
         let now = globals.currentDate()
         self.createdAt = createdAt ?? now
-        self.collaborator = collaborator
         self.downloadCredits = downloadCredits
         csrf = CSRFToken(UUID())
         self.canceled = canceled
@@ -155,7 +158,7 @@ extension String {
 
 extension UserData {
     var premiumAccess: Bool {
-        return admin || collaborator || subscriber
+        return role == .admin || role == .collaborator || subscriber
     }
     
     func validate() -> [ValidationError] {
@@ -168,11 +171,19 @@ extension UserData {
         }
         return result
     }
+    
+    var isAdmin: Bool {
+        return role == .admin
+    }
+    
+    var isCollaborator: Bool {
+        return role == .collaborator
+    }
 
     func downloadStatus(for episode: Episode, downloads: [Row<DownloadData>]) -> Episode.DownloadStatus {
-        guard subscriber || admin else { return .notSubscribed }
+        guard subscriber || isAdmin else { return .notSubscribed }
         let creditsLeft = (downloadCredits + downloadCreditsOffset) - downloads.count
-        if admin || downloads.contains(where: { $0.data.episodeNumber == episode.number }) {
+        if isAdmin || downloads.contains(where: { $0.data.episodeNumber == episode.number }) {
             return .reDownload
         } else if creditsLeft > 0 {
             return .canDownload(creditsLeft: creditsLeft)

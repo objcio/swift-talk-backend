@@ -222,6 +222,21 @@ fileprivate let migrations: [String] = [
         DROP COLUMN IF EXISTS payment_method_id,
         DROP COLUMN IF EXISTS last_reconciled_at,
         DROP COLUMN IF EXISTS updated_at
+    """,
+    """
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT * FROM information_schema.columns WHERE table_name='users' AND column_name='role') THEN
+            ALTER TABLE USERS
+                ADD COLUMN IF NOT EXISTS role integer DEFAULT 0 NOT NULL;
+            UPDATE USERS SET role = 1 WHERE collaborator;
+            UPDATE USERS SET role = 2 WHERE admin;
+            ALTER TABLE USERS
+                DROP COLUMN IF EXISTS collaborator,
+                DROP COLUMN IF EXISTS admin;
+        END IF;
+    END
+    $$;
     """
 ]
 

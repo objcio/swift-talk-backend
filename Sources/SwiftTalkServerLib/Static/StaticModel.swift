@@ -14,43 +14,43 @@ struct Id<A>: RawRepresentable, Codable, Equatable, Hashable {
 }
 
 struct Collaborator: Codable, Equatable {
+    enum Role: String, Codable, Equatable, Comparable {
+        case host = "host"
+        case guestHost = "guest-host"
+        case transcript = "transcript"
+        case copyEditing = "copy-editing"
+        case technicalReview = "technical-review"
+        case shooting = "shooting"
+        
+        static private let order: [Role] = [.host, .guestHost, .technicalReview, .transcript, .copyEditing, .shooting]
+        
+        static func <(lhs: Role, rhs: Role) -> Bool {
+            return Role.order.index(of: lhs)! < Role.order.index(of: rhs)!
+        }
+        
+        
+        var name: String {
+            switch self {
+            case .host:
+                return "Host"
+            case .guestHost:
+                return "Guest Host"
+            case .transcript:
+                return "Transcript"
+            case .copyEditing:
+                return "Copy Editing"
+            case .technicalReview:
+                return "Technical Review"
+            case .shooting:
+                return "Shooting"
+            }
+        }
+    }
+    
     var id: Id<Collaborator>
     var name: String
     var url: URL
     var role: Role
-}
-
-enum Role: String, Codable, Equatable, Comparable {
-    case host = "host"
-    case guestHost = "guest-host"
-    case transcript = "transcript"
-    case copyEditing = "copy-editing"
-    case technicalReview = "technical-review"
-    case shooting = "shooting"
-
-    static private let order: [Role] = [.host, .guestHost, .technicalReview, .transcript, .copyEditing, .shooting]
-
-    static func <(lhs: Role, rhs: Role) -> Bool {
-        return Role.order.index(of: lhs)! < Role.order.index(of: rhs)!
-    }
-
-    
-    var name: String {
-        switch self {
-        case .host:
-            return "Host"
-        case .guestHost:
-            return "Guest Host"
-        case .transcript:
-            return "Transcript"
-        case .copyEditing:
-            return "Copy Editing"
-        case .technicalReview:
-            return "Technical Review"
-        case .shooting:
-            return "Shooting"
-        }
-    }
 }
 
 struct Episode: Codable, Equatable {
@@ -146,7 +146,7 @@ extension Swift.Collection where Element == Episode {
     }
     
     func scoped(for user: UserData?) -> [Episode] {
-        guard let u = user, u.admin || u.collaborator else { return released }
+        guard let u = user, u.isAdmin || u.isCollaborator else { return released }
         return Array(self)
     }
     
