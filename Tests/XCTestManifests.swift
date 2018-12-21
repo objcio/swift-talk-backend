@@ -9,7 +9,7 @@ extension FlowTests {
 
 extension RouteTests {
     static let __allTests = [
-        ("testBasicRoutes", testBasicRoutes),
+        ("testBasicRoutes", testLandingPages),
     ]
 }
 

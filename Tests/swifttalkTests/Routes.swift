@@ -14,8 +14,12 @@ final class RouteTests: XCTestCase {
     override static func setUp() {
 	}
     
-    func testBasicRoutes() {
+    func testLandingPages() {
         XCTAssertEqual(Route.init(Request("/episodes/S01E132-dijkstra-s-shortest-path-algorithm")), Route.episode(Id(rawValue: "S01E132-dijkstra-s-shortest-path-algorithm"), .view(playPosition: nil)))
+        XCTAssertEqual(Route.init(Request("/episodes/S01E126-rendering-tracks?t=100")), Route.episode(Id(rawValue: "S01E126-rendering-tracks"), .view(playPosition: 100)))
         XCTAssertEqual(Route.init(Request("/collections/map-routing")), Route.collection(Id(rawValue: "map-routing")))
+        XCTAssertEqual(Route.init(Request("/promo/hello-world")), Route.promoCode("hello-world"))
+        XCTAssertEqual(Route.init(Request("/gift")), Route.gift(.home))
+        XCTAssertEqual(Route.init(Request("/")), Route.home)
     }
 }
