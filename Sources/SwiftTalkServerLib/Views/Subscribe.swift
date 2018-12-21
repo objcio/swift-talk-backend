@@ -9,7 +9,7 @@ import Foundation
 
 
 let benefits: [(icon: String, name: String, description: String)] = [
-    ("icon-benefit-unlock.svg", "Watch All Episodes", "New subscriber-only episodes every two weeks"), // TODO
+    ("icon-benefit-unlock.svg", "Watch All Episodes", "A new episode every week"), // TODO
     ("icon-benefit-team.svg", "Invite Your Team", "Sign up additional team members at \(teamDiscount)% discount"),
     ("icon-benefit-support.svg", "Support Us", "Ensure the continuous production of new episodes"),
 ]
