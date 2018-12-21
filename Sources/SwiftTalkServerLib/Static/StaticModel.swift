@@ -127,8 +127,8 @@ extension Episode {
         return p.title + ": " + title
     }
     
-    var transcript: CommonMark.Node? {
-        return Transcript.forEpisode(number: number)?.contents
+    var highlightedTranscript: String? {
+        return Transcript.forEpisode(number: number)?.highlighted
     }
     
     var tableOfContents: [(TimeInterval, title: String)] {
@@ -202,7 +202,9 @@ extension String {
 
 struct Transcript {
     var number: Int
-    var contents: CommonMark.Node
+    private var contents: CommonMark.Node
+    var highlighted: String
+    
     var tableOfContents: [(TimeInterval, title: String)]
     
     init?(fileName: String, raw: String) {
@@ -221,6 +223,7 @@ struct Transcript {
                 return [inl]
             }
         }))
+        highlighted = contents.highlightedHTML
         
         // Extract table of contents
         var result: [(TimeInterval, title: String)] = []

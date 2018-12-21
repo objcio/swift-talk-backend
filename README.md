@@ -97,6 +97,12 @@ If you get a "basic auth" error: heroku container:login
 heroku container:push web
 heroku container:release web
 
+# Running in Docker
+
+```
+docker run -a stdin -a stdout -i -t --env-file .env --env RDS_HOSTNAME=(ifconfig en1 | awk '/inet /{print $2}') -p 8765:8765 swifttalk-server
+```
+
 
 # Debugging Linux Bugs
 
