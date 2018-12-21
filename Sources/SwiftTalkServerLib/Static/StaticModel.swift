@@ -127,10 +127,6 @@ extension Episode {
         return p.title + ": " + title
     }
     
-    var transcript: CommonMark.Node? {
-        return Transcript.forEpisode(number: number)?.contents
-    }
-    
     var highlightedTranscript: String? {
         return Transcript.forEpisode(number: number)?.highlighted
     }
@@ -206,11 +202,8 @@ extension String {
 
 struct Transcript {
     var number: Int
-    var contents: CommonMark.Node
-    
-    var highlighted: String {
-        return contents.highlightedHTML // todo cache
-    }
+    private var contents: CommonMark.Node
+    var highlighted: String
     
     var tableOfContents: [(TimeInterval, title: String)]
     
@@ -230,6 +223,7 @@ struct Transcript {
                 return [inl]
             }
         }))
+        highlighted = contents.highlightedHTML
         
         // Extract table of contents
         var result: [(TimeInterval, title: String)] = []

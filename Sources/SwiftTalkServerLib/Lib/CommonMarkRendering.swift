@@ -69,9 +69,10 @@ extension String {
     func highlightSwift() -> String {
         guard let map = try? SyntaxMap(file: File(contents: self)) else { return self }
         var result: String = ""
-        var previous = startIndex
+        var previous = utf8.startIndex
         for token in map.tokens {
-            let start = utf8.index(startIndex, offsetBy: token.offset)
+            let start = utf8.index(utf8.startIndex, offsetBy: token.offset)
+            if start < previous { continue } // skip overlapping token, not sure why this happens
             result.append(contentsOf: self[previous..<start])
             let end = utf8.index(start, offsetBy: token.length)
             let cl = Kind(sourceKitType: token.type)?.htmlClass ?? ""
