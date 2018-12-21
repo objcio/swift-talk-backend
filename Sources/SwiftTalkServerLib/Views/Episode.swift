@@ -377,7 +377,7 @@ extension Episode {
                         .div(attributes: ["class": "js-transcript js-expandable z-0", "data-expandable-collapsed": "absolute position-stretch position-nw overflow-hidden", "id": "transcript"], [
                             Node.raw(expandTranscript),
                             Node.div(classes: "c-text c-text--fit-code z-0 js-has-codeblocks", [
-                                .raw(transcript?.html ?? "No transcript yet.")
+                                .raw(highlightedTranscript ?? "No transcript yet.")
                             ])
                         ])
                     ])

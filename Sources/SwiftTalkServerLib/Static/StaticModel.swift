@@ -131,6 +131,10 @@ extension Episode {
         return Transcript.forEpisode(number: number)?.contents
     }
     
+    var highlightedTranscript: String? {
+        return Transcript.forEpisode(number: number)?.highlighted
+    }
+    
     var tableOfContents: [(TimeInterval, title: String)] {
         return Transcript.forEpisode(number: number)?.tableOfContents ?? []
     }
@@ -203,6 +207,11 @@ extension String {
 struct Transcript {
     var number: Int
     var contents: CommonMark.Node
+    
+    var highlighted: String {
+        return contents.highlightedHTML // todo cache
+    }
+    
     var tableOfContents: [(TimeInterval, title: String)]
     
     init?(fileName: String, raw: String) {

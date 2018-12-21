@@ -9144,7 +9144,8 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
 .hljs .hljs-built_in,
 .hljs .hljs-setting,
 .hljs .hljs-params,
-.hljs .hljs-clojure .hljs-attribute, .highlight .pyg-bp,
+.hljs .hljs-clojure .hljs-attribute,
+.hljs .swift .hljs-type, .highlight .pyg-bp,
 .highlight .hljs-class .hljs-title,
 .highlight .hljs-haskell .hljs-type,
 .highlight .hljs-smalltalk .hljs-class,
@@ -9158,10 +9159,12 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
 .highlight .hljs-built_in,
 .highlight .hljs-setting,
 .highlight .hljs-params,
-.highlight .hljs-clojure .hljs-attribute {
+.highlight .hljs-clojure .hljs-attribute,
+.highlight .swift .hljs-type {
   /* 5 'dark purple' */
   color: #c56021;
-  /*rgb(92,38,153)*/ }
+  /*rgb(92,38,153)*/
+  color: #5C2699; }
 .hljs .hljs-variable, .highlight .hljs-variable {
   /* 6 'teal' */
   color: #23a9db;
