@@ -96,6 +96,11 @@ extension CSRFToken: NodeRepresentable {
     }
 }
 
+extension UserData.Role: NodeRepresentable {
+    func makeNode(in context: PostgreSQL.Context?) throws -> PostgreSQL.Node {
+        return rawValue.makeNode(in: context)
+    }
+}
 
 extension Connection {
     @discardableResult func execute<A>(_ query: Query<A>) throws -> A {
