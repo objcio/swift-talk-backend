@@ -21,5 +21,8 @@ final class RouteTests: XCTestCase {
         XCTAssertEqual(Route.init(Request("/promo/hello-world")), Route.promoCode("hello-world"))
         XCTAssertEqual(Route.init(Request("/gift")), Route.gift(.home))
         XCTAssertEqual(Route.init(Request("/")), Route.home)
+        XCTAssertEqual(Route.init(Request("/hooks/recurly")), Route.recurlyWebhook)
+        XCTAssertEqual(Route.init(Request("/hooks/github")), Route.githubWebhook)
+        XCTAssertEqual(Route.init(Request("/users/auth/github/callback?code=abc&origin=/anotherRoute")), Route.githubCallback(code: "abc", origin: "/anotherRoute"))
     }
 }
