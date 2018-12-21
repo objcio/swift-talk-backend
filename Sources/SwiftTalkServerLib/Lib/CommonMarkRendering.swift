@@ -66,7 +66,7 @@ fileprivate enum Kind {
 }
 
 extension String {
-    fileprivate func highlightSwift() -> String {
+    func highlightSwift() -> String {
         guard let map = try? SyntaxMap(file: File(contents: self)) else { return self }
         var result: String = ""
         var previous = startIndex
@@ -87,7 +87,6 @@ extension CommonMark.Node {
     var highlightedHTML: String {
         let swiftCode: [String] = elements.flatMap { (el: Block) -> [String] in
             return el.deep(collect: { (block: Block) -> [String] in
-                if case let .codeBlock(text, lang) = block { print(lang) }
                 guard case let .codeBlock(text, "swift") = block else { return [] }
                 return [text]
             })
