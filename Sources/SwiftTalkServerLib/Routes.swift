@@ -229,7 +229,7 @@ private let otherRoutes: [Router<Route>] = [
     assetsRoute,
     .c("favicon.ico", Route.staticFile(path: ["favicon.ico"])),
     .c("collections", .collections),
-    (.c("episode") / .episodeId / episodeHelper.choice()).transform({ .episode($0.0, $0.1) }, { route in
+    (.c("episodes") / .episodeId / episodeHelper.choice()).transform({ .episode($0.0, $0.1) }, { route in
         guard case let .episode(x,y) = route else { return nil }
         return (x,y)
     }),
