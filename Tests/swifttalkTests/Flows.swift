@@ -135,10 +135,12 @@ final class FlowTests: XCTestCase {
     func testSubscription() throws {
         // todo test coupon codes
         testPlans = plans
-        let flow = try Flow.landingPage(session: nil, .subscribe)
-        flow.verify { page in
+        
+        let subscribeWithoutASession = try Flow.landingPage(session: nil, .subscribe)
+        subscribeWithoutASession.verify { page in
             testLinksTo(page, route: .login(continue: .subscription(.new(couponCode: nil))))
         }
+        
         let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .subscribe)
         try notSubscribed.click(.subscription(.new(couponCode: nil)), {
             var confirmedSess = $0.session!

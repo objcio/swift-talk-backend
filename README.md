@@ -102,6 +102,8 @@ heroku container:release web
 
 You can run a docker container from one of the intermediate steps. Then install screen and vim, and you have a small linux dev environment.
 
+https://medium.com/ihme-tech/troubleshooting-the-docker-build-process-454583c80665
+
 # Importing the existing database
 
 ```
