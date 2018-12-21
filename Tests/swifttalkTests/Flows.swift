@@ -95,7 +95,7 @@ struct Flow {
     
     func fillForm(to action: Route, data: [String:String] = [:], expectedQueries: [QueryAndResult] = [], file: StaticString = #file, line: UInt = #line,  _ then: (Flow) throws -> ()) throws {
         guard let f = currentPage.forms().first(where: { $0.action == action }) else {
-            XCTFail("Couldn't find a form with action \(action)")
+            XCTFail("Couldn't find a form with action \(action)", file: file, line: line)
             return
         }
         var postData = Dictionary(f.inputs, uniquingKeysWith: { $1 })
@@ -103,7 +103,7 @@ struct Flow {
             XCTAssert(postData[key] != nil)
         }
         guard case let ._withPostData(cont) = try Flow.run(session, action, expectedQueries, file, line) else {
-            XCTFail("Expected post handler")
+            XCTFail("Expected post handler", file: file, line: line)
             return
         }
         let theData = postData.merging(data, uniquingKeysWith: { $1 }).map { (key, value) in "\(key)=\(value.escapeForAttributeValue)"}.joined(separator: "&").data(using: .utf8)!
