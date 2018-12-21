@@ -27,16 +27,20 @@ let package = Package(
                 "CommonMark",
                 "PerfectXML",
 				"Cryptor",
-		]),
+			],
+			path: "Sources/SwiftTalkServerLib"
+		),
         .target(
             name: "swifttalk-server",
         	dependencies: [
                 "SwiftTalkServerLib"
-        	]
+        	],
+			path: "Sources/swifttalk-server"
         ),
         .testTarget(
             name: "SwiftTalkTests",
-        	dependencies: ["SwiftTalkServerLib"]
+        	dependencies: ["SwiftTalkServerLib"],
+			path: "Tests"
         )
     ]
 )
