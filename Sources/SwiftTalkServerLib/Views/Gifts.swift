@@ -91,7 +91,7 @@ func redeemGiftAlreadySubscribed() throws -> Node {
     return LayoutConfig(pageTitle: "Redeem Your Gift", contents: contents).layout
 }
 
-func redeemGiftSub(gift: Row<Gift>, plan: Plan) throws -> Node {
+func redeemGiftSub(gift: Row<GiftData>, plan: Plan) throws -> Node {
     var message: [Node] = []
     if !gift.data.message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
         message = [
@@ -121,7 +121,7 @@ func redeemGiftSub(gift: Row<Gift>, plan: Plan) throws -> Node {
     return LayoutConfig(pageTitle: "Redeem Your Gift", contents: contents).layout
 }
 
-func giftThankYou(gift: Gift) -> Node {
+func giftThankYou(gift: GiftData) -> Node {
     let contents: [Node] = [
         pageHeader(.other(header: "Thank You", blurb: nil, extraClasses: "ms4"), extraClasses: "text-center"),
         .div(classes: "container pt0", [
@@ -164,8 +164,8 @@ extension GiftStep1Data {
     }
 }
 
-extension Gift {
-    static func fromData(_ data: GiftStep1Data) -> Either<Gift, [ValidationError]> {
+extension GiftData {
+    static func fromData(_ data: GiftStep1Data) -> Either<GiftData, [ValidationError]> {
         let day_ = Either(Int(data.day), or: [ValidationError(field: "day", message: "Day is not a number")])
         let month_ = Either(Int(data.month), or: [ValidationError(field: "month", message: "Month is not a number")])
         let year_ = Either(Int(data.year), or: [ValidationError(field: "year", message: "Year is not a number")])
@@ -174,7 +174,7 @@ extension Gift {
             guard let date = Calendar.current.date(from: DateComponents(calendar: Calendar.current, timeZone: TimeZone(secondsFromGMT: 0), year: year, month: month, day: day)) else {
                 return .right([ValidationError(field: "day", message: "Invalid Date")])
             }
-            let gift = Gift(gifterEmail: nil, gifterName: nil, gifteeEmail: data.gifteeEmail, gifteeName: data.gifteeName, sendAt: date, message: data.message, gifterUserId: nil, gifteeUserId: nil, subscriptionId: nil, activated: false, planCode: data.planCode)
+            let gift = GiftData(gifterEmail: nil, gifterName: nil, gifteeEmail: data.gifteeEmail, gifteeName: data.gifteeName, sendAt: date, message: data.message, gifterUserId: nil, gifteeUserId: nil, subscriptionId: nil, activated: false, planCode: data.planCode)
             let errs = gift.validate()
             return errs.isEmpty ? .left(gift) : .right(errs)
         case let .right(errs): return .right(errs)
@@ -230,7 +230,7 @@ struct GiftResult {
     var gifter_name: String = ""
 }
 
-func payGiftForm(plan: Plan, gift: Gift, route: Route) -> Form<GiftResult> {
+func payGiftForm(plan: Plan, gift: GiftData, route: Route) -> Form<GiftResult> {
     return Form.init(parse: { dict in
         guard let d = dict["billing_info[token]"], let e = dict["gifter_email"], let n = dict["gifter_name"] else { return nil }
         return GiftResult(token: d, gifter_email: e, gifter_name: n)
@@ -249,7 +249,7 @@ func payGiftForm(plan: Plan, gift: Gift, route: Route) -> Form<GiftResult> {
     })
 }
 
-extension Gift {
+extension GiftData {
     var gifterEmailText: String {
         let prettyDate = DateFormatter.fullPretty.string(from: sendAt)
         return """
@@ -271,7 +271,7 @@ extension Gift {
     }
 }
 
-extension Row where Element == Gift {
+extension Row where Element == GiftData {
     func gifteeEmailText(duration: String) -> String {
         let url = Route.gift(.redeem(id)).url.absoluteString
         let message = data.message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "" : """

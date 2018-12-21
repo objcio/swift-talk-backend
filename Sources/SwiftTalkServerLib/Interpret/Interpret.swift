@@ -163,7 +163,7 @@ extension Route {
                 
                 return catchAndDisplayError {
                     if let s = webhook.subscription, s.plan.plan_code.hasPrefix("gift") {
-                        return I.query(Row<Gift>.select(subscriptionId: s.uuid)) {
+                        return I.query(Row<GiftData>.select(subscriptionId: s.uuid)) {
                             if var gift = flatten($0) {
                                 log(info: "gift update \(s) \(gift)")
                                 let ok = { I.write("", status: .ok) }

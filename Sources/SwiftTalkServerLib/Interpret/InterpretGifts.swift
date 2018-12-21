@@ -17,7 +17,7 @@ extension Route.Gifts {
             guard let plan = Plan.gifts.first(where: { $0.plan_code == planCode }) else {
                 throw ServerError.init(privateMessage: "Illegal plan: \(planCode)", publicMessage: "Couldn't find the plan you selected.")
             }
-            return I.form(giftForm(plan: plan), initial: GiftStep1Data(planCode: planCode), convert: Gift.fromData, onPost: { gift in
+            return I.form(giftForm(plan: plan), initial: GiftStep1Data(planCode: planCode), convert: GiftData.fromData, onPost: { gift in
                 catchAndDisplayError {
                     I.query(gift.insert) { id in
                         I.redirect(to: Route.gift(.pay(id)))
@@ -25,7 +25,7 @@ extension Route.Gifts {
                 }
             })
         case .pay(let id):
-            return I.query(Row<Gift>.select(id)) { g in
+            return I.query(Row<GiftData>.select(id)) { g in
                 guard let gift = g else {
                     throw ServerError(privateMessage: "No such gift", publicMessage: "Something went wrong, please try again.")
                 }
@@ -67,7 +67,7 @@ extension Route.Gifts {
             }
 
         case .thankYou(let id):
-            return I.query(Row<Gift>.select(id)) {
+            return I.query(Row<GiftData>.select(id)) {
                 guard let gift = $0 else {
                     throw ServerError(privateMessage: "gift doesn't exist: \(id.uuidString)", publicMessage: "This gift subscription doesn't exist. Please get in touch to resolve this issue.")
                 }
@@ -76,7 +76,7 @@ extension Route.Gifts {
             }
         case .redeem(let id):
             return I.withSession { session in
-                return I.query(Row<Gift>.select(id)) {
+                return I.query(Row<GiftData>.select(id)) {
                     guard let gift = $0 else {
                         throw ServerError(privateMessage: "gift doesn't exist: \(id.uuidString)", publicMessage: "This gift subscription doesn't exist. Please get in touch to resolve this issue.")
                     }

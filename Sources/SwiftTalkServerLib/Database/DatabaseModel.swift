@@ -15,7 +15,7 @@ struct FileData: Codable, Insertable {
     static let tableName: String = "files"
 }
 
-struct Gift: Codable, Insertable {
+struct GiftData: Codable, Insertable {
     var gifterEmail: String?
     var gifterName: String?
     var gifteeEmail: String
