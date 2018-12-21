@@ -90,7 +90,7 @@ struct Github {
     
     func contents(_ url: URL) -> RemoteEndpoint<String> {
         let headers = ["Authorization": "token \(accessToken)", "Accept": "application/vnd.github.v3.raw"]
-        return RemoteEndpoint(.get, url: url, headers: headers) { $0.flatMap { String(data: $0, encoding: .utf8) } }
+        return RemoteEndpoint(.get, url: url, headers: headers, expectedStatusCode: expected200to300) { $0.flatMap { String(data: $0, encoding: .utf8) } }
     }
     
     static let staticDataDecoder: JSONDecoder = {

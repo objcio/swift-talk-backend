@@ -43,7 +43,7 @@ extension Route.Gifts {
                             case .errors(let messages):
                                 log(RecurlyErrors(messages))
                                 let theMessages = messages.map { ($0.field ?? "", $0.message) } + [("", "There was a problem with the payment. You have not been charged. Please try again or contact us for assistance.")]
-                                let response = giftForm(plan: plan).render(GiftStep1Data(gifteeEmail: gift.data.gifteeEmail, gifteeName: gift.data.gifteeName, day: "", month: "", year: "", message: gift.data.message, planCode: plan.plan_code), theMessages)
+                                let response = f.render(result, theMessages)
                                 return I.write(response)
                             case .success(let sub):
                                 var copy = gift

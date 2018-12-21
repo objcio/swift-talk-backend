@@ -659,14 +659,14 @@ struct Recurly {
 
 }
 
-extension RemoteEndpoint where A: Decodable {
+fileprivate extension RemoteEndpoint where A: Decodable {
     init(xml method: Method, url: URL, headers: [String:String], query: [String:String] = [:]) {
-        self.init(method, url: url, accept: .xml, headers: headers, query: query, parse: { $0.flatMap(parseRecurlyResponse(url)) })
+        self.init(method, url: url, accept: .xml, headers: headers, expectedStatusCode: { $0 >= 200 && $0 < 500 }, query: query, parse: { $0.flatMap(parseRecurlyResponse(url)) })
     }
 
     init<B: Encodable & RootElement>(xml method: Method, url: URL, value: B, headers: [String:String], query: [String:String] = [:]) {
         let data = try! encodeXML(value).data(using: .utf8)!
-        self.init(method, url: url, accept: .xml, body: data, headers: headers, query: query, parse: { $0.flatMap(parseRecurlyResponse(url)) })
+        self.init(method, url: url, accept: .xml, body: data, headers: headers, expectedStatusCode: { $0 >= 200 && $0 < 500 }, query: query, parse: { $0.flatMap(parseRecurlyResponse(url)) })
     }
 }
 
