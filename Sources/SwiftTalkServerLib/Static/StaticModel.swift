@@ -223,7 +223,7 @@ struct Transcript {
                 return [inl]
             }
         }))
-        highlighted = contents.highlightedHTML
+        highlighted = contents.html
         
         // Extract table of contents
         var result: [(TimeInterval, title: String)] = []
