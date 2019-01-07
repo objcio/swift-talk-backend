@@ -148,7 +148,8 @@ final class FlowTests: XCTestCase {
             try $0.fillForm(to: .account(.register(couponCode: nil)), expectedQueries: [
                 QueryAndResult(query: confirmedSess.user.update(), response: ())], {
                     try $0.withSession(confirmedSess) {
-                        try $0.followRedirect(to: .subscription(.new(couponCode: nil)), expectedQueries: [QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1))], {
+                        try $0.followRedirect(to: .subscription(.new(couponCode: nil)), expectedQueries:
+                            [QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1))], {
                             print($0.currentPage)
                         })
                     }
