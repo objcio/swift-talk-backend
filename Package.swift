@@ -11,7 +11,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-nio.git", from: "1.5.0"),
 		.package(url: "https://github.com/vapor-community/postgresql.git", .exact("2.1.2")),
-        .package(url: "https://github.com/objcio/commonmark-swift", .branch("master")),
+        .package(url: "https://github.com/objcio/commonmark-swift", .branch("memory")),
         .package(url:"https://github.com/PerfectlySoft/Perfect-XML.git", .exact("3.1.3")),
 		.package(url: "https://github.com/IBM-Swift/BlueCryptor", .exact("1.0.20")),
         .package(url: "https://github.com/jpsim/SourceKitten", from: "0.22.0"),
@@ -38,6 +38,14 @@ let package = Package(
         	],
 			path: "Sources/swifttalk-server"
         ),
+		.target(
+			name: "highlight-html",
+			dependencies: [
+                "SourceKittenFramework",
+                "CommonMark"
+			],
+			path: "Sources/highlight-html"
+		),
         .testTarget(
             name: "SwiftTalkTests",
         	dependencies: ["SwiftTalkServerLib"],

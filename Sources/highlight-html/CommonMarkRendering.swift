@@ -20,7 +20,7 @@ fileprivate enum Kind {
     case string
     case comment
     case error
-    
+
     var htmlClass: String? {
         switch self {
         case .indent: return nil
@@ -35,7 +35,7 @@ fileprivate enum Kind {
         case .error: return "hljs-error"
         }
     }
-    
+
     init?(sourceKitType type: String) {
         switch type {
         case "source.lang.swift.syntaxtype.comment": self = .comment
@@ -85,7 +85,7 @@ extension String {
 }
 
 extension CommonMark.Node {
-    var highlightedHTML: String {
+    public var highlightedHTML: String {
         let swiftCode: [String] = elements.flatMap { (el: Block) -> [String] in
             return el.deep(collect: { (block: Block) -> [String] in
                 guard case let .codeBlock(text, "swift") = block else { return [] }
@@ -98,13 +98,5 @@ extension CommonMark.Node {
             return [Block.html(text: "<pre class=\"highlight\"><code class=\"swift\">\(highlighted)</code></pre>")]
         }
         return CommonMark.Node(blocks: els).html
-    }
-}
-
-extension Block {
-    fileprivate var highlightedHTML: [Block] {
-        return deepApply { (block) -> [Block] in
-            return [block]
-        }
     }
 }

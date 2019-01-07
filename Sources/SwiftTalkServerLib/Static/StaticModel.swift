@@ -202,18 +202,18 @@ extension String {
 
 struct Transcript {
     var number: Int
-    private var contents: CommonMark.Node
+//    private var contents: CommonMark.Node
     var highlighted: String
-    
     var tableOfContents: [(TimeInterval, title: String)]
     
-    init?(fileName: String, raw: String) {
+    init?(fileName: String, raw: String, highlight: Bool = false) {
         guard let number = Int(fileName.trimmingCharacters(in: CharacterSet.decimalDigits.inverted)) else { return nil }
         self.number = number
+
         
         // Add timestamp links
         guard let nodes = CommonMark.Node(markdown: raw) else { return nil }
-        self.contents = CommonMark.Node(blocks: nodes.elements.deepApply({ (inl: Inline) -> [Inline] in
+        let contents = CommonMark.Node(blocks: nodes.elements.deepApply({ (inl: Inline) -> [Inline] in
             guard case let .text(t) = inl else { return [inl] }
             if let (m, s, remainder) = t.scanTimePrefix() {
                 let totalSeconds = m * 60 + s
@@ -223,12 +223,12 @@ struct Transcript {
                 return [inl]
             }
         }))
-        highlighted = contents.html
+        highlighted = highlight ? contents.commonMark.markdownToHighlightedHTML : contents.html
         
         // Extract table of contents
         var result: [(TimeInterval, title: String)] = []
         var currentTitle: String?
-        for el in self.contents.elements {
+        for el in contents.elements {
             switch el {
             case let .heading(text: text, _):
                 let strs = text.deep(collect: { (i: Inline) -> [String] in

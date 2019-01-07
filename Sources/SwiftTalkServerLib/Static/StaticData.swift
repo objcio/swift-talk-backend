@@ -47,9 +47,9 @@ fileprivate let collectionsSource: Static<[Collection]> = .fromStaticRepo()
 fileprivate let collaboratorsSource: Static<[Collaborator]> = Static<[Collaborator]>.fromStaticRepo()
 
 fileprivate let transcriptsSource: Static<[Transcript]> = Static(async: { cb in
-    cb(queryTranscripts())
+    queryTranscripts(fast: true, cb)
     refreshTranscripts {
-        cb(queryTranscripts())
+        queryTranscripts(cb)
     }
 })
 

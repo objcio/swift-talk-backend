@@ -41,8 +41,8 @@
         "package": "CommonMark",
         "repositoryURL": "https://github.com/objcio/commonmark-swift",
         "state": {
-          "branch": "master",
-          "revision": "9a3e89b451deee2c748327c2e87a3b477fea3562",
+          "branch": "memory",
+          "revision": "adff63754fe93e729e55fb293e8eca8afb1eb655",
           "version": null
         }
       },
@@ -132,8 +132,8 @@
         "repositoryURL": "https://github.com/antitypical/Result.git",
         "state": {
           "branch": null,
-          "revision": "8fc088dcf72802801efeecba76ea8fb041fb773d",
-          "version": "4.0.0"
+          "revision": "2ca499ba456795616fbc471561ff1d963e6ae160",
+          "version": "4.1.0"
         }
       },
       {

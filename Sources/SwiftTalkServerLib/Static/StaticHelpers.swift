@@ -70,10 +70,23 @@ extension Static {
     }
 }
 
-func queryTranscripts() -> [Transcript] {
+func queryTranscripts(fast: Bool = false, _ cb: @escaping ([Transcript]) -> ()) {
+    if fast {
+        cb(queryTranscriptsHelper(fast: true))
+    } else {
+        DispatchQueue.global(qos: .userInitiated).async {
+            print("Starting highlighting")
+            let res = queryTranscriptsHelper(fast: false)
+            print("Done highlighting")
+            cb(res)
+        }
+    }
+}
+
+func queryTranscriptsHelper(fast: Bool = false) -> [Transcript] {
     return tryOrLog { try withConnection { connection in
         let rows = try connection.execute(Row<FileData>.transcripts())
-        return rows.compactMap { f in Transcript(fileName: f.data.key, raw: f.data.value) }
+        return rows.compactMap { f in Transcript(fileName: f.data.key, raw: f.data.value, highlight: !fast) }
     }} ?? []
 }
 

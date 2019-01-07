@@ -226,3 +226,28 @@ extension Date {
         return components.year == components2.year && components.month == components2.month && components.day == components2.day
     }
 }
+
+extension Process {
+    static func pipe(launchPath: String, _ string: String) -> String {
+        let task = Process()
+        task.launchPath = launchPath
+        task.arguments = []
+
+        let out = Pipe()
+        task.standardOutput = out
+
+        let `in` = Pipe()
+        task.standardInput = `in`
+
+        task.launch()
+        `in`.fileHandleForWriting.write(string)
+        `in`.fileHandleForWriting.closeFile()
+
+        let data = out.fileHandleForReading.readDataToEndOfFile()
+        out.fileHandleForWriting.closeFile()
+
+        let output = String(data: data, encoding: .utf8)
+//        task.terminate() // crashes on linux
+        return output ?? ""
+    }
+}
