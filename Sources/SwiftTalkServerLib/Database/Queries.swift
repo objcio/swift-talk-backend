@@ -258,3 +258,11 @@ extension Row where Element == PlayProgressData {
         return Row<PlayProgressData>.select.appending(parameters: [userId]) { "WHERE user_id=\($0[0]) ORDER BY episode_number DESC" }
     }
 }
+
+extension Row where Element == SignupTokenData {
+    static var prune: Query<()> {
+        return Row<SignupTokenData>.delete.appending { _ in
+            "WHERE expiration_date < LOCALTIMESTAMP"
+        }
+    }
+}

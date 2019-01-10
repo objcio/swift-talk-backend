@@ -148,6 +148,13 @@ struct TeamMemberData: Codable, Insertable {
     static let tableName: String = "team_members"
 }
 
+struct SignupTokenData: Codable, Insertable {
+    var userId: UUID
+    var expirationDate: Date
+    
+    static let tableName: String = "signup_tokens"
+}
+
 fileprivate let emailRegex = try! NSRegularExpression(pattern: "^[^@]+@(?:[^@.]+?\\.)+.{2,}$", options: [.caseInsensitive])
 
 extension String {

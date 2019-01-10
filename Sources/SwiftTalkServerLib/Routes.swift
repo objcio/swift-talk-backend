@@ -12,6 +12,7 @@ indirect enum Route: Equatable {
     case episodes
     case sitemap
     case subscribe
+    case teamMemberSignup(token: UUID)
     case collections
     case login(continue: Route?)
     case githubCallback(code: String?, origin: String?)
@@ -41,6 +42,7 @@ indirect enum Route: Equatable {
         case upgrade
         case create(couponCode: String?)
         case new(couponCode: String?)
+        case teamMember(token: UUID)
     }
    
     enum Account: Equatable {
@@ -207,6 +209,10 @@ private let subscriptionRoutes2: [Router<Route.Subscription>] = [
         guard case let .new(x) = route else { return nil }
         return x
     }),
+    .c("team-member") / Router.uuid.transform({ Route.Subscription.teamMember(token: $0) }, { route in
+        guard case let .teamMember(token) = route else { return nil }
+        return token
+    }),
     .c("cancel", .cancel),
     .c("reactivate", .reactivate),
     .c("upgrade", .upgrade),
@@ -218,6 +224,10 @@ private let subscriptionRoutes2: [Router<Route.Subscription>] = [
 
 private let subscriptionRoutes: [Router<Route>] = [
     .c("subscribe", .subscribe),
+    .c("team-member-signup") / Router.uuid.transform({ Route.teamMemberSignup(token: $0) }, { route in
+        guard case let .teamMemberSignup(token) = route else { return nil }
+        return token
+    }),
     .c("subscription") / subscriptionRoutes2.choice().transform(Route.subscription, { r in
         guard case let .subscription(x) = r else { return nil }
         return x

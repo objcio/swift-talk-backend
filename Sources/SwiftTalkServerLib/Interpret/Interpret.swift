@@ -44,6 +44,24 @@ extension Route {
                 throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
             }
             return I.write(Plan.subscribe(monthly: monthly, yearly: yearly))
+        case .teamMemberSignup(let token):
+            return I.query(Row<SignupTokenData>.prune) { _ in
+                return I.query(Row<SignupTokenData>.select(token)) { row in
+                    guard let tokenData = row?.data else {
+                        throw ServerError(privateMessage: "signup token doesn't exist: \(token)", publicMessage: "This signup link is expired. Please get in touch with your team manager for a new signup link.")
+                    }
+                    return I.withSession { session in
+                        if session?.premiumAccess == true {
+                            return try I.write(teamMemberSignupAlreadySubscribed())
+                        } else if let user = session?.user {
+                            // associate user with master team user
+                            fatalError("TODO")
+                        } else {
+                            return I.write(try teamMemberSubscribe(signupToken: token))
+                        }
+                    }
+                }
+            }
         case .collection(let name):
             guard let coll = Collection.all.first(where: { $0.id == name }) else {
                 return .write(errorView("No such collection"), status: .notFound)

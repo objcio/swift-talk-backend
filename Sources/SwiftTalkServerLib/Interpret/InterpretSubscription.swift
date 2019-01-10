@@ -60,6 +60,8 @@ extension Route.Subscription {
                 	try newSubscription(couponCode: couponCode, errs: [])
                 }
             }
+        case .teamMember(let token):
+            return I.write("TODO")
         case .cancel:
             return I.verifiedPost { _ in
                 return I.onSuccess(promise: user.currentSubscription.promise.map(flatten)) { sub in

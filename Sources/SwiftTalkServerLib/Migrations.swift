@@ -237,6 +237,16 @@ fileprivate let migrations: [String] = [
         END IF;
     END
     $$;
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS signup_tokens (
+        id uuid DEFAULT public.uuid_generate_v4() PRIMARY KEY,
+        expiration_date timestamp NOT NULL,
+        user_id uuid REFERENCES users
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS signup_tokens_expiration_date ON signup_tokens (expiration_date)
     """
 ]
 

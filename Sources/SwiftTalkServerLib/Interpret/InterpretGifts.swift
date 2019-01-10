@@ -101,7 +101,6 @@ extension Route.Gifts {
                     } else {
                         return I.write(try redeemGiftSub(gift: gift, plan: plan))
                     }
-
                 }
             }
         }

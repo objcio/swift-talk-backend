@@ -433,7 +433,7 @@ func addTeamMemberForm() -> Form<TeamMemberFormData> {
     })
 }
 
-func teamMembersView(addForm: Node, teamMembers: [Row<UserData>]) -> Node {
+func teamMembersView(addForm: Node, teamMembers: [Row<UserData>], signupLink: URL) -> Node {
     let currentTeamMembers = teamMembers.isEmpty ? Node.p([.raw("No team members added yet.")]) : Node.div(teamMembers.compactMap { tm in
         guard let githubLogin = tm.data.githubLogin else { return nil }
         return .div(classes: "flex items-center pv- border-top border-1 border-color-gray-90", [
@@ -452,6 +452,13 @@ func teamMembersView(addForm: Node, teamMembers: [Row<UserData>]) -> Node {
             Node.div([
                 heading("Add Team Member"),
                 addForm,
+            ]),
+            Node.div([
+                heading("Signup Link"),
+                Node.div(classes: "c-text", [
+                    Node.p([.text("Send the following link to your team members for signup: \(signupLink.absoluteString)")]),
+                    Node.p([.text("Each time you visit this page a unique signup link is generated. Signup links expire after 48 hours.")])
+                ])
             ]),
             Node.div([
                 heading("Current Team Members"),

@@ -22,9 +22,13 @@ extension Route.Account {
     
     private func interpret2<I: Interp>(session sess: Session) throws -> I {
         func teamMembersResponse(_ data: TeamMemberFormData? = nil,_ errors: [ValidationError] = []) throws -> I {
-            let renderedForm = addTeamMemberForm().render(data ?? TeamMemberFormData(githubUsername: ""), errors)
-            return I.query(sess.user.teamMembers) { members in
-                I.write(teamMembersView(addForm: renderedForm, teamMembers: members))
+            let signupTokenData = SignupTokenData(userId: sess.user.id, expirationDate: Date().addingTimeInterval(48*60*60))
+            return I.query(signupTokenData.insert) { signupToken in
+                let signupLink = Route.teamMemberSignup(token: signupToken).url
+                let renderedForm = addTeamMemberForm().render(data ?? TeamMemberFormData(githubUsername: ""), errors)
+                return I.query(sess.user.teamMembers) { members in
+                    I.write(teamMembersView(addForm: renderedForm, teamMembers: members, signupLink: signupLink))
+                }
             }
         }
         
@@ -171,7 +175,7 @@ extension Route.Account {
                                 return I.query(task) {
                                     try teamMembersResponse()
                                 }
-
+                                
                             }
                         }
                     }
@@ -184,7 +188,7 @@ extension Route.Account {
                 I.query(sess.user.deleteTeamMember(id)) {
                     let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: globals.currentDate().addingTimeInterval(5*60))
                     return I.query(task) {
-                    	try teamMembersResponse()
+                        try teamMembersResponse()
                     }
                 }
             }
