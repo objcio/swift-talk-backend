@@ -80,7 +80,7 @@ extension Plan {
         if plan_interval_unit == .months && plan_interval_length == 1 {
             return 1000
         } else if plan_interval_unit == .months && plan_interval_length == 12 {
-            return 15000
+            return 10000
         } else {
             return nil
         }
