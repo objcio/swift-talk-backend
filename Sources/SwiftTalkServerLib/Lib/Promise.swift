@@ -83,15 +83,3 @@ func zip<A,B,C,D,E,F>(
     ) -> Promise<(A,B,C, D, E, F)> {
     return zip(p0, zip(p1, zip(p2, zip(p3, zip(p4, p5))))).map { ($0.0, $0.1.0, $0.1.1.0, $0.1.1.1.0, $0.1.1.1.1.0, $0.1.1.1.1.1) }
 }
-
-func sequentially<A>(_ promises: [Promise<A>]) -> Promise<[A]> {
-    let initial: Promise<[A]> = Promise { $0([]) }
-    return promises.reduce(initial) { result, promise in
-        return result.flatMap { (existing: [A]) in
-            promise.map { new in
-                return existing + [new]
-            }
-        }
-    }
-}
-

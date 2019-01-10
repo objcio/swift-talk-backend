@@ -74,11 +74,29 @@ struct Github {
         return RemoteEndpoint<Repository>(json: .patch, url: url, body: data, headers: headers).map { $0.`private` == `private` }
     }
     
-    var transcripts: RemoteEndpoint<[Github.File]> {
+    private var transcriptFiles: RemoteEndpoint<[Github.File]> {
         let url = URL(string: "https://api.github.com/repos/objcio/\(transcriptsRepo)/contents/")!
         let query = ["access_token": accessToken, "ref": "master"]
         return RemoteEndpoint<[Github.File]>(json: .get, url: url, query: query).map { files in
             return files.filter { $0.name.hasPrefix("episode") }
+        }
+    }
+
+    private func contents(_ file: File) -> RemoteEndpoint<(file: File, content: String)> {
+        let headers = ["Authorization": "token \(accessToken)", "Accept": "application/vnd.github.v3.raw"]
+        return RemoteEndpoint(.get, url: file.url, headers: headers, expectedStatusCode: expected200to300) { data in
+            guard let d = data, let str = String(data: d, encoding: .utf8) else { return nil }
+            return (file: file, content: str)
+        }
+    }
+
+    var transcripts: CombinedEndpoint<[(file: File, content: String)]> {
+        return transcriptFiles.c.flatMap { files in
+            guard !files.isEmpty else { return nil }
+            let batches = files.chunked(size: 5).map { batch in
+                zip(batch.map { self.contents($0).c })!
+            }
+            return sequentially(batches)!.map { Array($0.joined()) }
         }
     }
     
@@ -86,11 +104,6 @@ struct Github {
         let url = URL(string: "https://api.github.com/repos/objcio/\(staticDataRepo)/contents/\(A.jsonName)")!
         let headers = ["Authorization": "token \(accessToken)", "Accept": "application/vnd.github.v3.raw"]
         return RemoteEndpoint(json: .get, url: url, headers: headers, decoder: Github.staticDataDecoder)
-    }
-    
-    func contents(_ url: URL) -> RemoteEndpoint<String> {
-        let headers = ["Authorization": "token \(accessToken)", "Accept": "application/vnd.github.v3.raw"]
-        return RemoteEndpoint(.get, url: url, headers: headers, expectedStatusCode: expected200to300) { $0.flatMap { String(data: $0, encoding: .utf8) } }
     }
     
     static let staticDataDecoder: JSONDecoder = {

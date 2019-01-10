@@ -15,6 +15,7 @@ enum ContentType: String {
 func expected200to300(_ code: Int) -> Bool {
     return code >= 200 && code < 300
 }
+
 struct RemoteEndpoint<A> {
     enum Method {
         case get, post, put, patch
@@ -25,8 +26,14 @@ struct RemoteEndpoint<A> {
     var expectedStatusCode: (Int) -> Bool = expected200to300
     
     func map<B>(_ f: @escaping (A) -> B) -> RemoteEndpoint<B> {
-        return RemoteEndpoint<B>(request: request, parse: { value in
+        return RemoteEndpoint<B>(request: request, expectedStatusCode: expectedStatusCode, parse: { value in
             self.parse(value).map(f)
+        })
+    }
+
+    func compactMap<B>(_ transform: @escaping (A) -> B?) -> RemoteEndpoint<B> {
+        return RemoteEndpoint<B>(request: request, expectedStatusCode: expectedStatusCode, parse: { data in
+            self.parse(data).flatMap(transform)
         })
     }
 
@@ -53,8 +60,9 @@ struct RemoteEndpoint<A> {
         self.parse = { $0.flatMap(parse) }
     }
     
-    public init(request: URLRequest, parse: @escaping (Data?) -> A?) {
+    public init(request: URLRequest, expectedStatusCode: @escaping (Int) -> Bool, parse: @escaping (Data?) -> A?) {
         self.request = request
+        self.expectedStatusCode = expectedStatusCode
         self.parse = parse
     }
 }
