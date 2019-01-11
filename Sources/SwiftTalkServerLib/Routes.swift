@@ -12,6 +12,7 @@ indirect enum Route: Equatable {
     case episodes
     case sitemap
     case subscribe
+    case subscribeTeam
     case teamMemberSignup(token: UUID)
     case collections
     case login(continue: Route?)
@@ -224,6 +225,7 @@ private let subscriptionRoutes2: [Router<Route.Subscription>] = [
 
 private let subscriptionRoutes: [Router<Route>] = [
     .c("subscribe", .subscribe),
+    .c("subscribe-team", .subscribeTeam),
     .c("team-member-signup") / Router.uuid.transform({ Route.teamMemberSignup(token: $0) }, { route in
         guard case let .teamMemberSignup(token) = route else { return nil }
         return token

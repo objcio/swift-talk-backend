@@ -10,7 +10,7 @@ import Foundation
 
 let benefits: [(icon: String, name: String, description: String)] = [
     ("icon-benefit-unlock.svg", "Watch All Episodes", "A new episode every week"), // TODO
-    ("icon-benefit-team.svg", "Invite Your Team", "Sign up additional team members at \(teamDiscount)% discount"),
+    ("icon-benefit-download.svg", "Download Episodes", "Take Swift Talk with you when you're offline"),
     ("icon-benefit-support.svg", "Support Us", "Ensure the continuous production of new episodes"),
 ]
 
@@ -105,10 +105,19 @@ extension Plan {
                             ]),
                         .div([
                             continueLink
-                            ])
-                        
-                        ]),
+                        ])
+                    ]),
                     newSubscriptionBanner(),
+                    Node.ul(classes: "text-center max-width-7 center pt pb++", [
+                        .div(classes: "color-orange", [
+                            .inlineSvg(path: "icon-benefit-team.svg", classes: "svg-fill-current")
+                        ]),
+                        .div(classes: "mb+", [
+                            .h3(classes: "bold color-blue mt- mb---", ["Looking for a subscription for your whole team?"]),
+                            .p(classes: "color-gray-50 lh-125", ["Our team subscription offers a 30% discount and comes with separate team manager account to manage billing and access for your entire team."])
+                        ]),
+                        Node.link(to: .subscribeTeam, classes: linkClasses, ["Explore Team Subscriptions"])
+                    ]),
                     .div(classes: "ms-1 color-gray-65 text-center pt+", [
                         .ul(classes: "stack pl", smallPrint(noTeamMemberDiscount: coupon != nil && !coupon!.applies_to_non_plan_charges).map { Node.li([.text($0)])})
                         ])
@@ -120,12 +129,9 @@ extension Plan {
 }
 
 fileprivate func smallPrint(noTeamMemberDiscount: Bool) -> [String] {
-    return
-        (noTeamMemberDiscount ? ["The discount doesn’t apply to added team members."] : []) +
-            [
-                "Subscriptions can be cancelled at any time.",
-                "All prices shown excluding VAT.",
-                "VAT only applies to EU customers."
+    return (noTeamMemberDiscount ? ["The discount doesn’t apply to added team members."] : []) + [
+        "Subscriptions can be cancelled at any time.",
+        "All prices shown excluding VAT (only applies to EU customers)."
     ]
 }
 
