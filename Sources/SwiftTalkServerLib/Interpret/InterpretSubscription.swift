@@ -68,7 +68,7 @@ extension Route.Subscription {
                     return I.write(teamMemberSignupAlreadySubscribed())
                 }
                 let teamMemberData = TeamMemberData(userId: tokenData.userId, teamMemberId: user.id)
-                return I.execute(teamMemberData.insert) { _ in
+                return I.query(teamMemberData.insert) { _ in
                     return I.execute(Task.syncTeamMembersWithRecurly(userId: tokenData.userId).schedule(minutes: 5)) { _ in
                         if !user.data.confirmedNameAndEmail {
                             let resp = registerForm(couponCode: nil).render(.init(user.data), [])
