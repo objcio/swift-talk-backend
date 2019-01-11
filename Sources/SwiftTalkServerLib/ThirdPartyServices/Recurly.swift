@@ -65,25 +65,49 @@ fileprivate extension Plan {
 }
 
 extension Plan {
-    static var gifts: [Plan] {
-        return all.filter { $0.plan_code.hasPrefix("gift") }.sorted { $0.sortDuration < $1.sortDuration } // TODO
-    }
     static var monthly: Plan? {
-        return all.first(where: { $0.plan_interval_unit == .months && $0.plan_interval_length == 1 })
-    }
-    static var yearly: Plan? {
-        return all.first(where: { $0.plan_interval_unit == .months && $0.plan_interval_length == 12 })
+        return all.first { $0.isMonthly && $0.isStandardPlan }
     }
     
+    static var yearly: Plan? {
+        return all.first { $0.isYearly && $0.isStandardPlan }
+    }
+
+    static var gifts: [Plan] {
+        return all.filter { $0.isGiftPlan }.sorted { $0.sortDuration < $1.sortDuration } // TODO
+    }
+
+    static var teamMonthly: Plan? {
+        return all.first { $0.isMonthly && $0.isTeamPlan }
+    }
+
+    static var teamYearly: Plan? {
+        return all.first { $0.isYearly && $0.isTeamPlan }
+    }
+
+    var isStandardPlan: Bool {
+        return !isTeamPlan && !isGiftPlan
+    }
+    
+    var isTeamPlan: Bool {
+        return plan_code.hasPrefix("team")
+    }
+    
+    var isGiftPlan: Bool {
+        return plan_code.hasPrefix("gift")
+    }
+    
+    var isMonthly: Bool {
+        return plan_interval_unit == .months && plan_interval_length == 1
+    }
+
+    var isYearly: Bool {
+        return plan_interval_unit == .months && plan_interval_length == 12
+    }
+
     var teamMemberPrice: Int? {
         // todo think of a good way to load this from recurly
-        if plan_interval_unit == .months && plan_interval_length == 1 {
-            return 1000
-        } else if plan_interval_unit == .months && plan_interval_length == 12 {
-            return 10000
-        } else {
-            return nil
-        }
+        return isMonthly ? 1000 : isYearly ? 10000 : nil
     }
     
     var teamMemberAddOn: RemoteEndpoint<AddOn> {
