@@ -48,14 +48,13 @@ extension Route {
             return I.query(Row<SignupTokenData>.prune) { _ in
                 return I.query(Row<SignupTokenData>.select(token)) { row in
                     guard let tokenData = row?.data else {
-                        throw ServerError(privateMessage: "signup token doesn't exist: \(token)", publicMessage: "This signup link is expired. Please get in touch with your team manager for a new signup link.")
+                        throw ServerError(privateMessage: "signup token doesn't exist: \(token)", publicMessage: "This signup link has expired. Please get in touch with your team manager for a new signup link.")
                     }
                     return I.withSession { session in
                         if session?.premiumAccess == true {
                             return try I.write(teamMemberSignupAlreadySubscribed())
                         } else if let user = session?.user {
-                            // associate user with master team user
-                            fatalError("TODO")
+                            return I.redirect(to: Route.subscription(.teamMember(token: token)))
                         } else {
                             return I.write(try teamMemberSubscribe(signupToken: token))
                         }

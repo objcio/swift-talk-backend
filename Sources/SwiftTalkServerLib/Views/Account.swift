@@ -434,30 +434,41 @@ func addTeamMemberForm() -> Form<TeamMemberFormData> {
 }
 
 func teamMembersView(addForm: Node, teamMembers: [Row<UserData>], signupLink: URL) -> Node {
-    let currentTeamMembers = teamMembers.isEmpty ? Node.p([.raw("No team members added yet.")]) : Node.div(teamMembers.compactMap { tm in
-        guard let githubLogin = tm.data.githubLogin else { return nil }
-        return .div(classes: "flex items-center pv- border-top border-1 border-color-gray-90", [
+    func row(avatarURL: String, name: String, email: String, githubLogin: String, deleteRoute: Route?) -> Node {
+        return Node.div(classes: "flex items-center pv- border-top border-1 border-color-gray-90", [
             .div(classes: "block radius-full ms-2 width-2 mr", [
-                .img(src: tm.data.avatarURL, classes: "block radius-full ms-2 width-2 mr")
+                Node.img(src: avatarURL, classes: "block radius-full ms-2 width-2 mr")
             ]),
-            .div(classes: "flex-grow type-mono", [
-                .link(to: URL(string: "https://github.com/\(githubLogin)")!, classes: "color-gray-30 no-decoration hover-color-blue", [.text(githubLogin)])
+            .div(classes: "cols flex-grow " + (deleteRoute == nil ? "bold" : ""), [
+                .div(classes: "col width-1/3", [.text(name)]),
+                .div(classes: "col width-1/3", [.text(email)]),
+                .div(classes: "col width-1/3", [.text(githubLogin)]),
             ]),
-            Node.button(to: .account(.deleteTeamMember(tm.id)), [.raw("&times;")], classes: "button-input ms-1")
+            .div(classes: "block width-2", [
+                deleteRoute.map { Node.button(to: $0, [.raw("&times;")], classes: "button-input ms-1") } ?? ""
+            ]),
         ])
-    })
+    }
+    let currentTeamMembers: Node
+    if teamMembers.isEmpty {
+        currentTeamMembers = Node.p(classes: "c-text", ["No team members added yet."])
+    } else {
+        let headerRow = row(avatarURL: "", name: "Name", email: "Email", githubLogin: "Github Handle", deleteRoute: nil)
+        currentTeamMembers = Node.div([headerRow] + teamMembers.compactMap { tm in
+            guard let githubLogin = tm.data.githubLogin else { return nil }
+            return row(avatarURL: tm.data.avatarURL, name: tm.data.name, email: tm.data.email, githubLogin: githubLogin, deleteRoute: .account(.deleteTeamMember(tm.id)))
+        })
+    }
     
     let content: [Node] = [
         Node.div(classes: "stack++", [
             Node.div([
-                heading("Add Team Member"),
-                addForm,
-            ]),
-            Node.div([
-                heading("Signup Link"),
-                Node.div(classes: "c-text", [
-                    Node.p([.text("Send the following link to your team members for signup: \(signupLink.absoluteString)")]),
-                    Node.p([.text("Each time you visit this page a unique signup link is generated. Signup links expire after 48 hours.")])
+                heading("Add Team Members"),
+                .div(classes: "c-text", [
+                    .p(["Team members cost $10/month or $100/year (excl. VAT), depending on your subscription."]),
+                    .p(["Please send the following link to your team members for signup:"]),
+                    .div(classes: "type-mono ms-1 mt", [.text(signupLink.absoluteString)]),
+                    .p(["Each time you visit this page a unique signup link is generated. Signup links expire after 48 hours."])
                 ])
             ]),
             Node.div([

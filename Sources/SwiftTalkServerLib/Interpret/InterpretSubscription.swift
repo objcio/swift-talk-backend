@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import PostgreSQL
 
 extension Route.Subscription {
     func interpret<I: Interp>() throws -> I {
@@ -61,7 +60,25 @@ extension Route.Subscription {
                 }
             }
         case .teamMember(let token):
-            return I.write("TODO")
+            return I.query(Row<SignupTokenData>.select(token)) { row in
+                guard let tokenData = row?.data else {
+                    throw ServerError(privateMessage: "signup token doesn't exist: \(token)", publicMessage: "This signup link has expired. Please get in touch with your team manager for a new signup link.")
+                }
+                guard !sess.premiumAccess else {
+                    return I.write(teamMemberSignupAlreadySubscribed())
+                }
+                let teamMemberData = TeamMemberData(userId: tokenData.userId, teamMemberId: user.id)
+                return I.execute(teamMemberData.insert) { _ in
+                    return I.execute(Task.syncTeamMembersWithRecurly(userId: tokenData.userId).schedule(minutes: 5)) { _ in
+                        if !user.data.confirmedNameAndEmail {
+                            let resp = registerForm(couponCode: nil).render(.init(user.data), [])
+                            return I.write(resp)
+                        } else {
+                            return I.redirect(to: .home)
+                        }
+                    }
+                }
+            }
         case .cancel:
             return I.verifiedPost { _ in
                 return I.onSuccess(promise: user.currentSubscription.promise.map(flatten)) { sub in

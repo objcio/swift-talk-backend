@@ -9,17 +9,17 @@ import Foundation
 
 fileprivate let signupHeader = pageHeader(.other(header: "Team Member Signup", blurb: nil, extraClasses: "ms4"), extraClasses: "text-center")
 
-func teamMemberSignupAlreadySubscribed() throws -> Node {
+func teamMemberSignupAlreadySubscribed() -> Node {
     let contents: [Node] = [
         signupHeader,
         .section(classes: "container", [
             .div(classes: "c-text text-center cols max-width-8 center", [
-                .p([.text("You already have an active subscription at this moment.")]),
-                .p([.text("To change your subscription to the team you've been invited to, please cancel your own subscription and signup as a team member once your old subscription has expired.")]),
+                .p(["You already have an active subscription."]),
+                .p(["To change your subscription to the team you've been invited to, please cancel your current subscription and signup as a team member once your old subscription has expired."]),
                 .p([
-                    .text("To expedite this process, please get in touch at"),
+                    "To expedite this process, please get in touch at",
                     .link(to: URL(string: "mailto:\(email)")!, [.text(email)]),
-                    .text(".")
+                    "."
                 ]),
             ])
         ])
