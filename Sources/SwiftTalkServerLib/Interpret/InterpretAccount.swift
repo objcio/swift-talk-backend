@@ -76,9 +76,13 @@ extension Route.Account {
                 u.data.confirmedNameAndEmail = true
                 let errors = u.data.validate()
                 if errors.isEmpty {
-                    return I.query(u.update()) {
-                    	I.redirect(to: .account(.profile))
-                    }
+                    return I.onSuccess(promise: recurly.updateAccount(accountCode: u.id, email: u.data.email).promise, do: { _ in
+                        I.query(u.update()) { _ in
+                            I.redirect(to: .account(.profile))
+                        }
+                    }, else: {
+                        I.write(f.render(data, [(field: "", message: "An error occurred while updating your account profile. Please try again later.")]))
+                    })
                 } else {
                     return I.write(f.render(result, errors))
                 }
