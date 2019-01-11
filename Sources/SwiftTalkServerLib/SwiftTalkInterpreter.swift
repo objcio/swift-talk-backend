@@ -247,12 +247,12 @@ extension SwiftTalkInterpreter {
 
 extension SwiftTalkInterpreter where Self: HTML {
     static func onSuccess<A>(promise: Promise<A?>, file: StaticString = #file, line: UInt = #line, message: String = "Something went wrong.", do cont: @escaping (A) throws -> Self) -> Self {
-        return onSuccess(promise: promise, file: file, line: line, message: message, do: cont, else: {
+        return onSuccess(promise: promise, file: file, line: line, do: cont, else: {
             throw ServerError(privateMessage: "Expected non-nil value, but got nil (\(file):\(line)).", publicMessage: message)
         })
     }
     
-    static func onSuccess<A>(promise: Promise<A?>, file: StaticString = #file, line: UInt = #line, message: String = "Something went wrong.", do cont: @escaping (A) throws -> Self, else: @escaping () throws -> Self) -> Self {
+    static func onSuccess<A>(promise: Promise<A?>, file: StaticString = #file, line: UInt = #line, do cont: @escaping (A) throws -> Self, else: @escaping () throws -> Self) -> Self {
         return onComplete(promise: promise, do: { value in
             catchAndDisplayError {
                 if let v = value {

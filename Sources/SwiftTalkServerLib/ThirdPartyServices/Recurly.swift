@@ -630,6 +630,15 @@ struct Recurly {
         let url = base.appendingPathComponent("subscriptions/\(subscription.uuid)")
         return RemoteEndpoint(xml: .put, url: url, value: UpdateSubscription(timeframe: "now", plan_code: plan_code, subscription_add_ons: addons), headers: headers, query: [:])
     }
+    
+    func updateAccount(accountCode: UUID, email: String) -> RemoteEndpoint<Account> {
+        struct UpdateAccount: Codable, RootElement {
+            static let rootElementName = "account"
+            var email: String
+        }
+        let url = base.appendingPathComponent("accounts/\(accountCode.uuidString)")
+        return RemoteEndpoint(xml: .put, url: url, value: UpdateAccount(email: email), headers: headers)
+    }
 
     func coupon(code: String) -> RemoteEndpoint<Coupon> {
         let url = base.appendingPathComponent("coupons/\(code)")
