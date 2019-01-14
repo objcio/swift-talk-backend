@@ -56,7 +56,11 @@ extension Route.Subscription {
                 return I.write(resp)
             } else {
                 return I.query(Task.unfinishedSubscriptionReminder(userId: user.id).schedule(weeks: 1)) {
-                    try newSubscription(couponCode: couponCode, team: team, errs: [])
+                    var u = user
+                    u.data.role = team ? .teamManager : .user
+                    return I.query(u.update()) {
+                        try newSubscription(couponCode: couponCode, team: team, errs: [])
+                    }
                 }
             }
         case .teamMember(let token):

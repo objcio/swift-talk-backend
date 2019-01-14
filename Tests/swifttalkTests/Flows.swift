@@ -18,11 +18,17 @@ struct QueryAndResult {
     }
 }
 
+extension QueryAndResult: Equatable {
+    static func ==(l: QueryAndResult, r: QueryAndResult) -> Bool {
+        return l.query.query == r.query.query
+    }
+}
+
 struct TestEnv {
     let requestEnvironment: RequestEnvironment
-    let expected: [QueryAndResult]
     let file: StaticString
     let line: UInt
+    let nextQuery: ((QueryAndResult) -> Any?) -> Any?
 }
 
 extension TestEnv: ContainsRequestEnvironment {}
@@ -33,7 +39,7 @@ extension TestEnv: ContainsSession {
 extension TestEnv: CanQuery {
     func execute<A>(_ query: Query<A>) -> Either<A, Error> {
         let theQuery = query.query
-        for q in expected {
+        guard let result = nextQuery({ q in
             if q.query.query == theQuery, let resp = q.response as? A {
                 let v1 = query.values.map { try! $0.makeNode(in: nil) }
                 let v2 = q.query.values.map { try! $0.makeNode(in: nil) }
@@ -41,14 +47,17 @@ extension TestEnv: CanQuery {
                 for (x,(y, index)) in zip(v1, zip(v2, v1.indices)) {
                     XCTAssertEqual(x.wrapped,y.wrapped, "\(x.wrapped) != \(y.wrapped) at index \(index) (sql: \(theQuery))", file: file, line: line)
                     if x.wrapped != y.wrapped {
-                        return .right(TestErr())                        
+                        return Either<A, Error>.right(TestErr())
                     }
                 }
-                return .left(resp)
+                return Either<A, Error>.left(resp)
             }
+            return nil
+        }) as? Either<A, Error> else {
+            XCTFail("Query not present \(query)", file: file, line: line)
+            return .right(TestErr())
         }
-        XCTFail("Query not present \(query)", file: file, line: line)
-        return .right(TestErr())
+        return result
     }
     
     func getConnection() -> Either<Connection, Error> {
@@ -61,12 +70,24 @@ extension TestEnv: CanQuery {
 struct Flow {
     let session: Session?
     let currentPage: TestInterpreter
-    
-    private static func run(_ session: Session?, _ route: Route, _ queries: [QueryAndResult] = [], _ file: StaticString, _ line: UInt) throws -> TestInterpreter {
+
+    private static func run(_ session: Session?, _ route: Route, _ expectedQueries: [QueryAndResult], queriesChanged: (([QueryAndResult]) -> ())? = nil, _ file: StaticString, _ line: UInt) throws -> TestInterpreter {
         let env = RequestEnvironment(route: route, hashedAssetName: { $0 }, buildSession: { session }, connection: noConnection, resourcePaths: [])
-        let testEnv = TestEnv(requestEnvironment: env, expected: queries, file: file, line: line)
+        var queries = expectedQueries
+        let testEnv = TestEnv(requestEnvironment: env, file: file, line: line) { next in
+            for (idx, q) in queries.enumerated() {
+                if let result = next(q) {
+                    queries.remove(at: idx)
+                    queriesChanged?(queries)
+                    return result
+                }
+            }
+            return nil
+        }
         let t: Reader<TestEnv, TestInterpreter> = try route.interpret()
-        return t.run(testEnv)
+        let result = t.run(testEnv)
+        XCTAssert(queries.isEmpty || queriesChanged != nil, "Expected queries to execute: \(queries)")
+        return result
     }
     
     static func landingPage(session: Session?, file: StaticString = #file, line: UInt = #line, _ route: Route) throws -> Flow {
@@ -102,12 +123,14 @@ struct Flow {
         for (key,_) in data {
             XCTAssert(postData[key] != nil)
         }
-        guard case let ._withPostData(cont) = try Flow.run(session, action, expectedQueries, file, line) else {
+        var queries = expectedQueries
+        guard case let ._withPostData(cont) = try Flow.run(session, action, queries, queriesChanged: { queries = $0 }, file, line) else {
             XCTFail("Expected post handler", file: file, line: line)
             return
         }
         let theData = postData.merging(data, uniquingKeysWith: { $1 }).map { (key, value) in "\(key)=\(value.escapeForAttributeValue)"}.joined(separator: "&").data(using: .utf8)!
         let nextPage = cont(theData)
+        XCTAssert(queries.isEmpty, "Expected queries to execute: \(queries)")
         try then(Flow(session: session, currentPage: nextPage))
     }
     
@@ -138,35 +161,65 @@ final class FlowTests: XCTestCase {
         
         let subscribeWithoutASession = try Flow.landingPage(session: nil, .subscribe)
         subscribeWithoutASession.verify { page in
-            testLinksTo(page, route: .login(continue: .subscription(.new(couponCode: nil))))
+            testLinksTo(page, route: .login(continue: .subscription(.new(couponCode: nil, team: false))))
         }
         
         let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .subscribe)
-        try notSubscribed.click(.subscription(.new(couponCode: nil)), {
+        try notSubscribed.click(.subscription(.new(couponCode: nil, team: false)), {
             var confirmedSess = $0.session!
             confirmedSess.user.data.confirmedNameAndEmail = true
-            try $0.fillForm(to: .account(.register(couponCode: nil)), expectedQueries: [
-                QueryAndResult(query: confirmedSess.user.update(), response: ())], {
-                    try $0.withSession(confirmedSess) {
-                        try $0.followRedirect(to: .subscription(.new(couponCode: nil)), expectedQueries:
-                            [QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1))], {
-                            print($0.currentPage)
-                        })
-                    }
+            try $0.fillForm(to: .account(.register(couponCode: nil, team: false)), expectedQueries: [
+                QueryAndResult(query: confirmedSess.user.update(), response: ())
+            ], {
+                try $0.withSession(confirmedSess) {
+                    try $0.followRedirect(to: .subscription(.new(couponCode: nil, team: false)), expectedQueries: [
+                        QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1)),
+                        QueryAndResult(confirmedSess.user.update())
+                    ], {
+                        print($0.currentPage)
+                    })
+                }
             })
         })
     }
-    
+
+    func testTeamSubscription() throws {
+        testPlans = plans
+        let subscribeWithoutASession = try Flow.landingPage(session: nil, .subscribeTeam)
+        subscribeWithoutASession.verify { page in
+            testLinksTo(page, route: .login(continue: .subscription(.new(couponCode: nil, team: true))))
+        }
+
+        let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .subscribeTeam)
+        try notSubscribed.click(.subscription(.new(couponCode: nil, team: true)), {
+            var confirmedSess = $0.session!
+            confirmedSess.user.data.confirmedNameAndEmail = true
+            confirmedSess.user.data.role = .teamManager
+            try $0.fillForm(to: .account(.register(couponCode: nil, team: true)), expectedQueries: [
+                QueryAndResult(query: confirmedSess.user.update(), response: ())
+            ], {
+                try $0.withSession(confirmedSess) {
+                    try $0.followRedirect(to: .subscription(.new(couponCode: nil, team: true)), expectedQueries: [
+                        QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1)),
+                        QueryAndResult(confirmedSess.user.update())
+                    ], {
+                        print($0.currentPage)
+                    })
+                }
+            })
+        })
+    }
+
     func testNewSubscription() throws {
         testPlans = plans
         
         // todo test coupon codes
-        let i = run(.subscription(.new(couponCode: nil)))
+        let i = run(.subscription(.new(couponCode: nil, team: false)))
         // Not logged in
         try i(nil).testIsError()
         
         let form = try TestUnwrap(i(nonSubscribedUser).forms().first)
-        XCTAssertEqual(form.action, .account(.register(couponCode: nil)))
+        XCTAssertEqual(form.action, .account(.register(couponCode: nil, team: false)))
         
         try print(i(subscribedUser))
     }
