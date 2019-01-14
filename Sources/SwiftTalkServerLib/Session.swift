@@ -34,7 +34,7 @@ struct Session {
     }
     
     var teamMemberPremiumAccess: Bool {
-        return masterTeamUser?.data.premiumAccess == true
+        return masterTeamUser?.data.subscriber == true
     }
     
     var gifterPremiumAccess: Bool {

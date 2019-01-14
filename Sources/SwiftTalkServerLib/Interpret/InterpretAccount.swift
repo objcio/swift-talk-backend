@@ -44,12 +44,13 @@ extension Route.Account {
             return I.query(sess.user.deleteSession(sess.sessionId)) {
                 return I.redirect(to: .home)
             }
-        case .register(let couponCode):
-            return I.form(registerForm(couponCode: couponCode), initial: ProfileFormData(sess.user.data), convert: { profile in
+        case let .register(couponCode, team):
+            return I.form(registerForm(couponCode: couponCode, team: team), initial: ProfileFormData(sess.user.data), convert: { profile in
                 var u = sess.user
                 u.data.email = profile.email
                 u.data.name = profile.name
                 u.data.confirmedNameAndEmail = true
+                u.data.role = team ? .teamManager : .user
                 let errors = u.data.validate()
                 if errors.isEmpty {
                     return .left(u)
@@ -61,7 +62,7 @@ extension Route.Account {
                     if sess.premiumAccess {
                         return I.redirect(to: .home)
                     } else {
-                        return I.redirect(to: .subscription(.new(couponCode: couponCode)))
+                        return I.redirect(to: .subscription(.new(couponCode: couponCode, team: team)))
                     }
                 }
             })

@@ -104,6 +104,7 @@ struct UserData: Codable, Insertable {
         case user = 0
         case collaborator = 1
         case admin = 2
+        case teamManager = 3
     }
     var email: String
     var githubUID: Int?
@@ -165,6 +166,7 @@ extension String {
 
 extension UserData {
     var premiumAccess: Bool {
+        guard role != .teamManager else { return false }
         return role == .admin || role == .collaborator || subscriber
     }
     

@@ -119,11 +119,12 @@ extension Task {
         case .syncTeamMembersWithRecurly(let userId):
             guard let user = try c.get().execute(Row<UserData>.select(userId)) else { onCompletion(true); return }
             let teamMembers = try c.get().execute(user.teamMembers)
+            let memberCount = user.data.role == .teamManager ? teamMembers.count - 1 : teamMembers.count
             URLSession.shared.load(user.currentSubscription).flatMap { (sub: Subscription??) -> Promise<Subscription?> in
                 guard let su = sub, let s = su else { return Promise { $0(nil) } }
-                return URLSession.shared.load(recurly.updateSubscription(s, numberOfTeamMembers: teamMembers.count))
+                return URLSession.shared.load(recurly.updateSubscription(s, numberOfTeamMembers: memberCount))
             }.run { sub in
-                onCompletion(sub?.subscription_add_ons?.first?.quantity == teamMembers.count)
+                onCompletion(sub?.subscription_add_ons?.first?.quantity == memberCount)
             }
         
         case .releaseEpisode(let number):

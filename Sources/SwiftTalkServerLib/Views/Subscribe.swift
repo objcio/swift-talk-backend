@@ -8,14 +8,15 @@
 import Foundation
 
 
-let benefits: [(icon: String, name: String, description: String)] = [
-    ("icon-benefit-unlock.svg", "Watch All Episodes", "A new episode every week"), // TODO
+let subscriptionBenefits: [(icon: String, name: String, description: String)] = [
+    ("icon-benefit-unlock.svg", "Watch All Episodes", "A new episode every week"),
     ("icon-benefit-download.svg", "Download Episodes", "Take Swift Talk with you when you're offline"),
     ("icon-benefit-support.svg", "Support Us", "Ensure the continuous production of new episodes"),
 ]
 
-func newSubscriptionBanner() -> Node {
-    return Node.ul(classes: "lh-110 text-center cols max-width-9 center mb- pv++ m-|stack+", benefits.map { b in
+
+func benefits(_ items: [(icon: String, name: String, description: String)]) -> Node {
+    return Node.ul(classes: "lh-110 text-center cols max-width-9 center mb- pv++ m-|stack+", items.map { b in
         Node.li(classes: "m+|col m+|width-1/3", [
             .div(classes: "color-orange", [
                 .inlineSvg(path: b.icon, classes: "svg-fill-current")
@@ -23,8 +24,8 @@ func newSubscriptionBanner() -> Node {
             .div([
                 .h3(classes: "bold color-blue mt- mb---", [.text(b.name)]),
                 .p(classes: "color-gray-50 lh-125", [.text(b.description)])
-                ])
             ])
+        ])
     })
 }
 
@@ -46,8 +47,8 @@ func profile(submitTitle: String, action: Route) -> Form<ProfileFormData> {
     })
 }
 
-func registerForm(couponCode: String?) -> Form<ProfileFormData> {
-    return profile(submitTitle: "Create Account", action: .account(.register(couponCode: couponCode))).wrap { node in
+func registerForm(couponCode: String?, team: Bool) -> Form<ProfileFormData> {
+    return profile(submitTitle: "Create Account", action: .account(.register(couponCode: couponCode, team: team))).wrap { node in
         LayoutConfig(contents: [
             Node.header([
                 Node.div(classes: "container-h pb+ pt-", [
@@ -86,7 +87,7 @@ fileprivate func continueLink(to route: Route, title: String, extraClasses: Clas
     return Node.link(to: route, classes: linkClasses + (extraClasses ?? ""), [.text(title)])
 }
 
-fileprivate func continueLink(context: Context, coupon: Coupon?) -> Node {
+fileprivate func continueLink(context: Context, coupon: Coupon?, team: Bool) -> Node {
     if context.session.premiumAccess {
         if let d = context.session?.user.data, d.canceled {
             return continueLink(to: .account(.billing), title: "Reactivate Subscription", extraClasses: "c-button--ghost")
@@ -94,9 +95,9 @@ fileprivate func continueLink(context: Context, coupon: Coupon?) -> Node {
             return continueLink(to: .account(.billing), title: "You're already subscribed", extraClasses: "c-button--ghost")
         }
     } else if context.session?.user != nil {
-        return continueLink(to: .subscription(.new(couponCode: coupon?.coupon_code)), title: "Proceed to payment")
+        return continueLink(to: .subscription(.new(couponCode: coupon?.coupon_code, team: team)), title: "Proceed to payment")
     } else {
-        return continueLink(to: .login(continue: Route.subscription(.new(couponCode: coupon?.coupon_code))), title: "Sign in with Github")
+        return continueLink(to: .login(continue: Route.subscription(.new(couponCode: coupon?.coupon_code, team: team))), title: "Sign in with Github")
     }
 }
 
@@ -119,10 +120,10 @@ func renderSubscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node
                         ])
                     ]),
                     .div([
-                        continueLink(context: context, coupon: coupon)
+                        continueLink(context: context, coupon: coupon, team: false)
                     ])
                 ]),
-                newSubscriptionBanner(),
+                benefits(subscriptionBenefits),
                 Node.ul(classes: "text-center max-width-7 center pt pb++", [
                     .div(classes: "color-orange", [
                         .inlineSvg(path: "icon-benefit-team.svg", classes: "svg-fill-current")
@@ -164,10 +165,14 @@ func renderSubscribeTeam(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> 
                         ])
                     ]),
                     .div([
-                        continueLink(context: context, coupon: coupon)
+                        continueLink(context: context, coupon: coupon, team: true)
                     ])
                 ]),
-                newSubscriptionBanner(),
+                benefits([
+                    ("icon-benefit-unlock.svg", "Watch All Episodes", "A new episode every week"),
+                    ("icon-benefit-manager.svg", "Team Manager Account", "A central account to manage billing and team members"),
+                    ("icon-benefit-download.svg", "Download Episodes", "Take Swift Talk with you when you're offline"),
+                ]),
                 .div(classes: "ms-1 color-gray-65 text-center center pt+ max-width-8", [
                     smallPrint([
                         .span([.raw("<sup>*</sup>"), .text("Prices apply from the 2nd team member. The first team member is included in the subscription base price, $\(monthly.discountedPrice(coupon: coupon).pretty)/month or $\(yearly.discountedPrice(coupon: coupon).pretty)/year")]),
@@ -185,19 +190,19 @@ fileprivate func smallPrint(_ lines: [Node]) -> Node {
     return Node.ul(classes: "stack pl", lines.map { Node.li([$0])})
 }
 
-func newSub(csrf: CSRFToken, coupon: Coupon?, errs: [String]) throws -> Node {
+func newSub(csrf: CSRFToken, coupon: Coupon?, team: Bool, errs: [String]) throws -> Node {
     guard let m = Plan.monthly, let y = Plan.yearly else {
         throw ServerError(privateMessage: "No monthly or yearly plan: \(Plan.all)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
     }
-    let data = NewSubscriptionData(action: Route.subscription(.create(couponCode: coupon?.coupon_code)).path, public_key: env.recurlyPublicKey, plans: [
+    let data = NewSubscriptionData(action: Route.subscription(.create(couponCode: coupon?.coupon_code, team: team)).path, public_key: env.recurlyPublicKey, plans: [
         .init(m), .init(y)
         ], payment_errors: errs, method: .post, coupon: coupon.map(NewSubscriptionData.Coupon.init), csrf: csrf)
     return LayoutConfig(contents: [
         .header([
             .div(classes: "container-h pb+ pt+", [
                 .h1(classes: "ms4 color-blue bold", ["Subscribe to Swift Talk"])
-                ])
-            ]),
+            ])
+        ]),
         .div(classes: "container", [
             ReactComponent.newSubscription.build(data)
         ])

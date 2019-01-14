@@ -16,18 +16,18 @@ extension Route.Subscription {
 
     private func interpret2<I: Interp>(sesssion sess: Session) throws -> I {
         let user = sess.user
-        func newSubscription(couponCode: String?, errs: [String]) throws -> I {
+        func newSubscription(couponCode: String?, team: Bool, errs: [String]) throws -> I {
             if let c = couponCode {
                 return I.onSuccess(promise: recurly.coupon(code: c).promise, do: { coupon in
-                    return try I.write(newSub(csrf: sess.user.data.csrf, coupon: coupon, errs: errs))
+                    return try I.write(newSub(csrf: sess.user.data.csrf, coupon: coupon, team: team, errs: errs))
                 })
             } else {
-                return try I.write(newSub(csrf: sess.user.data.csrf, coupon: nil, errs: errs))
+                return try I.write(newSub(csrf: sess.user.data.csrf, coupon: nil, team: team, errs: errs))
             }
         }
         
         switch self {
-        case .create(let couponCode):
+        case let .create(couponCode, team):
             return I.verifiedPost { dict in
                 guard let planId = dict["plan_id"], let token = dict["billing_info[token]"] else {
                     throw ServerError(privateMessage: "Incorrect post data", publicMessage: "Something went wrong")
@@ -39,10 +39,10 @@ extension Route.Subscription {
                     case .errors(let messages):
                         log(RecurlyErrors(messages))
                         if messages.contains(where: { $0.field == "subscription.account.email" && $0.symbol == "invalid_email" }) {
-                            let response = registerForm(couponCode: couponCode).render(.init(user.data), [ValidationError("email", "Please provide a valid email address and try again.")])
+                            let response = registerForm(couponCode: couponCode, team: team).render(.init(user.data), [ValidationError("email", "Please provide a valid email address and try again.")])
                             return I.write(response)
                         }
-                        return try newSubscription(couponCode: couponCode, errs: messages.map { $0.message })
+                        return try newSubscription(couponCode: couponCode, team: team, errs: messages.map { $0.message })
                     case .success(let sub):
                         return I.query(user.changeSubscriptionStatus(sub.state == .active)) {
                         	I.redirect(to: .account(.thankYou))
@@ -50,13 +50,13 @@ extension Route.Subscription {
                     }
                 })
             }
-        case .new(let couponCode):
+        case let .new(couponCode, team):
             if !user.data.confirmedNameAndEmail {
-                let resp = registerForm(couponCode: couponCode).render(.init(user.data), [])
+                let resp = registerForm(couponCode: couponCode, team: team).render(.init(user.data), [])
                 return I.write(resp)
             } else {
                 return I.query(Task.unfinishedSubscriptionReminder(userId: user.id).schedule(weeks: 1)) {
-                	try newSubscription(couponCode: couponCode, errs: [])
+                    try newSubscription(couponCode: couponCode, team: team, errs: [])
                 }
             }
         case .teamMember(let token):
@@ -71,7 +71,7 @@ extension Route.Subscription {
                 return I.query(teamMemberData.insert) { _ in
                     return I.execute(Task.syncTeamMembersWithRecurly(userId: tokenData.userId).schedule(minutes: 5)) { _ in
                         if !user.data.confirmedNameAndEmail {
-                            let resp = registerForm(couponCode: nil).render(.init(user.data), [])
+                            let resp = registerForm(couponCode: nil, team: false).render(.init(user.data), [])
                             return I.write(resp)
                         } else {
                             return I.redirect(to: .home)

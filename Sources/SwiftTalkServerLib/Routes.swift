@@ -41,13 +41,13 @@ indirect enum Route: Equatable {
         case cancel
         case reactivate
         case upgrade
-        case create(couponCode: String?)
-        case new(couponCode: String?)
+        case create(couponCode: String?, team: Bool)
+        case new(couponCode: String?, team: Bool)
         case teamMember(token: UUID)
     }
    
     enum Account: Equatable {
-        case register(couponCode: String?)
+        case register(couponCode: String?, team: Bool)
         case thankYou
         case profile
         case billing
@@ -185,9 +185,9 @@ private let externalRoutes: [Router<Route>] = [
     .c("sitemap", .sitemap)
 ]
 
-private let register: Router<Route> = .c("register") / Router.optionalString().transform({ Route.account(.register(couponCode: $0)) }, { (route: Route) -> String?? in
-    guard case let Route.account(.register(x)) = route else { return nil }
-    return x
+private let register: Router<Route> = (.c("register") / Router.optionalString() / Router.booleanQueryParam(name: "team")).transform({ Route.account(.register(couponCode: $0.0, team: $0.1)) }, { route in
+    guard case let Route.account(.register(couponCode, team)) = route else { return nil }
+    return (couponCode, team)
 })
 
 private let accountRoutes: [Router<Route>] = [
@@ -206,9 +206,9 @@ private let accountRoutes: [Router<Route>] = [
 ]
 
 private let subscriptionRoutes2: [Router<Route.Subscription>] = [
-    .c("new") / Router.optionalString().transform(Route.Subscription.new, { route in
-        guard case let .new(x) = route else { return nil }
-        return x
+    (.c("new") / Router.optionalString() / Router.booleanQueryParam(name: "team")).transform({ Route.Subscription.new(couponCode: $0.0, team: $0.1) }, { route in
+        guard case let .new(couponCode, team) = route else { return nil }
+        return (couponCode, team)
     }),
     .c("team-member") / Router.uuid.transform({ Route.Subscription.teamMember(token: $0) }, { route in
         guard case let .teamMember(token) = route else { return nil }
@@ -217,9 +217,9 @@ private let subscriptionRoutes2: [Router<Route.Subscription>] = [
     .c("cancel", .cancel),
     .c("reactivate", .reactivate),
     .c("upgrade", .upgrade),
-    Router.optionalString().transform(Route.Subscription.create, { r in
-        guard case let .create(s) = r else { return nil }
-        return s 
+    (Router.optionalString() / Router.booleanQueryParam(name: "team")).transform({ Route.Subscription.create(couponCode: $0.0, team: $0.1) }, { r in
+        guard case let .create(couponCode, team) = r else { return nil }
+        return (couponCode, team)
     }),
 ]
 
