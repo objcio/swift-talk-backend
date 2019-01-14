@@ -15,8 +15,8 @@ func accountContainer(content: Node, forRoute: Route) -> Node {
             (Route.account(.profile), title: "Profile"),
             (Route.account(.billing), title: "Billing"),
             (Route.account(.logout), title: "Logout"),
-            ]
-        if context.session?.selfPremiumAccess == true {
+        ]
+        if context.session?.selfPremiumAccess == true || context.session?.user.data.role == .teamManager {
             items.insert((Route.account(.teamMembers), title: "Team Members"), at: 2)
         }
         return .div(classes: "container pb0", [

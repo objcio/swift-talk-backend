@@ -28,7 +28,7 @@ struct Session {
     }
     
     var activeSubscription: Bool {
-        return (selfPremiumAccess && !user.data.canceled) ||
+        return ((selfPremiumAccess || user.data.subscriber) && !user.data.canceled) ||
             (gifterPremiumAccess && gifter?.data.canceled == false) ||
             (teamMemberPremiumAccess && masterTeamUser?.data.canceled == false)
     }
@@ -43,5 +43,17 @@ struct Session {
     
     var selfPremiumAccess: Bool {
         return user.data.premiumAccess
+    }
+
+    func downloadStatus(for episode: Episode, downloads: [Row<DownloadData>]) -> Episode.DownloadStatus {
+        guard premiumAccess else { return .notSubscribed }
+        let creditsLeft = (user.data.downloadCredits + user.data.downloadCreditsOffset) - downloads.count
+        if user.data.isAdmin || downloads.contains(where: { $0.data.episodeNumber == episode.number }) {
+            return .reDownload
+        } else if creditsLeft > 0 {
+            return .canDownload(creditsLeft: creditsLeft)
+        } else {
+            return .noCredits
+        }
     }
 }

@@ -259,12 +259,12 @@ func flash(message: String, type: FlashType) -> Node {
 func userHeader(_ context: Context) -> Node {
     let subscribeButton = Node.li(classes: "flex items-center ml+", [
         .link(to: .subscribe, classes: "button button--tight button--themed fz-nav", [.text("Subscribe")])
-        ])
+    ])
     
     func link(to route: Route, text: String) -> Node {
         return .li(classes: "flex ml+", [
             .link(to: route, classes: "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration", [.text(text)])
-            ])
+        ])
     }
     
     let items: [Node]

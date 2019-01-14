@@ -124,7 +124,7 @@ extension Task {
                 guard let su = sub, let s = su else { return Promise { $0(nil) } }
                 return URLSession.shared.load(recurly.updateSubscription(s, numberOfTeamMembers: memberCount))
             }.run { sub in
-                onCompletion(sub?.subscription_add_ons?.first?.quantity == memberCount)
+                onCompletion((sub?.subscription_add_ons?.first?.quantity) ?? 0 == memberCount)
             }
         
         case .releaseEpisode(let number):

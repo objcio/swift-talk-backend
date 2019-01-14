@@ -188,18 +188,6 @@ extension UserData {
     var isCollaborator: Bool {
         return role == .collaborator
     }
-
-    func downloadStatus(for episode: Episode, downloads: [Row<DownloadData>]) -> Episode.DownloadStatus {
-        guard subscriber || isAdmin else { return .notSubscribed }
-        let creditsLeft = (downloadCredits + downloadCreditsOffset) - downloads.count
-        if isAdmin || downloads.contains(where: { $0.data.episodeNumber == episode.number }) {
-            return .reDownload
-        } else if creditsLeft > 0 {
-            return .canDownload(creditsLeft: creditsLeft)
-        } else {
-            return .noCredits
-        }
-    }
 }
 
 struct PlayProgressData {
