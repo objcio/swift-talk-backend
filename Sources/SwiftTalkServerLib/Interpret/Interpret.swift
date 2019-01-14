@@ -43,13 +43,12 @@ extension Route {
             guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
                 throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
             }
-            return I.write(Plan.subscribe(monthly: monthly, yearly: yearly))
+            return I.write(renderSubscribe(monthly: monthly, yearly: yearly))
         case .subscribeTeam:
-            guard let monthly = Plan.teamMonthly, let yearly = Plan.teamYearly else {
+            guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
                 throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
             }
-            return I.write("TODO")
-//            return I.write(Plan.subscribeTeam(monthly: monthly, yearly: yearly))
+            return I.write(renderSubscribeTeam(monthly: monthly, yearly: yearly))
         case .teamMemberSignup(let token):
             return I.query(Row<SignupTokenData>.prune) { _ in
                 return I.query(Row<SignupTokenData>.select(token)) { row in
@@ -142,7 +141,7 @@ extension Route {
                 guard let m = Plan.monthly, let y = Plan.yearly else {
                     throw ServerError(privateMessage: "Plans not loaded", publicMessage: "A small hiccup. Please try again in a little while.")
                 }
-                return I.write(Plan.subscribe(monthly: m, yearly: y, coupon: coupon))
+                return I.write(renderSubscribe(monthly: m, yearly: y, coupon: coupon))
             })
        
         case let .staticFile(path: p):

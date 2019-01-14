@@ -109,7 +109,7 @@ extension SwiftTalkInterpreter where Self: HTML, Self: HasDatabase {
         }
     }
     
-    static func execute<A>(_ query: Query<A>, _ cont: @escaping (Either<A, Error>) throws -> Self) -> Self {
+    static func queryWithError<A>(_ query: Query<A>, _ cont: @escaping (Either<A, Error>) throws -> Self) -> Self {
         return Self.execute(query) { (result: Either<A, Error>) in
             catchAndDisplayError {
                 return try cont(result)

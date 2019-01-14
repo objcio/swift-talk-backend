@@ -105,17 +105,17 @@ extension Plan {
         return plan_interval_unit == .months && plan_interval_length == 12
     }
 
-    var teamMemberPrice: Int? {
+    var teamMemberPrice: Amount {
         // todo think of a good way to load this from recurly
-        return isMonthly ? 1000 : isYearly ? 10000 : nil
+        return isMonthly ? 1000 : 10000
     }
     
     var teamMemberAddOn: RemoteEndpoint<AddOn> {
         return recurly.teamMemberAddOn(plan_code: plan_code)
     }
-
-    func discountedPrice(coupon: Coupon?) -> Amount {
-        let base = unit_amount_in_cents
+    
+    func discountedPrice(basePrice: KeyPath<Plan, Amount>, coupon: Coupon?) -> Amount {
+        let base = self[keyPath: basePrice]
         guard let c = coupon else { return base }
         guard c.applies_to_all_plans || c.plan_codes.contains(plan_code) else {
             return base
@@ -128,6 +128,14 @@ extension Plan {
         case .freeTrial: return base // todo?
         default: return base
         }
+    }
+    
+    func discountedTeamMemberPrice(coupon: Coupon?) -> Amount {
+        return discountedPrice(basePrice: \.teamMemberPrice, coupon: coupon)
+    }
+
+    func discountedPrice(coupon: Coupon?) -> Amount {
+        return discountedPrice(basePrice: \.unit_amount_in_cents, coupon: coupon)
     }
 }
 
@@ -199,12 +207,12 @@ extension Subscription {
 
     // Returns nil if there aren't any upgrades.
     var upgrade: Upgrade? {
-        if state == .active, let m = Plan.monthly, plan.plan_code == m.plan_code, let y = Plan.yearly, let teamMemberPrice = y.teamMemberPrice {
+        if state == .active, let m = Plan.monthly, plan.plan_code == m.plan_code, let y = Plan.yearly {
             let teamMembers = subscription_add_ons?.first?.quantity ?? 0
-            let totalWithoutVat = y.unit_amount_in_cents.usdCents + (teamMembers * teamMemberPrice)
+            let totalWithoutVat = y.unit_amount_in_cents.usdCents + (teamMembers * y.teamMemberPrice.usdCents)
             let vat: Int? = tax_rate.map { Int(Double(totalWithoutVat) * $0) }
             let total = totalWithoutVat + (vat ?? 0)
-            return Upgrade(plan: y, total_without_vat: totalWithoutVat, total_in_cents: total, vat_in_cents: vat, tax_rate: tax_rate, team_members: teamMembers, per_team_member_in_cents: teamMemberPrice)
+            return Upgrade(plan: y, total_without_vat: totalWithoutVat, total_in_cents: total, vat_in_cents: vat, tax_rate: tax_rate, team_members: teamMembers, per_team_member_in_cents: y.teamMemberPrice.usdCents)
         } else {
             return nil
         }
