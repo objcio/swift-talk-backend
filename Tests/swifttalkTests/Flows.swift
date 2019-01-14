@@ -28,7 +28,7 @@ struct TestEnv {
     let requestEnvironment: RequestEnvironment
     let file: StaticString
     let line: UInt
-    let nextQuery: ((QueryAndResult) -> Any?) -> Any?
+    let iterateQueriues: ((QueryAndResult) -> Any?) -> Any?
 }
 
 extension TestEnv: ContainsRequestEnvironment {}
@@ -39,7 +39,7 @@ extension TestEnv: ContainsSession {
 extension TestEnv: CanQuery {
     func execute<A>(_ query: Query<A>) -> Either<A, Error> {
         let theQuery = query.query
-        guard let result = nextQuery({ q in
+        guard let result = iterateQueriues({ q in
             if q.query.query == theQuery, let resp = q.response as? A {
                 let v1 = query.values.map { try! $0.makeNode(in: nil) }
                 let v2 = q.query.values.map { try! $0.makeNode(in: nil) }
