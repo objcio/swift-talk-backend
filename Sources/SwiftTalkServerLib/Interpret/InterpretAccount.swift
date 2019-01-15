@@ -34,12 +34,8 @@ extension Route.Account {
         
         switch self {
         case .thankYou:
-            return I.withConnection { c in
-                // todo: change how we load the episodes (should be a Query<X>, rather than take a connection)
-                let episodesWithProgress = try Episode.all.scoped(for: sess.user.data).withProgress(for: sess.user.id, connection: c)
-                // todo: flash: "Thank you for supporting us
-                return .write(renderHome(episodes: episodesWithProgress))
-            }
+            // todo: flash: "Thank you for supporting us
+            return I.redirect(to: .home)
         case .logout:
             return I.query(sess.user.deleteSession(sess.sessionId)) {
                 return I.redirect(to: .home)
