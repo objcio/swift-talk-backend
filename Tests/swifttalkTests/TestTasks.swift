@@ -14,42 +14,36 @@ final class TaskTests: XCTestCase {
         pushTestEnv()
     }
     
-    func testSyncTeamMembers() throws {
-        func setupSession(user: Row<UserData>, numberOfTeamMembers: Int) {
-            let session = TestURLSession { e in
-                if e.request.matches(user.currentSubscription.request) {
-                    return activeSubscription
-                } else if e.request.matches(recurly.updateSubscription(activeSubscription, numberOfTeamMembers: numberOfTeamMembers).request) {
-                    return activeSubscription
-                } else {
-                    XCTFail("Unexpected endpoint: \(e.request.httpMethod ?? "GET") \(e.request.url!)"); fatalError()
-                }
-            }
-            let testDate = Date()
-            pushGlobals(Globals(currentDate: { testDate }, urlSession: session))
-        }
-        
-        func conn(user: Row<UserData>) -> Lazy<ConnectionProtocol> {
-            return Lazy({ TestConnection { query in
-                if query.matches(Row<UserData>.select(user.id)) {
-                    return user as Any
-                } else if query.matches(user.teamMembers) {
-                    return [user, user]
-                } else {
-                    XCTFail()
-                    fatalError()
-                }
-            } as ConnectionProtocol }, cleanup: { _ in })
-        }
+    func setupGlobals(session: URLSessionProtocol) {
+        let testDate = Date()
+        pushGlobals(Globals(currentDate: { testDate }, urlSession: session))
+    }
 
-        // Team members of a normal user should all be billed
-        var user = subscribedUser.user
-        setupSession(user: user, numberOfTeamMembers: 2)
-        try Task.syncTeamMembersWithRecurly(userId: user.id).interpret(conn(user: user)) { _ in }
+    func setupTeamMembersSession(user: Row<UserData>, numberOfTeamMembers: Int) {
+        setupGlobals(session: TestURLSession([
+            EndpointAndResult(endpoint: user.currentSubscription, response: activeSubscription),
+            EndpointAndResult(endpoint: recurly.updateSubscription(activeSubscription, numberOfTeamMembers: numberOfTeamMembers), response: activeSubscription)
+            ]))
+    }
+    
+    func syncTeamMembersQueries(user: Row<UserData>) -> [QueryAndResult] {
+        return [
+            QueryAndResult(query: Row<UserData>.select(user.id), response: user),
+            QueryAndResult(query: user.teamMembers, response: [user, user])
+        ]
+    }
 
-        // Team members of a team manager should be billed minus one
-        user = subscribedTeamManager.user
-        setupSession(user: user, numberOfTeamMembers: 1)
-        try Task.syncTeamMembersWithRecurly(userId: user.id).interpret(conn(user: user)) { _ in }
+    func testSyncTeamMembersBillsAllTeamMembersForStandardUser() throws {
+        let user = subscribedUser.user
+        setupTeamMembersSession(user: user, numberOfTeamMembers: 2)
+        let conn = TestConnection(syncTeamMembersQueries(user: user)).lazy
+        try Task.syncTeamMembersWithRecurly(userId: user.id).interpret(conn) { _ in }
+    }
+
+    func testSyncTeamMembersBillsMinusOneTeamMembersForTeamManager() throws {
+        let user = subscribedTeamManager.user
+        setupTeamMembersSession(user: user, numberOfTeamMembers: 1)
+        let conn = TestConnection(syncTeamMembersQueries(user: user)).lazy
+        try Task.syncTeamMembersWithRecurly(userId: user.id).interpret(conn) { _ in }
     }
 }

@@ -90,9 +90,18 @@ func TestUnwrap<A>(_ value: A?, file: StaticString = #file, line: UInt = #line) 
 struct TestConnection: ConnectionProtocol {
     let _execute: (String, [PostgreSQL.Node]) -> PostgreSQL.Node = { _,_ in fatalError() }
     let _eQuery: (Query<Any>) throws -> Any
-    init(query: @escaping (Query<Any>) throws -> Any = { _ in fatalError() }) {
-        self._eQuery = query
+    
+    init(executeQuery: @escaping (Query<Any>) throws -> Any = { _ in fatalError() }) {
+        self._eQuery = executeQuery
     }
+    
+    init(_ queries: [QueryAndResult]) {
+        self._eQuery = { query in
+            guard let q = queries.first(where: { $0.query.matches(query) }) else { XCTFail("Query not found: \(query)"); throw TestErr() }
+            return q.response
+        }
+    }
+    
     func execute(_ query: String, _ values: [PostgreSQL.Node]) throws -> PostgreSQL.Node {
         return _execute(query, values)
     }
@@ -102,6 +111,10 @@ struct TestConnection: ConnectionProtocol {
     }
     
     func close() throws {
+    }
+    
+    var lazy: Lazy<ConnectionProtocol> {
+        return Lazy({ self }, cleanup: { _ in })
     }
 }
 
@@ -122,15 +135,37 @@ extension Query {
     }
 }
 
+struct EndpointAndResult {
+    let endpoint: RemoteEndpoint<Any>
+    let response: Any
+    init<A>(endpoint: RemoteEndpoint<A>, response: A) {
+        self.endpoint = endpoint.map { $0 }
+        self.response = response
+    }
+}
+
 struct TestURLSession: URLSessionProtocol {
-    let _load: (RemoteEndpoint<Any>) -> Any
+    let _load: (RemoteEndpoint<Any>) throws -> Any
     
-    init(_ load: @escaping (RemoteEndpoint<Any>) -> Any = { _ in fatalError() }) {
+    init(_ load: @escaping (RemoteEndpoint<Any>) throws -> Any = { _ in fatalError() }) {
         self._load = load
     }
     
+    init(_ stubs: [EndpointAndResult]) {
+        self._load = { endpoint in
+            guard let stub = stubs.first(where: { $0.endpoint.request.matches(endpoint.request) }) else {
+                XCTFail("Unexpected endpoint: \(endpoint.request.httpMethod ?? "GET") \(endpoint.request.url!)"); throw TestErr()
+            }
+            return stub.response
+        }
+    }
+    
     func load<A>(_ e: RemoteEndpoint<A>, callback: @escaping (A?) -> ()) {
-        callback((_load(e.map { $0 }) as! A))
+        do {
+            callback((try _load(e.map { $0 }) as! A))
+        } catch {
+            XCTFail()
+        }
     }
     
     func onDelegateQueue(_ f: @escaping () -> ()) {
