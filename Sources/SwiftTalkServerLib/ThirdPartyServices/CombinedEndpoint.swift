@@ -73,7 +73,7 @@ func sequentially<A>(_ endpoints: [CombinedEndpoint<A>]) -> CombinedEndpoint<[A]
     }
 }
 
-extension URLSession {
+extension URLSessionProtocol {
     func load<A>(_ endpoint: CombinedEndpoint<A>, callback: @escaping (A?) -> ()) {
         switch endpoint {
         case let .single(r):
@@ -91,14 +91,14 @@ extension URLSession {
             load(l) { resultA = $0; group.leave() }
             group.enter()
             load(r) { resultB = $0; group.leave() }
-            group.notify(queue: .global(), execute: {
-                self.delegateQueue.addOperation {
+            group.notify(queue: .global()) {
+                self.onDelegateQueue {
                     guard let x = resultA, let y = resultB else {
                         callback(nil); return
                     }
                     callback(transform(x, y))
                 }
-            })
+            }
         }
     }
 }

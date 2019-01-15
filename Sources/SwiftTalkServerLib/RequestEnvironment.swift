@@ -12,9 +12,9 @@ struct RequestEnvironment {
     var hashedAssetName: (String) -> String = { $0 }
     private let _session: Lazy<Session?>
     let route: Route
-    private let _connection: Lazy<Connection>
+    private let _connection: Lazy<ConnectionProtocol>
     let resourcePaths: [URL]
-    init(route: Route, hashedAssetName: @escaping (String) -> String, buildSession: @escaping () -> Session?, connection: Lazy<Connection>, resourcePaths: [URL]) {
+    init(route: Route, hashedAssetName: @escaping (String) -> String, buildSession: @escaping () -> Session?, connection: Lazy<ConnectionProtocol>, resourcePaths: [URL]) {
         self.hashedAssetName = hashedAssetName
         self._session = Lazy(buildSession, cleanup: { _ in () })
         self.route = route
@@ -28,7 +28,7 @@ struct RequestEnvironment {
         return Context(route: route, message: nil, session: session)
     }
     
-    func connection() throws -> Connection {
+    func connection() throws -> ConnectionProtocol {
         return try _connection.get()
     }
 }

@@ -58,12 +58,12 @@ protocol HasSession {
 import PostgreSQL
 protocol HasDatabase {
     static func execute<A>(_ query: Query<A>, _ cont: @escaping (Either<A, Error>) -> Self) -> Self
-    @available(*, deprecated) static func withConnection(_ cont: @escaping (Either<PostgreSQL.Connection, Error>) -> Self) -> Self
+    @available(*, deprecated) static func withConnection(_ cont: @escaping (Either<ConnectionProtocol, Error>) -> Self) -> Self
 }
 
 protocol CanQuery {
     func execute<A>(_ query: Query<A>) -> Either<A, Error>
-    @available(*, deprecated) func getConnection() -> Either<PostgreSQL.Connection, Error>
+    @available(*, deprecated) func getConnection() -> Either<ConnectionProtocol, Error>
 
 }
 
@@ -76,7 +76,7 @@ extension RequestEnvironment: CanQuery {
         }
     }
     
-    func getConnection() -> Either<Connection, Error> {
+    func getConnection() -> Either<ConnectionProtocol, Error> {
         do { return try .left(connection()) }
         catch { return .right(error) }
     }
@@ -89,7 +89,7 @@ extension Reader: HasDatabase where Value: CanQuery {
         }
     }
     
-    static func withConnection(_ cont: @escaping (Either<Connection, Error>) -> Reader<Value, Result>) -> Reader<Value, Result> {
+    static func withConnection(_ cont: @escaping (Either<ConnectionProtocol, Error>) -> Reader<Value, Result>) -> Reader<Value, Result> {
         return Reader { env in
             return cont(env.getConnection()).run(env)
         }
@@ -118,8 +118,8 @@ extension SwiftTalkInterpreter where Self: HTML, Self: HasDatabase {
 
     }
     
-    @available(*, deprecated) static func withConnection(_ cont: @escaping (Connection) throws -> Self) -> Self {
-        return Self.withConnection { (result: Either<Connection,Error>) in
+    @available(*, deprecated) static func withConnection(_ cont: @escaping (ConnectionProtocol) throws -> Self) -> Self {
+        return Self.withConnection { (result: Either<ConnectionProtocol,Error>) in
             catchAndDisplayError {
                 switch result {
                 case .left(let c): return try cont(c)

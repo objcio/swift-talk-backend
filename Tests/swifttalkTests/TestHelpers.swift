@@ -100,7 +100,47 @@ struct TestConnection: ConnectionProtocol {
     func execute<A>(_ query: Query<A>) throws -> A {
         return try _eQuery(query.map { $0 }) as! A
     }
+    
+    func close() throws {
+    }
 }
 
 struct TestErr: Error { }
+
+extension Query {
+    func matches<B>(_ other: Query<B>) -> Bool {
+        if query == other.query {
+            let v1 = values.map { try! $0.makeNode(in: nil) }
+            let v2 = other.values.map { try! $0.makeNode(in: nil) }
+            guard v1.count == v2.count else { return false }
+            for (x, y) in zip(v1, v2) {
+                guard x.wrapped == y.wrapped else { return false }
+            }
+            return true
+        }
+        return false
+    }
+}
+
+struct TestURLSession: URLSessionProtocol {
+    let _load: (RemoteEndpoint<Any>) -> Any
+    
+    init(_ load: @escaping (RemoteEndpoint<Any>) -> Any = { _ in fatalError() }) {
+        self._load = load
+    }
+    
+    func load<A>(_ e: RemoteEndpoint<A>, callback: @escaping (A?) -> ()) {
+        callback((_load(e.map { $0 }) as! A))
+    }
+    
+    func onDelegateQueue(_ f: @escaping () -> ()) {
+        f()
+    }
+}
+
+extension URLRequest {
+    func matches(_ other: URLRequest) -> Bool {
+        return url == other.url && httpMethod == other.httpMethod && allHTTPHeaderFields == other.allHTTPHeaderFields && httpBody == other.httpBody
+    }
+}
 

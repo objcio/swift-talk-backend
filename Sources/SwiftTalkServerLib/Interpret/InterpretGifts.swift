@@ -54,7 +54,7 @@ extension Route.Gifts {
                                 return I.query(copy.update()) {
                                     if start != nil {
                                         let email = sendgrid.send(to: result.gifter_email, name: copy.data.gifterName ?? "", subject: "Thank you for gifting Swift Talk", text: copy.data.gifterEmailText)
-                                        URLSession.shared.load(email) { result in
+                                        globals.urlSession.load(email) { result in
                                             myAssert(result != nil)
                                         }
                                     }

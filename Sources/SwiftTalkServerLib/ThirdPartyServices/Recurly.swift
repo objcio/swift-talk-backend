@@ -566,8 +566,6 @@ extension Row where Element == UserData {
         return recurly.redemptions(accountId: id.uuidString)
     }
     
-    
-    
     var currentSubscription: RemoteEndpoint<Subscription?> {
         return subscriptions.map { $0.first { $0.state == .active || $0.state == .canceled } }
     }
@@ -578,6 +576,13 @@ extension Row where Element == UserData {
     
     func updateBillingInfo(token: String) -> RemoteEndpoint<RecurlyResult<BillingInfo>> {
         return recurly.updatePaymentMethod(for: id, token: token)
+    }
+    
+    func updateCurrentSubscription(numberOfTeamMembers: Int) -> CombinedEndpoint<Subscription> {
+        return currentSubscription.c.flatMap { sub in
+            guard let s = sub else { return nil }
+            return recurly.updateSubscription(s, numberOfTeamMembers: numberOfTeamMembers).c
+        }
     }
 }
 
@@ -684,9 +689,9 @@ struct Recurly {
 
     func subscriptionStatus(for accountId: UUID) -> Promise<(subscriber: Bool, canceled: Bool, downloadCredits: UInt)?> {
         return Promise { cb in
-            URLSession.shared.load(self.account(with: accountId)) { result in
+            globals.urlSession.load(self.account(with: accountId)) { result in
                 guard let acc = result else { cb(nil); return }
-                URLSession.shared.load(recurly.listSubscriptions(accountId: acc.account_code)) { subs in
+                globals.urlSession.load(recurly.listSubscriptions(accountId: acc.account_code)) { subs in
                     let hasActiveSubscription = subs?.contains(where: { $0.state == .active }) ?? false
                     cb((acc.subscriber, canceled: !hasActiveSubscription, (subs?.activeMonths ?? 0) * 4))
                 }

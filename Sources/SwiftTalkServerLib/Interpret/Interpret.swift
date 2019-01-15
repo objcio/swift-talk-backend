@@ -10,7 +10,7 @@ import PostgreSQL
 import NIOHTTP1
 
 extension Swift.Collection where Element == Episode {
-    func withProgress(for userId: UUID?, connection: Connection) throws -> [EpisodeWithProgress] {
+    func withProgress(for userId: UUID?, connection: ConnectionProtocol) throws -> [EpisodeWithProgress] {
         guard let id = userId else { return map { EpisodeWithProgress(episode: $0, progress: nil) } }
         let progresses = try connection.execute(Row<PlayProgressData>.sortedDesc(for: id)).map { $0.data }
         return map { episode in
@@ -200,7 +200,7 @@ extension Route {
                                         let duration = plan?.prettyDuration ?? "unknown"
                                         let email = sendgrid.send(to: gift.data.gifteeEmail, name: gift.data.gifteeName, subject: "We have a gift for you...", text: gift.gifteeEmailText(duration: duration))
                                         log(info: "Sending gift email to \(gift.data.gifteeEmail)")
-                                        URLSession.shared.load(email) { result in
+                                        globals.urlSession.load(email) { result in
                                             if result == nil {
                                                 log(error: "Can't send email for gift \(gift)")
                                             }

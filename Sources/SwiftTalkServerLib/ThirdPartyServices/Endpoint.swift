@@ -107,6 +107,20 @@ extension RemoteEndpoint where A: Decodable {
     }
 }
 
+protocol URLSessionProtocol {
+    func load<A>(_ e: RemoteEndpoint<A>, callback: @escaping (A?) -> ())
+    func onDelegateQueue(_ f: @escaping () -> ())
+}
+
+extension URLSessionProtocol {
+    func load<A>(_ e: RemoteEndpoint<A>) -> Promise<A?> {
+        return Promise { cb in
+            self.load(e, callback: cb)
+        }
+    }
+}
+
+extension URLSession: URLSessionProtocol {}
 
 extension URLSession {
     func load<A>(_ e: RemoteEndpoint<A>, callback: @escaping (A?) -> ()) {
@@ -119,16 +133,14 @@ extension URLSession {
             return callback(e.parse(data))
         }).resume()
     }
-    
-    func load<A>(_ e: RemoteEndpoint<A>) -> Promise<A?> {
-        return Promise { [unowned self] cb in
-            self.load(e, callback: cb)
-        }
+
+    func onDelegateQueue(_ f: @escaping () -> ()) {
+        self.delegateQueue.addOperation(f)
     }
 }
 
 extension RemoteEndpoint {
     var promise: Promise<A?> {
-        return URLSession.shared.load(self)
+        return globals.urlSession.load(self)
     }
 }

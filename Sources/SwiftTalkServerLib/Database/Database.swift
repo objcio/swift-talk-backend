@@ -31,6 +31,7 @@ let postgreSQL = try! PostgreSQL.Database(connInfo: postgresConfig)
 protocol ConnectionProtocol {
     func execute(_ query: String, _ values: [PostgreSQL.Node]) throws -> PostgreSQL.Node
     func execute<A>(_ query: Query<A>) throws -> A
+    func close() throws
 }
     
 extension ConnectionProtocol {
@@ -56,8 +57,8 @@ func withConnection<A>(_ x: (ConnectionProtocol) throws -> A) throws -> A {
     return result
 }
 
-func lazyConnection() -> Lazy<Connection> {
-    return Lazy<Connection>({ () throws -> Connection in
+func lazyConnection() -> Lazy<ConnectionProtocol> {
+    return Lazy<ConnectionProtocol>({ () throws -> ConnectionProtocol in
         return try postgreSQL.makeConnection()
     }, cleanup: { conn in
         try? conn.close()

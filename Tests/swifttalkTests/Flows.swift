@@ -60,7 +60,7 @@ extension TestEnv: CanQuery {
         return result
     }
     
-    func getConnection() -> Either<Connection, Error> {
+    func getConnection() -> Either<ConnectionProtocol, Error> {
         fatalError("not implemented yet")
     }
     
