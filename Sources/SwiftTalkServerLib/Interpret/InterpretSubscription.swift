@@ -45,7 +45,7 @@ extension Route.Subscription {
                         return try newSubscription(couponCode: couponCode, team: team, errs: messages.map { $0.message })
                     case .success(let sub):
                         return I.query(user.changeSubscriptionStatus(sub.state == .active)) {
-                        	I.redirect(to: .account(.thankYou))
+                            I.redirect(to: team ? .account(.teamMembers) : .account(.thankYou))
                         }
                     }
                 })
