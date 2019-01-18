@@ -26,9 +26,9 @@ extension QueryAndResult: Equatable {
 
 struct TestEnv {
     let requestEnvironment: RequestEnvironment
+    let connection: TestConnection?
     let file: StaticString
     let line: UInt
-    let iterateQueriues: ((QueryAndResult) -> Any?) -> Any?
 }
 
 extension TestEnv: ContainsRequestEnvironment {}
@@ -38,26 +38,12 @@ extension TestEnv: ContainsSession {
 
 extension TestEnv: CanQuery {
     func execute<A>(_ query: Query<A>) -> Either<A, Error> {
-        let theQuery = query.query
-        guard let result = iterateQueriues({ q in
-            if q.query.query == theQuery, let resp = q.response as? A {
-                let v1 = query.values.map { try! $0.makeNode(in: nil) }
-                let v2 = q.query.values.map { try! $0.makeNode(in: nil) }
-                XCTAssertEqual(v1.count, v2.count)
-                for (x,(y, index)) in zip(v1, zip(v2, v1.indices)) {
-                    XCTAssertEqual(x.wrapped,y.wrapped, "\(x.wrapped) != \(y.wrapped) at index \(index) (sql: \(theQuery))", file: file, line: line)
-                    if x.wrapped != y.wrapped {
-                        return Either<A, Error>.right(TestErr())
-                    }
-                }
-                return Either<A, Error>.left(resp)
-            }
-            return nil
-        }) as? Either<A, Error> else {
-            XCTFail("Query not present \(query)", file: file, line: line)
-            return .right(TestErr())
+        guard let c = connection else { XCTFail(); return .right(TestErr()) }
+        do {
+            return .left(try c.execute(query))
+        } catch {
+            return .right(error)
         }
-        return result
     }
     
     func getConnection() -> Either<ConnectionProtocol, Error> {
@@ -71,27 +57,17 @@ struct Flow {
     let session: Session?
     let currentPage: TestInterpreter
 
-    private static func run(_ session: Session?, _ route: Route, _ expectedQueries: [QueryAndResult], queriesChanged: (([QueryAndResult]) -> ())? = nil, _ file: StaticString, _ line: UInt) throws -> TestInterpreter {
+    private static func run(_ session: Session?, _ route: Route, connection: TestConnection? = nil, assertQueriesDone: Bool = true, _ file: StaticString, _ line: UInt) throws -> TestInterpreter {
         let env = RequestEnvironment(route: route, hashedAssetName: { $0 }, buildSession: { session }, connection: noConnection, resourcePaths: [])
-        var queries = expectedQueries
-        let testEnv = TestEnv(requestEnvironment: env, file: file, line: line) { next in
-            for (idx, q) in queries.enumerated() {
-                if let result = next(q) {
-                    queries.remove(at: idx)
-                    queriesChanged?(queries)
-                    return result
-                }
-            }
-            return nil
-        }
+        let testEnv = TestEnv(requestEnvironment: env, connection: connection, file: file, line: line)
         let t: Reader<TestEnv, TestInterpreter> = try route.interpret()
         let result = t.run(testEnv)
-        XCTAssert(queries.isEmpty || queriesChanged != nil, "Expected queries to execute: \(queries)")
+        if let c = connection, assertQueriesDone { c.assertDone() }
         return result
     }
     
     static func landingPage(session: Session?, file: StaticString = #file, line: UInt = #line, _ route: Route) throws -> Flow {
-        return try Flow(session: session, currentPage: run(session, route, [], file, line))
+        return try Flow(session: session, currentPage: run(session, route, file, line))
     }
     
     func verify(cond: (TestInterpreter) -> ()) {
@@ -100,7 +76,7 @@ struct Flow {
     
     func click(_ route: Route, file: StaticString = #file, line: UInt = #line, _ cont: (Flow) throws -> ()) throws {
         testLinksTo(currentPage, route: route)
-        try cont(Flow(session: session, currentPage: Flow.run(session, route, [], file, line)))
+        try cont(Flow(session: session, currentPage: Flow.run(session, route, file, line)))
     }
     
     func followRedirect(to action: Route, expectedQueries: [QueryAndResult] = [], file: StaticString = #file, line: UInt = #line,  _ then: (Flow) throws -> ()) throws -> () {
@@ -111,7 +87,7 @@ struct Flow {
             XCTFail("Expected \(action), got \(path)"); return
         }
         
-        try then(Flow(session: session, currentPage: Flow.run(session, action, expectedQueries, file, line)))
+        try then(Flow(session: session, currentPage: Flow.run(session, action, connection: TestConnection(expectedQueries), file, line)))
     }
     
     func fillForm(to action: Route, data: [String:String] = [:], expectedQueries: [QueryAndResult] = [], file: StaticString = #file, line: UInt = #line,  _ then: (Flow) throws -> ()) throws {
@@ -123,14 +99,14 @@ struct Flow {
         for (key,_) in data {
             XCTAssert(postData[key] != nil)
         }
-        var queries = expectedQueries
-        guard case let ._withPostData(cont) = try Flow.run(session, action, queries, queriesChanged: { queries = $0 }, file, line) else {
+        let conn = TestConnection(expectedQueries)
+        guard case let ._withPostData(cont) = try Flow.run(session, action, connection: conn, assertQueriesDone: false, file, line) else {
             XCTFail("Expected post handler", file: file, line: line)
             return
         }
         let theData = postData.merging(data, uniquingKeysWith: { $1 }).map { (key, value) in "\(key)=\(value.escapeForAttributeValue)"}.joined(separator: "&").data(using: .utf8)!
         let nextPage = cont(theData)
-        XCTAssert(queries.isEmpty, "Expected queries to execute: \(queries)")
+        conn.assertDone()
         try then(Flow(session: session, currentPage: nextPage))
     }
     

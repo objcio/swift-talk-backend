@@ -144,28 +144,24 @@ struct EndpointAndResult {
     }
 }
 
-struct TestURLSession: URLSessionProtocol {
-    let _load: (RemoteEndpoint<Any>) throws -> Any
+class TestURLSession: URLSessionProtocol {
+    private var results: [EndpointAndResult]
     
-    init(_ load: @escaping (RemoteEndpoint<Any>) throws -> Any = { _ in fatalError() }) {
-        self._load = load
+    init(_ results: [EndpointAndResult]) {
+        self.results = results
     }
     
-    init(_ stubs: [EndpointAndResult]) {
-        self._load = { endpoint in
-            guard let stub = stubs.first(where: { $0.endpoint.request.matches(endpoint.request) }) else {
-                XCTFail("Unexpected endpoint: \(endpoint.request.httpMethod ?? "GET") \(endpoint.request.url!)"); throw TestErr()
-            }
-            return stub.response
+    func load<A>(_ endpoint: RemoteEndpoint<A>, callback: @escaping (A?) -> ()) {
+        guard let idx = results.firstIndex(where: { $0.endpoint.request.matches(endpoint.request) }) else {
+            XCTFail("Unexpected endpoint: \(endpoint.request.httpMethod ?? "GET") \(endpoint.request.url!)"); return
         }
+        let response = results[idx].response as! A
+        results.remove(at: idx)
+        callback(response)
     }
     
-    func load<A>(_ e: RemoteEndpoint<A>, callback: @escaping (A?) -> ()) {
-        do {
-            callback((try _load(e.map { $0 }) as! A))
-        } catch {
-            XCTFail()
-        }
+    func assertDone() {
+        XCTAssert(results.isEmpty)
     }
     
     func onDelegateQueue(_ f: @escaping () -> ()) {
