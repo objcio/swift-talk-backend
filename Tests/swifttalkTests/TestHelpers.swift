@@ -87,19 +87,12 @@ func TestUnwrap<A>(_ value: A?, file: StaticString = #file, line: UInt = #line) 
 }
 
 
-struct TestConnection: ConnectionProtocol {
+class TestConnection: ConnectionProtocol {
     let _execute: (String, [PostgreSQL.Node]) -> PostgreSQL.Node = { _,_ in fatalError() }
-    let _eQuery: (Query<Any>) throws -> Any
+    private var results: [QueryAndResult]
     
-    init(executeQuery: @escaping (Query<Any>) throws -> Any = { _ in fatalError() }) {
-        self._eQuery = executeQuery
-    }
-    
-    init(_ queries: [QueryAndResult]) {
-        self._eQuery = { query in
-            guard let q = queries.first(where: { $0.query.matches(query) }) else { XCTFail("Query not found: \(query)"); throw TestErr() }
-            return q.response
-        }
+    init(_ results: [QueryAndResult]) {
+        self.results = results
     }
     
     func execute(_ query: String, _ values: [PostgreSQL.Node]) throws -> PostgreSQL.Node {
@@ -107,10 +100,17 @@ struct TestConnection: ConnectionProtocol {
     }
     
     func execute<A>(_ query: Query<A>) throws -> A {
-        return try _eQuery(query.map { $0 }) as! A
+        guard let idx = results.firstIndex(where: { $0.query.matches(query) }) else { XCTFail("Query not found: \(query)"); throw TestErr() }
+        let response = results[idx].response as! A
+        results.remove(at: idx)
+        return response
     }
     
     func close() throws {
+    }
+    
+    func assertDone() {
+        XCTAssert(results.isEmpty)
     }
     
     var lazy: Lazy<ConnectionProtocol> {

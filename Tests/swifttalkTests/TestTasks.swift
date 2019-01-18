@@ -36,14 +36,16 @@ final class TaskTests: XCTestCase {
     func testSyncTeamMembersBillsAllTeamMembersForStandardUser() throws {
         let user = subscribedUser.user
         setupTeamMembersSession(user: user, numberOfTeamMembers: 2)
-        let conn = TestConnection(syncTeamMembersQueries(user: user)).lazy
-        try Task.syncTeamMembersWithRecurly(userId: user.id).interpret(conn) { _ in }
+        let conn = TestConnection(syncTeamMembersQueries(user: user))
+        try Task.syncTeamMembersWithRecurly(userId: user.id).interpret(conn.lazy) { _ in }
+        conn.assertDone()
     }
 
     func testSyncTeamMembersBillsMinusOneTeamMembersForTeamManager() throws {
         let user = subscribedTeamManager.user
         setupTeamMembersSession(user: user, numberOfTeamMembers: 1)
-        let conn = TestConnection(syncTeamMembersQueries(user: user)).lazy
-        try Task.syncTeamMembersWithRecurly(userId: user.id).interpret(conn) { _ in }
+        let conn = TestConnection(syncTeamMembersQueries(user: user))
+        try Task.syncTeamMembersWithRecurly(userId: user.id).interpret(conn.lazy) { _ in }
+        conn.assertDone()
     }
 }
