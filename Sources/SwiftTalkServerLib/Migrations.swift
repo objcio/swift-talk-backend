@@ -247,6 +247,22 @@ fileprivate let migrations: [String] = [
     """,
     """
     CREATE INDEX IF NOT EXISTS signup_tokens_expiration_date ON signup_tokens (expiration_date)
+    """,
     """
+    ALTER TABLE team_members
+        ADD COLUMN IF NOT EXISTS created_at timestamp DEFAULT LOCALTIMESTAMP NOT NULL,
+        ADD COLUMN IF NOT EXISTS expired_at timestamp,
+        DROP CONSTRAINT IF EXISTS team_members_user_id_team_member_id_key
+    """,
+    """
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT * FROM pg_constraint WHERE conname='team_members_unique') THEN
+            ALTER TABLE team_members ADD CONSTRAINT team_members_unique UNIQUE (user_id, team_member_id, expired_at);
+        END IF;
+    END
+    $$;
+    """,
+
 ]
 

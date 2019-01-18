@@ -184,7 +184,7 @@ extension Row where Element == UserData {
         return .build(parameters: [id], parse: Element.parseFirst) { """
             SELECT u.id,\(fields) FROM \(UserData.tableName) AS u
             INNER JOIN \(TeamMemberData.tableName) AS t ON t.user_id = u.id
-            WHERE t.team_member_id=\($0[0]) AND u.subscriber=true
+            WHERE t.team_member_id=\($0[0]) AND t.expired_at IS NULL AND u.subscriber=true
             """
         }
     }
@@ -208,7 +208,7 @@ extension Row where Element == UserData {
         return .build(parameters: [id], parse: Element.parse) { """
             SELECT u.id,\(fields) FROM \(UserData.tableName) AS u
             INNER JOIN \(TeamMemberData.tableName) AS t ON t.team_member_id = u.id
-            WHERE t.user_id=\($0[0])
+            WHERE t.user_id=\($0[0]) AND t.expired_at IS NULL
             """
         }
     }
@@ -232,8 +232,10 @@ extension Row where Element == UserData {
     }
     
     func deleteTeamMember(_ teamMemberId: UUID) -> Query<()> {
-        return Row<TeamMemberData>.delete.appending(parameters: [self.id, teamMemberId]) {
-            "WHERE user_id=\($0[0]) AND team_member_id=\($0[1])"
+        return Query.build(parameters: [teamMemberId], parse: parseEmpty) { """
+            UPDATE \(TeamMemberData.tableName) SET expired_at=LOCALTIMESTAMP
+            WHERE team_member_id=\($0[0]) AND expired_at IS NULL
+            """
         }
     }
 }
