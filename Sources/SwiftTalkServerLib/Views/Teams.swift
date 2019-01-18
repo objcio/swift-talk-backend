@@ -39,7 +39,7 @@ func teamMemberSubscribe(signupToken: UUID) throws -> Node {
                     ]),
                 ]),
                 .div([
-                    Node.link(to: Route.login(continue: Route.subscription(.teamMember(token: signupToken))), classes: "mt+ c-button c-button--big c-button--blue c-button--wide", ["Start By Logging In With GitHub"])
+                    Node.link(to: Route.loginWithGithub(continue: Route.subscription(.teamMember(token: signupToken))), classes: "mt+ c-button c-button--big c-button--blue c-button--wide", ["Start By Logging In With GitHub"])
                 ])
             ])
         ])

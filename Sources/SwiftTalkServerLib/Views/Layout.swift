@@ -273,7 +273,7 @@ func userHeader(_ context: Context) -> Node {
         let logout = link(to: .account(.logout), text: "Log out")
         items = s.activeSubscription ? [account, logout] : [account, subscribeButton]
     } else {
-        items = [link(to: .login(continue: context.route), text: "Log in"), subscribeButton]
+        items = [link(to: .login(continue: context.route, couponCode: nil, team: false), text: "Log in"), subscribeButton]
     }
     return .nav(classes: "flex-none self-center border-left border-1 border-color-gray-85 flex ml+", [
         .ul(classes: "flex items-stretch", items)

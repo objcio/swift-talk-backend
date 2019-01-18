@@ -178,7 +178,7 @@ extension Router where A == String {
     }
     
     static func booleanQueryParam(name: String) -> Router<Bool> {
-        return queryParam(name: name).transform({ $0 == "1" }, { $0 ? "1" : "0" })
+        return optionalQueryParam(name: name).transform({ $0 == "1" }, { $0 ? "1" : "0" })
     }
 }
 

@@ -137,7 +137,7 @@ final class FlowTests: XCTestCase {
         
         let subscribeWithoutASession = try Flow.landingPage(session: nil, .subscribe)
         subscribeWithoutASession.verify { page in
-            testLinksTo(page, route: .login(continue: .subscription(.new(couponCode: nil, team: false))))
+            testLinksTo(page, route: .loginWithGithub(continue: .subscription(.new(couponCode: nil, team: false))))
         }
         
         let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .subscribe)
@@ -163,7 +163,7 @@ final class FlowTests: XCTestCase {
         testPlans = plans
         let subscribeWithoutASession = try Flow.landingPage(session: nil, .subscribeTeam)
         subscribeWithoutASession.verify { page in
-            testLinksTo(page, route: .login(continue: .subscription(.new(couponCode: nil, team: true))))
+            testLinksTo(page, route: .loginWithGithub(continue: .subscription(.new(couponCode: nil, team: true))))
         }
 
         let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .subscribeTeam)
