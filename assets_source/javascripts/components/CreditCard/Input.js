@@ -9,7 +9,15 @@ export default class Input extends Component {
     label: PropTypes.string.isRequired,
     defaultValue: PropTypes.string,
     disabled: PropTypes.bool,
+    onChange: PropTypes.func,
     error: PropTypes.bool
+  }
+
+  handleChange (e) {
+    const value = e.target.value
+	if(this.props.onChange) {
+		this.props.onChange(value)
+	}
   }
 
   render () {
@@ -34,7 +42,9 @@ export default class Input extends Component {
                id={id}
                data-recurly={id}
                disabled={disabled}
-               defaultValue={defaultValue || ''} />
+               defaultValue={defaultValue || ''} 
+		       onBlur={this.handleChange.bind(this)}
+               onChange={this.handleChange.bind(this)} />
       </fieldset>
     )
   }
