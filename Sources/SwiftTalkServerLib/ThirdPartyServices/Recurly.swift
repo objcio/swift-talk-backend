@@ -191,7 +191,7 @@ extension Subscription {
         return toMinusOneDay.numberOfMonths(since: act)
     }
 
-    func totalAtRenewal(addOn: Plan.AddOn) -> Int {
+    func totalAtRenewal(addOn: Plan.AddOn, vatExempt: Bool) -> (total: Int, vat: Int) {
         let teamMemberPrice: Int
         if let a = subscription_add_ons?.first, a.add_on_code == addOn.add_on_code {
             teamMemberPrice = a.quantity * addOn.unit_amount_in_cents.usdCents
@@ -199,19 +199,23 @@ extension Subscription {
             teamMemberPrice = 0
         }
         let beforeTax = unit_amount_in_cents * quantity + teamMemberPrice
-        if let rate = tax_rate {
-            return beforeTax + Int(Double(beforeTax) * rate)
+        if let rate = tax_rate, !vatExempt {
+            let vat = Int(Double(beforeTax) * rate)
+            return (beforeTax + vat, vat)
         }
-        return beforeTax
+        return (beforeTax, 0)
     }
 
     // Returns nil if there aren't any upgrades.
-    var upgrade: Upgrade? {
+    func upgrade(vatExempt: Bool) -> Upgrade? {
         if state == .active, let m = Plan.monthly, plan.plan_code == m.plan_code, let y = Plan.yearly {
             let teamMembers = subscription_add_ons?.first?.quantity ?? 0
             let totalWithoutVat = y.unit_amount_in_cents.usdCents + (teamMembers * y.teamMemberPrice.usdCents)
-            let vat: Int? = tax_rate.map { Int(Double(totalWithoutVat) * $0) }
-            let total = totalWithoutVat + (vat ?? 0)
+            var vat = 0
+            if let rate = tax_rate, !vatExempt {
+                vat = Int(Double(totalWithoutVat) * rate)
+            }
+            let total = totalWithoutVat + vat
             return Upgrade(plan: y, total_without_vat: totalWithoutVat, total_in_cents: total, vat_in_cents: vat, tax_rate: tax_rate, team_members: teamMembers, per_team_member_in_cents: y.teamMemberPrice.usdCents)
         } else {
             return nil
@@ -222,13 +226,12 @@ extension Subscription {
         let plan: Plan
         let total_without_vat: Int
         let total_in_cents: Int
-        let vat_in_cents: Int?
+        let vat_in_cents: Int
         let tax_rate: Double?
         let team_members: Int
         let per_team_member_in_cents: Int
     }
 }
-
 
 extension Sequence where Element == Subscription {
     var activeMonths: UInt {
@@ -303,6 +306,12 @@ struct BillingInfo: Codable {
     var first_six: String
     var last_four: String
     var updated_at: Date
+}
+
+extension BillingInfo {
+    var vatExempt: Bool {
+        return vat_number != nil && country != "DE"
+    }
 }
 
 struct Invoice: Codable {

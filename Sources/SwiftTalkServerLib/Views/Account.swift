@@ -165,14 +165,7 @@ extension Subscription.State {
 
 extension Subscription.Upgrade {
     func pretty(csrf: CSRFToken) -> [Node] {
-        let priceBreakdown: String
-        if let v = vat_in_cents {
-            let vatText = " + \(dollarAmount(cents: v)) VAT"
-            let subTotal = dollarAmount(cents: total_without_vat)
-            priceBreakdown = " (\(subTotal)\(vatText))"
-        } else {
-            priceBreakdown = ""
-        }
+        let vat = vat_in_cents == 0 ? "" : " (including \(dollarAmount(cents: vat_in_cents)) VAT)"
         let teamMemberText: String
         if team_members == 1 {
             teamMemberText = ". This includes your team member"
@@ -183,9 +176,9 @@ extension Subscription.Upgrade {
         }
         return [
                 .p([.text("Upgrade to the \(plan.name) plan.")]),
-                .p([.text(
+                .p(classes: "lh-110", [.text(
                     "Your new plan will cost \(dollarAmount(cents: total_in_cents)) \(plan.prettyInterval)" +
-                        priceBreakdown +
+                        vat +
                         teamMemberText +
                     ". You'll be charged immediately, and credited for the remainder of the current billing period."
                     )]),
@@ -269,7 +262,7 @@ extension BillingInfo {
             ])
         }
         return [
-            heading("Payment Method"),
+            heading("Billing Info"),
             Node.div([
                 Node.ul(classes: "stack- mb", [
                     item(key: "Type", value: card_type),
@@ -280,7 +273,7 @@ extension BillingInfo {
                     } ?? .none
                 ])
             ]),
-            Node.link(to: .account(.updatePayment), classes: "color-blue no-decoration border-bottom border-1 hover-color-black bold", [.text("Update Payment Method")])
+            Node.link(to: .account(.updatePayment), classes: "color-blue no-decoration border-bottom border-1 hover-color-black bold", [.text("Update Billing Info")])
         ]
     }
 }
@@ -339,6 +332,7 @@ func billingView(user: Row<UserData>, subscription: (Subscription, Plan.AddOn)?,
     return Node.withContext { context in
         let subscriptionInfo: [Node] = subscription.map { (x) -> [Node] in
             let (sub, addOn) = x
+            let (total, vat) = sub.totalAtRenewal(addOn: addOn, vatExempt: billingInfo.vatExempt)
             return [
             heading("Subscription"),
             Node.div([
@@ -361,7 +355,8 @@ func billingView(user: Row<UserData>, subscription: (Subscription, Plan.AddOn)?,
                         label(text: "Next Billing"),
                         Node.div(classes: "flex-auto color-gray-30 stack-", [
                             Node.p([
-                                Node.text(dollarAmount(cents: sub.totalAtRenewal(addOn: addOn))),
+                                Node.text(dollarAmount(cents: total)),
+                                vat == 0 ? .none : Node.text(" (including \(dollarAmount(cents: vat)) VAT)"),
                                 Node.text(" on "),
                                 .text(sub.current_period_ends_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "n/a"),
                             ]),
@@ -375,12 +370,12 @@ func billingView(user: Row<UserData>, subscription: (Subscription, Plan.AddOn)?,
                             button(to: .subscription(.cancel), csrf: user.data.csrf, text: "Cancel Subscription", classes: "color-invalid")
                         ])
                     ]) : .none,
-                    sub.upgrade.map { upgrade in
-                            Node.li(classes: "flex", [
-                                label(text: "Upgrade"),
-                                Node.div(classes: "flex-auto color-gray-30 stack--", upgrade.pretty(csrf: user.data.csrf))
-                            ])
-                        } ?? .none,
+                    sub.upgrade(vatExempt: billingInfo.vatExempt).map { upgrade in
+                        Node.li(classes: "flex", [
+                            label(text: "Upgrade"),
+                            Node.div(classes: "flex-auto color-gray-30 stack--", upgrade.pretty(csrf: user.data.csrf))
+                        ])
+                    } ?? .none,
 
                     sub.state == .canceled ? Node.li(classes: "flex", [
                         label(text: "Expires on"),

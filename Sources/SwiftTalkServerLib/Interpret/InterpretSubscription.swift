@@ -101,7 +101,7 @@ extension Route.Subscription {
         case .upgrade:
             return I.verifiedPost { _ in
                 return I.onSuccess(promise: sess.user.currentSubscription.promise.map(flatten), do: { sub throws -> I in
-                    guard let u = sub.upgrade else { throw ServerError(privateMessage: "no upgrade available \(sub)", publicMessage: "There's no upgrade available.")}
+                    guard let u = sub.upgrade(vatExempt: false) else { throw ServerError(privateMessage: "no upgrade available \(sub)", publicMessage: "There's no upgrade available.")}
                     return I.query(sess.user.teamMembers) { teamMembers in
                         I.onSuccess(promise: recurly.updateSubscription(sub, plan_code: u.plan.plan_code, numberOfTeamMembers: teamMembers.count).promise, do: { result throws -> I in
                             I.redirect(to: .account(.billing))
