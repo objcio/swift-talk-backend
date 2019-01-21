@@ -1292,12 +1292,16 @@ var NewGiftSubscription = function (_Component) {
     var _this = _possibleConstructorReturn(this, (NewGiftSubscription.__proto__ || Object.getPrototypeOf(NewGiftSubscription)).call(this, props));
 
     _this.state = {
-      tax: null
+      tax: null,
+      vat_number: null,
+      country: null
     };
     _this.taxRequestPromise = null;
 
     _this.state = {
-      tax: null
+      tax: null,
+      vat_number: null,
+      country: null
     };
     return _this;
   }
@@ -1319,7 +1323,7 @@ var NewGiftSubscription = function (_Component) {
           return response.json();
         }).then(function (json) {
           if (currentPromise === _this2.taxRequestPromise) {
-            _this2.setState({ tax: json[0] || null, loading: false });
+            _this2.setState({ tax: json[0] || null, country: country, loading: false });
           }
         });
         this.taxRequestPromise = currentPromise;
@@ -1328,19 +1332,34 @@ var NewGiftSubscription = function (_Component) {
       }
     }
   }, {
+    key: 'vatChanged',
+    value: function vatChanged(number) {
+      if (number) {
+        this.setState({ vat_number: number });
+      } else {
+        this.setState({ vat_number: null });
+      }
+    }
+  }, {
     key: 'render',
     value: function render() {
       var plan = this.props.plan;
-      var tax = this.state.tax;
+      var _state = this.state,
+          tax = _state.tax,
+          vat_number = _state.vat_number,
+          country = _state.country;
       var base_price = plan.base_price,
           interval = plan.interval;
 
-      var taxAmount = base_price * (tax ? tax.rate : 0);
+      var vatExempt = vat_number && country != "DE";
+      var shouldChargeVAT = tax && !vatExempt;
+      var taxAmount = base_price * (shouldChargeVAT ? tax.rate : 0);
       var total = base_price + taxAmount;
       return _react2.default.createElement(
         _CreditCard2.default,
         _extends({}, this.props, {
           onCountryChange: this.fetchTaxRate.bind(this),
+          onVatChange: this.vatChanged.bind(this),
           loading: this.state.loading,
           showEmailAndName: true,
           buttonText: 'Buy',
@@ -1377,7 +1396,15 @@ var NewGiftSubscription = function (_Component) {
               _accountingJs2.default.formatMoney(base_price / 100, '$')
             )
           ),
-          tax && _react2.default.createElement(
+          tax && (vatExempt ? _react2.default.createElement(
+            'div',
+            { className: 'pa border-bottom border-color-white border-2 flex justify-between items-center' },
+            _react2.default.createElement(
+              'span',
+              null,
+              'VAT Exempt'
+            )
+          ) : _react2.default.createElement(
             'div',
             { className: 'pa border-bottom border-color-white border-2 flex justify-between items-center' },
             _react2.default.createElement(
@@ -1393,7 +1420,7 @@ var NewGiftSubscription = function (_Component) {
               null,
               _accountingJs2.default.formatMoney(taxAmount / 100, '$')
             )
-          ),
+          )),
           _react2.default.createElement(
             'div',
             { className: 'bgcolor-gray-90 color-gray-15 bold pa flex justify-between items-center' },
@@ -1475,7 +1502,8 @@ var NewSubscription = function (_Component) {
 
     _this.state = {
       tax: null,
-      selected_plan_id: null
+      selected_plan_id: null,
+      vat_number: null
     };
     _this.taxRequestPromise = null;
 
@@ -1520,7 +1548,6 @@ var NewSubscription = function (_Component) {
       } else {
         this.setState({ vat_number: null });
       }
-      console.log(this.state);
     }
   }, {
     key: 'handleSelectedPlanChange',

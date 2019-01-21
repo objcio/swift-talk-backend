@@ -30,7 +30,8 @@ export default class NewSubscription extends Component {
 
   state = {
     tax: null,
-    selected_plan_id: null
+    selected_plan_id: null,
+	vat_number: null
   }
 
   taxRequestPromise = null
