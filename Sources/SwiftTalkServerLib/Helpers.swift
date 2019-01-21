@@ -78,6 +78,12 @@ extension Scanner {
     }
 }
 
+extension String {
+    var nonEmpty: String? {
+        return isEmpty ? nil : self
+    }
+}
+
 func zip<A,B,R>(_ a: Either<A, [R]>, _ b: Either<B, [R]>) -> Either<(A,B), [R]> {
     guard case let .left(x) = a, case let .left(y) = b else {
         return .right((a.err ?? []) + (b.err ?? []))

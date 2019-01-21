@@ -23,6 +23,8 @@ export default class NewGiftSubscription extends Component {
 
   state = {
     tax: null,
+	vat_number: null,
+	country: null,
   }
 
   taxRequestPromise = null
@@ -30,7 +32,9 @@ export default class NewGiftSubscription extends Component {
   constructor(props) {
     super(props)
     this.state =  {
-        tax: null
+        tax: null,
+		vat_number: null,
+		country: null,
     }
   }
 
@@ -47,7 +51,7 @@ export default class NewGiftSubscription extends Component {
         .then((response) => (response.json()))
         .then((json) => {
           if (currentPromise === this.taxRequestPromise) {
-            this.setState({tax: json[0] || null, loading: false})
+            this.setState({tax: json[0] || null, country: country, loading: false})
           }
         })
       this.taxRequestPromise = currentPromise
@@ -56,17 +60,28 @@ export default class NewGiftSubscription extends Component {
     }
   }
 
+  vatChanged (number) {
+    if (number) {
+      this.setState({vat_number: number})
+    } else {
+      this.setState({vat_number: null})
+    }
+  }
+
 
 
   render () {
     const { plan } = this.props
-    const { tax } = this.state
+    const { tax, vat_number, country } = this.state
     const { base_price, interval } = plan
-    const taxAmount = base_price * (tax ? tax.rate : 0)
+	const vatExempt = vat_number && country != "DE"
+	const shouldChargeVAT = tax && !vatExempt
+    const taxAmount = base_price * (shouldChargeVAT ? tax.rate : 0)
     const total = base_price + taxAmount
     return (
       <CreditCard {...this.props}
                   onCountryChange={this.fetchTaxRate.bind(this)}
+                  onVatChange={this.vatChanged.bind(this)}
                   loading={this.state.loading}
 		          showEmailAndName={true}
                   buttonText='Buy'
@@ -82,10 +97,17 @@ export default class NewGiftSubscription extends Component {
             <span>{a.formatMoney(base_price / 100, '$')}</span>
           </div>
           {tax && (
-            <div className="pa border-bottom border-color-white border-2 flex justify-between items-center">
-              <span className="smallcaps-large">{tax.type.toUpperCase()} ({tax.rate * 100}%)</span>
-              <span>{a.formatMoney(taxAmount / 100, '$')}</span>
-            </div>
+			   vatExempt ? (
+					<div className="pa border-bottom border-color-white border-2 flex justify-between items-center">
+					  <span>VAT Exempt</span>
+					</div>
+			    ) : (
+					<div className="pa border-bottom border-color-white border-2 flex justify-between items-center">
+					  <span className="smallcaps-large">{tax.type.toUpperCase()} ({tax.rate * 100}%)</span>
+					  <span>{a.formatMoney(taxAmount / 100, '$')}</span>
+					</div>
+				)
+			  
           )}
           <div className="bgcolor-gray-90 color-gray-15 bold pa flex justify-between items-center">
             <span className="smallcaps-large">Total</span>

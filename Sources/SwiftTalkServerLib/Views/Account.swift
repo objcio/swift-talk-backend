@@ -210,6 +210,7 @@ struct PaymentViewData: Codable {
     var action: String
     var public_key: String
     var buttonText: String
+    var vat_number: String?
     struct Coupon: Codable { }
     var payment_errors: [String] // TODO verify type
     var method: HTTPMethod = .post
@@ -229,6 +230,7 @@ struct PaymentViewData: Codable {
         phone = billingInfo.phone
         year = billingInfo.year
         month = billingInfo.month
+        vat_number = billingInfo.vat_number
         self.action = action
         self.public_key = publicKey
         self.buttonText = buttonText
@@ -260,22 +262,22 @@ extension BillingInfo {
         return "\(first_six.first!)*** **** **** \(last_four)"
     }
     var show: [Node] {
+        func item(key: String, value v: String, classes: Class? = nil) -> Node {
+            return Node.li(classes: "flex", [
+                label(text: key),
+                value(text: v)
+            ])
+        }
         return [
             heading("Payment Method"),
             Node.div([
                 Node.ul(classes: "stack- mb", [
-                    Node.li(classes: "flex", [
-                        label(text: "Type"),
-                        value(text: self.card_type)
-                    ]),
-                    Node.li(classes: "flex", [
-                        label(text: "Number"),
-                        value(text: cardMask, classes: "type-mono")
-                    ]),
-                    Node.li(classes: "flex", [
-                        label(text: "Expiry"),
-                        value(text: "\(month)/\(year)")
-                        ]),
+                    item(key: "Type", value: card_type),
+                    item(key: "Number", value: cardMask, classes: .some("type-mono")) as Node,
+                    item(key: "Expiry", value: "\(month)/\(year)") as Node,
+                    vat_number?.nonEmpty.map { num in
+                        item(key: "VAT Number", value: num)
+                    } ?? .none
                 ])
             ]),
             Node.link(to: .account(.updatePayment), classes: "color-blue no-decoration border-bottom border-1 hover-color-black bold", [.text("Update Payment Method")])
