@@ -186,7 +186,7 @@ extension Route.Account {
             })
         case .deleteTeamMember(let id):
             return I.verifiedPost { _ in
-                I.query(sess.user.deleteTeamMember(id)) {
+                I.query(sess.user.deleteTeamMember(teamMemberId: id, userId: sess.user.id)) {
                     let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: globals.currentDate().addingTimeInterval(5*60))
                     return I.query(task) {
                         try teamMembersResponse()

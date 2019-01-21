@@ -9,41 +9,63 @@ import Foundation
 
 fileprivate let signupHeader = pageHeader(.other(header: "Team Member Signup", blurb: nil, extraClasses: "ms4"), extraClasses: "text-center")
 
-func teamMemberSignupAlreadySubscribed() -> Node {
-    let contents: [Node] = [
+fileprivate func template(content: [Node], buttons: [Node]) -> Node {
+    return LayoutConfig(pageTitle: "Redeem Your Gift", contents: [
         signupHeader,
         .section(classes: "container", [
-            .div(classes: "c-text text-center cols max-width-8 center", [
-                .p(["You already have an active subscription."]),
-                .p(["To change your subscription to the team you've been invited to, please cancel your current subscription and signup as a team member once your old subscription has expired."]),
-                .p([
-                    "To expedite this process, please get in touch at",
-                    .link(to: URL(string: "mailto:\(email)")!, [.text(email)]),
-                    "."
-                ]),
+            .div(classes: "text-center center max-width-8", [
+                .div(classes: "c-text", content),
+                .div(classes: "mt++", buttons)
             ])
         ])
-    ]
-    return LayoutConfig(pageTitle: "Redeem Your Gift", contents: contents).layout
+    ]).layout
 }
 
-func teamMemberSubscribe(signupToken: UUID) throws -> Node {
-    let contents: [Node] = [
-        signupHeader,
-        .div(classes: "container pt0", [
-            .div(classes: "bgcolor-white pa- radius-8 max-width-7 box-sizing-content center stack-", [
-                Node.div(classes: "text-center mt+", [
-                    .div(classes: "c-text mt mb-", [
-                        .p([.text("Welcome to Swift Talk!")]),
-                        .p([.text("You're one step away from signing up as a team member:")]),
-                    ]),
-                ]),
-                .div([
-                    Node.link(to: Route.login(continue: Route.subscription(.teamMember(token: signupToken))), classes: "mt+ c-button c-button--big c-button--blue c-button--wide", ["Start By Logging In With GitHub"])
-                ])
-            ])
+fileprivate func button(route: Route, title: String, highlighted: Bool = false) -> Node {
+    return Node.link(to: route, classes: "mb c-button c-button--big c-button--wide " + (highlighted ? "c-button--orange" : "c-button--blue"), [.text(title)])
+}
+
+func teamMemberSubscribeForSelfSubscribed(signupToken: UUID) -> Node {
+    return template(content: [
+        .p(classes: "center bold", ["You already have an active subscription."]),
+        .p(classes: "center", ["You can register as a team member using the orange button below. Your current individual subscription will be terminated and you will receive a refund for the remaining time in the current billing cycle."]),
+    ], buttons: [
+        button(route: .subscription(.teamMember(token: signupToken, terminate: true)), title: "Terminate Subscription And Become Team Member", highlighted: true),
+        button(route: .home, title: "Keep My Individual Subscription"),
+    ])
+}
+
+func teamMemberSubscribeForGiftSubscriber(signupToken: UUID) -> Node {
+    return template(content: [
+        .p(classes: "center bold", ["You already have an active gift subscription."]),
+        .p(classes: "center", ["If you register as a team member now, you'll automatically stay subscribed with your team once the gift subcription expires."]),
+        ], buttons: [
+            button(route: .subscription(.teamMember(token: signupToken, terminate: false)), title: "Register As Team Member"),
         ])
-    ]
-    return LayoutConfig(pageTitle: "Team Member Signup", contents: contents).layout
+}
+
+func teamMemberSubscribeForAlreadyPartOfThisTeam() -> Node {
+    return template(content: [
+        .p(classes: "center bold", ["You're already part of this team."]),
+        .p(classes: "center", ["You account has already been linked to this team and you have full access to Swift Talk!"]),
+    ], buttons: [])
+}
+
+func teamMemberSubscribeForSignedIn(signupToken: UUID) -> Node {
+    return template(content: [
+        .p(classes: "center bold", ["Welcome to Swift Talk!"]),
+        .p(classes: "center", ["You're one step away from signing up as a team member:"]),
+    ], buttons: [
+        button(route: .login(continue: .subscription(.teamMember(token: signupToken, terminate: false))), title: "Join As Team Member Now")
+    ])
+}
+
+func teamMemberSubscribe(signupToken: UUID) -> Node {
+    return template(content: [
+        .p(classes: "center bold", ["Welcome to Swift Talk!"]),
+        .p(classes: "center", ["You're just a few steps away from signing up as a team member:"]),
+    ], buttons: [
+        button(route: .login(continue: .subscription(.teamMember(token: signupToken, terminate: false))), title: "Start By Logging In With GitHub")
+    ])
 }
 

@@ -269,7 +269,9 @@ fileprivate let migrations: [String] = [
         DROP COLUMN IF EXISTS password_reset,
         DROP COLUMN IF EXISTS username
     """,
-
-
+    """
+    ALTER TABLE team_members
+        DROP CONSTRAINT IF EXISTS team_members_unique
+    """
 ]
 

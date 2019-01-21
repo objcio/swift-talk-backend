@@ -654,6 +654,17 @@ struct Recurly {
         return RemoteEndpoint(xml: .put, url: url, headers: headers)
     }
     
+    enum Refund: String {
+        case full
+        case partial
+        case none
+    }
+    
+    func terminate(_ subscription: Subscription, refund: Refund) -> RemoteEndpoint<RecurlyResult<RecurlyVoid>> {
+        let url = base.appendingPathComponent("subscriptions/\(subscription.uuid)/terminate")
+        return RemoteEndpoint(xml: .put, url: url, headers: headers, query: ["refund": refund.rawValue])
+    }
+    
     func reactivate(_ subscription: Subscription) -> RemoteEndpoint<RecurlyResult<RecurlyVoid>> {
         let url = base.appendingPathComponent("subscriptions/\(subscription.uuid)/reactivate")
         return RemoteEndpoint(xml: .put, url: url, headers: headers)

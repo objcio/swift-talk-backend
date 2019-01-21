@@ -334,71 +334,69 @@ func billingView(user: Row<UserData>, subscription: (Subscription, Plan.AddOn)?,
             let (sub, addOn) = x
             let (total, vat) = sub.totalAtRenewal(addOn: addOn, vatExempt: billingInfo.vatExempt)
             return [
-            heading("Subscription"),
-            Node.div([
-                Node.ul(classes: "stack- mb", [
-                    Node.li(classes: "flex", [
-                        label(text: "Plan"),
-                        value(text: sub.plan.name)
-                    ]),
-                    Node.li(classes: "flex", [
-                        label(text: "State"),
-                        value(text: sub.state.pretty)
-                    ]),
-                    sub.trial_ends_at.map { trialEndDate in
-                        Node.li(classes: "flex", [
-                            label(text: "Trial Ends At"),
-                            value(text: DateFormatter.fullPretty.string(from: trialEndDate))
-                        ])
-                    } ?? Node.none,
-                    sub.state == .active ? Node.li(classes: "flex", [
-                        label(text: "Next Billing"),
-                        Node.div(classes: "flex-auto color-gray-30 stack-", [
-                            Node.p([
-                                Node.text(dollarAmount(cents: total)),
-                                vat == 0 ? .none : Node.text(" (including \(dollarAmount(cents: vat)) VAT)"),
-                                Node.text(" on "),
-                                .text(sub.current_period_ends_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "n/a"),
+                Node.div([
+                    heading("Subscription"),
+                    Node.div([
+                        Node.ul(classes: "stack- mb", [
+                            Node.li(classes: "flex", [
+                                label(text: "Plan"),
+                                value(text: sub.plan.name)
                             ]),
-                            redemptions.isEmpty ? .none : Node.p(classes: " input-note mt-",
-                                [Node.span(classes: "bold", [.text("Note:")])] + redemptions.map { x in
-                                 let (redemption, coupon) = x
-                                let start = DateFormatter.fullPretty.string(from: redemption.created_at)
-                                 return Node.text("Due to a technical limation, the displayed price does not take your active coupon (\(coupon.billingDescription), started at \(start)) into account.")
-                                }
-                            ),
-                            button(to: .subscription(.cancel), csrf: user.data.csrf, text: "Cancel Subscription", classes: "color-invalid")
+                            Node.li(classes: "flex", [
+                                label(text: "State"),
+                                value(text: sub.state.pretty)
+                            ]),
+                            sub.trial_ends_at.map { trialEndDate in
+                                Node.li(classes: "flex", [
+                                    label(text: "Trial Ends At"),
+                                    value(text: DateFormatter.fullPretty.string(from: trialEndDate))
+                                ])
+                            } ?? Node.none,
+                            sub.state == .active ? Node.li(classes: "flex", [
+                                label(text: "Next Billing"),
+                                Node.div(classes: "flex-auto color-gray-30 stack-", [
+                                    Node.p([
+                                        Node.text(dollarAmount(cents: total)),
+                                        vat == 0 ? .none : Node.text(" (including \(dollarAmount(cents: vat)) VAT)"),
+                                        Node.text(" on "),
+                                        .text(sub.current_period_ends_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "n/a"),
+                                    ]),
+                                    redemptions.isEmpty ? .none : Node.p(classes: " input-note mt-",
+                                        [Node.span(classes: "bold", [.text("Note:")])] + redemptions.map { x in
+                                         let (redemption, coupon) = x
+                                        let start = DateFormatter.fullPretty.string(from: redemption.created_at)
+                                         return Node.text("Due to a technical limation, the displayed price does not take your active coupon (\(coupon.billingDescription), started at \(start)) into account.")
+                                        }
+                                    ),
+                                    button(to: .subscription(.cancel), csrf: user.data.csrf, text: "Cancel Subscription", classes: "color-invalid")
+                                ])
+                            ]) : .none,
+                            sub.upgrade(vatExempt: billingInfo.vatExempt).map { upgrade in
+                                Node.li(classes: "flex", [
+                                    label(text: "Upgrade"),
+                                    Node.div(classes: "flex-auto color-gray-30 stack--", upgrade.pretty(csrf: user.data.csrf))
+                                ])
+                            } ?? .none,
+                            sub.state == .canceled ? Node.li(classes: "flex", [
+                                label(text: "Expires on"),
+                                Node.div(classes: "flex-auto color-gray-30 stack-", [
+                                    .text(sub.expires_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "<unknown date>"),
+                                    button(to: .subscription(.reactivate), csrf: user.data.csrf, text: "Reactivate Subscription", classes: "color-invalid")
+                                ])
+                            ]) : .none
                         ])
-                    ]) : .none,
-                    sub.upgrade(vatExempt: billingInfo.vatExempt).map { upgrade in
-                        Node.li(classes: "flex", [
-                            label(text: "Upgrade"),
-                            Node.div(classes: "flex-auto color-gray-30 stack--", upgrade.pretty(csrf: user.data.csrf))
-                        ])
-                    } ?? .none,
-
-                    sub.state == .canceled ? Node.li(classes: "flex", [
-                        label(text: "Expires on"),
-                        Node.div(classes: "flex-auto color-gray-30 stack-", [
-                            .text(sub.expires_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "<unknown date>"),
-                            button(to: .subscription(.reactivate), csrf: user.data.csrf, text: "Reactivate Subscription", classes: "color-invalid")
-                        ])
-                        
-                    ]) : .none
-                ])
-            ])
-        ]} ?? (context.session?.activeSubscription == true ? [] : [
+                    ])
+                ]),
+                Node.div(billingInfo.show)
+            ]
+        } ?? (context.session?.activeSubscription == true ? [] : [
             Node.div(classes: "text-center", [
                 Node.p(classes: "color-gray-30 ms1 mb", [.text("You don't have an active subscription.")]),
                 Node.link(to: .subscribe, classes: "c-button", [.text("Become a Subscriber")])
             ])
         ])
        
-        return billingLayout(content: [
-            Node.div(subscriptionInfo),
-            Node.div(billingInfo.show),
-            Node.div(invoicesView(user: user, invoices: invoices))
-        ])
+        return billingLayout(content: subscriptionInfo + [Node.div(invoicesView(user: user, invoices: invoices))])
     }
 }
 

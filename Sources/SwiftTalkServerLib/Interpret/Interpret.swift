@@ -56,12 +56,16 @@ extension Route {
                         throw ServerError(privateMessage: "signup token doesn't exist: \(token)", publicMessage: "This signup link has expired. Please get in touch with your team manager for a new signup link.")
                     }
                     return I.withSession { session in
-                        if session?.premiumAccess == true {
-                            return I.write(teamMemberSignupAlreadySubscribed())
+                        if session?.selfPremiumAccess == true {
+                            return I.write(teamMemberSubscribeForSelfSubscribed(signupToken: token))
+                        } else if session?.gifterPremiumAccess == true {
+                            return I.write(teamMemberSubscribeForGiftSubscriber(signupToken: token))
+                        } else if session?.teamMemberPremiumAccess == true && row?.data.userId == session?.masterTeamUser?.id{
+                            return I.write(teamMemberSubscribeForAlreadyPartOfThisTeam())
                         } else if let user = session?.user {
-                            return I.redirect(to: Route.subscription(.teamMember(token: token)))
+                            return I.write(teamMemberSubscribeForSignedIn(signupToken: token))
                         } else {
-                            return I.write(try teamMemberSubscribe(signupToken: token))
+                            return I.write(teamMemberSubscribe(signupToken: token))
                         }
                     }
                 }

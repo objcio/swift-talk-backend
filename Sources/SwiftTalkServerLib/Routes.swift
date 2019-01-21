@@ -43,7 +43,7 @@ indirect enum Route: Equatable {
         case upgrade
         case create(couponCode: String?, team: Bool)
         case new(couponCode: String?, team: Bool)
-        case teamMember(token: UUID)
+        case teamMember(token: UUID, terminate: Bool)
     }
    
     enum Account: Equatable {
@@ -210,9 +210,11 @@ private let subscriptionRoutes2: [Router<Route.Subscription>] = [
         guard case let .new(couponCode, team) = route else { return nil }
         return (couponCode, team)
     }),
-    .c("team-member") / Router.uuid.transform({ Route.Subscription.teamMember(token: $0) }, { route in
-        guard case let .teamMember(token) = route else { return nil }
-        return token
+    (.c("team-member") / Router.uuid / Router.booleanQueryParam(name: "terminate")).transform({
+        Route.Subscription.teamMember(token: $0.0, terminate: $0.1)
+    }, { route in
+        guard case let .teamMember(token, terminate) = route else { return nil }
+        return (token, terminate)
     }),
     .c("cancel", .cancel),
     .c("reactivate", .reactivate),

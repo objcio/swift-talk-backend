@@ -231,10 +231,10 @@ extension Row where Element == UserData {
         return .build(parameters: [subscribed, id], parse: parseEmpty) { "UPDATE users SET subscriber=\($0[0]) WHERE id=\($0[1])" }
     }
     
-    func deleteTeamMember(_ teamMemberId: UUID) -> Query<()> {
-        return Query.build(parameters: [teamMemberId], parse: parseEmpty) { """
+    func deleteTeamMember(teamMemberId: UUID, userId: UUID) -> Query<()> {
+        return Query.build(parameters: [teamMemberId, userId], parse: parseEmpty) { """
             UPDATE \(TeamMemberData.tableName) SET expired_at=LOCALTIMESTAMP
-            WHERE team_member_id=\($0[0]) AND expired_at IS NULL
+            WHERE team_member_id=\($0[0]) AND user_id=\($0[1]) AND expired_at IS NULL
             """
         }
     }
