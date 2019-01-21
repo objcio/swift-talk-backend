@@ -99,7 +99,7 @@ extension FormView {
                 let id = fields.firstId ?? ""
                 let isErr = errors.contains { $0.field == id }
                 let children = fields.count == 1 ? renderField(fields[0]) : Node.div(classes: "flex items-center width-full max-width-6", fields.map(renderField))
-                return Node.fieldset(classes: "input-unit mb+ text-left", [
+                return Node.fieldset(classes: "input-unit mb+", [
                     Node.label(classes: "input-label" + (required ? "input-label--required" : "") + (isErr ? "color-invalid" : ""), attributes: ["for": id], [.text(title)]),
                     children,
                     note.map { Node.label(classes: "input-note mt-", attributes: ["for": id], [

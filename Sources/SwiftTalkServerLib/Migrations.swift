@@ -265,18 +265,11 @@ fileprivate let migrations: [String] = [
     """,
     """
     ALTER TABLE users
-        ADD COLUMN IF NOT EXISTS password text,
-        ADD COLUMN IF NOT EXISTS password_reset uuid,
-        ADD COLUMN IF NOT EXISTS username text
+        DROP COLUMN IF EXISTS password,
+        DROP COLUMN IF EXISTS password_reset,
+        DROP COLUMN IF EXISTS username
     """,
-    """
-    DO $$
-    BEGIN
-        IF NOT EXISTS (SELECT * FROM pg_constraint WHERE conname='users_unique_username') THEN
-            ALTER TABLE users ADD CONSTRAINT users_unique_username UNIQUE (username);
-        END IF;
-    END
-    $$;
-    """,
+
+
 ]
 

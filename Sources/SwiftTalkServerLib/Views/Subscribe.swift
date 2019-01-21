@@ -97,7 +97,7 @@ fileprivate func continueLink(context: Context, coupon: Coupon?, team: Bool) -> 
     } else if context.session?.user != nil {
         return continueLink(to: .subscription(.new(couponCode: coupon?.coupon_code, team: team)), title: "Proceed to payment")
     } else {
-        return continueLink(to: .loginWithGithub(continue: Route.subscription(.new(couponCode: coupon?.coupon_code, team: team))), title: "Sign in with Github")
+        return continueLink(to: .login(continue: Route.subscription(.new(couponCode: coupon?.coupon_code, team: team))), title: "Sign in with Github")
     }
 }
 

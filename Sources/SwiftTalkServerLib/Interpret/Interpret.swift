@@ -76,15 +76,7 @@ extension Route {
                     return .write(coll.show(episodes: episodesWithProgress))
                 }
             }
-        case let .login(origin, couponCode, team):
-            return I.form(loginForm(origin: origin ?? .home, couponCode: couponCode, team: team), initial: LoginFormData(username: "", password: ""), convert: { data in
-                return .left(data)
-            }) { data in
-                return I.redirect(to: .home)
-            }
-        case .forgotPassword:
-            return I.write("TODO")
-        case .loginWithGithub(let cont):
+        case .login(let cont):
             var path = "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(github.clientId)"
             if let c = cont {
                 let encoded = env.baseURL.absoluteString + Route.githubCallback(code: nil, origin: c.path).path

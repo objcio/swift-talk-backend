@@ -15,9 +15,7 @@ indirect enum Route: Equatable {
     case subscribeTeam
     case teamMemberSignup(token: UUID)
     case collections
-    case login(continue: Route?, couponCode: String?, team: Bool)
-    case loginWithGithub(continue: Route?)
-    case forgotPassword
+    case login(continue: Route?)
     case githubCallback(code: String?, origin: String?)
     case collection(Id<Collection>)
     case staticFile(path: [String])
@@ -170,17 +168,11 @@ private let assetsRoute: Router<Route> = (.c("assets") / .path()).transform({ Ro
     return path
 })
 
-private let githubLoginRoute: Router<Route> = (.c("users") / .c("auth") / .c("github") / Router.optionalQueryParam(name: "origin")).transform({ origin in Route.loginWithGithub(continue: origin.flatMap { router.route(forURI: $0) }) }, { r in
-    guard case .loginWithGithub(let x) = r else { return nil }
+private let loginRoute: Router<Route> = (.c("users") / .c("auth") / .c("github") / Router.optionalQueryParam(name: "origin")).transform({ origin in Route.login(continue: origin.flatMap {router.route(forURI: $0)})}, { r in
+    guard case .login(let x) = r else { return nil }
     return x?.path
 })
 
-private let loginRoute: Router<Route> = .c("login") / (Router.optionalQueryParam(name: "origin") / Router.optionalQueryParam(name: "coupon") / Router.booleanQueryParam(name: "team")).transform({ params in
-    Route.login(continue: params.0.0.flatMap { router.route(forURI: $0) }, couponCode: params.0.1, team: params.1)
-}, { r in
-    guard case let .login(origin, coupon, team) = r else { return nil }
-    return ((origin?.path, coupon), team)
-})
 
 
 private let deleteTeamMember: Router<Route> = (Router<()>.c("team_members") / .c("delete") / Router.uuid).transform({ Route.account(.deleteTeamMember($0))}, { r in
@@ -200,9 +192,7 @@ private let register: Router<Route> = (.c("register") / Router.optionalString() 
 
 private let accountRoutes: [Router<Route>] = [
     callbackRoute,
-    githubLoginRoute,
     loginRoute,
-    .c("forgot-password", .forgotPassword),
     .c("account") / [
       .c("thankYou", .account(.thankYou)),
       .c("logout", .account(.logout)),
