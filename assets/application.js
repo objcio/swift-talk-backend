@@ -963,6 +963,7 @@ var CreditCard = function (_Component) {
           state = _props.state,
           zip = _props.zip,
           vat_number = _props.vat_number,
+          company = _props.company,
           onCountryChange = _props.onCountryChange,
           onVatChange = _props.onVatChange,
           buttonText = _props.buttonText,
@@ -1114,10 +1115,25 @@ var CreditCard = function (_Component) {
               disabled: disabled,
               onChange: onCountryChange,
               required: true })
+          )
+        ),
+        _react2.default.createElement(
+          'div',
+          { className: 'cols' },
+          _react2.default.createElement(
+            'div',
+            { className: 'col width-1/2' },
+            _react2.default.createElement(_Input2.default, { id: 'company',
+              label: 'Company',
+              ref: 'vat_number',
+              error: errors.includes('company'),
+              defaultValue: company,
+              disabled: disabled
+            })
           ),
           _react2.default.createElement(
             'div',
-            { className: 'col width-full' },
+            { className: 'col width-1/2' },
             _react2.default.createElement(_Input2.default, { id: 'vat_number',
               label: 'EU VAT ID (if applicable)',
               ref: 'vat_number',
@@ -1235,6 +1251,7 @@ CreditCard.propTypes = {
   city: _react.PropTypes.string,
   state: _react.PropTypes.string,
   zip: _react.PropTypes.string,
+  company: _react.PropTypes.string,
   vat_number: _react.PropTypes.string,
   children: _react.PropTypes.node,
   showEmailAndName: _react.PropTypes.bool,
