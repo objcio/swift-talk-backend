@@ -77,20 +77,8 @@ extension Plan {
         return all.filter { $0.isGiftPlan }.sorted { $0.sortDuration < $1.sortDuration } // TODO
     }
 
-    static var teamMonthly: Plan? {
-        return all.first { $0.isMonthly && $0.isTeamPlan }
-    }
-
-    static var teamYearly: Plan? {
-        return all.first { $0.isYearly && $0.isTeamPlan }
-    }
-
     var isStandardPlan: Bool {
-        return !isTeamPlan && !isGiftPlan
-    }
-    
-    var isTeamPlan: Bool {
-        return plan_code.hasPrefix("team")
+        return !isGiftPlan
     }
     
     var isGiftPlan: Bool {
