@@ -280,7 +280,7 @@ extension BillingInfo {
 
 fileprivate func button(to route: Route, csrf: CSRFToken, text: String, classes: Class = "") -> Node {
     return Node.withCSRF { csrf in
-    	Node.button(to: route, [.text(text)], classes: "bold reset-button border-bottom border-1 hover-color-black" + classes)
+    	return Node.button(to: route, [.text(text)], classes: "bold reset-button border-bottom border-1 hover-color-black" + classes)
     }
 }
 
@@ -292,48 +292,51 @@ fileprivate func value(text: String, classes: Class = "") -> Node {
     return Node.span(classes: "flex-auto color-gray-30" + classes, [.text(text)])
 }
 
-func billingLayout(content: [Node]) -> Node {
+func billingLayout(_ content: [Node]) -> Node {
     return LayoutConfig(contents: [
         accountHeader,
         accountContainer(content: Node.div(classes: "stack++", content), forRoute: .account(.billing))
     ]).layout
 }
 
-func teamMemberBilling() -> Node {
-    return billingLayout(content: [
+func teamMemberBillingContent() -> [Node] {
+    return [
         .withContext { context in
-            Node.div(classes: "c-text", [
-                heading("Billing"),
-                Node.p([.text("You have a team member account, which doesn't have its own billing details. To manage billing details and to download invoices, please contact the person managing the organization account with the GitHub handle \"\(context.session?.masterTeamUser?.data.githubLogin ?? "<unknown>")\".")])
+            .div([
+                heading("Subscription"),
+                .p(classes: "lh-110", [.text("You have a team member account, which doesn't have its own billing info. To manage billing and to download invoices, please contact the person managing the organization account with the GitHub handle \"\(context.session?.masterTeamUser?.data.githubLogin ?? "<unknown>")\".")])
             ])
         }
-    ])
+    ]
 }
 
-func gifteeBilling() -> Node {
-    return billingLayout(content: [
-        Node.div(classes: "c-text", [
-            heading("Billing"),
-            Node.p([.text("You currently have an active gift subscription, which doesn't have its own billing details.")])
+func gifteeBillingContent() -> [Node] {
+    return [
+        .div([
+            heading("Subscription"),
+            .p(classes: "lh-110", [.text("You currently have an active gift subscription, which doesn't have its own billing info.")])
         ])
-    ])
+    ]
 }
 
-func unsubscribedBilling() -> Node {
-    return billingLayout(content: [
-        Node.div(classes: "c-text", [
-            heading("Billing"),
-            Node.p([.text("You haven't subscribed yet. Please use the Subscribe button in the upper right to start your Swift Talk subscription.")])
+func unsubscribedBillingContent() -> [Node] {
+    return [
+        Node.div([
+            heading("Subscription"),
+            Node.p(classes: "mb", [.text("You don't have an active subscription.")]),
+            Node.link(to: .subscribe, classes: "c-button", [.text("Become a Subscriber")])
         ])
-    ])
+    ]
 }
 
-func billingView(user: Row<UserData>, subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo, redemptions: [(Redemption, Coupon)]) -> Node {
+func billingView(subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo, redemptions: [(Redemption, Coupon)]) -> Node {
     return Node.withContext { context in
-        let subscriptionInfo: [Node] = subscription.map { (x) -> [Node] in
-            let (sub, addOn) = x
+        guard let session = context.session else { return billingLayout(unsubscribedBillingContent()) }
+        let user = session.user
+        let subscriptionInfo: [Node]
+        if let (sub, addOn) = subscription {
             let (total, vat) = sub.totalAtRenewal(addOn: addOn, vatExempt: billingInfo.vatExempt)
-            return [
+            subscriptionInfo = [
                 Node.div([
                     heading("Subscription"),
                     Node.div([
@@ -361,13 +364,13 @@ func billingView(user: Row<UserData>, subscription: (Subscription, Plan.AddOn)?,
                                         Node.text(" on "),
                                         .text(sub.current_period_ends_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "n/a"),
                                     ]),
-                                    redemptions.isEmpty ? .none : Node.p(classes: " input-note mt-",
-                                        [Node.span(classes: "bold", [.text("Note:")])] + redemptions.map { x in
-                                         let (redemption, coupon) = x
+                                    redemptions.isEmpty ? .none : Node.p(classes: " input-note mt-", [
+                                        Node.span(classes: "bold", [.text("Note:")])
+                                    ] + redemptions.map { x in
+                                        let (redemption, coupon) = x
                                         let start = DateFormatter.fullPretty.string(from: redemption.created_at)
-                                         return Node.text("Due to a technical limation, the displayed price does not take your active coupon (\(coupon.billingDescription), started at \(start)) into account.")
-                                        }
-                                    ),
+                                        return Node.text("Due to a technical limation, the displayed price does not take your active coupon (\(coupon.billingDescription), started at \(start)) into account.")
+                                    }),
                                     button(to: .subscription(.cancel), csrf: user.data.csrf, text: "Cancel Subscription", classes: "color-invalid")
                                 ])
                             ]) : .none,
@@ -389,14 +392,14 @@ func billingView(user: Row<UserData>, subscription: (Subscription, Plan.AddOn)?,
                 ]),
                 Node.div(billingInfo.show)
             ]
-        } ?? (context.session?.activeSubscription == true ? [] : [
-            Node.div(classes: "text-center", [
-                Node.p(classes: "color-gray-30 ms1 mb", [.text("You don't have an active subscription.")]),
-                Node.link(to: .subscribe, classes: "c-button", [.text("Become a Subscriber")])
-            ])
-        ])
-       
-        return billingLayout(content: subscriptionInfo + [Node.div(invoicesView(user: user, invoices: invoices))])
+        } else if session.gifterPremiumAccess {
+            subscriptionInfo = gifteeBillingContent()
+        } else if session.teamMemberPremiumAccess {
+            subscriptionInfo = teamMemberBillingContent()
+        } else {
+            subscriptionInfo = context.session?.activeSubscription == true ? [] : unsubscribedBillingContent()
+        }
+        return billingLayout(subscriptionInfo + [Node.div(invoicesView(user: user, invoices: invoices))])
     }
 }
 

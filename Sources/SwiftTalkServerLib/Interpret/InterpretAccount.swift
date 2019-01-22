@@ -105,7 +105,7 @@ extension Route.Account {
                             }
                             return (r,c)
                         }
-                        let result = billingView(user: sess.user, subscription: subAndAddOn, invoices: invoicesAndPDFs, billingInfo: billingInfo, redemptions: redemptionsWithCoupon)
+                        let result = billingView(subscription: subAndAddOn, invoices: invoicesAndPDFs, billingInfo: billingInfo, redemptions: redemptionsWithCoupon)
                         return I.write(result)
                     }
                     if let s = sub, let p = Plan.all.first(where: { $0.plan_code == s.plan.plan_code }) {
@@ -125,11 +125,11 @@ extension Route.Account {
                     }
                 }, else: {
                     if sess.teamMemberPremiumAccess {
-                        return I.write(teamMemberBilling())
+                        return I.write(billingLayout(teamMemberBillingContent()))
                     } else if sess.gifterPremiumAccess {
-                        return I.write(gifteeBilling())
+                        return I.write(billingLayout(gifteeBillingContent()))
                     } else {
-                        return I.write(unsubscribedBilling())
+                        return I.write(billingLayout(unsubscribedBillingContent()))
                     }
                 })
             }
