@@ -121,6 +121,7 @@ struct UserData: Codable, Insertable {
     var canceled: Bool = false
     var confirmedNameAndEmail: Bool = false
     var csrf: CSRFToken
+    var teamToken: UUID
 
     
     init(email: String, githubUID: Int? = nil, githubLogin: String? = nil, githubToken: String? = nil, avatarURL: String, name: String, createdAt: Date? = nil, role: Role = .user, downloadCredits: Int = 0, canceled: Bool = false, confirmedNameAndEmail: Bool = false, subscriber: Bool = false) {
@@ -138,6 +139,7 @@ struct UserData: Codable, Insertable {
         self.confirmedNameAndEmail = confirmedNameAndEmail
         self.subscriber = subscriber
         self.role = role
+        self.teamToken = UUID()
     }
     
     static let tableName: String = "users"
@@ -148,13 +150,6 @@ struct TeamMemberData: Codable, Insertable {
     var teamMemberId: UUID
     
     static let tableName: String = "team_members"
-}
-
-struct SignupTokenData: Codable, Insertable {
-    var userId: UUID
-    var expirationDate: Date
-    
-    static let tableName: String = "signup_tokens"
 }
 
 fileprivate let emailRegex = try! NSRegularExpression(pattern: "^[^@]+@(?:[^@.]+?\\.)+.{2,}$", options: [.caseInsensitive])

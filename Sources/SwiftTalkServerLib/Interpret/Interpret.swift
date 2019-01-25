@@ -50,23 +50,21 @@ extension Route {
             }
             return I.write(renderSubscribeTeam(monthly: monthly, yearly: yearly))
         case .teamMemberSignup(let token):
-            return I.query(Row<SignupTokenData>.prune) { _ in
-                return I.query(Row<SignupTokenData>.select(token)) { row in
-                    guard let tokenData = row?.data else {
-                        throw ServerError(privateMessage: "signup token doesn't exist: \(token)", publicMessage: "This signup link has expired. Please get in touch with your team manager for a new signup link.")
-                    }
-                    return I.withSession { session in
-                        if session?.selfPremiumAccess == true {
-                            return I.write(teamMemberSubscribeForSelfSubscribed(signupToken: token))
-                        } else if session?.gifterPremiumAccess == true {
-                            return I.write(teamMemberSubscribeForGiftSubscriber(signupToken: token))
-                        } else if session?.teamMemberPremiumAccess == true && row?.data.userId == session?.masterTeamUser?.id{
-                            return I.write(teamMemberSubscribeForAlreadyPartOfThisTeam())
-                        } else if let user = session?.user {
-                            return I.write(teamMemberSubscribeForSignedIn(signupToken: token))
-                        } else {
-                            return I.write(teamMemberSubscribe(signupToken: token))
-                        }
+            return I.query(Row<UserData>.select(teamToken: token)) { row in
+                guard let teamManager = row else {
+                    throw ServerError(privateMessage: "signup token doesn't exist: \(token)", publicMessage: "This signup link is invalid. Please get in touch with your team manager for a new one.")
+                }
+                return I.withSession { session in
+                    if session?.selfPremiumAccess == true {
+                        return I.write(teamMemberSubscribeForSelfSubscribed(signupToken: token))
+                    } else if session?.gifterPremiumAccess == true {
+                        return I.write(teamMemberSubscribeForGiftSubscriber(signupToken: token))
+                    } else if session?.teamMemberPremiumAccess == true && teamManager.id == session?.masterTeamUser?.id {
+                        return I.write(teamMemberSubscribeForAlreadyPartOfThisTeam())
+                    } else if let user = session?.user {
+                        return I.write(teamMemberSubscribeForSignedIn(signupToken: token))
+                    } else {
+                        return I.write(teamMemberSubscribe(signupToken: token))
                     }
                 }
             }

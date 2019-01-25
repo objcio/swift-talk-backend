@@ -450,7 +450,7 @@ func teamMembersView(teamMembers: [Row<UserData>], signupLink: URL) -> Node {
                     .p(["Team members cost $10/month or $100/year (excl. VAT), depending on your subscription."]),
                     .p(["Please send the following link to your team members for signup:"]),
                     .div(classes: "type-mono ms-1 mt", [.text(signupLink.absoluteString)]),
-                    .p(["Each time you visit this page a unique signup link is generated. Signup links expire after 48 hours."])
+                    .button(to: .account(.invalidateTeamToken), ["Generate New Signup Link"], classes: "button mt+", confirm: "WARNING: This will invalidate the current signup link. Do you want to proceed?"),
                 ])
             ]),
             Node.div([

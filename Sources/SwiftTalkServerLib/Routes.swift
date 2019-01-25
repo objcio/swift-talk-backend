@@ -53,6 +53,7 @@ indirect enum Route: Equatable {
         case billing
         case teamMembers
         case deleteTeamMember(UUID)
+        case invalidateTeamToken
         case updatePayment
         case logout
     }
@@ -202,6 +203,7 @@ private let accountRoutes: [Router<Route>] = [
       .c("team_members", .account(.teamMembers)),
       register,
       deleteTeamMember,
+      .c("invalidate_team_token", .account(.invalidateTeamToken))
     ].choice()
 ]
 

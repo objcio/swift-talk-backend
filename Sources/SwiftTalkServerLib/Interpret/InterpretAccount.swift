@@ -146,13 +146,14 @@ extension Route.Account {
             })
             
         case .teamMembers:
-            let signupTokenData = SignupTokenData(userId: sess.user.id, expirationDate: Date().addingTimeInterval(48*60*60))
-            return I.query(signupTokenData.insert) { signupToken in
-                let signupLink = Route.teamMemberSignup(token: signupToken).url
-                return I.query(sess.user.teamMembers) { members in
-                    I.write(teamMembersView(teamMembers: members, signupLink: signupLink))
-                }
+            let signupLink = Route.teamMemberSignup(token: sess.user.data.teamToken).url
+            return I.query(sess.user.teamMembers) { members in
+                I.write(teamMembersView(teamMembers: members, signupLink: signupLink))
             }
+        case .invalidateTeamToken:
+            var user = sess.user
+            user.data.teamToken = UUID()
+            return I.query(user.update()) { I.redirect(to: .account(.teamMembers)) }
         case .deleteTeamMember(let id):
             return I.verifiedPost { _ in
                 I.query(sess.user.deleteTeamMember(teamMemberId: id, userId: sess.user.id)) {

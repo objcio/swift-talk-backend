@@ -172,6 +172,10 @@ extension Row where Element == UserData {
         return Row<UserData>.selectOne.appending(parameters: [login]) { "WHERE github_login=\($0[0])" }
     }
 
+    static func select(teamToken: UUID) -> Query<Row<Element>?> {
+        return Row<UserData>.selectOne.appending(parameters: [teamToken]) { "WHERE team_token=\($0[0])" }
+    }
+
     static func select(sessionId id: UUID) -> Query<Row<Element>?> {
         let fields = UserData.fieldNames.map { "u.\($0)" }.sqlJoined
         return .build(parameters: [id], parse: Element.parseFirst) {
@@ -258,13 +262,5 @@ extension Row where Element: Insertable {
 extension Row where Element == PlayProgressData {
     static func sortedDesc(for userId: UUID) -> Query<[Row<PlayProgressData>]> {
         return Row<PlayProgressData>.select.appending(parameters: [userId]) { "WHERE user_id=\($0[0]) ORDER BY episode_number DESC" }
-    }
-}
-
-extension Row where Element == SignupTokenData {
-    static var prune: Query<()> {
-        return Row<SignupTokenData>.delete.appending { _ in
-            "WHERE expiration_date < LOCALTIMESTAMP"
-        }
     }
 }

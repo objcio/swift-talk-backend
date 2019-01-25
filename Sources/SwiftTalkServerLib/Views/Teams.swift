@@ -65,7 +65,7 @@ func teamMemberSubscribe(signupToken: UUID) -> Node {
         .p(classes: "center bold", ["Welcome to Swift Talk!"]),
         .p(classes: "center", ["You're just a few steps away from signing up as a team member:"]),
     ], buttons: [
-        button(route: .login(continue: .subscription(.teamMember(token: signupToken, terminate: false))), title: "Start By Logging In With GitHub")
+        button(route: .login(continue: .teamMemberSignup(token: signupToken)), title: "Start By Logging In With GitHub")
     ])
 }
 

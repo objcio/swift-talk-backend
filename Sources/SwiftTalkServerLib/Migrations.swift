@@ -272,6 +272,16 @@ fileprivate let migrations: [String] = [
     """
     ALTER TABLE team_members
         DROP CONSTRAINT IF EXISTS team_members_unique
+    """,
     """
+    DROP TABLE signup_tokens
+    """,
+    """
+    ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS team_token uuid DEFAULT public.uuid_generate_v4() NOT NULL
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS users_team_token_index ON users (team_token)
+    """,
 ]
 

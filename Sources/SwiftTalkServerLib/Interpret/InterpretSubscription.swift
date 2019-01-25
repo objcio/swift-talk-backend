@@ -64,27 +64,15 @@ extension Route.Subscription {
                 }
             }
         case let .teamMember(token, terminate):
-            return I.query(Row<SignupTokenData>.select(token)) { row in
-                guard let tokenData = row?.data else {
-                    throw ServerError(privateMessage: "signup token doesn't exist: \(token)", publicMessage: "This signup link has expired. Please get in touch with your team manager for a new signup link.")
+            return I.query(Row<UserData>.select(teamToken: token)) { row in
+                guard let teamManager = row else {
+                    throw ServerError(privateMessage: "signup token doesn't exist: \(token)", publicMessage: "This signup link is invalid. Please get in touch with your team manager for a new one.")
                 }
-                let teamMemberData = TeamMemberData(userId: tokenData.userId, teamMemberId: user.id)
-                return I.query(teamMemberData.insert) { _ in
-                    return I.execute(Task.syncTeamMembersWithRecurly(userId: tokenData.userId).schedule(minutes: 5)) { _ in
-                        if sess.selfPremiumAccess == true {
-                            if terminate {
-                                return I.onSuccess(promise: user.currentSubscription.promise.map(flatten)) { sub in
-                                    return I.onSuccess(promise: recurly.terminate(sub, refund: .partial).promise) { result in
-                                        switch result {
-                                        case .success: return I.redirect(to: .home)
-                                        case .errors(let errs): throw RecurlyErrors(errs)
-                                        }
-                                    }
-                                }
-                            } else {
-                                return I.write(teamMemberSubscribeForSelfSubscribed(signupToken: token))
-                            }
-                        } else {
+                
+                func registerTeamMember() -> I {
+                    let teamMemberData = TeamMemberData(userId: teamManager.id, teamMemberId: user.id)
+                    return I.query(teamMemberData.insert) { _ in
+                        return I.execute(Task.syncTeamMembersWithRecurly(userId: teamManager.id).schedule(minutes: 5)) { _ in
                             if !user.data.confirmedNameAndEmail {
                                 let resp = registerForm(couponCode: nil, team: false).render(.init(user.data), [])
                                 return I.write(resp)
@@ -93,6 +81,23 @@ extension Route.Subscription {
                             }
                         }
                     }
+                }
+                
+                if sess.selfPremiumAccess == true {
+                    if terminate {
+                        return I.onSuccess(promise: user.currentSubscription.promise.map(flatten)) { sub in
+                            return I.onSuccess(promise: recurly.terminate(sub, refund: .partial).promise) { result in
+                                switch result {
+                                case .success: return registerTeamMember()
+                                case .errors(let errs): throw RecurlyErrors(errs)
+                                }
+                            }
+                        }
+                    } else {
+                        return I.write(teamMemberSubscribeForSelfSubscribed(signupToken: token))
+                    }
+                } else {
+                    return registerTeamMember()
                 }
             }
         case .cancel:
