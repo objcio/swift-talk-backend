@@ -304,7 +304,7 @@ func teamMemberBillingContent() -> [Node] {
         .withContext { context in
             .div([
                 heading("Subscription"),
-                .p(classes: "lh-110", [.text("You have a team member account, which doesn't have its own billing info. To manage billing and to download invoices, please contact the person managing the organization account with the GitHub handle \"\(context.session?.masterTeamUser?.data.githubLogin ?? "<unknown>")\".")])
+                .p(classes: "lh-110", [.text("You have a team member account, which doesn't have its own billing info.")])
             ])
         }
     ]

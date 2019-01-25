@@ -62,7 +62,7 @@ extension Route {
                         return I.write(teamMemberSubscribeForSelfSubscribed(signupToken: token))
                     } else if session?.gifterPremiumAccess == true {
                         return I.write(teamMemberSubscribeForGiftSubscriber(signupToken: token))
-                    } else if session?.teamMemberPremiumAccess == true && teamManager.id == session?.masterTeamUser?.id {
+                    } else if session?.isMemberOf(teamManager) == true {
                         return I.write(teamMemberSubscribeForAlreadyPartOfThisTeam())
                     } else if let user = session?.user {
                         return I.write(teamMemberSubscribeForSignedIn(signupToken: token))

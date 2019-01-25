@@ -32,11 +32,11 @@ public func run() throws {
                 let user = try conn.get().execute(Row<UserData>.select(sessionId: sId))
                 return try user.map { u in
                     if u.data.premiumAccess {
-                        return Session(sessionId: sId, user: u, masterTeamUser: nil, gifter: nil)
+                        return Session(sessionId: sId, user: u, teamManager: nil, gifter: nil)
                     } else {
-                        let masterTeamUser: Row<UserData>? = try conn.get().execute(u.masterTeamUser)
+                        let teamManager: Row<UserData>? = try conn.get().execute(u.masterTeamUser)
                         let gifter: Row<UserData>? = try conn.get().execute(u.gifter)
-                        return Session(sessionId: sId, user: u, masterTeamUser: masterTeamUser, gifter: gifter)
+                        return Session(sessionId: sId, user: u, teamManager: teamManager, gifter: gifter)
                     }
                 }
             } catch {

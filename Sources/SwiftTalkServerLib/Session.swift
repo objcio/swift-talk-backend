@@ -20,8 +20,15 @@ struct Context {
 struct Session {
     var sessionId: UUID
     var user: Row<UserData>
-    var masterTeamUser: Row<UserData>?
-    var gifter: Row<UserData>?
+    private var teamManager: Row<UserData>?
+    private var gifter: Row<UserData>?
+    
+    init(sessionId: UUID, user: Row<UserData>, teamManager: Row<UserData>?, gifter: Row<UserData>?) {
+        self.sessionId = sessionId
+        self.user = user
+        self.teamManager = teamManager
+        self.gifter = gifter
+    }
     
     var premiumAccess: Bool {
         return selfPremiumAccess || teamMemberPremiumAccess || gifterPremiumAccess
@@ -30,11 +37,11 @@ struct Session {
     var activeSubscription: Bool {
         return ((selfPremiumAccess || user.data.subscriber) && !user.data.canceled) ||
             (gifterPremiumAccess && gifter?.data.canceled == false) ||
-            (teamMemberPremiumAccess && masterTeamUser?.data.canceled == false)
+            (teamMemberPremiumAccess && teamManager?.data.canceled == false)
     }
     
     var teamMemberPremiumAccess: Bool {
-        return masterTeamUser?.data.subscriber == true
+        return teamManager?.data.subscriber == true
     }
     
     var gifterPremiumAccess: Bool {
@@ -43,6 +50,10 @@ struct Session {
     
     var selfPremiumAccess: Bool {
         return user.data.premiumAccess
+    }
+    
+    func isMemberOf(_ user: Row<UserData>) -> Bool {
+        return teamManager?.id == user.id
     }
 
     func downloadStatus(for episode: Episode, downloads: [Row<DownloadData>]) -> Episode.DownloadStatus {
