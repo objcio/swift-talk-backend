@@ -415,23 +415,7 @@ func accountForm() -> Form<ProfileFormData> {
 }
 
 
-struct TeamMemberFormData {
-    var githubUsername: String
-}
-
-func addTeamMemberForm() -> Form<TeamMemberFormData> {
-    return Form<TeamMemberFormData>(parse: { dict in
-        guard let username = dict["github_username"] else { return nil }
-        return TeamMemberFormData(githubUsername: username)
-    }, render: { data, errors in
-        let form = FormView(fields: [
-            .text(id: "github_username", title: "Github Username", value: data.githubUsername, note: "Your new team member won’t be notified, as we don’t have their email address yet."),
-            ], submitTitle: "Add Team Member", submitNote: "Team members cost $10/month or $100/year, depending on your subscription. All prices excluding VAT.", action: .account(.teamMembers), errors: errors)
-        return .div(form.renderStacked())
-    })
-}
-
-func teamMembersView(addForm: Node, teamMembers: [Row<UserData>], signupLink: URL) -> Node {
+func teamMembersView(teamMembers: [Row<UserData>], signupLink: URL) -> Node {
     func row(avatarURL: String, name: String, email: String, githubLogin: String, deleteRoute: Route?) -> Node {
         return Node.div(classes: "flex items-center pv- border-top border-1 border-color-gray-90", [
             .div(classes: "block radius-full ms-2 width-2 mr", [
