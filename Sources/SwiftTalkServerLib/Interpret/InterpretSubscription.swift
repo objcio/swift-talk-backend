@@ -19,10 +19,10 @@ extension Route.Subscription {
         func newSubscription(couponCode: String?, team: Bool, errs: [String]) throws -> I {
             if let c = couponCode {
                 return I.onSuccess(promise: recurly.coupon(code: c).promise, do: { coupon in
-                    return try I.write(newSub(csrf: sess.user.data.csrf, coupon: coupon, team: team, errs: errs))
+                    return try I.write(newSub(coupon: coupon, team: team, errs: errs))
                 })
             } else {
-                return try I.write(newSub(csrf: sess.user.data.csrf, coupon: nil, team: team, errs: errs))
+                return try I.write(newSub(coupon: nil, team: team, errs: errs))
             }
         }
         

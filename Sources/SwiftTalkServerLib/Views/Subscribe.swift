@@ -190,23 +190,25 @@ fileprivate func smallPrint(_ lines: [Node]) -> Node {
     return Node.ul(classes: "stack pl", lines.map { Node.li([$0])})
 }
 
-func newSub(csrf: CSRFToken, coupon: Coupon?, team: Bool, errs: [String]) throws -> Node {
+func newSub(coupon: Coupon?, team: Bool, errs: [String]) throws -> Node {
     guard let m = Plan.monthly, let y = Plan.yearly else {
         throw ServerError(privateMessage: "No monthly or yearly plan: \(Plan.all)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
     }
-    let data = NewSubscriptionData(action: Route.subscription(.create(couponCode: coupon?.coupon_code, team: team)).path, public_key: env.recurlyPublicKey, plans: [
-        .init(m), .init(y)
-        ], payment_errors: errs, method: .post, coupon: coupon.map(NewSubscriptionData.Coupon.init), csrf: csrf)
-    return LayoutConfig(contents: [
-        .header([
-            .div(classes: "container-h pb+ pt+", [
-                .h1(classes: "ms4 color-blue bold", ["Subscribe to Swift Talk"])
+    return Node.withCSRF { csrf in        
+        let data = NewSubscriptionData(action: Route.subscription(.create(couponCode: coupon?.coupon_code, team: team)).path, public_key: env.recurlyPublicKey, plans: [
+            .init(m), .init(y)
+            ], payment_errors: errs, method: .post, coupon: coupon.map(NewSubscriptionData.Coupon.init), csrf: csrf)
+        return LayoutConfig(contents: [
+            .header([
+                .div(classes: "container-h pb+ pt+", [
+                    .h1(classes: "ms4 color-blue bold", ["Subscribe to Swift Talk"])
+                ])
+            ]),
+            .div(classes: "container", [
+                ReactComponent.newSubscription.build(data)
             ])
-        ]),
-        .div(classes: "container", [
-            ReactComponent.newSubscription.build(data)
-        ])
-    ], includeRecurlyJS: true).layoutForCheckout
+        ], includeRecurlyJS: true).layoutForCheckout
+    }
 }
 
 extension ReactComponent where A == NewSubscriptionData {

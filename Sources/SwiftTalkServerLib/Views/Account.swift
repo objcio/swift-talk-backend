@@ -164,7 +164,7 @@ extension Subscription.State {
 
 
 extension Subscription.Upgrade {
-    func pretty(csrf: CSRFToken) -> [Node] {
+    func pretty() -> [Node] {
         let vat = vat_in_cents == 0 ? "" : " (including \(dollarAmount(cents: vat_in_cents)) VAT)"
         let teamMemberText: String
         if team_members == 1 {
@@ -182,7 +182,7 @@ extension Subscription.Upgrade {
                         teamMemberText +
                     ". You'll be charged immediately, and credited for the remainder of the current billing period."
                     )]),
-                button(to: .subscription(.upgrade), csrf: csrf, text: "Upgrade Subscription", classes: "color-invalid")
+                button(to: .subscription(.upgrade), text: "Upgrade Subscription", classes: "color-invalid")
             ]
     }
 }
@@ -278,7 +278,7 @@ extension BillingInfo {
     }
 }
 
-fileprivate func button(to route: Route, csrf: CSRFToken, text: String, classes: Class = "") -> Node {
+fileprivate func button(to route: Route, text: String, classes: Class = "") -> Node {
     return Node.withCSRF { csrf in
     	return Node.button(to: route, [.text(text)], classes: "bold reset-button border-bottom border-1 hover-color-black" + classes)
     }
@@ -371,20 +371,20 @@ func billingView(subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice,
                                         let start = DateFormatter.fullPretty.string(from: redemption.created_at)
                                         return Node.text("Due to a technical limation, the displayed price does not take your active coupon (\(coupon.billingDescription), started at \(start)) into account.")
                                     }),
-                                    button(to: .subscription(.cancel), csrf: user.data.csrf, text: "Cancel Subscription", classes: "color-invalid")
+                                    button(to: .subscription(.cancel), text: "Cancel Subscription", classes: "color-invalid")
                                 ])
                             ]) : .none,
                             sub.upgrade(vatExempt: billingInfo.vatExempt).map { upgrade in
                                 Node.li(classes: "flex", [
                                     label(text: "Upgrade"),
-                                    Node.div(classes: "flex-auto color-gray-30 stack--", upgrade.pretty(csrf: user.data.csrf))
+                                    Node.div(classes: "flex-auto color-gray-30 stack--", upgrade.pretty())
                                 ])
                             } ?? .none,
                             sub.state == .canceled ? Node.li(classes: "flex", [
                                 label(text: "Expires on"),
                                 Node.div(classes: "flex-auto color-gray-30 stack-", [
                                     .text(sub.expires_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "<unknown date>"),
-                                    button(to: .subscription(.reactivate), csrf: user.data.csrf, text: "Reactivate Subscription", classes: "color-invalid")
+                                    button(to: .subscription(.reactivate), text: "Reactivate Subscription", classes: "color-invalid")
                                 ])
                             ]) : .none
                         ])
