@@ -10,13 +10,16 @@ import PostgreSQL
 import NIOHTTP1
 
 extension Swift.Collection where Element == Episode {
-    func withProgress(for userId: UUID?, connection: ConnectionProtocol) throws -> [EpisodeWithProgress] {
-        guard let id = userId else { return map { EpisodeWithProgress(episode: $0, progress: nil) } }
-        let progresses = try connection.execute(Row<PlayProgressData>.sortedDesc(for: id)).map { $0.data }
-        return map { episode in
+    func withProgress<I: Interp>(for id: UUID?, _ cont: @escaping ([EpisodeWithProgress]) -> I) -> I {
+        guard let userId = id else { return cont(map { EpisodeWithProgress(episode: $0, progress: nil )}) }
+        
+        return I.query(Row<PlayProgressData>.sortedDesc(for: userId).map { results in
+        	let progresses = results.map { $0.data }
+            return self.map { episode in
             // todo this is (n*m), we should use the fact that `progresses` is sorted!
             EpisodeWithProgress(episode: episode, progress: progresses.first { $0.episodeNumber == episode.number }?.progress)
-        }
+            }
+        }, cont)
     }
 }
 
@@ -73,9 +76,8 @@ extension Route {
                 return .write(errorView("No such collection"), status: .notFound)
             }
             return I.withSession { session in
-                I.withConnection { c in
-                    let episodesWithProgress = try coll.episodes(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
-                    return .write(coll.show(episodes: episodesWithProgress))
+                return coll.episodes(for: session?.user.data).withProgress(for: session?.user.id) {
+                    I.write(coll.show(episodes: $0))
                 }
             }
         case .login(let cont):
@@ -121,17 +123,13 @@ extension Route {
 
         case .episodes:
             return I.withSession { session in
-                return I.withConnection { c in
-                    let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
-                    return I.write(index(episodesWithProgress))
-                }
+                let scoped = Episode.all.scoped(for: session?.user.data)
+                return scoped.withProgress(for: session?.user.id,  { I.write(index($0)) })
             }
         case .home:
             return I.withSession { session in
-                return I.withConnection { c in
-                    let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
-                    return .write(renderHome(episodes: episodesWithProgress))
-                }
+                let scoped = Episode.all.scoped(for: session?.user.data)
+                return scoped.withProgress(for: session?.user.id) { .write(renderHome(episodes: $0)) }
             }
         case .sitemap:
             return .write(Route.siteMap)
