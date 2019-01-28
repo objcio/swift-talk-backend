@@ -237,6 +237,12 @@ fileprivate let migrations: [String] = [
         END IF;
     END
     $$;
+    """,
+    """
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS team_token uuid DEFAULT public.uuid_generate_v4();
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS team_token_index ON users (team_token);
     """
 ]
 

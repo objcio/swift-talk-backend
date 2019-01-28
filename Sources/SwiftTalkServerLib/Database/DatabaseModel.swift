@@ -120,9 +120,9 @@ struct UserData: Codable, Insertable {
     var canceled: Bool = false
     var confirmedNameAndEmail: Bool = false
     var csrf: CSRFToken
-
+    var teamToken: UUID
     
-    init(email: String, githubUID: Int? = nil, githubLogin: String? = nil, githubToken: String? = nil, avatarURL: String, name: String, createdAt: Date? = nil, collaborator: Bool = false, downloadCredits: Int = 0, canceled: Bool = false, confirmedNameAndEmail: Bool = false, subscriber: Bool = false) {
+    init(email: String, githubUID: Int? = nil, githubLogin: String? = nil, githubToken: String? = nil, avatarURL: String, name: String, createdAt: Date? = nil, collaborator: Bool = false, downloadCredits: Int = 0, canceled: Bool = false, confirmedNameAndEmail: Bool = false, subscriber: Bool = false, teamToken: UUID = UUID()) {
         self.email = email
         self.githubUID = githubUID
         self.githubLogin = githubLogin
@@ -136,6 +136,7 @@ struct UserData: Codable, Insertable {
         self.canceled = canceled
         self.confirmedNameAndEmail = confirmedNameAndEmail
         self.subscriber = subscriber
+        self.teamToken = teamToken
     }
     
     static let tableName: String = "users"

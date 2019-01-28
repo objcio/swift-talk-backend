@@ -21,13 +21,6 @@ extension Route.Account {
     }
     
     private func interpret2<I: Interp>(session sess: Session) throws -> I {
-        func teamMembersResponse(_ data: TeamMemberFormData? = nil,_ errors: [ValidationError] = []) throws -> I {
-            let renderedForm = addTeamMemberForm().render(data ?? TeamMemberFormData(githubUsername: ""), errors)
-            return I.query(sess.user.teamMembers) { members in
-                I.write(teamMembersView(addForm: renderedForm, teamMembers: members))
-            }
-        }
-        
         switch self {
         case .thankYou:
             return I.redirect(to: .home)
@@ -152,38 +145,40 @@ extension Route.Account {
             
         case .teamMembers:
             // todo use the form helper
-            return I.verifiedPost(do: { params in
-                guard let formData = addTeamMemberForm().parse(params), sess.selfPremiumAccess else { return try teamMembersResponse() }
-                let promise = github.profile(username: formData.githubUsername).promise
-                return I.onCompleteOrCatch(promise: promise) { profile in
-                    guard let p = profile else {
-                        return try teamMembersResponse(formData, [(field: "github_username", message: "No user with this username exists on GitHub")])
-                    }
-                    let newUserData = UserData(email: p.email ?? "", githubUID: p.id, githubLogin: p.login, avatarURL: p.avatar_url, name: p.name ?? "")
-                    return I.query(newUserData.findOrInsert(uniqueKey: "github_uid", value: p.id)) { (newUserId: UUID) in
-                        let teamMemberData = TeamMemberData(userId: sess.user.id, teamMemberId: newUserId)
-                        return I.queryWithError(teamMemberData.insert) { (result: Either<UUID, Error>) in
-                            switch result {
-                            case .right: return try teamMembersResponse(formData, [(field: "github_username", message: "Team member already exists")])
-                            case .left:
-                                let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(minutes: 5)
-                                return I.query(task) {
-                                    try teamMembersResponse()
-                                }
-
-                            }
-                        }
-                    }
-                }
-            }, or: {
-                return try teamMembersResponse()
-            })
+//            return I.verifiedPost(do: { params in
+//                guard let formData = addTeamMemberForm().parse(params), sess.selfPremiumAccess else { return try teamMembersResponse() }
+//                let promise = github.profile(username: formData.githubUsername).promise
+//                return I.onCompleteOrCatch(promise: promise) { profile in
+//                    guard let p = profile else {
+//                        return try teamMembersResponse(formData, [(field: "github_username", message: "No user with this username exists on GitHub")])
+//                    }
+//                    let newUserData = UserData(email: p.email ?? "", githubUID: p.id, githubLogin: p.login, avatarURL: p.avatar_url, name: p.name ?? "")
+//                    return I.query(newUserData.findOrInsert(uniqueKey: "github_uid", value: p.id)) { (newUserId: UUID) in
+//                        let teamMemberData = TeamMemberData(userId: sess.user.id, teamMemberId: newUserId)
+//                        return I.queryWithError(teamMemberData.insert) { (result: Either<UUID, Error>) in
+//                            switch result {
+//                            case .right: return try teamMembersResponse(formData, [(field: "github_username", message: "Team member already exists")])
+//                            case .left:
+//                                let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(minutes: 5)
+//                                return I.query(task) {
+//                                    try teamMembersResponse()
+//                                }
+//
+//                            }
+//                        }
+//                    }
+//                }
+//            }, or: {
+            let url = Route.teamMemberSignup(token: sess.user.data.teamToken).url
+            return I.query(sess.user.teamMembers) { members in
+                I.write(teamMembersView(signupURL: url, teamMembers: members))
+            }
         case .deleteTeamMember(let id):
             return I.verifiedPost { _ in
                 I.query(sess.user.deleteTeamMember(id)) {
                     let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: globals.currentDate().addingTimeInterval(5*60))
                     return I.query(task) {
-                    	try teamMembersResponse()
+                        return I.redirect(to: .account(.teamMembers))
                     }
                 }
             }

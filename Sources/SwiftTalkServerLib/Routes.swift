@@ -12,6 +12,7 @@ indirect enum Route: Equatable {
     case episodes
     case sitemap
     case subscribe
+    case teamMemberSignup(token: UUID)
     case collections
     case login(continue: Route?)
     case githubCallback(code: String?, origin: String?)
@@ -239,7 +240,11 @@ private let otherRoutes: [Router<Route>] = [
     .c("promo") / (Router.string().transform(Route.promoCode, { r in
         guard case let .promoCode(s) = r else { return nil }
         return s
-    }))
+    })),
+    .c("join_team") / Router.uuid.transform({ .teamMemberSignup(token: $0) }, { route in
+        guard case let .teamMemberSignup(token) = route else { return nil }
+        return token
+    })
 ]
 
 private let internalRoutes: [Router<Route>] = [

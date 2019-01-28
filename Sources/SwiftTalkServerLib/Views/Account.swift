@@ -417,23 +417,7 @@ func accountForm() -> Form<ProfileFormData> {
 }
 
 
-struct TeamMemberFormData {
-    var githubUsername: String
-}
-
-func addTeamMemberForm() -> Form<TeamMemberFormData> {
-    return Form<TeamMemberFormData>(parse: { dict in
-        guard let username = dict["github_username"] else { return nil }
-        return TeamMemberFormData(githubUsername: username)
-    }, render: { data, errors in
-        let form = FormView(fields: [
-            .text(id: "github_username", title: "Github Username", value: data.githubUsername, note: "Your new team member won’t be notified, as we don’t have their email address yet."),
-            ], submitTitle: "Add Team Member", submitNote: "Team members cost $10/month or $100/year, depending on your subscription. All prices excluding VAT.", action: .account(.teamMembers), errors: errors)
-        return .div(form.renderStacked())
-    })
-}
-
-func teamMembersView(addForm: Node, teamMembers: [Row<UserData>]) -> Node {
+func teamMembersView(signupURL: URL, teamMembers: [Row<UserData>]) -> Node {
     let currentTeamMembers = teamMembers.isEmpty ? Node.p([.raw("No team members added yet.")]) : Node.div(teamMembers.compactMap { tm in
         guard let githubLogin = tm.data.githubLogin else { return nil }
         return .div(classes: "flex items-center pv- border-top border-1 border-color-gray-90", [
@@ -451,7 +435,10 @@ func teamMembersView(addForm: Node, teamMembers: [Row<UserData>]) -> Node {
         Node.div(classes: "stack++", [
             Node.div([
                 heading("Add Team Member"),
-                addForm,
+                Node.div(classes: "stack", [
+                    Node.p(["To add team members, send them the following signup link:"]),
+                    Node.p(classes: "type-mono", [.text(signupURL.absoluteString)])
+                ])
             ]),
             Node.div([
                 heading("Current Team Members"),
