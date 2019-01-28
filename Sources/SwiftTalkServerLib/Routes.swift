@@ -51,6 +51,7 @@ indirect enum Route: Equatable {
         case billing
         case teamMembers
         case deleteTeamMember(UUID)
+        case joinTeam(token: UUID)
         case updatePayment
         case logout
     }
@@ -203,6 +204,10 @@ private let accountRoutes: Router<Route> = [
         .c("billing", .billing),
         .c("payment", .updatePayment),
         .c("team_members", .teamMembers),
+        .c("join_team") / Router.uuid.transform({ .joinTeam(token: $0) }, { a in
+            guard case let .joinTeam(id) = a else { return nil }
+            return id
+        }),
         deleteTeamMember,
     ].choice(),
      register,

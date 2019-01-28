@@ -172,6 +172,10 @@ extension Row where Element == UserData {
         return Row<UserData>.selectOne.appending(parameters: [login]) { "WHERE github_login=\($0[0])" }
     }
 
+    static func select(teamToken: UUID) -> Query<Row<Element>?> {
+        return Row<UserData>.selectOne.appending(parameters: [teamToken]) { "WHERE team_token=\($0[0])" }
+    }
+
     static func select(sessionId id: UUID) -> Query<Row<Element>?> {
         let fields = UserData.fieldNames.map { "u.\($0)" }.sqlJoined
         return .build(parameters: [id], parse: Element.parseFirst) {
@@ -229,6 +233,11 @@ extension Row where Element == UserData {
     
     func changeSubscriptionStatus(_ subscribed: Bool) -> Query<()> {
         return .build(parameters: [subscribed, id], parse: parseEmpty) { "UPDATE users SET subscriber=\($0[0]) WHERE id=\($0[1])" }
+    }
+    
+    func addTeamMember(id teamMemberId: UUID) -> Query<()> {
+        let data = TeamMemberData(userId: id, teamMemberId: teamMemberId)
+        return data.insert.map { _ in () }
     }
     
     func deleteTeamMember(_ teamMemberId: UUID) -> Query<()> {

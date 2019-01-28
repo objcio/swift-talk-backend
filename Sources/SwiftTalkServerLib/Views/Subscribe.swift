@@ -59,6 +59,8 @@ func registerForm(couponCode: String?) -> Form<ProfileFormData> {
     }
 }
 
+fileprivate let linkClasses: Class = "c-button c-button--big c-button--blue c-button--wide"
+
 extension Plan {
     static func subscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node {
         return .withContext { context in
@@ -75,7 +77,6 @@ extension Plan {
                     ])
             }
             let continueLink: Node
-            let linkClasses: Class = "c-button c-button--big c-button--blue c-button--wide"
             if context.session.premiumAccess {
                 if let d = context.session?.user.data, d.canceled {
                     continueLink = Node.button(to: .subscription(.reactivate), [.text("Reactivate Subscription")], classes: linkClasses + "c-button--ghost")
@@ -249,4 +250,21 @@ extension NewSubscriptionData.Coupon {
         free_trial_amount = coupon.free_trial_amount
         free_trial_unit = coupon.free_trial_unit
     }
+}
+
+func joinTeam(token: UUID) -> Node {
+    let contents: [Node] = [
+        pageHeader(.other(header: "Join as Team Member", blurb: nil, extraClasses: "ms4"), extraClasses: "text-center"),
+        .div(classes: "container pt0", [
+            .div(classes: "bgcolor-white pa- radius-8 max-width-7 box-sizing-content center stack-", [
+                Node.div(classes: "text-center mt+", [
+                    .div(classes: "c-text mt mb-", [
+                        .p([.text("You have been invited to join Swift Talk as a team member.")]),
+                    ]),
+                    Node.link(to: .login(continue: .account(.joinTeam(token: token))), classes: linkClasses, ["Sign in with Github"]),
+                ])
+            ])
+        ])
+    ]
+    return LayoutConfig(pageTitle: "Join as Team Member", contents: contents).layout
 }

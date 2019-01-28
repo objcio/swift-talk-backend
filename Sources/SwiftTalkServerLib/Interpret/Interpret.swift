@@ -42,7 +42,8 @@ extension Route {
         case .gift(let g):
             return try g.interpret()
         case let .teamMemberSignup(token: token):
-            return I.write("team signup \(token)")
+            // todo: take into account different subscriber states?
+            return I.write(joinTeam(token: token))
         case let .episode(id, action):
             return try action.interpret(id: id)
         case .subscribe: // this isn't in .subscribe because it doesn't require a session.

@@ -24,6 +24,19 @@ extension Route.Account {
         switch self {
         case .thankYou:
             return I.redirect(to: .home)
+        case .joinTeam(let token):
+            return I.query(Row<UserData>.select(teamToken: token)) { row in
+                guard let teamManager = row else {
+                    throw ServerError(privateMessage: "Invalid team token: \(token)", publicMessage: "This team signup link is invalid. Please contact your team mamager for a new one.")
+                }
+                guard !sess.premiumAccess else {
+                    return I.redirect(to: Route.teamMemberSignup(token: token))
+                }
+                return I.query(teamManager.addTeamMember(id: sess.user.id)) { result in
+                    // todo verify result isn't nil
+                    return I.redirect(to: .home)
+                }
+            }
         case .logout:
             return I.query(sess.user.deleteSession(sess.sessionId)) {
                 return I.redirect(to: .home)
