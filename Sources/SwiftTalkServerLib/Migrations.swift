@@ -13,7 +13,7 @@ func runMigrations() throws {
         _ = try withConnection { conn in
             for m in migrations {
                 do {
-			try conn.execute(m)
+			_ = try conn.execute(m)
                 } catch {
                     throw DatabaseError(err: error, query: m)
                 }

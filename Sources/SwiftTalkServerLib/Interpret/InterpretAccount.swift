@@ -30,12 +30,7 @@ extension Route.Account {
         
         switch self {
         case .thankYou:
-            return I.withConnection { c in
-                // todo: change how we load the episodes (should be a Query<X>, rather than take a connection)
-                let episodesWithProgress = try Episode.all.scoped(for: sess.user.data).withProgress(for: sess.user.id, connection: c)
-                // todo: flash: "Thank you for supporting us
-                return .write(renderHome(episodes: episodesWithProgress))
-            }
+            return I.redirect(to: .home)
         case .logout:
             return I.query(sess.user.deleteSession(sess.sessionId)) {
                 return I.redirect(to: .home)
@@ -167,7 +162,7 @@ extension Route.Account {
                     let newUserData = UserData(email: p.email ?? "", githubUID: p.id, githubLogin: p.login, avatarURL: p.avatar_url, name: p.name ?? "")
                     return I.query(newUserData.findOrInsert(uniqueKey: "github_uid", value: p.id)) { (newUserId: UUID) in
                         let teamMemberData = TeamMemberData(userId: sess.user.id, teamMemberId: newUserId)
-                        return I.execute(teamMemberData.insert) { (result: Either<UUID, Error>) in
+                        return I.queryWithError(teamMemberData.insert) { (result: Either<UUID, Error>) in
                             switch result {
                             case .right: return try teamMembersResponse(formData, [(field: "github_username", message: "Team member already exists")])
                             case .left:
