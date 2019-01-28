@@ -437,7 +437,8 @@ func teamMembersView(signupURL: URL, teamMembers: [Row<UserData>]) -> Node {
                 heading("Add Team Member"),
                 Node.div(classes: "stack", [
                     Node.p(["To add team members, send them the following signup link:"]),
-                    Node.p(classes: "type-mono", [.text(signupURL.absoluteString)])
+                    Node.p(classes: "type-mono", [.text(signupURL.absoluteString)]),
+                    Node.button(to: .account(.invalidateTeamToken), ["Generate New Signup Link"], classes: blueButtonClasses, confirm: "This invalidates the current signup link. Do you want to proceed?")
                 ])
             ]),
             Node.div([

@@ -135,6 +135,21 @@ final class FlowTests: XCTestCase {
         }
     }
     
+    func testTeamMemberSignup() throws {
+        let token = subscribedUser.user.data.teamToken
+        let subscribeWithoutASession = try Flow.landingPage(session: nil, Route.teamMemberSignup(token: token))
+        subscribeWithoutASession.verify { page in
+            testLinksTo(page, route: .login(continue: .account(.joinTeam(token: token))))
+        }
+        
+        let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .account(.joinTeam(token: token)), queries: [
+            QueryAndResult(query: Row<UserData>.select(teamToken: token), response: subscribedUser.user),
+            QueryAndResult(query: subscribedUser.user.addTeamMember(id: nonSubscribedUser.user.id), response: ())
+        ])
+        try notSubscribed.verifyRedirect(to: .home)
+    }
+
+    
     func testSubscription() throws {
         // todo test coupon codes
         testPlans = plans

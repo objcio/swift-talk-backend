@@ -24,6 +24,14 @@ extension Route.Account {
         switch self {
         case .thankYou:
             return I.redirect(to: .home)
+        case .invalidateTeamToken:
+            return I.verifiedPost(do: { _ in
+                var user = sess.user
+                user.data.teamToken = UUID()
+                return I.query(user.update()) { _ in
+                    return I.redirect(to: .account(.teamMembers))
+                }
+            })
         case .joinTeam(let token):
             return I.query(Row<UserData>.select(teamToken: token)) { row in
                 guard let teamManager = row else {
