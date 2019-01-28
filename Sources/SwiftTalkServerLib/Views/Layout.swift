@@ -99,7 +99,7 @@ extension LayoutConfig {
         let head = Node.head([
             .meta(attributes: ["charset": "utf-8"]),
             .meta(attributes: ["http-equiv": "X-UA-Compatible", "content": "IE=edge"]),
-            .meta(attributes: ["name": "viewport", "content": "'width=device-width, initial-scale=1, user-scalable=no'"]),
+            .meta(attributes: ["name": "viewport", "content": "width=device-width, initial-scale=1, user-scalable=no"]),
         ] + [
             .title(pageTitle),
             .xml(name: "link", attributes: [
