@@ -59,7 +59,8 @@ func registerForm(couponCode: String?) -> Form<ProfileFormData> {
     }
 }
 
-fileprivate let linkClasses: Class = "c-button c-button--big c-button--blue c-button--wide"
+let blueButtonClasses: Class = "c-button c-button--blue"
+let bigBlueButtonClasses: Class = blueButtonClasses + "c-button--big c-button--wide"
 
 extension Plan {
     static func subscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node {
@@ -79,14 +80,14 @@ extension Plan {
             let continueLink: Node
             if context.session.premiumAccess {
                 if let d = context.session?.user.data, d.canceled {
-                    continueLink = Node.button(to: .subscription(.reactivate), [.text("Reactivate Subscription")], classes: linkClasses + "c-button--ghost")
+                    continueLink = Node.button(to: .subscription(.reactivate), [.text("Reactivate Subscription")], classes: bigBlueButtonClasses + "c-button--ghost")
                 } else {
-                    continueLink = Node.link(to: .account(.profile), classes: linkClasses + "c-button--ghost", ["You're already subscribed"])
+                    continueLink = Node.link(to: .account(.profile), classes: bigBlueButtonClasses + "c-button--ghost", ["You're already subscribed"])
                 }
             } else if context.session?.user != nil {
-                continueLink = Node.link(to: .subscription(.new(couponCode: coupon?.coupon_code)), classes: linkClasses, ["Proceed to payment"])
+                continueLink = Node.link(to: .subscription(.new(couponCode: coupon?.coupon_code)), classes: bigBlueButtonClasses, ["Proceed to payment"])
             } else {
-                continueLink = Node.link(to: .login(continue: Route.subscription(.new(couponCode: coupon?.coupon_code))), classes: linkClasses, ["Sign in with Github"])
+                continueLink = Node.link(to: .login(continue: Route.subscription(.new(couponCode: coupon?.coupon_code))), classes: bigBlueButtonClasses, ["Sign in with Github"])
             }
             let contents: [Node] = [
                 pageHeader(.other(header: "Subscribe to Swift Talk", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),
@@ -261,7 +262,7 @@ func joinTeam(token: UUID) -> Node {
                     .div(classes: "c-text mt mb-", [
                         .p([.text("You have been invited to join Swift Talk as a team member.")]),
                     ]),
-                    Node.link(to: .login(continue: .account(.joinTeam(token: token))), classes: linkClasses, ["Sign in with Github"]),
+                    Node.link(to: .login(continue: .account(.joinTeam(token: token))), classes: bigBlueButtonClasses, ["Sign in with Github"]),
                 ])
             ])
         ])
