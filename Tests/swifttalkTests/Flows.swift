@@ -69,8 +69,8 @@ struct Flow {
         return t.run(testEnv)
     }
     
-    static func landingPage(session: Session?, file: StaticString = #file, line: UInt = #line, _ route: Route) throws -> Flow {
-        return try Flow(session: session, currentPage: run(session, route, [], file, line))
+    static func landingPage(session: Session?, file: StaticString = #file, line: UInt = #line, _ route: Route, queries: [QueryAndResult] = []) throws -> Flow {
+        return try Flow(session: session, currentPage: run(session, route, queries, file, line))
     }
     
     func verify(cond: (TestInterpreter) -> ()) {
@@ -83,14 +83,17 @@ struct Flow {
     }
     
     func followRedirect(to action: Route, expectedQueries: [QueryAndResult] = [], file: StaticString = #file, line: UInt = #line,  _ then: (Flow) throws -> ()) throws -> () {
+        try verifyRedirect(to: action, file: file, line: line)
+        try then(Flow(session: session, currentPage: Flow.run(session, action, expectedQueries, file, line)))
+    }
+    
+    func verifyRedirect(to action: Route, file: StaticString = #file, line: UInt = #line) throws -> () {
         guard case let TestInterpreter._redirect(path: path, headers: _) = currentPage else {
             XCTFail("Expected redirect"); return
         }
         guard action.path == path else {
             XCTFail("Expected \(action), got \(path)"); return
         }
-        
-        try then(Flow(session: session, currentPage: Flow.run(session, action, expectedQueries, file, line)))
     }
     
     func fillForm(to action: Route, data: [String:String] = [:], expectedQueries: [QueryAndResult] = [], file: StaticString = #file, line: UInt = #line,  _ then: (Flow) throws -> ()) throws {
