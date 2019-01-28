@@ -102,6 +102,13 @@ private extension Array where Element == Router<Route.Subscription> {
     }
 }
 
+private extension Array where Element == Router<Route.Account> {
+    func choice() -> Router<Route.Account> {
+        assert(!isEmpty)
+        return dropFirst().reduce(self[0], { $0.or($1) })
+    }
+}
+
 private extension Array where Element == Router<Route.EpisodeR> {
     func choice() -> Router<Route.EpisodeR> {
         assert(!isEmpty)
@@ -173,8 +180,8 @@ private let loginRoute: Router<Route> = (.c("users") / .c("auth") / .c("github")
 
 
 
-private let deleteTeamMember: Router<Route> = (Router<()>.c("team_members") / .c("delete") / Router.uuid).transform({ Route.account(.deleteTeamMember($0))}, { r in
-    guard case let .account(.deleteTeamMember(id)) = r else { return nil }
+private let deleteTeamMember: Router<Route.Account> = (Router<()>.c("team_members") / .c("delete") / Router.uuid).transform({ .deleteTeamMember($0)}, { r in
+    guard case let .deleteTeamMember(id) = r else { return nil }
     return id
 })
 
@@ -183,25 +190,26 @@ private let externalRoutes: [Router<Route>] = [
     .c("sitemap", .sitemap)
 ]
 
-private let register: Router<Route> = .c("register") / Router.optionalString().transform({ Route.account(.register(couponCode: $0)) }, { (route: Route) -> String?? in
-    guard case let Route.account(.register(x)) = route else { return nil }
+private let register: Router<Route.Account> = .c("register") / Router.optionalString().transform({ .register(couponCode: $0) }, { route -> String?? in
+    guard case let .register(x) = route else { return nil }
     return x
 })
 
-private let accountRoutes: [Router<Route>] = [
-    callbackRoute,
-    loginRoute,
+private let accountRoutes: Router<Route> = [
     .c("account") / [
-      .c("thankYou", .account(.thankYou)),
-      .c("logout", .account(.logout)),
-      .c("profile", .account(.profile)),
-      .c("billing", .account(.billing)),
-      .c("payment", .account(.updatePayment)),
-      .c("team_members", .account(.teamMembers)),
-      register,
-      deleteTeamMember,
-    ].choice()
-]
+        .c("thankYou", Route.Account.thankYou),
+        .c("logout", .logout),
+        .c("profile", .profile),
+        .c("billing", .billing),
+        .c("payment", .updatePayment),
+        .c("team_members", .teamMembers),
+        deleteTeamMember,
+    ].choice(),
+     register,
+    ].choice().transform(Route.account, { r in
+        guard case let .account(x) = r else { return nil }
+        return x
+    })
 
 private let subscriptionRoutes2: [Router<Route.Subscription>] = [
     .c("new") / Router.optionalString().transform(Route.Subscription.new, { route in
@@ -226,6 +234,8 @@ private let subscriptionRoutes: [Router<Route>] = [
 ]
 
 private let otherRoutes: [Router<Route>] = [
+    callbackRoute,
+    loginRoute,
     .c("episodes", .episodes),
     assetsRoute,
     .c("favicon.ico", Route.staticFile(path: ["favicon.ico"])),
@@ -279,6 +289,6 @@ private let giftRoute: Router<Route> =
         return x
     })
 
-let allRoutes = externalRoutes + accountRoutes + subscriptionRoutes + otherRoutes + internalRoutes
+let allRoutes = externalRoutes + [accountRoutes] + subscriptionRoutes + otherRoutes + internalRoutes
 let router = allRoutes.choice()
 
