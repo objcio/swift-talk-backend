@@ -124,13 +124,13 @@ func renderSubscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node
                     ])
                 ]),
                 benefits(subscriptionBenefits),
-                Node.ul(classes: "text-center max-width-7 center pt pb++", [
+                Node.ul(classes: "text-center max-width-7 center pt++ pb++", [
                     .div(classes: "color-orange", [
                         .inlineSvg(path: "icon-benefit-team.svg", classes: "svg-fill-current")
                     ]),
                     .div(classes: "mb+", [
                         .h3(classes: "bold color-blue mt- mb---", ["Looking for a subscription for your whole team?"]),
-                        .p(classes: "color-gray-50 lh-125", ["Our team subscription offers a 30% discount and comes with a separate team manager account to manage billing and access for your entire team."])
+                        .p(classes: "color-gray-50 lh-125", ["Our team subscription offers a 30% discount and comes with a separate team manager account to manage billing and access."])
                     ]),
                     continueLink(to: .subscribeTeam, title: "Explore Team Subscriptions")
                 ]),

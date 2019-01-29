@@ -28,10 +28,10 @@ fileprivate func button(route: Route, title: String, highlighted: Bool = false) 
 func teamMemberSubscribeForSelfSubscribed(signupToken: UUID) -> Node {
     return template(content: [
         .p(classes: "center bold", ["You already have an active subscription."]),
-        .p(classes: "center", ["You can register as a team member using the orange button below. Your current individual subscription will be terminated and you will receive a refund for the remaining time in the current billing cycle."]),
+        .p(classes: "center", ["You can register as a team member using the orange button below. Your current individual subscription will end immediately and you will receive a refund for remainder of the current billing cycle."]),
     ], buttons: [
-        button(route: .subscription(.teamMember(token: signupToken, terminate: true)), title: "Terminate Subscription And Become Team Member", highlighted: true),
-        button(route: .home, title: "Keep My Individual Subscription"),
+        button(route: .subscription(.teamMember(token: signupToken, terminate: true)), title: "End Subscription and Become a Team Member", highlighted: true),
+        button(route: .home, title: "Keep my Individual Subscription"),
     ])
 }
 
@@ -40,7 +40,7 @@ func teamMemberSubscribeForGiftSubscriber(signupToken: UUID) -> Node {
         .p(classes: "center bold", ["You already have an active gift subscription."]),
         .p(classes: "center", ["If you register as a team member now, you'll automatically stay subscribed with your team once the gift subcription expires."]),
         ], buttons: [
-            button(route: .subscription(.teamMember(token: signupToken, terminate: false)), title: "Register As Team Member"),
+            button(route: .subscription(.teamMember(token: signupToken, terminate: false)), title: "Register as a Team Member"),
         ])
 }
 
@@ -54,18 +54,18 @@ func teamMemberSubscribeForAlreadyPartOfThisTeam() -> Node {
 func teamMemberSubscribeForSignedIn(signupToken: UUID) -> Node {
     return template(content: [
         .p(classes: "center bold", ["Welcome to Swift Talk!"]),
-        .p(classes: "center", ["You're one step away from signing up as a team member:"]),
+        .p(classes: "center", ["Please confirm to signup as a team member using the button below."]),
     ], buttons: [
-        button(route: .login(continue: .subscription(.teamMember(token: signupToken, terminate: false))), title: "Join As Team Member Now")
+        button(route: .login(continue: .subscription(.teamMember(token: signupToken, terminate: false))), title: "Join as a Team Member Now")
     ])
 }
 
 func teamMemberSubscribe(signupToken: UUID) -> Node {
     return template(content: [
         .p(classes: "center bold", ["Welcome to Swift Talk!"]),
-        .p(classes: "center", ["You're just a few steps away from signing up as a team member:"]),
+        .p(classes: "center", ["You've been invited to sign up for Swift Talk as a team member. Please start by logging in with GitHub."]),
     ], buttons: [
-        button(route: .login(continue: .teamMemberSignup(token: signupToken)), title: "Start By Logging In With GitHub")
+        button(route: .login(continue: .teamMemberSignup(token: signupToken)), title: "Log in with GitHub")
     ])
 }
 
