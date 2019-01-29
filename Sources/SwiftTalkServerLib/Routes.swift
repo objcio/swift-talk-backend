@@ -43,7 +43,7 @@ indirect enum Route: Equatable {
         case upgrade
         case create(couponCode: String?, team: Bool)
         case new(couponCode: String?, team: Bool)
-        case teamMember(token: UUID, terminate: Bool)
+        case registerAsTeamMember(token: UUID, terminate: Bool)
     }
    
     enum Account: Equatable {
@@ -212,10 +212,10 @@ private let subscriptionRoutes2: [Router<Route.Subscription>] = [
         guard case let .new(couponCode, team) = route else { return nil }
         return (couponCode, team)
     }),
-    (.c("team-member") / Router.uuid / Router.booleanQueryParam(name: "terminate")).transform({
-        Route.Subscription.teamMember(token: $0.0, terminate: $0.1)
+    (.c("register_team_member") / Router.uuid / Router.booleanQueryParam(name: "terminate")).transform({
+        Route.Subscription.registerAsTeamMember(token: $0.0, terminate: $0.1)
     }, { route in
-        guard case let .teamMember(token, terminate) = route else { return nil }
+        guard case let .registerAsTeamMember(token, terminate) = route else { return nil }
         return (token, terminate)
     }),
     .c("cancel", .cancel),
@@ -229,8 +229,8 @@ private let subscriptionRoutes2: [Router<Route.Subscription>] = [
 
 private let subscriptionRoutes: [Router<Route>] = [
     .c("subscribe", .subscribe),
-    .c("subscribe-team", .subscribeTeam),
-    .c("team-member-signup") / Router.uuid.transform({ Route.teamMemberSignup(token: $0) }, { route in
+    .c("subscribe_team", .subscribeTeam),
+    .c("team_member_signup") / Router.uuid.transform({ Route.teamMemberSignup(token: $0) }, { route in
         guard case let .teamMemberSignup(token) = route else { return nil }
         return token
     }),

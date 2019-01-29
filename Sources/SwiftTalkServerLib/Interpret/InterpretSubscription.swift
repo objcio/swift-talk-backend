@@ -63,7 +63,7 @@ extension Route.Subscription {
                     }
                 }
             }
-        case let .teamMember(token, terminate):
+        case let .registerAsTeamMember(token, terminate):
             return I.query(Row<UserData>.select(teamToken: token)) { row in
                 guard let teamManager = row else {
                     throw ServerError(privateMessage: "signup token doesn't exist: \(token)", publicMessage: "This signup link is invalid. Please get in touch with your team manager for a new one.")
