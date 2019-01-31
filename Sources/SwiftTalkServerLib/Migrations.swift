@@ -239,16 +239,6 @@ fileprivate let migrations: [String] = [
     $$;
     """,
     """
-    CREATE TABLE IF NOT EXISTS signup_tokens (
-        id uuid DEFAULT public.uuid_generate_v4() PRIMARY KEY,
-        expiration_date timestamp NOT NULL,
-        user_id uuid REFERENCES users
-    )
-    """,
-    """
-    CREATE INDEX IF NOT EXISTS signup_tokens_expiration_date ON signup_tokens (expiration_date)
-    """,
-    """
     ALTER TABLE team_members
         ADD COLUMN IF NOT EXISTS created_at timestamp,
         ADD COLUMN IF NOT EXISTS expired_at timestamp,
@@ -265,7 +255,7 @@ fileprivate let migrations: [String] = [
         DROP CONSTRAINT IF EXISTS team_members_unique
     """,
     """
-    DROP TABLE signup_tokens
+    DROP TABLE IF EXISTS signup_tokens
     """,
     """
     ALTER TABLE users
