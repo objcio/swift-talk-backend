@@ -136,10 +136,9 @@ func renderSubscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node
                         ])
                     ])
                 ]),
-                .div(classes: "ms-1 color-gray-65 text-center pt+", [
+                .div(classes: "ms-1 color-gray-65 lh-110 text-center pt+", [
                     smallPrint([
                         "All prices shown excluding VAT (only applies to EU customers).",
-                        "Subscriptions can be cancelled at any time.",
                     ])
                 ])
             ]),
@@ -175,11 +174,20 @@ func renderSubscribeTeam(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> 
                     ("icon-benefit-manager.svg", "Team Manager Account", "A central account to manage billing and team members"),
                     ("icon-benefit-download.svg", "Download Episodes", "Take Swift Talk with you when you're offline"),
                 ]),
-                .div(classes: "ms-1 color-gray-65 text-center center pt+ max-width-8", [
+                Node.ul(classes: "text-center max-width-7 center pv+", [
+                    .div(classes: "mb+", [
+                        .h3(classes: "bold color-blue ms1 mt-- mb-", ["Enterprise Subscriptions"]),
+                        .p(classes: "color-gray-50 lh-125", [
+                            "Please ",
+                            Node.link(to: URL(string: "mailto:\(email)")!, classes: "no-decoration color-blue", ["get in touch"]),
+                            " for teams with more than 30 members."
+                            ])
+                        ])
+                    ]),
+                .div(classes: "ms-1 color-gray-65 lh-110 text-center center pt+ max-width-8", [
                     smallPrint([
                         .span([.raw("<sup>*</sup>"), .text("Prices apply from the 2nd team member. The first team member is included in the subscription base price, $\(monthly.discountedPrice(coupon: coupon).pretty)/month or $\(yearly.discountedPrice(coupon: coupon).pretty)/year")]),
                         "All prices shown excluding VAT (only applies to EU customers).",
-                        "Subscriptions can be cancelled at any time.",
                     ])
                 ])
             ]),
