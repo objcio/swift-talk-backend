@@ -11,7 +11,7 @@ import Foundation
 let subscriptionBenefits: [(icon: String, name: String, description: String)] = [
     ("icon-benefit-unlock.svg", "Watch All Episodes", "A new episode every week"),
     ("icon-benefit-download.svg", "Download Episodes", "Take Swift Talk with you when you're offline"),
-    ("icon-benefit-support.svg", "Support Us", "Ensure the continuous production of new episodes"),
+    ("icon-benefit-support.svg", "Support Us", "With your help we can keep producing new episodes"),
 ]
 
 
@@ -129,10 +129,12 @@ func renderSubscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node
                         .inlineSvg(path: "icon-benefit-team.svg", classes: "svg-fill-current")
                     ]),
                     .div(classes: "mb+", [
-                        .h3(classes: "bold color-blue mt- mb---", ["Looking for a subscription for your whole team?"]),
-                        .p(classes: "color-gray-50 lh-125", ["Our team subscription offers a 30% discount and comes with a separate team manager account to manage billing and access."])
-                    ]),
-                    continueLink(to: .subscribeTeam, title: "Explore Team Subscriptions")
+                        .link(to: .subscribeTeam, classes: "no-decoration", [.h3(classes: "bold color-blue ms3 mt-- mb-", ["Team Subscriptions"])]),
+                        .p(classes: "color-gray-50 lh-125", [
+                            "Our team subscription includes a 30% discount and comes with a central account that lets you manage billing and access for your entire team.",
+                            Node.link(to: .subscribeTeam, classes: "no-decoration color-blue", ["Learn more..."])
+                        ])
+                    ])
                 ]),
                 .div(classes: "ms-1 color-gray-65 text-center pt+", [
                     smallPrint([

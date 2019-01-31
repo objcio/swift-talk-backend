@@ -421,7 +421,7 @@ func teamMembersView(teamMembers: [Row<UserData>], signupLink: URL) -> Node {
             .div(classes: "block radius-full ms-2 width-2 mr", [
                 Node.img(src: avatarURL, classes: "block radius-full ms-2 width-2 mr")
             ]),
-            .div(classes: "cols flex-grow " + (deleteRoute == nil ? "bold" : ""), [
+            .div(classes: "cols flex-grow" + (deleteRoute == nil ? "bold" : ""), [
                 .div(classes: "col width-1/3", [.text(name)]),
                 .div(classes: "col width-1/3", [.text(email)]),
                 .div(classes: "col width-1/3", [.text(githubLogin)]),
@@ -446,10 +446,10 @@ func teamMembersView(teamMembers: [Row<UserData>], signupLink: URL) -> Node {
         Node.div(classes: "stack++", [
             Node.div([
                 heading("Add Team Members"),
-                .div(classes: "c-text", [
-                    .p(["Team members cost $10/month or $100/year (excl. VAT), depending on your subscription."]),
-                    .p(["Please send the following link to your team members for signup:"]),
-                    .div(classes: "type-mono ms-1 mt", [.text(signupLink.absoluteString)]),
+                .div(classes: "color-gray-25 lh-110", [
+                    .p(["To add team members, please send them the following link for signup:"]),
+                    .div(classes: "type-mono ms-1 mv", [.text(signupLink.absoluteString)]),
+                    .p(classes: "color-gray-50 ms-1", ["Team members cost $10/month or $100/year (excl. VAT), depending on your subscription."]),
                     .button(to: .account(.invalidateTeamToken), ["Generate New Signup Link"], classes: "button mt+", confirm: "WARNING: This will invalidate the current signup link. Do you want to proceed?"),
                 ])
             ]),
