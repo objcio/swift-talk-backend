@@ -58,14 +58,16 @@ extension Route {
                     throw ServerError(privateMessage: "signup token doesn't exist: \(token)", publicMessage: "This signup link is invalid. Please get in touch with your team manager for a new one.")
                 }
                 return I.withSession { session in
-                    if session?.selfPremiumAccess == true {
-                        return I.write(teamMemberSubscribeForSelfSubscribed(signupToken: token))
-                    } else if session?.gifterPremiumAccess == true {
-                        return I.write(teamMemberSubscribeForGiftSubscriber(signupToken: token))
-                    } else if session?.isTeamMemberOf(teamManager) == true {
-                        return I.write(teamMemberSubscribeForAlreadyPartOfThisTeam())
-                    } else if let user = session?.user {
-                        return I.write(teamMemberSubscribeForSignedIn(signupToken: token))
+                    if let s = session {
+                        if s.user.id == teamManager.id && s.selfPremiumAccess {
+                            return I.write(teamMemberSubscribeForAlreadyPartOfThisTeam())
+                        } else if s.selfPremiumAccess {
+                            return I.write(teamMemberSubscribeForSelfSubscribed(signupToken: token))
+                        } else if s.isTeamMemberOf(teamManager) {
+                            return I.write(teamMemberSubscribeForAlreadyPartOfThisTeam())
+                        } else {
+                            return I.write(teamMemberSubscribeForSignedIn(signupToken: token))
+                        }
                     } else {
                         return I.write(teamMemberSubscribe(signupToken: token))
                     }
