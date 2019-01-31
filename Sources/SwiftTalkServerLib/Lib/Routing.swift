@@ -156,7 +156,7 @@ extension Router where A == String {
             } ?? [])
         }, description: .parameter("string?"))
     }
-
+    
     static func queryParam(name: String) -> Router<String> {
         return Router<String>(parse: { req in
             guard let x = req.query[name] else { return nil }
@@ -175,6 +175,10 @@ extension Router where A == String {
         }, print: { (str: String?) in
             return Endpoint(path: [], query: str == nil ? [:] : [name: str!])
         }, description: .queryParameter(name))
+    }
+    
+    static func booleanQueryParam(name: String) -> Router<Bool> {
+        return queryParam(name: name).transform({ $0 == "1" }, { $0 ? "1" : "0" })
     }
 }
 

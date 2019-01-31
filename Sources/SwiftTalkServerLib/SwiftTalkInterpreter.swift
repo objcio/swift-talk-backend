@@ -58,12 +58,11 @@ protocol HasSession {
 import PostgreSQL
 protocol HasDatabase {
     static func execute<A>(_ query: Query<A>, _ cont: @escaping (Either<A, Error>) -> Self) -> Self
-    @available(*, deprecated) static func withConnection(_ cont: @escaping (Either<PostgreSQL.Connection, Error>) -> Self) -> Self
 }
 
 protocol CanQuery {
     func execute<A>(_ query: Query<A>) -> Either<A, Error>
-    @available(*, deprecated) func getConnection() -> Either<PostgreSQL.Connection, Error>
+    @available(*, deprecated) func getConnection() -> Either<ConnectionProtocol, Error>
 
 }
 
@@ -76,7 +75,7 @@ extension RequestEnvironment: CanQuery {
         }
     }
     
-    func getConnection() -> Either<Connection, Error> {
+    func getConnection() -> Either<ConnectionProtocol, Error> {
         do { return try .left(connection()) }
         catch { return .right(error) }
     }
@@ -88,13 +87,6 @@ extension Reader: HasDatabase where Value: CanQuery {
             return cont(env.execute(query)).run(env)
         }
     }
-    
-    static func withConnection(_ cont: @escaping (Either<Connection, Error>) -> Reader<Value, Result>) -> Reader<Value, Result> {
-        return Reader { env in
-            return cont(env.getConnection()).run(env)
-        }
-    }
-    
 }
 
 extension SwiftTalkInterpreter where Self: HTML, Self: HasDatabase {
@@ -109,24 +101,21 @@ extension SwiftTalkInterpreter where Self: HTML, Self: HasDatabase {
         }
     }
     
-    static func execute<A>(_ query: Query<A>, _ cont: @escaping (Either<A, Error>) throws -> Self) -> Self {
+    static func query<A>(_ q: Query<A>?, or: @autoclosure () -> A, _ cont: @escaping (A) -> Self) -> Self {
+        if let x = q {
+            return query(x, cont)
+        } else {
+            return cont(or())
+        }
+    }
+    
+    static func queryWithError<A>(_ query: Query<A>, _ cont: @escaping (Either<A, Error>) throws -> Self) -> Self {
         return Self.execute(query) { (result: Either<A, Error>) in
             catchAndDisplayError {
                 return try cont(result)
             }
         }
 
-    }
-    
-    @available(*, deprecated) static func withConnection(_ cont: @escaping (Connection) throws -> Self) -> Self {
-        return Self.withConnection { (result: Either<Connection,Error>) in
-            catchAndDisplayError {
-                switch result {
-                case .left(let c): return try cont(c)
-                case .right(let e): throw e
-                }
-            }
-        }
     }
 }
 

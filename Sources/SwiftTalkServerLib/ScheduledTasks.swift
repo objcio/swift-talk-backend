@@ -114,35 +114,33 @@ extension Task {
         return schedule(at: date)
     }
     
-    func interpret(_ c: Lazy<Connection>, onCompletion: @escaping (Bool) -> ()) throws {
+    func interpret(_ c: Lazy<ConnectionProtocol>, onCompletion: @escaping (Bool) -> ()) throws {
         switch self {
         case .syncTeamMembersWithRecurly(let userId):
             guard let user = try c.get().execute(Row<UserData>.select(userId)) else { onCompletion(true); return }
             let teamMembers = try c.get().execute(user.teamMembers)
-            URLSession.shared.load(user.currentSubscription).flatMap { (sub: Subscription??) -> Promise<Subscription?> in
-                guard let su = sub, let s = su else { return Promise { $0(nil) } }
-                return URLSession.shared.load(recurly.updateSubscription(s, numberOfTeamMembers: teamMembers.count))
-            }.run { sub in
-                onCompletion(sub?.subscription_add_ons?.first?.quantity == teamMembers.count)
+            let memberCount = user.data.role == .teamManager ? teamMembers.count - 1 : teamMembers.count
+            globals.urlSession.load(user.updateCurrentSubscription(numberOfTeamMembers: memberCount)) { sub in
+                onCompletion((sub?.subscription_add_ons?.first?.quantity) ?? 0 == memberCount)
             }
         
         case .releaseEpisode(let number):
             guard let ep = Episode.all.first(where: { $0.number == number }) else { onCompletion(true); return }
-            let sendCampaign: Promise<Bool> = URLSession.shared.load(mailchimp.createCampaign(for: ep)).flatMap { campaignId in
+            let sendCampaign: Promise<Bool> = globals.urlSession.load(mailchimp.createCampaign(for: ep)).flatMap { campaignId in
                 guard let id = campaignId else { return Promise { $0(false) } }
-                return URLSession.shared.load(mailchimp.addContent(for: ep, toCampaign: id)).flatMap { _ in
+                return globals.urlSession.load(mailchimp.addContent(for: ep, toCampaign: id)).flatMap { _ in
                     if env.production {
-                        return URLSession.shared.load(mailchimp.sendCampaign(campaignId: id)).map { $0 != nil }
+                        return globals.urlSession.load(mailchimp.sendCampaign(campaignId: id)).map { $0 != nil }
                     } else {
-                        return URLSession.shared.load(mailchimp.testCampaign(campaignId: id)).map { $0 != nil }
+                        return globals.urlSession.load(mailchimp.testCampaign(campaignId: id)).map { $0 != nil }
                     }
                 }
             }
 
-            URLSession.shared.load(github.changeVisibility(private: false, of: ep.id.rawValue)).flatMap { _ in
-                URLSession.shared.load(circle.triggerMainSiteBuild)
+            globals.urlSession.load(github.changeVisibility(private: false, of: ep.id.rawValue)).flatMap { _ in
+                globals.urlSession.load(circle.triggerMainSiteBuild)
             }.flatMap { _ in
-                URLSession.shared.load(mailchimp.existsCampaign(for: ep))
+                globals.urlSession.load(mailchimp.existsCampaign(for: ep))
             }.flatMap { campaignExists in
                 return campaignExists == false ? sendCampaign : Promise { $0(false) }
             }.run { success in
@@ -152,13 +150,13 @@ extension Task {
         case .unfinishedSubscriptionReminder(let userId):
             guard let user = try c.get().execute(Row<UserData>.select(userId)), !user.data.subscriber else { onCompletion(true); return }
             let ep = sendgrid.send(to: user.data.email, name: user.data.name, subject: "Your Swift Talk Registration", text: unfinishedSubscriptionReminderText)
-            URLSession.shared.load(ep) { onCompletion($0 != nil)}
+            globals.urlSession.load(ep) { onCompletion($0 != nil)}
         }
     }
 }
 
 extension Row where Element == TaskData {
-    func process(_ c: Lazy<Connection>, onCompletion: @escaping (Bool) -> ()) throws {
+    func process(_ c: Lazy<ConnectionProtocol>, onCompletion: @escaping (Bool) -> ()) throws {
         let task = try JSONDecoder().decode(Task.self, from: self.data.json.data(using: .utf8)!)
         try task.interpret(c) { success in
             if success {

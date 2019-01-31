@@ -15,8 +15,8 @@ func accountContainer(content: Node, forRoute: Route) -> Node {
             (Route.account(.profile), title: "Profile"),
             (Route.account(.billing), title: "Billing"),
             (Route.account(.logout), title: "Logout"),
-            ]
-        if context.session?.selfPremiumAccess == true {
+        ]
+        if context.session?.selfPremiumAccess == true || context.session?.user.data.role == .teamManager {
             items.insert((Route.account(.teamMembers), title: "Team Members"), at: 2)
         }
         return .div(classes: "container pb0", [
@@ -164,15 +164,8 @@ extension Subscription.State {
 
 
 extension Subscription.Upgrade {
-    func pretty(csrf: CSRFToken) -> [Node] {
-        let priceBreakdown: String
-        if let v = vat_in_cents {
-            let vatText = " + \(dollarAmount(cents: v)) VAT"
-            let subTotal = dollarAmount(cents: total_without_vat)
-            priceBreakdown = " (\(subTotal)\(vatText))"
-        } else {
-            priceBreakdown = ""
-        }
+    func pretty() -> [Node] {
+        let vat = vat_in_cents == 0 ? "" : " (including \(dollarAmount(cents: vat_in_cents)) VAT)"
         let teamMemberText: String
         if team_members == 1 {
             teamMemberText = ". This includes your team member"
@@ -183,13 +176,13 @@ extension Subscription.Upgrade {
         }
         return [
                 .p([.text("Upgrade to the \(plan.name) plan.")]),
-                .p([.text(
+                .p(classes: "lh-110", [.text(
                     "Your new plan will cost \(dollarAmount(cents: total_in_cents)) \(plan.prettyInterval)" +
-                        priceBreakdown +
+                        vat +
                         teamMemberText +
                     ". You'll be charged immediately, and credited for the remainder of the current billing period."
                     )]),
-                button(to: .subscription(.upgrade), csrf: csrf, text: "Upgrade Subscription", classes: "color-invalid")
+                button(to: .subscription(.upgrade), text: "Upgrade Subscription", classes: "color-invalid")
             ]
     }
 }
@@ -210,6 +203,7 @@ struct PaymentViewData: Codable {
     var action: String
     var public_key: String
     var buttonText: String
+    var vat_number: String?
     struct Coupon: Codable { }
     var payment_errors: [String] // TODO verify type
     var method: HTTPMethod = .post
@@ -229,6 +223,7 @@ struct PaymentViewData: Codable {
         phone = billingInfo.phone
         year = billingInfo.year
         month = billingInfo.month
+        vat_number = billingInfo.vat_number
         self.action = action
         self.public_key = publicKey
         self.buttonText = buttonText
@@ -260,32 +255,32 @@ extension BillingInfo {
         return "\(first_six.first!)*** **** **** \(last_four)"
     }
     var show: [Node] {
+        func item(key: String, value v: String, classes: Class? = nil) -> Node {
+            return Node.li(classes: "flex", [
+                label(text: key),
+                value(text: v)
+            ])
+        }
         return [
-            heading("Payment Method"),
+            heading("Billing Info"),
             Node.div([
                 Node.ul(classes: "stack- mb", [
-                    Node.li(classes: "flex", [
-                        label(text: "Type"),
-                        value(text: self.card_type)
-                    ]),
-                    Node.li(classes: "flex", [
-                        label(text: "Number"),
-                        value(text: cardMask, classes: "type-mono")
-                    ]),
-                    Node.li(classes: "flex", [
-                        label(text: "Expiry"),
-                        value(text: "\(month)/\(year)")
-                        ]),
+                    item(key: "Type", value: card_type),
+                    item(key: "Number", value: cardMask, classes: .some("type-mono")) as Node,
+                    item(key: "Expiry", value: "\(month)/\(year)") as Node,
+                    vat_number?.nonEmpty.map { num in
+                        item(key: "VAT Number", value: num)
+                    } ?? .none
                 ])
             ]),
-            Node.link(to: .account(.updatePayment), classes: "color-blue no-decoration border-bottom border-1 hover-color-black bold", [.text("Update Payment Method")])
+            Node.link(to: .account(.updatePayment), classes: "color-blue no-decoration border-bottom border-1 hover-color-black bold", [.text("Update Billing Info")])
         ]
     }
 }
 
-fileprivate func button(to route: Route, csrf: CSRFToken, text: String, classes: Class = "") -> Node {
+fileprivate func button(to route: Route, text: String, classes: Class = "") -> Node {
     return Node.withCSRF { csrf in
-    	Node.button(to: route, [.text(text)], classes: "bold reset-button border-bottom border-1 hover-color-black" + classes)
+    	return Node.button(to: route, [.text(text)], classes: "bold reset-button border-bottom border-1 hover-color-black" + classes)
     }
 }
 
@@ -297,111 +292,114 @@ fileprivate func value(text: String, classes: Class = "") -> Node {
     return Node.span(classes: "flex-auto color-gray-30" + classes, [.text(text)])
 }
 
-func billingLayout(content: [Node]) -> Node {
+func billingLayout(_ content: [Node]) -> Node {
     return LayoutConfig(contents: [
         accountHeader,
         accountContainer(content: Node.div(classes: "stack++", content), forRoute: .account(.billing))
     ]).layout
 }
 
-func teamMemberBilling() -> Node {
-    return billingLayout(content: [
+func teamMemberBillingContent() -> [Node] {
+    return [
         .withContext { context in
-            Node.div(classes: "c-text", [
-                heading("Billing"),
-                Node.p([.text("You have a team member account, which doesn't have its own billing details. To manage billing details and to download invoices, please contact the person managing the organization account with the GitHub handle \"\(context.session?.masterTeamUser?.data.githubLogin ?? "<unknown>")\".")])
+            .div([
+                heading("Subscription"),
+                .p(classes: "lh-110", [.text("You have a team member account, which doesn't have its own billing info.")])
             ])
         }
-    ])
+    ]
 }
 
-func gifteeBilling() -> Node {
-    return billingLayout(content: [
-        Node.div(classes: "c-text", [
-            heading("Billing"),
-            Node.p([.text("You currently have an active gift subscription, which doesn't have its own billing details.")])
-        ])
-    ])
-}
-
-func unsubscribedBilling() -> Node {
-    return billingLayout(content: [
-        Node.div(classes: "c-text", [
-            heading("Billing"),
-            Node.p([.text("You haven't subscribed yet. Please use the Subscribe button in the upper right to start your Swift Talk subscription.")])
-        ])
-    ])
-}
-
-func billingView(user: Row<UserData>, subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo, redemptions: [(Redemption, Coupon)]) -> Node {
-    return Node.withContext { context in
-        let subscriptionInfo: [Node] = subscription.map { (x) -> [Node] in
-            let (sub, addOn) = x
-            return [
+func gifteeBillingContent() -> [Node] {
+    return [
+        .div([
             heading("Subscription"),
-            Node.div([
-                Node.ul(classes: "stack- mb", [
-                    Node.li(classes: "flex", [
-                        label(text: "Plan"),
-                        value(text: sub.plan.name)
-                    ]),
-                    Node.li(classes: "flex", [
-                        label(text: "State"),
-                        value(text: sub.state.pretty)
-                    ]),
-                    sub.trial_ends_at.map { trialEndDate in
-                        Node.li(classes: "flex", [
-                            label(text: "Trial Ends At"),
-                            value(text: DateFormatter.fullPretty.string(from: trialEndDate))
-                        ])
-                    } ?? Node.none,
-                    sub.state == .active ? Node.li(classes: "flex", [
-                        label(text: "Next Billing"),
-                        Node.div(classes: "flex-auto color-gray-30 stack-", [
-                            Node.p([
-                                Node.text(dollarAmount(cents: sub.totalAtRenewal(addOn: addOn))),
-                                Node.text(" on "),
-                                .text(sub.current_period_ends_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "n/a"),
-                            ]),
-                            redemptions.isEmpty ? .none : Node.p(classes: " input-note mt-",
-                                [Node.span(classes: "bold", [.text("Note:")])] + redemptions.map { x in
-                                 let (redemption, coupon) = x
-                                let start = DateFormatter.fullPretty.string(from: redemption.created_at)
-                                 return Node.text("Due to a technical limation, the displayed price does not take your active coupon (\(coupon.billingDescription), started at \(start)) into account.")
-                                }
-                            ),
-                            button(to: .subscription(.cancel), csrf: user.data.csrf, text: "Cancel Subscription", classes: "color-invalid")
-                        ])
-                    ]) : .none,
-                    sub.upgrade.map { upgrade in
-                            Node.li(classes: "flex", [
-                                label(text: "Upgrade"),
-                                Node.div(classes: "flex-auto color-gray-30 stack--", upgrade.pretty(csrf: user.data.csrf))
-                            ])
-                        } ?? .none,
+            .p(classes: "lh-110", [.text("You currently have an active gift subscription, which doesn't have its own billing info.")])
+        ])
+    ]
+}
 
-                    sub.state == .canceled ? Node.li(classes: "flex", [
-                        label(text: "Expires on"),
-                        Node.div(classes: "flex-auto color-gray-30 stack-", [
-                            .text(sub.expires_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "<unknown date>"),
-                            button(to: .subscription(.reactivate), csrf: user.data.csrf, text: "Reactivate Subscription", classes: "color-invalid")
+func unsubscribedBillingContent() -> [Node] {
+    return [
+        Node.div([
+            heading("Subscription"),
+            Node.p(classes: "mb", [.text("You don't have an active subscription.")]),
+            Node.link(to: .subscribe, classes: "c-button", [.text("Become a Subscriber")])
+        ])
+    ]
+}
+
+func billingView(subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo, redemptions: [(Redemption, Coupon)]) -> Node {
+    return Node.withContext { context in
+        guard let session = context.session else { return billingLayout(unsubscribedBillingContent()) }
+        let user = session.user
+        let subscriptionInfo: [Node]
+        if let (sub, addOn) = subscription {
+            let (total, vat) = sub.totalAtRenewal(addOn: addOn, vatExempt: billingInfo.vatExempt)
+            subscriptionInfo = [
+                Node.div([
+                    heading("Subscription"),
+                    Node.div([
+                        Node.ul(classes: "stack- mb", [
+                            Node.li(classes: "flex", [
+                                label(text: "Plan"),
+                                value(text: sub.plan.name)
+                            ]),
+                            Node.li(classes: "flex", [
+                                label(text: "State"),
+                                value(text: sub.state.pretty)
+                            ]),
+                            sub.trial_ends_at.map { trialEndDate in
+                                Node.li(classes: "flex", [
+                                    label(text: "Trial Ends At"),
+                                    value(text: DateFormatter.fullPretty.string(from: trialEndDate))
+                                ])
+                            } ?? Node.none,
+                            sub.state == .active ? Node.li(classes: "flex", [
+                                label(text: "Next Billing"),
+                                Node.div(classes: "flex-auto color-gray-30 stack-", [
+                                    Node.p([
+                                        Node.text(dollarAmount(cents: total)),
+                                        vat == 0 ? .none : Node.text(" (including \(dollarAmount(cents: vat)) VAT)"),
+                                        Node.text(" on "),
+                                        .text(sub.current_period_ends_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "n/a"),
+                                    ]),
+                                    redemptions.isEmpty ? .none : Node.p(classes: " input-note mt-", [
+                                        Node.span(classes: "bold", [.text("Note:")])
+                                    ] + redemptions.map { x in
+                                        let (redemption, coupon) = x
+                                        let start = DateFormatter.fullPretty.string(from: redemption.created_at)
+                                        return Node.text("Due to a technical limation, the displayed price does not take your active coupon (\(coupon.billingDescription), started at \(start)) into account.")
+                                    }),
+                                    button(to: .subscription(.cancel), text: "Cancel Subscription", classes: "color-invalid")
+                                ])
+                            ]) : .none,
+                            sub.upgrade(vatExempt: billingInfo.vatExempt).map { upgrade in
+                                Node.li(classes: "flex", [
+                                    label(text: "Upgrade"),
+                                    Node.div(classes: "flex-auto color-gray-30 stack--", upgrade.pretty())
+                                ])
+                            } ?? .none,
+                            sub.state == .canceled ? Node.li(classes: "flex", [
+                                label(text: "Expires on"),
+                                Node.div(classes: "flex-auto color-gray-30 stack-", [
+                                    .text(sub.expires_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "<unknown date>"),
+                                    button(to: .subscription(.reactivate), text: "Reactivate Subscription", classes: "color-invalid")
+                                ])
+                            ]) : .none
                         ])
-                        
-                    ]) : .none
-                ])
-            ])
-        ]} ?? (context.session?.activeSubscription == true ? [] : [
-            Node.div(classes: "text-center", [
-                Node.p(classes: "color-gray-30 ms1 mb", [.text("You don't have an active subscription.")]),
-                Node.link(to: .subscribe, classes: "c-button", [.text("Become a Subscriber")])
-            ])
-        ])
-       
-        return billingLayout(content: [
-            Node.div(subscriptionInfo),
-            Node.div(billingInfo.show),
-            Node.div(invoicesView(user: user, invoices: invoices))
-        ])
+                    ])
+                ]),
+                Node.div(billingInfo.show)
+            ]
+        } else if session.gifterPremiumAccess {
+            subscriptionInfo = gifteeBillingContent()
+        } else if session.teamMemberPremiumAccess {
+            subscriptionInfo = teamMemberBillingContent()
+        } else {
+            subscriptionInfo = context.session?.activeSubscription == true ? [] : unsubscribedBillingContent()
+        }
+        return billingLayout(subscriptionInfo + [Node.div(invoicesView(user: user, invoices: invoices))])
     }
 }
 
@@ -417,41 +415,43 @@ func accountForm() -> Form<ProfileFormData> {
 }
 
 
-struct TeamMemberFormData {
-    var githubUsername: String
-}
-
-func addTeamMemberForm() -> Form<TeamMemberFormData> {
-    return Form<TeamMemberFormData>(parse: { dict in
-        guard let username = dict["github_username"] else { return nil }
-        return TeamMemberFormData(githubUsername: username)
-    }, render: { data, errors in
-        let form = FormView(fields: [
-            .text(id: "github_username", title: "Github Username", value: data.githubUsername, note: "Your new team member won’t be notified, as we don’t have their email address yet."),
-            ], submitTitle: "Add Team Member", submitNote: "Team members cost $10/month or $100/year, depending on your subscription. All prices excluding VAT.", action: .account(.teamMembers), errors: errors)
-        return .div(form.renderStacked())
-    })
-}
-
-func teamMembersView(addForm: Node, teamMembers: [Row<UserData>]) -> Node {
-    let currentTeamMembers = teamMembers.isEmpty ? Node.p([.raw("No team members added yet.")]) : Node.div(teamMembers.compactMap { tm in
-        guard let githubLogin = tm.data.githubLogin else { return nil }
-        return .div(classes: "flex items-center pv- border-top border-1 border-color-gray-90", [
+func teamMembersView(teamMembers: [Row<UserData>], signupLink: URL) -> Node {
+    func row(avatarURL: String, name: String, email: String, githubLogin: String, deleteRoute: Route?) -> Node {
+        return Node.div(classes: "flex items-center pv- border-top border-1 border-color-gray-90", [
             .div(classes: "block radius-full ms-2 width-2 mr", [
-                .img(src: tm.data.avatarURL, classes: "block radius-full ms-2 width-2 mr")
+                Node.img(src: avatarURL, classes: "block radius-full ms-2 width-2 mr")
             ]),
-            .div(classes: "flex-grow type-mono", [
-                .link(to: URL(string: "https://github.com/\(githubLogin)")!, classes: "color-gray-30 no-decoration hover-color-blue", [.text(githubLogin)])
+            .div(classes: "cols flex-grow" + (deleteRoute == nil ? "bold" : ""), [
+                .div(classes: "col width-1/3", [.text(name)]),
+                .div(classes: "col width-1/3", [.text(email)]),
+                .div(classes: "col width-1/3", [.text(githubLogin)]),
             ]),
-            Node.button(to: .account(.deleteTeamMember(tm.id)), [.raw("&times;")], classes: "button-input ms-1")
+            .div(classes: "block width-2", [
+                deleteRoute.map { Node.button(to: $0, [.raw("&times;")], classes: "button-input ms-1", confirm: "Are you sure to delete this team member?") } ?? ""
+            ]),
         ])
-    })
+    }
+    let currentTeamMembers: Node
+    if teamMembers.isEmpty {
+        currentTeamMembers = Node.p(classes: "c-text", ["No team members added yet."])
+    } else {
+        let headerRow = row(avatarURL: "", name: "Name", email: "Email", githubLogin: "Github Handle", deleteRoute: nil)
+        currentTeamMembers = Node.div([headerRow] + teamMembers.compactMap { tm in
+            guard let githubLogin = tm.data.githubLogin else { return nil }
+            return row(avatarURL: tm.data.avatarURL, name: tm.data.name, email: tm.data.email, githubLogin: githubLogin, deleteRoute: .account(.deleteTeamMember(tm.id)))
+        })
+    }
     
     let content: [Node] = [
         Node.div(classes: "stack++", [
             Node.div([
-                heading("Add Team Member"),
-                addForm,
+                heading("Add Team Members"),
+                .div(classes: "color-gray-25 lh-110", [
+                    .p(["To add team members, please send them the following link for signup:"]),
+                    .div(classes: "type-mono ms-1 mv", [.text(signupLink.absoluteString)]),
+                    .p(classes: "color-gray-50 ms-1", ["Team members cost $10/month or $100/year (excl. VAT), depending on your subscription."]),
+                    .button(to: .account(.invalidateTeamToken), ["Generate New Signup Link"], classes: "button mt+", confirm: "WARNING: This will invalidate the current signup link. Do you want to proceed?"),
+                ])
             ]),
             Node.div([
                 heading("Current Team Members"),

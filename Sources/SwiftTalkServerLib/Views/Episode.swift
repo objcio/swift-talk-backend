@@ -120,6 +120,7 @@ extension Episode {
 extension Episode {
     enum DownloadStatus {
         case notSubscribed
+        case teamManager
         case reDownload
         case canDownload(creditsLeft: Int)
         case noCredits
@@ -134,6 +135,8 @@ extension Episode {
             switch self {
             case .notSubscribed:
                 return "Become a subscriber to download episode videos."
+            case .teamManager:
+                return "Add yourself as team member to download episode videos."
             case .reDownload:
                 return "Re-downloading episodes doesn’t use any download credits."
             case let .canDownload(creditsLeft):
@@ -506,13 +509,14 @@ func subscribeBanner() -> Node {
         Node.div(classes: "container", [
             Node.div(classes: "cols relative s-|stack+", [
                 Node.raw("""
-  <div class="col s+|width-1/2 relative">
-    <p class="smallcaps color-orange mb">Unlock Full Access</p>
-    <h2 class="color-white bold ms3">Subscribe to Swift Talk</h2>
-  </div>
-"""),
+                    <div class="col s+|width-1/2 relative">
+                        <p class="smallcaps color-orange mb">Unlock Full Access</p>
+                        <h2 class="color-white bold ms3">Subscribe to Swift Talk</h2>
+                    </div>
+                    """
+                ),
                 Node.div(classes: "col s+|width-1/2", [
-                    Node.ul(attributes: ["class": "stack+ lh-110"], benefits.map { b in
+                    Node.ul(attributes: ["class": "stack+ lh-110"], subscriptionBenefits.map { b in
                         Node.li([
                             Node.div(classes: "flag", [
                                 Node.div(classes: "flag__image pr color-orange", [
@@ -521,16 +525,16 @@ func subscribeBanner() -> Node {
                                 Node.div(classes: "flag__body", [
                                     Node.h3(attributes: ["class": "bold color-white mb---"], [Node.text(b.name)]),
                                     Node.p(attributes: ["class": "color-blue-darkest lh-125"], [Node.text(b.description)])
-                                    ])
                                 ])
                             ])
+                        ])
                     })
-                    ]),
+                ]),
                 Node.div(classes: "s+|absolute s+|position-sw col s+|width-1/2", [
                     Node.link(to: .subscribe, attributes: ["class": "c-button"], [.raw("Pricing &amp; Sign Up")])
-                    ])
                 ])
             ])
         ])
+    ])
 }
 

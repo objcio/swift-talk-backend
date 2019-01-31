@@ -57,7 +57,7 @@ fileprivate let plansSource: Static<[Plan]> = Static(async: { cb in
     let jsonName = "plans.json"
     let initial: [Plan] = loadStaticData(name: jsonName)
     cb(initial)
-    URLSession.shared.load(recurly.plans) { value in
+    globals.urlSession.load(recurly.plans) { value in
         cb(value)
         guard let v = value else { log(error: "Could not load plans from Recurly"); return }
         cacheStaticData(v, name: jsonName)

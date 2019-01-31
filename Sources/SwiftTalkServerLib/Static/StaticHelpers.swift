@@ -46,7 +46,7 @@ func cacheStaticData<A: Codable>(_ data: A, name: String) {
 }
 
 fileprivate func refreshStaticData<A: StaticLoadable>(_ endpoint: RemoteEndpoint<[A]>, onCompletion: @escaping () -> ()) {
-    URLSession.shared.load(endpoint) { result in
+    globals.urlSession.load(endpoint) { result in
         tryOrLog { try withConnection { connection in
             guard let r = result else { log(error: "Failed loading static data \(A.jsonName)"); return }
             cacheStaticData(r, name: A.jsonName)
@@ -91,7 +91,7 @@ func queryTranscriptsHelper(fast: Bool = false) -> [Transcript] {
 }
 
 func refreshTranscripts(onCompletion: @escaping () -> ()) {
-    URLSession.shared.load(github.transcripts) { results in
+    globals.urlSession.load(github.transcripts) { results in
         guard let transcripts = results else { log(error: "Failed to load transcripts"); return }
         tryOrLog { try withConnection { connection in
             for t in transcripts {

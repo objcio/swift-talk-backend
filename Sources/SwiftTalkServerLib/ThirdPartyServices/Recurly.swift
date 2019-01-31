@@ -72,11 +72,11 @@ extension Plan {
     static var yearly: Plan? {
         return all.first { $0.isYearly && $0.isStandardPlan }
     }
-    
+
     static var gifts: [Plan] {
         return all.filter { $0.isGiftPlan }.sorted { $0.sortDuration < $1.sortDuration } // TODO
     }
-    
+
     var isStandardPlan: Bool {
         return !isGiftPlan
     }
@@ -88,22 +88,22 @@ extension Plan {
     var isMonthly: Bool {
         return plan_interval_unit == .months && plan_interval_length == 1
     }
-    
+
     var isYearly: Bool {
         return plan_interval_unit == .months && plan_interval_length == 12
     }
-    
-    var teamMemberPrice: Int? {
+
+    var teamMemberPrice: Amount {
         // todo think of a good way to load this from recurly
-        return isMonthly ? 1000 : isYearly ? 10000 : nil
+        return isMonthly ? 1000 : 10000
     }
 
     var teamMemberAddOn: RemoteEndpoint<AddOn> {
         return recurly.teamMemberAddOn(plan_code: plan_code)
     }
-
-    func discountedPrice(coupon: Coupon?) -> Amount {
-        let base = unit_amount_in_cents
+    
+    func discountedPrice(basePrice: KeyPath<Plan, Amount>, coupon: Coupon?) -> Amount {
+        let base = self[keyPath: basePrice]
         guard let c = coupon else { return base }
         guard c.applies_to_all_plans || c.plan_codes.contains(plan_code) else {
             return base
@@ -116,6 +116,14 @@ extension Plan {
         case .freeTrial: return base // todo?
         default: return base
         }
+    }
+    
+    func discountedTeamMemberPrice(coupon: Coupon?) -> Amount {
+        return discountedPrice(basePrice: \.teamMemberPrice, coupon: coupon)
+    }
+
+    func discountedPrice(coupon: Coupon?) -> Amount {
+        return discountedPrice(basePrice: \.unit_amount_in_cents, coupon: coupon)
     }
 }
 
@@ -164,14 +172,14 @@ extension Date {
         return UInt((years * 12) + months)
     }
 }
+
 extension Subscription {
     var activeMonths: UInt {
         guard let act = activated_at, let end = current_period_ends_at else { return 0 }
-        let toMinusOneDay = Calendar.current.date(byAdding: DateComponents(day: -1), to: end)!
-        return toMinusOneDay.numberOfMonths(since: act)
+        return end.numberOfMonths(since: act)
     }
 
-    func totalAtRenewal(addOn: Plan.AddOn) -> Int {
+    func totalAtRenewal(addOn: Plan.AddOn, vatExempt: Bool) -> (total: Int, vat: Int) {
         let teamMemberPrice: Int
         if let a = subscription_add_ons?.first, a.add_on_code == addOn.add_on_code {
             teamMemberPrice = a.quantity * addOn.unit_amount_in_cents.usdCents
@@ -179,20 +187,24 @@ extension Subscription {
             teamMemberPrice = 0
         }
         let beforeTax = unit_amount_in_cents * quantity + teamMemberPrice
-        if let rate = tax_rate {
-            return beforeTax + Int(Double(beforeTax) * rate)
+        if let rate = tax_rate, !vatExempt {
+            let vat = Int(Double(beforeTax) * rate)
+            return (beforeTax + vat, vat)
         }
-        return beforeTax
+        return (beforeTax, 0)
     }
 
     // Returns nil if there aren't any upgrades.
-    var upgrade: Upgrade? {
-        if state == .active, let m = Plan.monthly, plan.plan_code == m.plan_code, let y = Plan.yearly, let teamMemberPrice = y.teamMemberPrice {
+    func upgrade(vatExempt: Bool) -> Upgrade? {
+        if state == .active, let m = Plan.monthly, plan.plan_code == m.plan_code, let y = Plan.yearly {
             let teamMembers = subscription_add_ons?.first?.quantity ?? 0
-            let totalWithoutVat = y.unit_amount_in_cents.usdCents + (teamMembers * teamMemberPrice)
-            let vat: Int? = tax_rate.map { Int(Double(totalWithoutVat) * $0) }
-            let total = totalWithoutVat + (vat ?? 0)
-            return Upgrade(plan: y, total_without_vat: totalWithoutVat, total_in_cents: total, vat_in_cents: vat, tax_rate: tax_rate, team_members: teamMembers, per_team_member_in_cents: teamMemberPrice)
+            let totalWithoutVat = y.unit_amount_in_cents.usdCents + (teamMembers * y.teamMemberPrice.usdCents)
+            var vat = 0
+            if let rate = tax_rate, !vatExempt {
+                vat = Int(Double(totalWithoutVat) * rate)
+            }
+            let total = totalWithoutVat + vat
+            return Upgrade(plan: y, total_without_vat: totalWithoutVat, total_in_cents: total, vat_in_cents: vat, tax_rate: tax_rate, team_members: teamMembers, per_team_member_in_cents: y.teamMemberPrice.usdCents)
         } else {
             return nil
         }
@@ -202,13 +214,12 @@ extension Subscription {
         let plan: Plan
         let total_without_vat: Int
         let total_in_cents: Int
-        let vat_in_cents: Int?
+        let vat_in_cents: Int
         let tax_rate: Double?
         let team_members: Int
         let per_team_member_in_cents: Int
     }
 }
-
 
 extension Sequence where Element == Subscription {
     var activeMonths: UInt {
@@ -283,6 +294,12 @@ struct BillingInfo: Codable {
     var first_six: String
     var last_four: String
     var updated_at: Date
+}
+
+extension BillingInfo {
+    var vatExempt: Bool {
+        return vat_number != nil && country != "DE"
+    }
 }
 
 struct Invoice: Codable {
@@ -546,8 +563,6 @@ extension Row where Element == UserData {
         return recurly.redemptions(accountId: id.uuidString)
     }
     
-    
-    
     var currentSubscription: RemoteEndpoint<Subscription?> {
         return subscriptions.map { $0.first { $0.state == .active || $0.state == .canceled } }
     }
@@ -558,6 +573,13 @@ extension Row where Element == UserData {
     
     func updateBillingInfo(token: String) -> RemoteEndpoint<RecurlyResult<BillingInfo>> {
         return recurly.updatePaymentMethod(for: id, token: token)
+    }
+    
+    func updateCurrentSubscription(numberOfTeamMembers: Int) -> CombinedEndpoint<Subscription> {
+        return currentSubscription.c.flatMap { sub in
+            guard let s = sub else { return nil }
+            return recurly.updateSubscription(s, numberOfTeamMembers: numberOfTeamMembers).c
+        }
     }
 }
 
@@ -632,6 +654,17 @@ struct Recurly {
         return RemoteEndpoint(xml: .put, url: url, headers: headers)
     }
     
+    enum Refund: String {
+        case full
+        case partial
+        case none
+    }
+    
+    func terminate(_ subscription: Subscription, refund: Refund) -> RemoteEndpoint<RecurlyResult<RecurlyVoid>> {
+        let url = base.appendingPathComponent("subscriptions/\(subscription.uuid)/terminate")
+        return RemoteEndpoint(xml: .put, url: url, headers: headers, query: ["refund": refund.rawValue])
+    }
+    
     func reactivate(_ subscription: Subscription) -> RemoteEndpoint<RecurlyResult<RecurlyVoid>> {
         let url = base.appendingPathComponent("subscriptions/\(subscription.uuid)/reactivate")
         return RemoteEndpoint(xml: .put, url: url, headers: headers)
@@ -664,9 +697,9 @@ struct Recurly {
 
     func subscriptionStatus(for accountId: UUID) -> Promise<(subscriber: Bool, canceled: Bool, downloadCredits: UInt)?> {
         return Promise { cb in
-            URLSession.shared.load(self.account(with: accountId)) { result in
+            globals.urlSession.load(self.account(with: accountId)) { result in
                 guard let acc = result else { cb(nil); return }
-                URLSession.shared.load(recurly.listSubscriptions(accountId: acc.account_code)) { subs in
+                globals.urlSession.load(recurly.listSubscriptions(accountId: acc.account_code)) { subs in
                     let hasActiveSubscription = subs?.contains(where: { $0.state == .active }) ?? false
                     cb((acc.subscriber, canceled: !hasActiveSubscription, (subs?.activeMonths ?? 0) * 4))
                 }

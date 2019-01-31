@@ -10,13 +10,16 @@ import PostgreSQL
 import NIOHTTP1
 
 extension Swift.Collection where Element == Episode {
-    func withProgress(for userId: UUID?, connection: Connection) throws -> [EpisodeWithProgress] {
-        guard let id = userId else { return map { EpisodeWithProgress(episode: $0, progress: nil) } }
-        let progresses = try connection.execute(Row<PlayProgressData>.sortedDesc(for: id)).map { $0.data }
-        return map { episode in
+    func withProgress<I: Interp>(for id: UUID?, _ cont: @escaping ([EpisodeWithProgress]) -> I) -> I {
+        guard let userId = id else { return cont(map { EpisodeWithProgress(episode: $0, progress: nil )}) }
+        
+        return I.query(Row<PlayProgressData>.sortedDesc(for: userId).map { results in
+        	let progresses = results.map { $0.data }
+            return self.map { episode in
             // todo this is (n*m), we should use the fact that `progresses` is sorted!
             EpisodeWithProgress(episode: episode, progress: progresses.first { $0.episodeNumber == episode.number }?.progress)
-        }
+            }
+        }, cont)
     }
 }
 
@@ -43,15 +46,38 @@ extension Route {
             guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
                 throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
             }
-            return I.write(Plan.subscribe(monthly: monthly, yearly: yearly))
+            return I.write(renderSubscribe(monthly: monthly, yearly: yearly))
+        case .subscribeTeam:
+            guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
+                throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
+            }
+            return I.write(renderSubscribeTeam(monthly: monthly, yearly: yearly))
+        case .teamMemberSignup(let token):
+            return I.query(Row<UserData>.select(teamToken: token)) { row in
+                guard let teamManager = row else {
+                    throw ServerError(privateMessage: "signup token doesn't exist: \(token)", publicMessage: "This signup link is invalid. Please get in touch with your team manager for a new one.")
+                }
+                return I.withSession { session in
+                    if session?.selfPremiumAccess == true {
+                        return I.write(teamMemberSubscribeForSelfSubscribed(signupToken: token))
+                    } else if session?.gifterPremiumAccess == true {
+                        return I.write(teamMemberSubscribeForGiftSubscriber(signupToken: token))
+                    } else if session?.isTeamMemberOf(teamManager) == true {
+                        return I.write(teamMemberSubscribeForAlreadyPartOfThisTeam())
+                    } else if let user = session?.user {
+                        return I.write(teamMemberSubscribeForSignedIn(signupToken: token))
+                    } else {
+                        return I.write(teamMemberSubscribe(signupToken: token))
+                    }
+                }
+            }
         case .collection(let name):
             guard let coll = Collection.all.first(where: { $0.id == name }) else {
                 return .write(errorView("No such collection"), status: .notFound)
             }
             return I.withSession { session in
-                I.withConnection { c in
-                    let episodesWithProgress = try coll.episodes(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
-                    return .write(coll.show(episodes: episodesWithProgress))
+                return coll.episodes(for: session?.user.data).withProgress(for: session?.user.id) {
+                    I.write(coll.show(episodes: $0))
                 }
             }
         case .login(let cont):
@@ -97,17 +123,13 @@ extension Route {
 
         case .episodes:
             return I.withSession { session in
-                return I.withConnection { c in
-                    let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
-                    return I.write(index(episodesWithProgress))
-                }
+                let scoped = Episode.all.scoped(for: session?.user.data)
+                return scoped.withProgress(for: session?.user.id,  { I.write(index($0)) })
             }
         case .home:
             return I.withSession { session in
-                return I.withConnection { c in
-                    let episodesWithProgress = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
-                    return .write(renderHome(episodes: episodesWithProgress))
-                }
+                let scoped = Episode.all.scoped(for: session?.user.data)
+                return scoped.withProgress(for: session?.user.id) { .write(renderHome(episodes: $0)) }
             }
         case .sitemap:
             return .write(Route.siteMap)
@@ -119,7 +141,7 @@ extension Route {
                 guard let m = Plan.monthly, let y = Plan.yearly else {
                     throw ServerError(privateMessage: "Plans not loaded", publicMessage: "A small hiccup. Please try again in a little while.")
                 }
-                return I.write(Plan.subscribe(monthly: m, yearly: y, coupon: coupon))
+                return I.write(renderSubscribe(monthly: m, yearly: y, coupon: coupon))
             })
        
         case let .staticFile(path: p):
@@ -145,20 +167,6 @@ extension Route {
                     row.data.downloadCredits = Int(s.downloadCredits)
                     row.data.canceled = s.canceled
                     tryOrLog("Failed to update user \(id) in response to Recurly webhook") { try c.get().execute(row.update()) }
-                    
-                    func update(credits: Int, for users: [Row<UserData>]) {
-                        for user in users {
-                            var u = user
-                            u.data.downloadCredits = row.data.downloadCredits
-                            tryOrLog("Failed to update download credits for associated user \(u.id)") { try c.get().execute(u.update()) }
-                        }
-                    }
-                    if let teamMembers = tryOrLog("Failed to get team members for \(row.id)", { try c.get().execute(row.teamMembers) }) {
-                        update(credits: row.data.downloadCredits, for: teamMembers)
-                    }
-                    if let giftees = tryOrLog("Failed to get gifees for \(row.id)", { try c.get().execute(row.giftees) }) {
-                        update(credits: row.data.downloadCredits, for: giftees)
-                    }
                 }
                 
                 return catchAndDisplayError {
@@ -178,7 +186,7 @@ extension Route {
                                         let duration = plan?.prettyDuration ?? "unknown"
                                         let email = sendgrid.send(to: gift.data.gifteeEmail, name: gift.data.gifteeName, subject: "We have a gift for you...", text: gift.gifteeEmailText(duration: duration))
                                         log(info: "Sending gift email to \(gift.data.gifteeEmail)")
-                                        URLSession.shared.load(email) { result in
+                                        globals.urlSession.load(email) { result in
                                             if result == nil {
                                                 log(error: "Can't send email for gift \(gift)")
                                             }

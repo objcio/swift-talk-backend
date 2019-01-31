@@ -13,7 +13,7 @@ func runMigrations() throws {
         _ = try withConnection { conn in
             for m in migrations {
                 do {
-			try conn.execute(m)
+			_ = try conn.execute(m)
                 } catch {
                     throw DatabaseError(err: error, query: m)
                 }
@@ -237,6 +237,60 @@ fileprivate let migrations: [String] = [
         END IF;
     END
     $$;
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS signup_tokens (
+        id uuid DEFAULT public.uuid_generate_v4() PRIMARY KEY,
+        expiration_date timestamp NOT NULL,
+        user_id uuid REFERENCES users
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS signup_tokens_expiration_date ON signup_tokens (expiration_date)
+    """,
+    """
+    ALTER TABLE team_members
+        ADD COLUMN IF NOT EXISTS created_at timestamp,
+        ADD COLUMN IF NOT EXISTS expired_at timestamp,
+        DROP CONSTRAINT IF EXISTS team_members_user_id_team_member_id_key
+    """,
+    """
+    ALTER TABLE users
+        DROP COLUMN IF EXISTS password,
+        DROP COLUMN IF EXISTS password_reset,
+        DROP COLUMN IF EXISTS username
+    """,
+    """
+    ALTER TABLE team_members
+        DROP CONSTRAINT IF EXISTS team_members_unique
+    """,
+    """
+    DROP TABLE signup_tokens
+    """,
+    """
+    ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS team_token uuid DEFAULT public.uuid_generate_v4() NOT NULL
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS users_team_token_index ON users (team_token)
+    """,
+    // Populate the new created_at field on team_members where it is null.
+    // We take the created_at date from the oldest team manager account the user is associated with.
+    """
+    UPDATE team_members SET created_at=dates.manager_created_at FROM (
+        SELECT tm.team_member_id member_id, min(u.created_at) manager_created_at FROM
+            users u INNER JOIN team_members tm ON u.id=tm.user_id
+            GROUP BY tm.team_member_id
+    ) AS dates WHERE team_members.team_member_id=dates.member_id AND created_at IS NULL
+    """,
+    // Now that created_at on team_members is populated for all old team members, we make it not null and set a default value.
+    """
+    ALTER TABLE team_members
+        ALTER created_at SET DEFAULT LOCALTIMESTAMP,
+        ALTER created_at SET NOT NULL
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS team_members_created_at_index ON team_members (created_at)
     """
 ]
 

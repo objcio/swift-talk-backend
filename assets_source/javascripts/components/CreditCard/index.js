@@ -20,6 +20,7 @@ export default class CreditCard extends Component {
     buttonText: PropTypes.string.isRequired,
     belowButtonText: PropTypes.string,
     onCountryChange: PropTypes.func,
+    onVatChange: PropTypes.func,
     month: PropTypes.number,
     year: PropTypes.number,
     first_name: PropTypes.string,
@@ -30,6 +31,8 @@ export default class CreditCard extends Component {
     city: PropTypes.string,
     state: PropTypes.string,
     zip: PropTypes.string,
+    company: PropTypes.string,
+    vat_number: PropTypes.string,
     children: PropTypes.node,
 	showEmailAndName: PropTypes.bool,
     payment_errors: PropTypes.arrayOf(PropTypes.string)
@@ -124,8 +127,8 @@ export default class CreditCard extends Component {
 
   render () {
     const { month, year, first_name, last_name,
-            country, address1, address2, city, state, zip,
-            onCountryChange, buttonText, loading
+            country, address1, address2, city, state, zip, vat_number, company,
+            onCountryChange, onVatChange, buttonText, loading
           } = this.props
     const { disabled } = this.state
     const errors = this.state.tokenErrors
@@ -242,6 +245,27 @@ export default class CreditCard extends Component {
                      disabled={disabled}
                      onChange={onCountryChange}
                      required />
+          </div>
+        </div>
+        <div className="cols">
+          <div className="col width-1/2">
+            <Input id='company'
+                   label='Company'
+                   ref='vat_number'
+                   error={errors.includes('company')}
+                   defaultValue={company}
+                   disabled={disabled}
+                   />
+          </div>
+          <div className="col width-1/2">
+            <Input id='vat_number'
+                   label='EU VAT ID (if applicable)'
+                   ref='vat_number'
+                   error={errors.includes('vat_number')}
+                   defaultValue={vat_number}
+                   disabled={disabled}
+		           onChange={onVatChange}
+                   />
           </div>
         </div>
       </div>

@@ -30,7 +30,8 @@ export default class NewSubscription extends Component {
 
   state = {
     tax: null,
-    selected_plan_id: null
+    selected_plan_id: null,
+	vat_number: null
   }
 
   taxRequestPromise = null
@@ -39,6 +40,7 @@ export default class NewSubscription extends Component {
     super(props)
     this.state =  {
         tax: null,
+		vat_number: null,
         selected_plan_id: props.plans[0].id
     }
   }
@@ -56,12 +58,20 @@ export default class NewSubscription extends Component {
         .then((response) => (response.json()))
         .then((json) => {
           if (currentPromise === this.taxRequestPromise) {
-            this.setState({tax: json[0] || null, loading: false})
+            this.setState({tax: json[0] || null, country: country, loading: false})
           }
         })
       this.taxRequestPromise = currentPromise
     } else {
       this.setState({tax: null})
+    }
+  }
+
+  vatChanged (number) {
+    if (number) {
+      this.setState({vat_number: number})
+    } else {
+      this.setState({vat_number: null})
     }
   }
 
@@ -86,16 +96,20 @@ export default class NewSubscription extends Component {
   }
 
   render () {
+	console.log(this.props, this.state.tax);
     const { coupon, plans } = this.props
-    const { tax, selected_plan_id } = this.state
+    const { tax, selected_plan_id, vat_number, country } = this.state
     const selected_plan = plans.find(p => p.id === selected_plan_id)
     const { base_price, interval } = selected_plan
     const discountedPrice = this.computeDiscountedPrice(base_price, coupon)
-    const taxAmount = discountedPrice * (tax ? tax.rate : 0)
+	const vatExempt = vat_number && country != "DE"
+	const shouldChargeVAT = tax && !vatExempt
+    const taxAmount = discountedPrice * (shouldChargeVAT ? tax.rate : 0)
     const total = discountedPrice + taxAmount
     return (
       <CreditCard {...this.props}
                   onCountryChange={this.fetchTaxRate.bind(this)}
+                  onVatChange={this.vatChanged.bind(this)}
                   loading={this.state.loading}
                   buttonText='Subscribe'>
 
@@ -143,10 +157,17 @@ export default class NewSubscription extends Component {
             </div>
           )}
           {tax && (
-            <div className="pa border-bottom border-color-white border-2 flex justify-between items-center">
-              <span className="smallcaps-large">{tax.type.toUpperCase()} ({tax.rate * 100}%)</span>
-              <span>{a.formatMoney(taxAmount / 100, '$')}</span>
-            </div>
+			   vatExempt ? (
+					<div className="pa border-bottom border-color-white border-2 flex justify-between items-center">
+					  <span>VAT Exempt</span>
+					</div>
+			    ) : (
+					<div className="pa border-bottom border-color-white border-2 flex justify-between items-center">
+					  <span className="smallcaps-large">{tax.type.toUpperCase()} ({tax.rate * 100}%)</span>
+					  <span>{a.formatMoney(taxAmount / 100, '$')}</span>
+					</div>
+				)
+			  
           )}
           <div className="bgcolor-gray-90 color-gray-15 bold pa flex justify-between items-center">
             <span className="smallcaps-large">Total</span>

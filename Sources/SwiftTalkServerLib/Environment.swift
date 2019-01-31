@@ -88,9 +88,11 @@ struct Env {
 
 struct Globals {
     let currentDate: () -> Date
+    let urlSession: URLSessionProtocol
     
-    init(currentDate: @escaping () -> Date = { Date() }) {
+    init(currentDate: @escaping () -> Date = { Date() }, urlSession: URLSessionProtocol = URLSession.shared) {
         self.currentDate = currentDate
+        self.urlSession = urlSession
     }
 }
 

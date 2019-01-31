@@ -104,6 +104,7 @@ struct UserData: Codable, Insertable {
         case user = 0
         case collaborator = 1
         case admin = 2
+        case teamManager = 3
     }
     var email: String
     var githubUID: Int?
@@ -120,9 +121,10 @@ struct UserData: Codable, Insertable {
     var canceled: Bool = false
     var confirmedNameAndEmail: Bool = false
     var csrf: CSRFToken
+    var teamToken: UUID
 
     
-    init(email: String, githubUID: Int? = nil, githubLogin: String? = nil, githubToken: String? = nil, avatarURL: String, name: String, createdAt: Date? = nil, collaborator: Bool = false, downloadCredits: Int = 0, canceled: Bool = false, confirmedNameAndEmail: Bool = false, subscriber: Bool = false) {
+    init(email: String, githubUID: Int? = nil, githubLogin: String? = nil, githubToken: String? = nil, avatarURL: String, name: String, createdAt: Date? = nil, role: Role = .user, downloadCredits: Int = 0, canceled: Bool = false, confirmedNameAndEmail: Bool = false, subscriber: Bool = false) {
         self.email = email
         self.githubUID = githubUID
         self.githubLogin = githubLogin
@@ -136,6 +138,8 @@ struct UserData: Codable, Insertable {
         self.canceled = canceled
         self.confirmedNameAndEmail = confirmedNameAndEmail
         self.subscriber = subscriber
+        self.role = role
+        self.teamToken = UUID()
     }
     
     static let tableName: String = "users"
@@ -144,8 +148,23 @@ struct UserData: Codable, Insertable {
 struct TeamMemberData: Codable, Insertable {
     var userId: UUID
     var teamMemberId: UUID
+    var createdAt: Date
+    var expiredAt: Date?
     
     static let tableName: String = "team_members"
+}
+
+extension TeamMemberData {
+    init(userId: UUID, teamMemberId: UUID) {
+        self.userId = userId
+        self.teamMemberId = teamMemberId
+        self.createdAt = globals.currentDate()
+    }
+    
+    var activeMonths: Int {
+        let endDate = expiredAt ?? globals.currentDate()
+        return Int(endDate.numberOfMonths(since: createdAt)) + 1
+    }
 }
 
 fileprivate let emailRegex = try! NSRegularExpression(pattern: "^[^@]+@(?:[^@.]+?\\.)+.{2,}$", options: [.caseInsensitive])
@@ -158,6 +177,7 @@ extension String {
 
 extension UserData {
     var premiumAccess: Bool {
+        guard role != .teamManager else { return false }
         return role == .admin || role == .collaborator || subscriber
     }
     

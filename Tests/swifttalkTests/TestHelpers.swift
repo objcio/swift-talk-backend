@@ -87,20 +87,91 @@ func TestUnwrap<A>(_ value: A?, file: StaticString = #file, line: UInt = #line) 
 }
 
 
-struct TestConnection: ConnectionProtocol {
+class TestConnection: ConnectionProtocol {
     let _execute: (String, [PostgreSQL.Node]) -> PostgreSQL.Node = { _,_ in fatalError() }
-    let _eQuery: (Query<Any>) throws -> Any
-    init(query: @escaping (Query<Any>) throws -> Any = { _ in fatalError() }) {
-        self._eQuery = query
+    private var results: [QueryAndResult]
+    
+    init(_ results: [QueryAndResult]) {
+        self.results = results
     }
+    
     func execute(_ query: String, _ values: [PostgreSQL.Node]) throws -> PostgreSQL.Node {
         return _execute(query, values)
     }
     
     func execute<A>(_ query: Query<A>) throws -> A {
-        return try _eQuery(query.map { $0 }) as! A
+        guard let idx = results.firstIndex(where: { $0.query.matches(query) }) else { XCTFail("Query not found: \(query)"); throw TestErr() }
+        let response = results[idx].response as! A
+        results.remove(at: idx)
+        return response
+    }
+    
+    func close() throws {
+    }
+    
+    func assertDone() {
+        XCTAssert(results.isEmpty)
+    }
+    
+    var lazy: Lazy<ConnectionProtocol> {
+        return Lazy({ self }, cleanup: { _ in })
     }
 }
 
 struct TestErr: Error { }
+
+extension Query {
+    func matches<B>(_ other: Query<B>) -> Bool {
+        if query == other.query {
+            let v1 = values.map { try! $0.makeNode(in: nil) }
+            let v2 = other.values.map { try! $0.makeNode(in: nil) }
+            guard v1.count == v2.count else { return false }
+            for (x, y) in zip(v1, v2) {
+                guard x.wrapped == y.wrapped else { return false }
+            }
+            return true
+        }
+        return false
+    }
+}
+
+struct EndpointAndResult {
+    let endpoint: RemoteEndpoint<Any>
+    let response: Any
+    init<A>(endpoint: RemoteEndpoint<A>, response: A) {
+        self.endpoint = endpoint.map { $0 }
+        self.response = response
+    }
+}
+
+class TestURLSession: URLSessionProtocol {
+    private var results: [EndpointAndResult]
+    
+    init(_ results: [EndpointAndResult]) {
+        self.results = results
+    }
+    
+    func load<A>(_ endpoint: RemoteEndpoint<A>, callback: @escaping (A?) -> ()) {
+        guard let idx = results.firstIndex(where: { $0.endpoint.request.matches(endpoint.request) }) else {
+            XCTFail("Unexpected endpoint: \(endpoint.request.httpMethod ?? "GET") \(endpoint.request.url!)"); return
+        }
+        let response = results[idx].response as! A
+        results.remove(at: idx)
+        callback(response)
+    }
+    
+    func assertDone() {
+        XCTAssert(results.isEmpty)
+    }
+    
+    func onDelegateQueue(_ f: @escaping () -> ()) {
+        f()
+    }
+}
+
+extension URLRequest {
+    func matches(_ other: URLRequest) -> Bool {
+        return url == other.url && httpMethod == other.httpMethod && allHTTPHeaderFields == other.allHTTPHeaderFields && httpBody == other.httpBody
+    }
+}
 

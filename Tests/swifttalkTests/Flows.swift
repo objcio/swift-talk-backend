@@ -18,9 +18,15 @@ struct QueryAndResult {
     }
 }
 
+extension QueryAndResult: Equatable {
+    static func ==(l: QueryAndResult, r: QueryAndResult) -> Bool {
+        return l.query.query == r.query.query
+    }
+}
+
 struct TestEnv {
     let requestEnvironment: RequestEnvironment
-    let expected: [QueryAndResult]
+    let connection: TestConnection?
     let file: StaticString
     let line: UInt
 }
@@ -32,26 +38,15 @@ extension TestEnv: ContainsSession {
 
 extension TestEnv: CanQuery {
     func execute<A>(_ query: Query<A>) -> Either<A, Error> {
-        let theQuery = query.query
-        for q in expected {
-            if q.query.query == theQuery, let resp = q.response as? A {
-                let v1 = query.values.map { try! $0.makeNode(in: nil) }
-                let v2 = q.query.values.map { try! $0.makeNode(in: nil) }
-                XCTAssertEqual(v1.count, v2.count)
-                for (x,(y, index)) in zip(v1, zip(v2, v1.indices)) {
-                    XCTAssertEqual(x.wrapped,y.wrapped, "\(x.wrapped) != \(y.wrapped) at index \(index) (sql: \(theQuery))", file: file, line: line)
-                    if x.wrapped != y.wrapped {
-                        return .right(TestErr())                        
-                    }
-                }
-                return .left(resp)
-            }
+        guard let c = connection else { XCTFail(); return .right(TestErr()) }
+        do {
+            return .left(try c.execute(query))
+        } catch {
+            return .right(error)
         }
-        XCTFail("Query not present \(query)", file: file, line: line)
-        return .right(TestErr())
     }
     
-    func getConnection() -> Either<Connection, Error> {
+    func getConnection() -> Either<ConnectionProtocol, Error> {
         fatalError("not implemented yet")
     }
     
@@ -61,16 +56,18 @@ extension TestEnv: CanQuery {
 struct Flow {
     let session: Session?
     let currentPage: TestInterpreter
-    
-    private static func run(_ session: Session?, _ route: Route, _ queries: [QueryAndResult] = [], _ file: StaticString, _ line: UInt) throws -> TestInterpreter {
+
+    private static func run(_ session: Session?, _ route: Route, connection: TestConnection? = nil, assertQueriesDone: Bool = true, _ file: StaticString, _ line: UInt) throws -> TestInterpreter {
         let env = RequestEnvironment(route: route, hashedAssetName: { $0 }, buildSession: { session }, connection: noConnection, resourcePaths: [])
-        let testEnv = TestEnv(requestEnvironment: env, expected: queries, file: file, line: line)
+        let testEnv = TestEnv(requestEnvironment: env, connection: connection, file: file, line: line)
         let t: Reader<TestEnv, TestInterpreter> = try route.interpret()
-        return t.run(testEnv)
+        let result = t.run(testEnv)
+        if let c = connection, assertQueriesDone { c.assertDone() }
+        return result
     }
     
     static func landingPage(session: Session?, file: StaticString = #file, line: UInt = #line, _ route: Route) throws -> Flow {
-        return try Flow(session: session, currentPage: run(session, route, [], file, line))
+        return try Flow(session: session, currentPage: run(session, route, file, line))
     }
     
     func verify(cond: (TestInterpreter) -> ()) {
@@ -79,7 +76,7 @@ struct Flow {
     
     func click(_ route: Route, file: StaticString = #file, line: UInt = #line, _ cont: (Flow) throws -> ()) throws {
         testLinksTo(currentPage, route: route)
-        try cont(Flow(session: session, currentPage: Flow.run(session, route, [], file, line)))
+        try cont(Flow(session: session, currentPage: Flow.run(session, route, file, line)))
     }
     
     func followRedirect(to action: Route, expectedQueries: [QueryAndResult] = [], file: StaticString = #file, line: UInt = #line,  _ then: (Flow) throws -> ()) throws -> () {
@@ -90,7 +87,7 @@ struct Flow {
             XCTFail("Expected \(action), got \(path)"); return
         }
         
-        try then(Flow(session: session, currentPage: Flow.run(session, action, expectedQueries, file, line)))
+        try then(Flow(session: session, currentPage: Flow.run(session, action, connection: TestConnection(expectedQueries), file, line)))
     }
     
     func fillForm(to action: Route, data: [String:String] = [:], expectedQueries: [QueryAndResult] = [], file: StaticString = #file, line: UInt = #line,  _ then: (Flow) throws -> ()) throws {
@@ -102,12 +99,14 @@ struct Flow {
         for (key,_) in data {
             XCTAssert(postData[key] != nil)
         }
-        guard case let ._withPostData(cont) = try Flow.run(session, action, expectedQueries, file, line) else {
+        let conn = TestConnection(expectedQueries)
+        guard case let ._withPostData(cont) = try Flow.run(session, action, connection: conn, assertQueriesDone: false, file, line) else {
             XCTFail("Expected post handler", file: file, line: line)
             return
         }
         let theData = postData.merging(data, uniquingKeysWith: { $1 }).map { (key, value) in "\(key)=\(value.escapeForAttributeValue)"}.joined(separator: "&").data(using: .utf8)!
         let nextPage = cont(theData)
+        conn.assertDone()
         try then(Flow(session: session, currentPage: nextPage))
     }
     
@@ -138,35 +137,65 @@ final class FlowTests: XCTestCase {
         
         let subscribeWithoutASession = try Flow.landingPage(session: nil, .subscribe)
         subscribeWithoutASession.verify { page in
-            testLinksTo(page, route: .login(continue: .subscription(.new(couponCode: nil))))
+            testLinksTo(page, route: .login(continue: .subscription(.new(couponCode: nil, team: false))))
         }
         
         let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .subscribe)
-        try notSubscribed.click(.subscription(.new(couponCode: nil)), {
+        try notSubscribed.click(.subscription(.new(couponCode: nil, team: false)), {
             var confirmedSess = $0.session!
             confirmedSess.user.data.confirmedNameAndEmail = true
-            try $0.fillForm(to: .account(.register(couponCode: nil)), expectedQueries: [
-                QueryAndResult(query: confirmedSess.user.update(), response: ())], {
-                    try $0.withSession(confirmedSess) {
-                        try $0.followRedirect(to: .subscription(.new(couponCode: nil)), expectedQueries:
-                            [QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1))], {
-                            print($0.currentPage)
-                        })
-                    }
+            try $0.fillForm(to: .account(.register(couponCode: nil, team: false)), expectedQueries: [
+                QueryAndResult(query: confirmedSess.user.update(), response: ())
+            ], {
+                try $0.withSession(confirmedSess) {
+                    try $0.followRedirect(to: .subscription(.new(couponCode: nil, team: false)), expectedQueries: [
+                        QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1)),
+                        QueryAndResult(confirmedSess.user.update())
+                    ], {
+                        print($0.currentPage)
+                    })
+                }
             })
         })
     }
-    
+
+    func testTeamSubscription() throws {
+        testPlans = plans
+        let subscribeWithoutASession = try Flow.landingPage(session: nil, .subscribeTeam)
+        subscribeWithoutASession.verify { page in
+            testLinksTo(page, route: .login(continue: .subscription(.new(couponCode: nil, team: true))))
+        }
+
+        let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .subscribeTeam)
+        try notSubscribed.click(.subscription(.new(couponCode: nil, team: true)), {
+            var confirmedSess = $0.session!
+            confirmedSess.user.data.confirmedNameAndEmail = true
+            confirmedSess.user.data.role = .teamManager
+            try $0.fillForm(to: .account(.register(couponCode: nil, team: true)), expectedQueries: [
+                QueryAndResult(query: confirmedSess.user.update(), response: ())
+            ], {
+                try $0.withSession(confirmedSess) {
+                    try $0.followRedirect(to: .subscription(.new(couponCode: nil, team: true)), expectedQueries: [
+                        QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1)),
+                        QueryAndResult(confirmedSess.user.update())
+                    ], {
+                        print($0.currentPage)
+                    })
+                }
+            })
+        })
+    }
+
     func testNewSubscription() throws {
         testPlans = plans
         
         // todo test coupon codes
-        let i = run(.subscription(.new(couponCode: nil)))
+        let i = run(.subscription(.new(couponCode: nil, team: false)))
         // Not logged in
         try i(nil).testIsError()
         
         let form = try TestUnwrap(i(nonSubscribedUser).forms().first)
-        XCTAssertEqual(form.action, .account(.register(couponCode: nil)))
+        XCTAssertEqual(form.action, .account(.register(couponCode: nil, team: false)))
         
         try print(i(subscribedUser))
     }

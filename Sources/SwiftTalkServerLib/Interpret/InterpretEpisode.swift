@@ -22,13 +22,15 @@ extension Route.EpisodeR {
         }
         switch self {
         case .view(let playPosition):
-            return I.withConnection { c in
-                let downloads = try (session?.user.downloads).map { try c.execute($0) } ?? []
-                let status = session?.downloadStatus(for: ep, downloads: downloads) ?? .notSubscribed
-                let allEpisodes = try Episode.all.scoped(for: session?.user.data).withProgress(for: session?.user.id, connection: c)
-                let featuredEpisodes = Array(allEpisodes.filter { $0.episode != ep }.prefix(8))
-                let position = playPosition ?? allEpisodes.first { $0.episode == ep }?.progress
-                return .write(ep.show(playPosition: position, downloadStatus: status, otherEpisodes: featuredEpisodes))
+            let scoped = Episode.all.scoped(for: session?.user.data)
+            // todo: we could have downloadStatus(for:)
+            return I.query(session?.user.downloads, or: []) { downloads in
+                let status = session?.downloadStatus(for: ep, downloads: downloads)
+                return scoped.withProgress(for: session?.user.id) { allEpisodes in
+                    let featuredEpisodes = Array(allEpisodes.filter { $0.episode != ep }.prefix(8))
+                    let position = playPosition ?? allEpisodes.first { $0.episode == ep }?.progress
+                    return .write(ep.show(playPosition: position, downloadStatus: status ?? .notSubscribed, otherEpisodes: featuredEpisodes))
+                }
             }
         case .download:
             return I.requireSession { s in
