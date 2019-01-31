@@ -182,7 +182,6 @@ extension String {
 
 extension StringProtocol {
     var parseAsQueryPart: [String:String] {
-        print(self)
         let items = split(separator: "&").compactMap { $0.keyAndValue }
         return Dictionary(items.map { (k,v) in (k.decoded, v.decoded) }, uniquingKeysWith: { $1 })
     }
