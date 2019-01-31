@@ -42,7 +42,7 @@
         "repositoryURL": "https://github.com/objcio/commonmark-swift",
         "state": {
           "branch": "memory",
-          "revision": "adff63754fe93e729e55fb293e8eca8afb1eb655",
+          "revision": "7bed03219ec27ed7824f52f9d9abb805b3dc7356",
           "version": null
         }
       },
@@ -78,8 +78,8 @@
         "repositoryURL": "https://github.com/Quick/Nimble.git",
         "state": {
           "branch": null,
-          "revision": "cd6dfb86f496fcd96ce0bc6da962cd936bf41903",
-          "version": "7.3.1"
+          "revision": "9a281b1cfa1c53d1e8bd92e1798e4e473af8d263",
+          "version": "7.3.3"
         }
       },
       {
@@ -123,8 +123,8 @@
         "repositoryURL": "https://github.com/Quick/Quick.git",
         "state": {
           "branch": null,
-          "revision": "5fbf13871d185526993130c3a1fad0b70bfe37ce",
-          "version": "1.3.2"
+          "revision": "f2b5a06440ea87eba1a167cab37bf6496646c52e",
+          "version": "1.3.4"
         }
       },
       {
@@ -150,8 +150,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio.git",
         "state": {
           "branch": null,
-          "revision": "a20e129c22ad00a51c902dca54a5456f90664780",
-          "version": "1.12.0"
+          "revision": "03c541a24dd0558c942b15d8464eb75d70a921c4",
+          "version": "1.12.1"
         }
       },
       {

@@ -94,7 +94,7 @@ extension Route.Subscription {
                             }
                         }
                     } else {
-                        return I.write(teamMemberSubscribeForSelfSubscribed(signupToken: token))
+                        return I.redirect(to: .teamMemberSignup(token: token))
                     }
                 } else {
                     return registerTeamMember()
