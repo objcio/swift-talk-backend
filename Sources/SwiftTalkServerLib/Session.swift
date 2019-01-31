@@ -52,7 +52,7 @@ struct Session {
         return user.data.premiumAccess
     }
     
-    func isMemberOf(_ user: Row<UserData>) -> Bool {
+    func isTeamMemberOf(_ user: Row<UserData>) -> Bool {
         return teamManager?.id == user.id
     }
     
