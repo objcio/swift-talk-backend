@@ -88,8 +88,8 @@ extension URLSessionProtocol {
             var resultA: Any?
             var resultB: Any?
             group.enter()
-            load(l) { resultA = $0; group.leave() }
             group.enter()
+            load(l) { resultA = $0; group.leave() }
             load(r) { resultB = $0; group.leave() }
             group.notify(queue: .global()) {
                 self.onDelegateQueue {
