@@ -427,7 +427,7 @@ func teamMembersView(teamMembers: [Row<UserData>], signupLink: URL) -> Node {
                 .div(classes: "col width-1/3", [.text(githubLogin)]),
             ]),
             .div(classes: "block width-2", [
-                deleteRoute.map { Node.button(to: $0, [.raw("&times;")], classes: "button-input ms-1") } ?? ""
+                deleteRoute.map { Node.button(to: $0, [.raw("&times;")], classes: "button-input ms-1", confirm: "Are you sure to delete this team member?") } ?? ""
             ]),
         ])
     }

@@ -20,12 +20,14 @@ struct Context {
 struct Session {
     var sessionId: UUID
     var user: Row<UserData>
+    private var teamMember: Row<TeamMemberData>?
     private var teamManager: Row<UserData>?
     private var gifter: Row<UserData>?
     
-    init(sessionId: UUID, user: Row<UserData>, teamManager: Row<UserData>?, gifter: Row<UserData>?) {
+    init(sessionId: UUID, user: Row<UserData>, teamMember: Row<TeamMemberData>?, teamManager: Row<UserData>?, gifter: Row<UserData>?) {
         self.sessionId = sessionId
         self.user = user
+        self.teamMember = teamMember
         self.teamManager = teamManager
         self.gifter = gifter
     }
@@ -57,11 +59,18 @@ struct Session {
     }
     
     var downloadCredits: Int {
-        return user.data.downloadCredits + (gifter?.data.downloadCredits ?? 0)
+        if selfPremiumAccess {
+            return user.data.downloadCredits
+        } else if gifterPremiumAccess, let g = gifter {
+            return g.data.downloadCredits
+        } else if teamMemberPremiumAccess, let tm = teamMember {
+            return tm.data.activeMonths * 4
+        }
+        return 0
     }
 
     func downloadStatus(for episode: Episode, downloads: [Row<DownloadData>]) -> Episode.DownloadStatus {
-        guard premiumAccess else { return .notSubscribed }
+        guard premiumAccess else { return user.data.role == .teamManager ? .teamManager : .notSubscribed }
         let creditsLeft = (downloadCredits + user.data.downloadCreditsOffset) - downloads.count
         if user.data.isAdmin || downloads.contains(where: { $0.data.episodeNumber == episode.number }) {
             return .reDownload

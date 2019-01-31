@@ -148,8 +148,23 @@ struct UserData: Codable, Insertable {
 struct TeamMemberData: Codable, Insertable {
     var userId: UUID
     var teamMemberId: UUID
+    var createdAt: Date
+    var expiredAt: Date?
     
     static let tableName: String = "team_members"
+}
+
+extension TeamMemberData {
+    init(userId: UUID, teamMemberId: UUID) {
+        self.userId = userId
+        self.teamMemberId = teamMemberId
+        self.createdAt = globals.currentDate()
+    }
+    
+    var activeMonths: Int {
+        let endDate = expiredAt ?? globals.currentDate()
+        return Int(endDate.numberOfMonths(since: createdAt)) + 1
+    }
 }
 
 fileprivate let emailRegex = try! NSRegularExpression(pattern: "^[^@]+@(?:[^@.]+?\\.)+.{2,}$", options: [.caseInsensitive])

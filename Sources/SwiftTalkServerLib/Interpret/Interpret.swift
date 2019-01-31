@@ -167,20 +167,6 @@ extension Route {
                     row.data.downloadCredits = Int(s.downloadCredits)
                     row.data.canceled = s.canceled
                     tryOrLog("Failed to update user \(id) in response to Recurly webhook") { try c.get().execute(row.update()) }
-                    
-                    func update(credits: Int, for users: [Row<UserData>]) {
-                        for user in users {
-                            var u = user
-                            u.data.downloadCredits = row.data.downloadCredits
-                            tryOrLog("Failed to update download credits for associated user \(u.id)") { try c.get().execute(u.update()) }
-                        }
-                    }
-                    if let teamMembers = tryOrLog("Failed to get team members for \(row.id)", { try c.get().execute(row.teamMembers) }) {
-                        update(credits: row.data.downloadCredits, for: teamMembers)
-                    }
-                    if let giftees = tryOrLog("Failed to get gifees for \(row.id)", { try c.get().execute(row.giftees) }) {
-                        update(credits: row.data.downloadCredits, for: giftees)
-                    }
                 }
                 
                 return catchAndDisplayError {

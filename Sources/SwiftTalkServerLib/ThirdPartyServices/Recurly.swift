@@ -172,11 +172,11 @@ extension Date {
         return UInt((years * 12) + months)
     }
 }
+
 extension Subscription {
     var activeMonths: UInt {
         guard let act = activated_at, let end = current_period_ends_at else { return 0 }
-        let toMinusOneDay = Calendar.current.date(byAdding: DateComponents(day: -1), to: end)!
-        return toMinusOneDay.numberOfMonths(since: act)
+        return end.numberOfMonths(since: act)
     }
 
     func totalAtRenewal(addOn: Plan.AddOn, vatExempt: Bool) -> (total: Int, vat: Int) {

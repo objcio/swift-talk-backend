@@ -120,6 +120,7 @@ extension Episode {
 extension Episode {
     enum DownloadStatus {
         case notSubscribed
+        case teamManager
         case reDownload
         case canDownload(creditsLeft: Int)
         case noCredits
@@ -134,6 +135,8 @@ extension Episode {
             switch self {
             case .notSubscribed:
                 return "Become a subscriber to download episode videos."
+            case .teamManager:
+                return "Add yourself as team member to download episode videos."
             case .reDownload:
                 return "Re-downloading episodes doesn’t use any download credits."
             case let .canDownload(creditsLeft):
