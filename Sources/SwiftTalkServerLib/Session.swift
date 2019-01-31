@@ -55,10 +55,14 @@ struct Session {
     func isMemberOf(_ user: Row<UserData>) -> Bool {
         return teamManager?.id == user.id
     }
+    
+    var downloadCredits: Int {
+        return user.data.downloadCredits + (gifter?.data.downloadCredits ?? 0)
+    }
 
     func downloadStatus(for episode: Episode, downloads: [Row<DownloadData>]) -> Episode.DownloadStatus {
         guard premiumAccess else { return .notSubscribed }
-        let creditsLeft = (user.data.downloadCredits + user.data.downloadCreditsOffset) - downloads.count
+        let creditsLeft = (downloadCredits + user.data.downloadCreditsOffset) - downloads.count
         if user.data.isAdmin || downloads.contains(where: { $0.data.episodeNumber == episode.number }) {
             return .reDownload
         } else if creditsLeft > 0 {
