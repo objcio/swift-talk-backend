@@ -78,8 +78,8 @@ extension Scanner {
     }
 }
 
-extension String {
-    var nonEmpty: String? {
+extension Swift.Collection {
+    var nonEmpty: Self? {
         return isEmpty ? nil : self
     }
 }
