@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import HTML
+
 
 func renderHome(episodes: [EpisodeWithProgress]) -> Node {
     let header = pageHeader(HeaderContent.other(header: "Swift Talk", blurb: "A weekly video series on Swift programming.", extraClasses: "ms4"))

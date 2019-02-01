@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import HTML
+
 
 fileprivate let signupHeader = pageHeader(.other(header: "Team Member Signup", blurb: nil, extraClasses: "ms4"), extraClasses: "text-center")
 

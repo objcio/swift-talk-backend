@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import HTML
+
 
 extension ANode where I == RequestEnvironment {
     static func hashedStylesheet(media: String = "all", href: String) -> Node {

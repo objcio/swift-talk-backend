@@ -8,6 +8,8 @@
 import Foundation
 import Promise
 import NIOWrapper
+import HTML
+
 
 struct Reader<Value, Result> {
     let run: (Value) -> Result

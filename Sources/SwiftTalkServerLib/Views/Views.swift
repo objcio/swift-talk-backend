@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import HTML
+
 
 enum HeaderContent {
     case node(Node)

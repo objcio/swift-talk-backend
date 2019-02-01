@@ -7,6 +7,7 @@
 
 import Foundation
 import Base
+import HTML
 
 
 let subscriptionBenefits: [(icon: String, name: String, description: String)] = [

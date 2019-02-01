@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import HTML
+
 
 fileprivate let formatter: DateFormatter = {
     let d = DateFormatter()

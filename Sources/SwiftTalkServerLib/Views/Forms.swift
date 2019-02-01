@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import HTML
 
 typealias ValidationError = (field: String, message: String)
 
@@ -19,7 +20,6 @@ struct Form<A> {
         self.render = render
     }
 
-    //
     func parse(_ data: [String:String]) -> A? {
         return _parse(data)
     }

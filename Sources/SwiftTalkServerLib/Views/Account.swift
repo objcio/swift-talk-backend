@@ -7,6 +7,8 @@
 
 import Foundation
 import Base
+import HTML
+
 
 fileprivate let accountHeader = pageHeader(.other(header: "Account", blurb: nil, extraClasses: "ms4"))
 

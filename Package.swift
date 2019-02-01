@@ -12,6 +12,7 @@ let package = Package(
         .library(name: "Promise", targets: ["Promise"]),
         .library(name: "Networking", targets: ["Networking"]),
         .library(name: "NIOWrapper", targets: ["NIOWrapper"]),
+        .library(name: "HTML", targets: ["HTML"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-nio.git", from: "1.5.0"),
@@ -53,6 +54,12 @@ let package = Package(
             path: "Sources/NIOWrapper"
         ),
         .target(
+            name: "HTML",
+            dependencies: [
+            ],
+            path: "Sources/HTML"
+        ),
+        .target(
             name: "Routing",
             dependencies: [
                 "Base",
@@ -66,6 +73,7 @@ let package = Package(
                 "Promise",
                 "Base",
                 "Routing",
+                "HTML",
                 "NIOWrapper",
 				"PostgreSQL",
                 "CommonMark",
