@@ -8,22 +8,22 @@
 import Foundation
 
 
-public var standardError = FileHandle.standardError
+var standardError = FileHandle.standardError
 
 infix operator ?!: NilCoalescingPrecedence
-public func ?!<A>(lhs: A?, rhs: Error) throws -> A {
+func ?!<A>(lhs: A?, rhs: Error) throws -> A {
     guard let value = lhs else {
         throw rhs
     }
     return value
 }
 
-public func flatten<A>(_ value: A??) -> A? {
+func flatten<A>(_ value: A??) -> A? {
     guard let x = value else { return nil }
     return x
 }
 
-public final class Lazy<A> {
+final class Lazy<A> {
     private let compute: () throws -> A
     private var cache: A?
     private var cleanup: (A) -> ()
@@ -44,7 +44,7 @@ public final class Lazy<A> {
     }
 }
 
-public final class Atomic<A> {
+final class Atomic<A> {
     private let queue = DispatchQueue(label: "Atomic serial queue")
     private var _value: A
     init(_ value: A) {
@@ -70,13 +70,13 @@ extension Foundation.FileHandle : TextOutputStream {
 }
 
 extension Scanner {
-    public var remainder: String {
+    var remainder: String {
         return NSString(string: string).substring(from: scanLocation)
     }
 }
 
 extension Swift.Collection {
-    public var nonEmpty: Self? {
+    var nonEmpty: Self? {
         return isEmpty ? nil : self
     }
 }
@@ -122,7 +122,7 @@ extension String {
     // https://github.com/apple/swift/blob/bd109bec92f52003edff30d458ea5b2a424c9aa0/stdlib/public/SDK/Foundation/JSONEncoder.swift#L148
     // Copyright (c) 2014 - 2017 Apple Inc. and the Swift project authors
     // Licensed under Apache License v2.0 with Runtime Library Exception
-    public var snakeCased: String {
+    var snakeCased: String {
         guard !self.isEmpty else { return self }
         let stringKey = self
         
@@ -172,11 +172,11 @@ extension String {
         return result
     }
     
-    public var base64Encoded: String {
+    var base64Encoded: String {
         return data(using: .utf8)!.base64EncodedString()
     }
     
-    public func drop(prefix: String) -> String? {
+    func drop(prefix: String) -> String? {
         guard hasPrefix(prefix) else { return nil }
         let remainderStart = self.index(startIndex, offsetBy: prefix.count)
         return String(self[remainderStart...])
@@ -186,7 +186,7 @@ extension String {
 import Cryptor
 
 extension Data {
-    public var md5: String {
+    var md5: String {
         let data = Data(Digest(using: .md5).update(data: self)?.final() ?? [])
         return data.map { String(format: "%02hhx", $0) }.joined()
     }
@@ -198,7 +198,7 @@ public enum Either<A, B> {
 }
 
 extension Either {
-    public init(_ value: A?, or: @autoclosure () -> B) {
+    init(_ value: A?, or: @autoclosure () -> B) {
         if let x = value {
             self = .left(x)
         } else {
@@ -206,14 +206,14 @@ extension Either {
         }
     }
     
-    public var err: B? {
+    var err: B? {
         guard case let .right(e) = self else { return nil }
         return e
     }
 }
 
 extension Date {
-    public var isToday: Bool {
+    var isToday: Bool {
         let components = Calendar.current.dateComponents([.month,.year,.day], from: self)
         let components2 = Calendar.current.dateComponents([.month,.year,.day], from: Date())
         return components.year == components2.year && components.month == components2.month && components.day == components2.day
@@ -221,7 +221,7 @@ extension Date {
 }
 
 extension Process {
-    public static func pipe(launchPath: String, _ string: String) -> String {
+    static func pipe(launchPath: String, _ string: String) -> String {
         let task = Process()
         task.launchPath = launchPath
         task.arguments = []
@@ -246,7 +246,7 @@ extension Process {
 }
 
 
-public func measure<A>(message: String, file: StaticString = #file, line: UInt = #line, treshold: TimeInterval = 0.01, _ code: () throws -> A) rethrows -> A {
+func measure<A>(message: String, file: StaticString = #file, line: UInt = #line, treshold: TimeInterval = 0.01, _ code: () throws -> A) rethrows -> A {
     let start = Date()
     let result = try code()
     let time = Date().timeIntervalSince(start)
