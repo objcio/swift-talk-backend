@@ -6,10 +6,12 @@
 //
 
 import Foundation
-
+import Promise
+import Base
 import XCTest
 import NIOHTTP1
 import PostgreSQL
+@testable import Networking
 @testable import SwiftTalkServerLib
 
 enum TestInterpreter: Interpreter, SwiftTalkInterpreter {
@@ -151,13 +153,13 @@ class TestURLSession: URLSessionProtocol {
         self.results = results
     }
     
-    func load<A>(_ endpoint: RemoteEndpoint<A>, callback: @escaping (A?) -> ()) {
+    func load<A>(_ endpoint: RemoteEndpoint<A>, failure: @escaping (Error?, URLResponse?) -> (), onComplete: @escaping (A?) -> ()) {
         guard let idx = results.firstIndex(where: { $0.endpoint.request.matches(endpoint.request) }) else {
             XCTFail("Unexpected endpoint: \(endpoint.request.httpMethod ?? "GET") \(endpoint.request.url!)"); return
         }
         let response = results[idx].response as! A
         results.remove(at: idx)
-        callback(response)
+        onComplete(response)
     }
     
     func assertDone() {

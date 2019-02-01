@@ -7,6 +7,7 @@
 
 import Foundation
 import XCTest
+import Base
 @testable import SwiftTalkServerLib
 
 final class RouteTests: XCTestCase {
