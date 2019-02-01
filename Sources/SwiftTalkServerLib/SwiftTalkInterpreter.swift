@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import NIOHTTP1
 import Promise
+import NIOWrapper
 
 struct Reader<Value, Result> {
     let run: (Value) -> Result
@@ -56,7 +56,6 @@ protocol HasSession {
     static func withSession(_ cont: @escaping (Session?) -> Self) -> Self
 }
 
-import PostgreSQL
 protocol HasDatabase {
     static func execute<A>(_ query: Query<A>, _ cont: @escaping (Either<A, Error>) -> Self) -> Self
 }

@@ -9,8 +9,8 @@ import Foundation
 import Promise
 import Base
 import XCTest
-import NIOHTTP1
 import PostgreSQL
+import NIOWrapper
 @testable import Networking
 @testable import SwiftTalkServerLib
 

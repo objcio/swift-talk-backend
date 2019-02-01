@@ -8,6 +8,7 @@
 import Foundation
 import Networking
 import Promise
+import Base
 
 
 extension RemoteEndpoint {

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Base
 
 
 struct ServerError: LocalizedError {

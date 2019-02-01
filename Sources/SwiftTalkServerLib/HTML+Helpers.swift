@@ -7,6 +7,8 @@
 
 import Foundation
 import CommonMark
+import Base
+
 
 protocol LinkTarget {
     var absoluteString: String { get }

@@ -31,6 +31,12 @@ extension Request {
 }
 
 
+extension Array where Element == URL {
+    public func resolve(_ path: String) -> URL? {
+        return lazy.map { $0.appendingPathComponent(path) }.filter { FileManager.default.fileExists(atPath: $0.path) }.first
+    }
+}
+
 extension String {
     fileprivate var decoded: String {
         return (removingPercentEncoding ?? "").replacingOccurrences(of: "+", with: " ")

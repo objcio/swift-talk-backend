@@ -1,7 +1,5 @@
 
 import XCTest
-import NIOHTTP1
-import PostgreSQL
 @testable import SwiftTalkServerLib
 
 struct QueryAndResult {

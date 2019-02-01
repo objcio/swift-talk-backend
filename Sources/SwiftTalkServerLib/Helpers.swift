@@ -6,9 +6,17 @@
 //
 
 import Foundation
+import Base
 
 
-var standardError = FileHandle.standardError
+public func myAssert(_ cond: @autoclosure () -> Bool, _ message: @autoclosure () -> String = "Assertion failure \(#file):\(#line) \(#function)", file: StaticString = #file, line: UInt = #line, method: StaticString = #function) {
+    if env.production {
+        guard !cond() else { return }
+        print(message(), to: &standardError)
+    } else {
+        assert(cond(), message, file: file, line: line)
+    }
+}
 
 infix operator ?!: NilCoalescingPrecedence
 func ?!<A>(lhs: A?, rhs: Error) throws -> A {
@@ -59,13 +67,6 @@ final class Atomic<A> {
         queue.sync {
             transform(&self._value)
         }
-    }
-}
-
-extension Foundation.FileHandle : TextOutputStream {
-    public func write(_ string: String) {
-        guard let data = string.data(using: .utf8) else { return }
-        self.write(data)
     }
 }
 

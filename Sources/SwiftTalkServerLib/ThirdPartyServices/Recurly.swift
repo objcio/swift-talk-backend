@@ -8,6 +8,7 @@
 import Foundation
 import Promise
 import Networking
+import Base
 
 let recurly = Recurly()
 

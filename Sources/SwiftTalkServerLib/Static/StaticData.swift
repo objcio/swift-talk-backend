@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import Base
+
 
 final class Static<A> {
     typealias Compute = (_ callback: @escaping (A?) -> ()) -> ()

@@ -7,6 +7,7 @@
 
 import Foundation
 import Networking
+import Base
 
 
 protocol StaticLoadable: Codable {

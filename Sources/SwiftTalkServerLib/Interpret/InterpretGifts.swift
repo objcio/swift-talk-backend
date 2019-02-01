@@ -6,7 +6,8 @@
 //
 
 import Foundation
-import PostgreSQL
+import Base
+
 
 extension Route.Gifts {
     func interpret<I: Interp>() throws -> I {

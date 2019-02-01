@@ -6,7 +6,8 @@
 //
 
 import Foundation
-import PostgreSQL
+import Base
+
 
 extension Route.Webhook {
     func interpret<I: Interp>() throws -> I {
