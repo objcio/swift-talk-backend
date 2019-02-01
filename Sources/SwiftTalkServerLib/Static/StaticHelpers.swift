@@ -8,6 +8,7 @@
 import Foundation
 import Networking
 import Base
+import Database
 
 
 protocol StaticLoadable: Codable {
@@ -27,7 +28,7 @@ extension Collection: StaticLoadable {
 }
 
 func loadStaticData<A: Codable>(name: String) -> [A] {
-    return tryOrLog { try withConnection { connection in
+    return tryOrLog { try postgres.withConnection { connection in
         guard
             let row = try connection.execute(Row<FileData>.staticData(jsonName: name)),
             let result = try? Github.staticDataDecoder.decode([A].self, from: row.data.value.data(using: .utf8)!)
@@ -37,7 +38,7 @@ func loadStaticData<A: Codable>(name: String) -> [A] {
 }
 
 func cacheStaticData<A: Codable>(_ data: A, name: String) {
-    tryOrLog { try withConnection { connection in
+    tryOrLog { try postgres.withConnection { connection in
         guard
             let encoded = try? Github.staticDataEncoder.encode(data),
             let json = String(data: encoded, encoding: .utf8)
@@ -49,7 +50,7 @@ func cacheStaticData<A: Codable>(_ data: A, name: String) {
 
 fileprivate func refreshStaticData<A: StaticLoadable>(_ endpoint: RemoteEndpoint<[A]>, onCompletion: @escaping () -> ()) {
     globals.urlSession.load(endpoint) { result in
-        tryOrLog { try withConnection { connection in
+        tryOrLog { try postgres.withConnection { connection in
             guard let r = result else { log(error: "Failed loading static data \(A.jsonName)"); return }
             cacheStaticData(r, name: A.jsonName)
             onCompletion()
@@ -86,7 +87,7 @@ func queryTranscripts(fast: Bool = false, _ cb: @escaping ([Transcript]) -> ()) 
 }
 
 func queryTranscriptsHelper(fast: Bool = false) -> [Transcript] {
-    return tryOrLog { try withConnection { connection in
+    return tryOrLog { try postgres.withConnection { connection in
         let rows = try connection.execute(Row<FileData>.transcripts())
         return rows.compactMap { f in Transcript(fileName: f.data.key, raw: f.data.value, highlight: !fast) }
     }} ?? []
@@ -95,7 +96,7 @@ func queryTranscriptsHelper(fast: Bool = false) -> [Transcript] {
 func refreshTranscripts(onCompletion: @escaping () -> ()) {
     globals.urlSession.load(github.transcripts) { results in
         guard let transcripts = results else { log(error: "Failed to load transcripts"); return }
-        tryOrLog { try withConnection { connection in
+        tryOrLog { try postgres.withConnection { connection in
             for t in transcripts {
                 let fd = FileData(repository: t.file.repository, path: t.file.path, value: t.content)
                 tryOrLog("Error caching \(t.file.url)") { try connection.execute(fd.insertOrUpdate(uniqueKey: "key")) }

@@ -30,6 +30,28 @@ extension Request {
     }
 }
 
+public final class Lazy<A> {
+    private let compute: () throws -> A
+    private var cache: A?
+    private var cleanup: (A) -> ()
+    
+    public func get() throws -> A {
+        if cache == nil {
+            cache = try compute()
+        }
+        return cache!
+    }
+    
+    public init(_ compute: @escaping () throws -> A, cleanup: @escaping (A) -> ()) {
+        self.compute = compute
+        self.cleanup = cleanup
+    }
+    
+    deinit {
+        guard let c = cache else { return }
+        cleanup(c)
+    }
+}
 
 extension Array where Element == URL {
     public func resolve(_ path: String) -> URL? {
@@ -61,5 +83,15 @@ extension StringProtocol {
         let remainder = self[index(after: i)...]
         return (String(path), remainder.parseAsQueryPart)
     }
+}
+
+public func measure<A>(message: String, file: StaticString = #file, line: UInt = #line, treshold: TimeInterval = 0.01, _ code: () throws -> A) rethrows -> A {
+    let start = Date()
+    let result = try code()
+    let time = Date().timeIntervalSince(start)
+    if time > treshold {
+        log(file: file, line: line, info: "measure: \(time*1000)ms \(message)")
+    }
+    return result
 }
 

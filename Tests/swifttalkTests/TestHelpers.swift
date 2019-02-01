@@ -12,6 +12,7 @@ import XCTest
 import PostgreSQL
 import NIOWrapper
 import HTML
+import Database
 @testable import Networking
 @testable import SwiftTalkServerLib
 

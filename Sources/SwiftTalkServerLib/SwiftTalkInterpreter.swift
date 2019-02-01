@@ -9,6 +9,7 @@ import Foundation
 import Promise
 import NIOWrapper
 import HTML
+import Database
 
 
 struct Reader<Value, Result> {

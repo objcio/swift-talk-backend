@@ -13,6 +13,7 @@ let package = Package(
         .library(name: "Networking", targets: ["Networking"]),
         .library(name: "NIOWrapper", targets: ["NIOWrapper"]),
         .library(name: "HTML", targets: ["HTML"]),
+        .library(name: "Database", targets: ["Database"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-nio.git", from: "1.5.0"),
@@ -67,6 +68,14 @@ let package = Package(
             path: "Sources/Routing"
         ),
         .target(
+            name: "Database",
+            dependencies: [
+                "PostgreSQL",
+                "Base",
+            ],
+            path: "Sources/Database"
+        ),
+        .target(
             name: "SwiftTalkServerLib",
             dependencies: [
                 "Networking",
@@ -75,6 +84,7 @@ let package = Package(
                 "Routing",
                 "HTML",
                 "NIOWrapper",
+                "Database",
 				"PostgreSQL",
                 "CommonMark",
                 "PerfectXML",

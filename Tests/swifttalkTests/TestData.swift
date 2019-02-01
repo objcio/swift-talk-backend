@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import Database
+import Base
 @testable import SwiftTalkServerLib
 
 let testCSRF = CSRFToken(UUID())

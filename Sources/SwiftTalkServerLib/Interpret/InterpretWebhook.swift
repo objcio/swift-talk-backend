@@ -7,6 +7,7 @@
 
 import Foundation
 import Base
+import Database
 
 
 extension Route.Webhook {
@@ -18,7 +19,7 @@ extension Route.Webhook {
                 guard let webhook: Webhook = try? decodeXML(from: data) else { return I.write("", status: .ok) }
                 let id = webhook.account.account_code
                 recurly.subscriptionStatus(for: webhook.account.account_code).run { status in
-                    let c = lazyConnection()
+                    let c = postgres.lazyConnection()
                     guard let s = status else {
                         return log(error: "Received Recurly webhook for account id \(id), but couldn't load this account from Recurly")
                     }

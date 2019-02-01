@@ -9,6 +9,7 @@ import Foundation
 import Promise
 import Networking
 import Base
+import Database
 
 let recurly = Recurly()
 

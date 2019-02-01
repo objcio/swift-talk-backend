@@ -403,7 +403,7 @@ extension Episode {
             ])
         ]
         
-        let scripts: [Node] = (context.session?.user.data.csrf).map { token in
+        let scripts: [Node] = (context.session?.user.data.csrfToken).map { token in
             return [
                 Node.script(src: "https://player.vimeo.com/api/player.js"),
                 Node.script(code: """

@@ -1,6 +1,8 @@
 
 import XCTest
 @testable import SwiftTalkServerLib
+import Database
+
 
 struct QueryAndResult {
     let query: Query<Any>

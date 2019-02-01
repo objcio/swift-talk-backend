@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import Database
+
 
 struct Context {
     var route: Route
@@ -13,7 +15,7 @@ struct Context {
     var session: Session?
     
     var csrf: CSRFToken {
-        return session?.user.data.csrf ?? sharedCSRF
+        return session?.user.data.csrfToken ?? sharedCSRF
     }
 }
 

@@ -7,6 +7,7 @@
 
 import Foundation
 import Promise
+import Database
 
 
 extension ProfileFormData {
@@ -130,7 +131,7 @@ extension Route.Account {
             // todo use the form helper
             func renderForm(errs: [RecurlyError]) -> I {
                 return I.onSuccess(promise: sess.user.billingInfo.promise, do: { billingInfo in
-                    let view = updatePaymentView(data: PaymentViewData(billingInfo, action: Route.account(.updatePayment).path, csrf: sess.user.data.csrf, publicKey: env.recurlyPublicKey, buttonText: "Update", paymentErrors: errs.map { $0.message }))
+                    let view = updatePaymentView(data: PaymentViewData(billingInfo, action: Route.account(.updatePayment).path, csrf: sess.user.data.csrfToken, publicKey: env.recurlyPublicKey, buttonText: "Update", paymentErrors: errs.map { $0.message }))
                     return I.write(view)
                 })
             }

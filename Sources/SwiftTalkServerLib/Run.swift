@@ -1,5 +1,7 @@
 import Foundation
 import NIOWrapper
+import Database
+
 
 extension NIOInterpreter: SwiftTalkInterpreter { }
 
@@ -23,7 +25,7 @@ public func run() throws {
         guard let route = Route(request) else { return nil }
         let sessionString = request.cookies.first { $0.0 == "sessionid" }?.1
         let sessionId = sessionString.flatMap { UUID(uuidString: $0) }
-        let conn = lazyConnection()
+        let conn = postgres.lazyConnection()
         func buildSession() -> Session? {
             guard let sId = sessionId else { return nil }
             do {

@@ -40,7 +40,7 @@ final class Static<A> {
 fileprivate let episodesSource: Static<[Episode]> = .fromStaticRepo(onRefresh: { newEpisodes in
     for ep in newEpisodes where ep.releaseAt > globals.currentDate() {
         let query = Task.releaseEpisode(number: ep.number).schedule(at: ep.releaseAt)
-        tryOrLog("Failed to schedule release task for episode \(ep.number)") { try withConnection { try $0.execute(query) } }
+        tryOrLog("Failed to schedule release task for episode \(ep.number)") { try postgres.withConnection { try $0.execute(query) } }
     }
 })
 
