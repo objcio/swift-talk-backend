@@ -11,8 +11,10 @@ import PostgreSQL
 extension Route.Gifts {
     func interpret<I: Interp>() throws -> I {
         switch self {
+            
         case .home:
             return try I.write(giftHome(plans: Plan.gifts))
+        
         case .new(let planCode):
             guard let plan = Plan.gifts.first(where: { $0.plan_code == planCode }) else {
                 throw ServerError.init(privateMessage: "Illegal plan: \(planCode)", publicMessage: "Couldn't find the plan you selected.")
@@ -24,6 +26,7 @@ extension Route.Gifts {
                     }
                 }
             })
+        
         case .pay(let id):
             return I.query(Row<GiftData>.select(id)) { g in
                 guard let gift = g else {
@@ -74,6 +77,7 @@ extension Route.Gifts {
                 
                 return I.write(giftThankYou(gift: gift.data))
             }
+        
         case .redeem(let id):
             return I.withSession { session in
                 return I.query(Row<GiftData>.select(id)) {
@@ -103,6 +107,7 @@ extension Route.Gifts {
                     }
                 }
             }
+            
         }
     }
 }

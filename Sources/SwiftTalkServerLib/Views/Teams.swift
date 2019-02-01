@@ -56,7 +56,7 @@ func teamMemberSubscribeForSignedIn(signupToken: UUID) -> Node {
         .h3(classes: "center color-blue", ["Welcome to Swift Talk!"]),
         .p(classes: "center", ["To join as a team member, please confirm using the button below."]),
     ], buttons: [
-        button(route: .login(continue: .subscription(.registerAsTeamMember(token: signupToken, terminate: false))), title: "Join as a Team Member")
+        button(route: .login(.login(continue: .subscription(.registerAsTeamMember(token: signupToken, terminate: false)))), title: "Join as a Team Member")
     ])
 }
 
@@ -65,7 +65,7 @@ func teamMemberSubscribe(signupToken: UUID) -> Node {
         .h3(classes: "center color-blue", ["Welcome to Swift Talk!"]),
         .p(classes: "center", ["You’ve been invited to join Swift Talk as a team member. Please start by logging in with GitHub."]),
     ], buttons: [
-        button(route: .login(continue: .teamMemberSignup(token: signupToken)), title: "Log in with GitHub")
+        button(route: .login(.login(continue: .signup(.teamMember(token: signupToken)))), title: "Log in with GitHub")
     ])
 }
 

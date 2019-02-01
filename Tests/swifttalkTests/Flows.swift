@@ -135,12 +135,12 @@ final class FlowTests: XCTestCase {
         // todo test coupon codes
         testPlans = plans
         
-        let subscribeWithoutASession = try Flow.landingPage(session: nil, .subscribe)
+        let subscribeWithoutASession = try Flow.landingPage(session: nil, .signup(.subscribe))
         subscribeWithoutASession.verify { page in
-            testLinksTo(page, route: .login(continue: .subscription(.new(couponCode: nil, team: false))))
+            testLinksTo(page, route: .login(.login(continue: .subscription(.new(couponCode: nil, team: false)))))
         }
         
-        let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .subscribe)
+        let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .signup(.subscribe))
         try notSubscribed.click(.subscription(.new(couponCode: nil, team: false)), {
             var confirmedSess = $0.session!
             confirmedSess.user.data.confirmedNameAndEmail = true
@@ -161,12 +161,12 @@ final class FlowTests: XCTestCase {
 
     func testTeamSubscription() throws {
         testPlans = plans
-        let subscribeWithoutASession = try Flow.landingPage(session: nil, .subscribeTeam)
+        let subscribeWithoutASession = try Flow.landingPage(session: nil, .signup(.subscribeTeam))
         subscribeWithoutASession.verify { page in
-            testLinksTo(page, route: .login(continue: .subscription(.new(couponCode: nil, team: true))))
+            testLinksTo(page, route: .login(.login(continue: .subscription(.new(couponCode: nil, team: true)))))
         }
 
-        let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .subscribeTeam)
+        let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .signup(.subscribeTeam))
         try notSubscribed.click(.subscription(.new(couponCode: nil, team: true)), {
             var confirmedSess = $0.session!
             confirmedSess.user.data.confirmedNameAndEmail = true

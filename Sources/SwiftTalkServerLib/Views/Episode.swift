@@ -397,7 +397,7 @@ extension Episode {
                         .text("Become a subscriber to watch future and all \(Episode.subscriberOnly) current subscriber-only episodes, plus enjoy access to episode video downloads and \(teamDiscount)% discount for your team members.")
                     ])
                 ]),
-                Node.link(to: .subscribe, attributes: ["class": "button button--themed"], [.text("Become a subscriber")])
+                Node.link(to: .signup(.subscribe), attributes: ["class": "button button--themed"], [.text("Become a subscriber")])
             ])
         ]
         
@@ -479,7 +479,7 @@ let subscriptionPitch: String = """
 <h3 class="mb-- bold lh-125">This episode is freely available thanks to the support of our subscribers</h3>
 <p class="lh-135">
 <span class="opacity-60">Subscribers get exclusive access to new and all previous subscriber-only episodes, video downloads, and 30% discount for team members.</span>
-<a href="\(Route.subscribe.path)" class="color-blue no-decoration hover-cascade">
+<a href="\(Route.signup(.subscribe).path)" class="color-blue no-decoration hover-cascade">
 <span class="hover-cascade__border-bottom">Become a Subscriber</span> <span class="bold">&rarr;</span>
 </a>
 </p>
@@ -531,7 +531,7 @@ func subscribeBanner() -> Node {
                     })
                 ]),
                 Node.div(classes: "s+|absolute s+|position-sw col s+|width-1/2", [
-                    Node.link(to: .subscribe, attributes: ["class": "c-button"], [.raw("Pricing &amp; Sign Up")])
+                    Node.link(to: .signup(.subscribe), attributes: ["class": "c-button"], [.raw("Pricing &amp; Sign Up")])
                 ])
             ])
         ])

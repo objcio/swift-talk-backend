@@ -15,7 +15,6 @@ extension Route.Subscription {
     }
 
     private func interpret2<I: Interp>(sesssion sess: Session) throws -> I {
-        let user = sess.user
         func newSubscription(couponCode: String?, team: Bool, errs: [String]) throws -> I {
             if let c = couponCode {
                 return I.onSuccess(promise: recurly.coupon(code: c).promise, do: { coupon in
@@ -25,8 +24,10 @@ extension Route.Subscription {
                 return try I.write(newSub(coupon: nil, team: team, errs: errs))
             }
         }
-        
+
+        let user = sess.user
         switch self {
+            
         case let .create(couponCode, team):
             return I.verifiedPost { dict in
                 guard let planId = dict["plan_id"], let token = dict["billing_info[token]"] else {
@@ -45,11 +46,13 @@ extension Route.Subscription {
                         return try newSubscription(couponCode: couponCode, team: team, errs: messages.map { $0.message })
                     case .success(let sub):
                         return I.query(user.changeSubscriptionStatus(sub.state == .active)) {
-                            I.redirect(to: team ? .account(.teamMembers) : .account(.thankYou))
+                            // todo: flash: "Thank you for supporting us
+                            I.redirect(to: team ? .account(.teamMembers) : .home)
                         }
                     }
                 })
             }
+        
         case let .new(couponCode, team):
             if !user.data.confirmedNameAndEmail {
                 let resp = registerForm(couponCode: couponCode, team: team).render(.init(user.data), [])
@@ -63,6 +66,7 @@ extension Route.Subscription {
                     }
                 }
             }
+        
         case let .registerAsTeamMember(token, terminate):
             return I.query(Row<UserData>.select(teamToken: token)) { row in
                 guard let teamManager = row else {
@@ -94,12 +98,13 @@ extension Route.Subscription {
                             }
                         }
                     } else {
-                        return I.redirect(to: .teamMemberSignup(token: token))
+                        return I.redirect(to: .signup(.teamMember(token: token)))
                     }
                 } else {
                     return registerTeamMember()
                 }
             }
+        
         case .cancel:
             return I.verifiedPost { _ in
                 return I.onSuccess(promise: user.currentSubscription.promise.map(flatten)) { sub in
@@ -115,6 +120,7 @@ extension Route.Subscription {
                     
                 }
             }
+        
         case .upgrade:
             return I.verifiedPost { _ in
                 return I.onSuccess(promise: sess.user.currentSubscription.promise.map(flatten), do: { sub throws -> I in
@@ -126,6 +132,7 @@ extension Route.Subscription {
                     }
                 })
             }
+        
         case .reactivate:
             return I.verifiedPost { _ in
                 return I.onSuccess(promise: user.currentSubscription.promise.map(flatten)) { sub in
@@ -134,13 +141,17 @@ extension Route.Subscription {
                     }
                     return I.onSuccess(promise: recurly.reactivate(sub).promise) { result in
                         switch result {
-                        case .success: return I.redirect(to: .account(.thankYou))
-                        case .errors(let errs): throw RecurlyErrors(errs)
+                        case .success:
+                            // todo: flash: "Thank you for supporting us
+                            return I.redirect(to: .home)
+                        case .errors(let errs):
+                            throw RecurlyErrors(errs)
                         }
                     }
                     
                 }
             }
+            
         }
     }
 }

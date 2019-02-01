@@ -120,6 +120,12 @@ extension Router where A == Int {
     }
 }
 
+extension Router where A == UUID {
+    static let uuid: Router<UUID> = Router<String>.string().transform({ return UUID(uuidString: $0)}, { uuid in
+        return uuid.uuidString
+    })
+}
+
 extension Router where A == [String] {
     // eats up the entire path of a route
     static func path() -> Router<[String]> {
@@ -182,16 +188,6 @@ extension Router where A == String {
     }
 }
 
-extension Optional {
-    func xor(_ value: Optional) -> Optional {
-        if let v = self {
-            assert(value == nil)
-            return v
-        }
-        return value
-    }
-}
-
 extension Router {
     func or(_ other: Router) -> Router {
         return Router(parse: { req in
@@ -223,6 +219,12 @@ extension Router {
         }, description: f(description))
     }
 }
+
+func choice<A>(_ routes: [Router<A>]) -> Router<A> {
+    assert(!routes.isEmpty)
+    return routes.dropFirst().reduce(routes[0], { $0.or($1) })
+}
+
 // append two routes
 func /<A,B>(lhs: Router<A>, rhs: Router<B>) -> Router<(A,B)> {
     return Router(parse: { req in

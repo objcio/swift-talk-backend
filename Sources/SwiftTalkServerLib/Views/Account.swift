@@ -324,7 +324,7 @@ func unsubscribedBillingContent() -> [Node] {
         Node.div([
             heading("Subscription"),
             Node.p(classes: "mb", [.text("You don't have an active subscription.")]),
-            Node.link(to: .subscribe, classes: "c-button", [.text("Become a Subscriber")])
+            Node.link(to: .signup(.subscribe), classes: "c-button", [.text("Become a Subscriber")])
         ])
     ]
 }

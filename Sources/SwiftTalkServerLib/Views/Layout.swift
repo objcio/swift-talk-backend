@@ -258,7 +258,7 @@ func flash(message: String, type: FlashType) -> Node {
 
 func userHeader(_ context: Context) -> Node {
     let subscribeButton = Node.li(classes: "flex items-center ml+", [
-        .link(to: .subscribe, classes: "button button--tight button--themed fz-nav", [.text("Subscribe")])
+        .link(to: .signup(.subscribe), classes: "button button--tight button--themed fz-nav", [.text("Subscribe")])
     ])
     
     func link(to route: Route, text: String) -> Node {
@@ -273,7 +273,7 @@ func userHeader(_ context: Context) -> Node {
         let logout = link(to: .account(.logout), text: "Log out")
         items = s.activeSubscription ? [account, logout] : [account, subscribeButton]
     } else {
-        items = [link(to: .login(continue: context.route), text: "Log in"), subscribeButton]
+        items = [link(to: .login(.login(continue: context.route)), text: "Log in"), subscribeButton]
     }
     return .nav(classes: "flex-none self-center border-left border-1 border-color-gray-85 flex ml+", [
         .ul(classes: "flex items-stretch", items)

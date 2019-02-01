@@ -20,7 +20,9 @@ extension Route.EpisodeR {
         guard let ep = Episode.all.findEpisode(with: id, scopedFor: session?.user.data) else {
             return .write(errorView("No such episode"), status: .notFound)
         }
+        
         switch self {
+        
         case .view(let playPosition):
             let scoped = Episode.all.scoped(for: session?.user.data)
             // todo: we could have downloadStatus(for:)
@@ -32,6 +34,7 @@ extension Route.EpisodeR {
                     return .write(ep.show(playPosition: position, downloadStatus: status ?? .notSubscribed, otherEpisodes: featuredEpisodes))
                 }
             }
+        
         case .download:
             return I.requireSession { s in
                 return .onCompleteOrCatch(promise: vimeo.downloadURL(for: ep.vimeoId).promise) { downloadURL in
@@ -50,6 +53,7 @@ extension Route.EpisodeR {
                     }
                 }
             }
+        
         case .playProgress:
             return I.withSession { sess in
                 guard let s = sess else { return I.write("", status: .ok) }
@@ -63,6 +67,7 @@ extension Route.EpisodeR {
                     return I.write("", status: .ok)
                 }
             }
+            
         }
     }
 }

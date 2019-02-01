@@ -97,7 +97,7 @@ fileprivate func continueLink(context: Context, coupon: Coupon?, team: Bool) -> 
     } else if context.session?.user != nil {
         return continueLink(to: .subscription(.new(couponCode: coupon?.coupon_code, team: team)), title: "Proceed to payment")
     } else {
-        return continueLink(to: .login(continue: Route.subscription(.new(couponCode: coupon?.coupon_code, team: team))), title: "Sign in with Github")
+        return continueLink(to: .login(.login(continue: Route.subscription(.new(couponCode: coupon?.coupon_code, team: team)))), title: "Sign in with Github")
     }
 }
 
@@ -129,10 +129,10 @@ func renderSubscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node
                         .inlineSvg(path: "icon-benefit-team.svg", classes: "svg-fill-current")
                     ]),
                     .div(classes: "mb+", [
-                        .link(to: .subscribeTeam, classes: "no-decoration", [.h3(classes: "bold color-blue ms3 mt-- mb-", ["Team Subscriptions"])]),
+                        .link(to: .signup(.subscribeTeam), classes: "no-decoration", [.h3(classes: "bold color-blue ms3 mt-- mb-", ["Team Subscriptions"])]),
                         .p(classes: "color-gray-50 lh-125", [
                             "Our team subscription includes a 30% discount and comes with a central account that lets you manage billing and access for your entire team.",
-                            Node.link(to: .subscribeTeam, classes: "no-decoration color-blue", ["Learn more..."])
+                            Node.link(to: .signup(.subscribeTeam), classes: "no-decoration color-blue", ["Learn more..."])
                         ])
                     ])
                 ]),

@@ -17,6 +17,8 @@ struct Context {
     }
 }
 
+private let sharedCSRF = CSRFToken(UUID(uuidString: "F5F6C2AE-85CB-4989-B0BF-F471CC92E3FF")!)
+
 struct Session {
     var sessionId: UUID
     var user: Row<UserData>

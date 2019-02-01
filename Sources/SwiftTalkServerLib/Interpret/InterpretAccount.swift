@@ -22,13 +22,12 @@ extension Route.Account {
     
     private func interpret2<I: Interp>(session sess: Session) throws -> I {
         switch self {
-        case .thankYou:
-            // todo: flash: "Thank you for supporting us
-            return I.redirect(to: .home)
+        
         case .logout:
             return I.query(sess.user.deleteSession(sess.sessionId)) {
                 return I.redirect(to: .home)
             }
+            
         case let .register(couponCode, team):
             return I.form(registerForm(couponCode: couponCode, team: team), initial: ProfileFormData(sess.user.data), convert: { profile in
                 var u = sess.user
@@ -51,6 +50,7 @@ extension Route.Account {
                     }
                 }
             })
+            
         case .profile:
             var u = sess.user
             let data = ProfileFormData(email: u.data.email, name: u.data.name)
@@ -73,6 +73,7 @@ extension Route.Account {
                     return I.write(f.render(result, errors))
                 }
             })
+            
         case .billing:
             var user = sess.user
             func renderBilling(recurlyToken: String) -> I {
@@ -123,6 +124,7 @@ extension Route.Account {
                 })
             }
             return renderBilling(recurlyToken: t)
+            
         case .updatePayment:
             // todo use the form helper
             func renderForm(errs: [RecurlyError]) -> I {
@@ -146,14 +148,16 @@ extension Route.Account {
             })
             
         case .teamMembers:
-            let signupLink = Route.teamMemberSignup(token: sess.user.data.teamToken).url
+            let signupLink = Route.signup(.teamMember(token: sess.user.data.teamToken)).url
             return I.query(sess.user.teamMembers) { members in
                 I.write(teamMembersView(teamMembers: members, signupLink: signupLink))
             }
+        
         case .invalidateTeamToken:
             var user = sess.user
             user.data.teamToken = UUID()
             return I.query(user.update()) { I.redirect(to: .account(.teamMembers)) }
+        
         case .deleteTeamMember(let id):
             return I.verifiedPost { _ in
                 I.query(sess.user.deleteTeamMember(teamMemberId: id, userId: sess.user.id)) {
