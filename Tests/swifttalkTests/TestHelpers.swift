@@ -11,6 +11,7 @@ import Base
 import XCTest
 import PostgreSQL
 import NIOWrapper
+import HTML
 @testable import Networking
 @testable import SwiftTalkServerLib
 
@@ -21,7 +22,7 @@ enum TestInterpreter: Interpreter, SwiftTalkInterpreter {
     case _onComplete(promise: Promise<Any>, do: (Any) -> TestInterpreter)
     case _withPostData(do: (Data) -> TestInterpreter)
     case _redirect(path: String, headers: [String:String])
-    case _writeHTML(SwiftTalkServerLib.ANode<()>, status: HTTPResponseStatus)
+    case _writeHTML(ANode<()>, status: HTTPResponseStatus)
     case _execute(Query<Any>, cont: (Either<Any, Error>) -> TestInterpreter)
     case _withSession((Session?) -> TestInterpreter)
     

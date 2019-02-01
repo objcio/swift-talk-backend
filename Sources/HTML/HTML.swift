@@ -36,7 +36,7 @@ extension String {
         return unicodeScalars.reduce(into: result, { $0.append($1.escapingIfNeeded) })
     }
     
-    var escapeForAttributeValue: String {
+    public var escapeForAttributeValue: String {
         return self.replacingOccurrences(of: "\"", with: "&quot;")
     }
 }
@@ -410,23 +410,23 @@ fileprivate extension String {
 
 extension El where I == () {
     // todo: we might want to check for forms as well
-    func linkTargets() -> [String] {
+    public func linkTargets() -> [String] {
         guard name == "a", let href = attributes["href"] else { return children.flatMap { $0.linkTargets() } }
         return [href]
     }
     
-    func forms() -> [(action: String, inputs: [(String,String)])] {
+    public func forms() -> [(action: String, inputs: [(String,String)])] {
         return children.flatMap { $0.forms() }
     }
     
-    func inputs() -> [(String,String)] {
+    public func inputs() -> [(String,String)] {
         return children.flatMap { $0.inputs() }
     }
 }
 
 extension ANode where I == () {
     // Searches for a's and forms
-    func linkTargets() -> [String] {
+    public func linkTargets() -> [String] {
         switch self {
         case .none:
             return []
@@ -441,7 +441,7 @@ extension ANode where I == () {
         }
     }
     
-    func forms() -> [(action: String, inputs: [(String,String)])] {
+    public func forms() -> [(action: String, inputs: [(String,String)])] {
         switch self {
         case .none:
             return []
@@ -458,7 +458,7 @@ extension ANode where I == () {
         }
     }
     
-    func inputs() -> [(String,String)] {
+    public func inputs() -> [(String,String)] {
         switch self {
         case .none:
             return []
