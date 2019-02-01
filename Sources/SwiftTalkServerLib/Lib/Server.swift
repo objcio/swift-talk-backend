@@ -6,32 +6,11 @@
 //
 
 import Foundation
+import Base
 import NIO
 import NIOHTTP1
 import NIOFoundationCompat
 
-
-enum HTTPMethod: String, Codable {
-    case post = "POST"
-    case get = "GET"
-}
-
-struct Request {
-    var path: [String]
-    var query: [String:String]
-    var method: HTTPMethod
-    var cookies: [(String, String)]
-}
-
-extension Request {
-    init(_ uri: String, method: HTTPMethod = .get, cookies: [(String,String)] = []) {
-        let (p,q) = uri.parseQuery
-        path = p.split(separator: "/").map(String.init)
-        query = q
-        self.method = method
-        self.cookies = cookies
-    }
-}
 
 protocol Interpreter {
     static func write(_ string: String, status: HTTPResponseStatus, headers: [String: String]) -> Self
@@ -166,37 +145,7 @@ struct NIOInterpreter: Interpreter {
     }
 }
 
-extension StringProtocol {
-    var keyAndValue: (String, String)? {
-        guard let i = index(of: "=") else { return nil }
-        let n = index(after: i)
-        return (String(self[..<i]), String(self[n...]).trimmingCharacters(in: CharacterSet(charactersIn: "\"")))
-    }
-}
-
-extension String {
-    fileprivate var decoded: String {
-    	return (removingPercentEncoding ?? "").replacingOccurrences(of: "+", with: " ")
-    }
-}
-
-extension StringProtocol {
-    var parseAsQueryPart: [String:String] {
-        let items = split(separator: "&").compactMap { $0.keyAndValue }
-        return Dictionary(items.map { (k,v) in (k.decoded, v.decoded) }, uniquingKeysWith: { $1 })
-    }
-}
-
-extension String {
-    var parseQuery: (String, [String:String]) {
-        guard let i = self.index(of: "?") else { return (self, [:]) }
-        let path = self[..<i]
-        let remainder = self[index(after: i)...]
-        return (String(path), remainder.parseAsQueryPart)
-    }
-}
-
-extension HTTPMethod {
+extension Base.HTTPMethod {
     init?(_ value: NIOHTTP1.HTTPMethod) {
         switch value {
         case .GET: self = .get

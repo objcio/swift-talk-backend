@@ -7,6 +7,8 @@ let package = Package(
     products: [
         .executable(name: "swifttalk-server", targets: ["swifttalk-server"]),
         .library(name: "SwiftTalkServerLib", targets: ["SwiftTalkServerLib"]),
+        .library(name: "Routing", targets: ["Routing"]),
+        .library(name: "Base", targets: ["Base"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-nio.git", from: "1.5.0"),
@@ -18,8 +20,24 @@ let package = Package(
     ],
     targets: [
         .target(
+            name: "Base",
+            dependencies: [
+                "Cryptor",
+            ],
+            path: "Sources/Helpers"
+        ),
+        .target(
+            name: "Routing",
+            dependencies: [
+                "Base",
+            ],
+            path: "Sources/Routing"
+        ),
+        .target(
             name: "SwiftTalkServerLib",
             dependencies: [
+                "Base",
+                "Routing",
                 "NIO",
                 "NIOHTTP1",
                 "NIOFoundationCompat",

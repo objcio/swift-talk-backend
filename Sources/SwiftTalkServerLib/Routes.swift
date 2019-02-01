@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import Routing
+import Base
 
 indirect enum Route: Equatable {
     case home
@@ -81,8 +83,8 @@ indirect enum Route: Equatable {
 
 extension Route {
     var path: String {
-        guard let result = router.print(self)?.prettyPath else {
-            log(error: "Couldn't print path for \(self) \(String(describing: router.print(self)))")
+        guard let result = router.prettyPrint(self) else {
+            log(error: "Couldn't print path for \(self))")
             return ""
         }
         return result
@@ -93,7 +95,7 @@ extension Route {
     }
     
     static var siteMap: String {
-        return router.description.pretty
+        return router.prettyDescription
     }
     
     init?(_ request: Request) {

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Base
 
 
 let subscriptionBenefits: [(icon: String, name: String, description: String)] = [

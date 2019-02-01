@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Base
 
 fileprivate let accountHeader = pageHeader(.other(header: "Account", blurb: nil, extraClasses: "ms4"))
 

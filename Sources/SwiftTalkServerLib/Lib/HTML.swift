@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import Base
+
 
 // This extension is from HTMLString: https://github.com/alexaubry/HTMLString
 extension UnicodeScalar {

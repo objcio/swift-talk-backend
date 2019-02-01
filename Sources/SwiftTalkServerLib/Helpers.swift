@@ -2,28 +2,28 @@
 //  Helpers.swift
 //  Bits
 //
-//  Created by Florian Kugler on 16-08-2018.
+//  Created by Florian Kugler on 01-02-2019.
 //
 
 import Foundation
 
 
-var standardError = FileHandle.standardError
+public var standardError = FileHandle.standardError
 
 infix operator ?!: NilCoalescingPrecedence
-func ?!<A>(lhs: A?, rhs: Error) throws -> A {
+public func ?!<A>(lhs: A?, rhs: Error) throws -> A {
     guard let value = lhs else {
         throw rhs
     }
     return value
 }
 
-func flatten<A>(_ value: A??) -> A? {
+public func flatten<A>(_ value: A??) -> A? {
     guard let x = value else { return nil }
     return x
 }
 
-final class Lazy<A> {
+public final class Lazy<A> {
     private let compute: () throws -> A
     private var cache: A?
     private var cleanup: (A) -> ()
@@ -44,7 +44,7 @@ final class Lazy<A> {
     }
 }
 
-final class Atomic<A> {
+public final class Atomic<A> {
     private let queue = DispatchQueue(label: "Atomic serial queue")
     private var _value: A
     private let _didSet: ((A) -> ())?
@@ -73,18 +73,18 @@ extension Foundation.FileHandle : TextOutputStream {
 }
 
 extension Scanner {
-    var remainder: String {
+    public var remainder: String {
         return NSString(string: string).substring(from: scanLocation)
     }
 }
 
 extension Swift.Collection {
-    var nonEmpty: Self? {
+    public var nonEmpty: Self? {
         return isEmpty ? nil : self
     }
 }
 
-func zip<A,B,R>(_ a: Either<A, [R]>, _ b: Either<B, [R]>) -> Either<(A,B), [R]> {
+public func zip<A,B,R>(_ a: Either<A, [R]>, _ b: Either<B, [R]>) -> Either<(A,B), [R]> {
     guard case let .left(x) = a, case let .left(y) = b else {
         return .right((a.err ?? []) + (b.err ?? []))
     }
@@ -92,7 +92,7 @@ func zip<A,B,R>(_ a: Either<A, [R]>, _ b: Either<B, [R]>) -> Either<(A,B), [R]> 
 }
 
 
-func zip<A,B,C,R>(_ a: Either<A, [R]>, _ b: Either<B, [R]>, _ c: Either<C, [R]>) -> Either<(A,B,C), [R]> {
+public func zip<A,B,C,R>(_ a: Either<A, [R]>, _ b: Either<B, [R]>, _ c: Either<C, [R]>) -> Either<(A,B,C), [R]> {
     guard case let .left(x) = a, case let .left(y) = b, case let .left(z) = c else {
         return .right((a.err ?? []) + (b.err ?? []) + (c.err ?? []))
     }
@@ -100,22 +100,22 @@ func zip<A,B,C,R>(_ a: Either<A, [R]>, _ b: Either<B, [R]>, _ c: Either<C, [R]>)
 }
 
 
-func zip<A,B>(_ a: A?, b: B?) -> (A,B)? {
+public func zip<A,B>(_ a: A?, b: B?) -> (A,B)? {
     guard let x = a, let y = b else { return nil }
     return (x,y)
 }
 
-func zip<A,B,C>(_ a: A?, b: B?, c: C?) -> (A,B, C)? {
+public func zip<A,B,C>(_ a: A?, b: B?, c: C?) -> (A,B, C)? {
     guard let x = a, let y = b, let z = c else { return nil }
     return (x,y,z)
 }
 
-func zip<A,B,C,D>(_ a: A?, b: B?, _ c: C?, _ d: D?) -> (A,B,C,D)? {
+public func zip<A,B,C,D>(_ a: A?, b: B?, _ c: C?, _ d: D?) -> (A,B,C,D)? {
     guard let x = a, let y = b, let z = c, let q = d else { return nil }
     return (x,y,z,q)
 }
 
-func zip<A,B,C,D,E>(_ a: A?, b: B?, _ c: C?, _ d: D?, e: E?) -> (A,B,C,D,E)? {
+public func zip<A,B,C,D,E>(_ a: A?, b: B?, _ c: C?, _ d: D?, e: E?) -> (A,B,C,D,E)? {
     guard let x = a, let y = b, let z = c, let q = d, let r = e else { return nil }
     return (x,y,z,q,r)
 }
@@ -125,7 +125,7 @@ extension String {
     // https://github.com/apple/swift/blob/bd109bec92f52003edff30d458ea5b2a424c9aa0/stdlib/public/SDK/Foundation/JSONEncoder.swift#L148
     // Copyright (c) 2014 - 2017 Apple Inc. and the Swift project authors
     // Licensed under Apache License v2.0 with Runtime Library Exception
-    var snakeCased: String {
+    public var snakeCased: String {
         guard !self.isEmpty else { return self }
         let stringKey = self
         
@@ -175,11 +175,11 @@ extension String {
         return result
     }
     
-    var base64Encoded: String {
+    public var base64Encoded: String {
         return data(using: .utf8)!.base64EncodedString()
     }
-
-    func drop(prefix: String) -> String? {
+    
+    public func drop(prefix: String) -> String? {
         guard hasPrefix(prefix) else { return nil }
         let remainderStart = self.index(startIndex, offsetBy: prefix.count)
         return String(self[remainderStart...])
@@ -189,13 +189,67 @@ extension String {
 import Cryptor
 
 extension Data {
-    var md5: String {
+    public var md5: String {
         let data = Data(Digest(using: .md5).update(data: self)?.final() ?? [])
         return data.map { String(format: "%02hhx", $0) }.joined()
     }
 }
 
-func measure<A>(message: String, file: StaticString = #file, line: UInt = #line, treshold: TimeInterval = 0.01, _ code: () throws -> A) rethrows -> A {
+public enum Either<A, B> {
+    case left(A)
+    case right(B)
+}
+
+extension Either {
+    public init(_ value: A?, or: @autoclosure () -> B) {
+        if let x = value {
+            self = .left(x)
+        } else {
+            self = .right(or())
+        }
+    }
+    
+    public var err: B? {
+        guard case let .right(e) = self else { return nil }
+        return e
+    }
+}
+
+extension Date {
+    public var isToday: Bool {
+        let components = Calendar.current.dateComponents([.month,.year,.day], from: self)
+        let components2 = Calendar.current.dateComponents([.month,.year,.day], from: Date())
+        return components.year == components2.year && components.month == components2.month && components.day == components2.day
+    }
+}
+
+extension Process {
+    public static func pipe(launchPath: String, _ string: String) -> String {
+        let task = Process()
+        task.launchPath = launchPath
+        task.arguments = []
+        
+        let out = Pipe()
+        task.standardOutput = out
+        
+        let `in` = Pipe()
+        task.standardInput = `in`
+        
+        task.launch()
+        `in`.fileHandleForWriting.write(string)
+        `in`.fileHandleForWriting.closeFile()
+        
+        let data = out.fileHandleForReading.readDataToEndOfFile()
+        out.fileHandleForWriting.closeFile()
+        
+        let output = String(data: data, encoding: .utf8)
+        //        task.terminate() // crashes on linux
+        return output ?? ""
+    }
+}
+
+
+public func measure<A>(message: String, file: StaticString = #file, line: UInt = #line, treshold: TimeInterval = 0.01, _ code: () throws -> A) rethrows -> A {
     let start = Date()
     let result = try code()
     let time = Date().timeIntervalSince(start)
@@ -205,55 +259,3 @@ func measure<A>(message: String, file: StaticString = #file, line: UInt = #line,
     return result
 }
 
-enum Either<A, B> {
-    case left(A)
-    case right(B)
-}
-
-extension Either {
-    init(_ value: A?, or: @autoclosure () -> B) {
-        if let x = value {
-            self = .left(x)
-        } else {
-            self = .right(or())
-        }
-    }
-    
-    var err: B? {
-        guard case let .right(e) = self else { return nil }
-        return e
-    }
-}
-
-extension Date {
-    var isToday: Bool {
-        let components = Calendar.current.dateComponents([.month,.year,.day], from: self)
-        let components2 = Calendar.current.dateComponents([.month,.year,.day], from: Date())
-        return components.year == components2.year && components.month == components2.month && components.day == components2.day
-    }
-}
-
-extension Process {
-    static func pipe(launchPath: String, _ string: String) -> String {
-        let task = Process()
-        task.launchPath = launchPath
-        task.arguments = []
-
-        let out = Pipe()
-        task.standardOutput = out
-
-        let `in` = Pipe()
-        task.standardInput = `in`
-
-        task.launch()
-        `in`.fileHandleForWriting.write(string)
-        `in`.fileHandleForWriting.closeFile()
-
-        let data = out.fileHandleForReading.readDataToEndOfFile()
-        out.fileHandleForWriting.closeFile()
-
-        let output = String(data: data, encoding: .utf8)
-//        task.terminate() // crashes on linux
-        return output ?? ""
-    }
-}
