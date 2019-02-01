@@ -8,6 +8,7 @@
 import Foundation
 import PostgreSQL
 import NIOHTTP1
+import Promise
 
 extension Route.EpisodeR {
     func interpret<I: Interp>(id: Id<Episode>) throws -> I {

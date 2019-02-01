@@ -9,6 +9,7 @@ let package = Package(
         .library(name: "SwiftTalkServerLib", targets: ["SwiftTalkServerLib"]),
         .library(name: "Routing", targets: ["Routing"]),
         .library(name: "Base", targets: ["Base"]),
+        .library(name: "Promise", targets: ["Promise"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-nio.git", from: "1.5.0"),
@@ -24,7 +25,13 @@ let package = Package(
             dependencies: [
                 "Cryptor",
             ],
-            path: "Sources/Helpers"
+            path: "Sources/Base"
+        ),
+        .target(
+            name: "Promise",
+            dependencies: [
+            ],
+            path: "Sources/Promise"
         ),
         .target(
             name: "Routing",
@@ -36,6 +43,7 @@ let package = Package(
         .target(
             name: "SwiftTalkServerLib",
             dependencies: [
+                "Promise",
                 "Base",
                 "Routing",
                 "NIO",

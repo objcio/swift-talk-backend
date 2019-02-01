@@ -7,6 +7,7 @@
 
 import Foundation
 import PostgreSQL
+import Promise
 
 extension ProfileFormData {
     init(_ data: UserData) {

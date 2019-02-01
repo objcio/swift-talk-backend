@@ -7,6 +7,7 @@
 
 import Foundation
 import PostgreSQL
+import Promise
 
 func scheduleTaskTimer() -> DispatchSourceTimer {
     let queue = DispatchQueue(label: "Scheduled Task Timer")

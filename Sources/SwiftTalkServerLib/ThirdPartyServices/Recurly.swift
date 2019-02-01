@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Promise
 
 
 let recurly = Recurly()

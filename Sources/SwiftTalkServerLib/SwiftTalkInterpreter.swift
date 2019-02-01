@@ -7,6 +7,7 @@
 
 import Foundation
 import NIOHTTP1
+import Promise
 
 struct Reader<Value, Result> {
     let run: (Value) -> Result

@@ -10,6 +10,7 @@ import Base
 import NIO
 import NIOHTTP1
 import NIOFoundationCompat
+import Promise
 
 
 protocol Interpreter {

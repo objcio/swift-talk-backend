@@ -47,10 +47,8 @@ public final class Lazy<A> {
 public final class Atomic<A> {
     private let queue = DispatchQueue(label: "Atomic serial queue")
     private var _value: A
-    private let _didSet: ((A) -> ())?
-    init(_ value: A, didSet: ((A) -> ())? = nil) {
+    init(_ value: A) {
         self._value = value
-        self._didSet = didSet
     }
     
     var value: A {
@@ -60,7 +58,6 @@ public final class Atomic<A> {
     func mutate(_ transform: (inout A) -> ()) {
         queue.sync {
             transform(&self._value)
-            _didSet?(self._value)
         }
     }
 }

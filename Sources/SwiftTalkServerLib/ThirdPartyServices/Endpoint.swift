@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Promise
 
 enum ContentType: String {
     case json = "application/json"
