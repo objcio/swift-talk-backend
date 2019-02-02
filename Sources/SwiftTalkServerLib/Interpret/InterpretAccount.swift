@@ -21,6 +21,39 @@ extension Route.Account {
     }
     
     private func interpret2<I: Interp>(session sess: Session) throws -> I {
+
+        func editAccount(form: Form<ProfileFormData>, role: UserData.Role, cont: @escaping () -> Route) -> I {
+            func updateAndRedirect(_ user: Row<UserData>) -> I {
+                return I.query(user.update()) { _ in
+                    return I.redirect(to: cont())
+                }
+            }
+            
+            return I.form(form, initial: ProfileFormData(sess.user.data), convert: { profile in
+                var u = sess.user
+                u.data.email = profile.email
+                u.data.name = profile.name
+                u.data.confirmedNameAndEmail = true
+                u.data.role = role
+                let errors = u.data.validate()
+                if errors.isEmpty {
+                    return .left(u)
+                } else {
+                    return .right(errors)
+                }
+            }, onPost: { user in
+                I.onSuccess(promise: recurly.account(with: sess.user.id).promise, do: { _ in
+                    I.onSuccess(promise: recurly.updateAccount(accountCode: sess.user.id, email: user.data.email).promise, do: { _ in
+                        updateAndRedirect(user)
+                    }, else: {
+                        I.write(form.render(ProfileFormData(user.data), [(field: "", message: "An error occurred while updating your account profile. Please try again later.")]))
+                    })
+                }, else: {
+                    updateAndRedirect(user)
+                })
+            })
+        }
+        
         switch self {
         case .thankYou:
             // todo: flash: "Thank you for supporting us
@@ -30,49 +63,12 @@ extension Route.Account {
                 return I.redirect(to: .home)
             }
         case let .register(couponCode, team):
-            return I.form(registerForm(couponCode: couponCode, team: team), initial: ProfileFormData(sess.user.data), convert: { profile in
-                var u = sess.user
-                u.data.email = profile.email
-                u.data.name = profile.name
-                u.data.confirmedNameAndEmail = true
-                u.data.role = team ? .teamManager : .user
-                let errors = u.data.validate()
-                if errors.isEmpty {
-                    return .left(u)
-                } else {
-                    return .right(errors)
-                }
-            }, onPost: { (user: Row<UserData>) in
-                return I.query(user.update()) {
-                    if sess.premiumAccess {
-                        return I.redirect(to: .home)
-                    } else {
-                        return I.redirect(to: .subscription(.new(couponCode: couponCode, team: team)))
-                    }
-                }
-            })
+            let role: UserData.Role = team ? .teamManager : .user
+            return editAccount(form: registerForm(couponCode: couponCode, team: team), role: role) {
+                return sess.premiumAccess ? .home : .subscription(.new(couponCode: couponCode, team: team))
+            }
         case .profile:
-            var u = sess.user
-            let data = ProfileFormData(email: u.data.email, name: u.data.name)
-            let f = accountForm()
-            return I.form(f, initial: data, validate: { _ in [] }, onPost: { result in
-                // todo: this is almost the same as the new account logic... can we abstract this?
-                u.data.email = result.email
-                u.data.name = result.name
-                u.data.confirmedNameAndEmail = true
-                let errors = u.data.validate()
-                if errors.isEmpty {
-                    return I.onSuccess(promise: recurly.updateAccount(accountCode: u.id, email: u.data.email).promise, do: { _ in
-                        I.query(u.update()) { _ in
-                            I.redirect(to: .account(.profile))
-                        }
-                    }, else: {
-                        I.write(f.render(data, [(field: "", message: "An error occurred while updating your account profile. Please try again later.")]))
-                    })
-                } else {
-                    return I.write(f.render(result, errors))
-                }
-            })
+            return editAccount(form: accountForm(), role: sess.user.data.role, cont: { .account(.profile) })
         case .billing:
             var user = sess.user
             func renderBilling(recurlyToken: String) -> I {
