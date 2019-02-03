@@ -100,6 +100,7 @@ class TestConnection: ConnectionProtocol {
     }
     
     func execute<A>(_ query: Query<A>) throws -> A {
+        
         guard let idx = results.firstIndex(where: { $0.query.matches(query) }) else { XCTFail("Query not found: \(query)"); throw TestErr() }
         let response = results[idx].response as! A
         results.remove(at: idx)
@@ -137,8 +138,8 @@ extension Query {
 
 struct EndpointAndResult {
     let endpoint: RemoteEndpoint<Any>
-    let response: Any
-    init<A>(endpoint: RemoteEndpoint<A>, response: A) {
+    let response: Any?
+    init<A>(endpoint: RemoteEndpoint<A>, response: A?) {
         self.endpoint = endpoint.map { $0 }
         self.response = response
     }
@@ -155,7 +156,7 @@ class TestURLSession: URLSessionProtocol {
         guard let idx = results.firstIndex(where: { $0.endpoint.request.matches(endpoint.request) }) else {
             XCTFail("Unexpected endpoint: \(endpoint.request.httpMethod ?? "GET") \(endpoint.request.url!)"); return
         }
-        let response = results[idx].response as! A
+        let response = results[idx].response as! A?
         results.remove(at: idx)
         callback(response)
     }

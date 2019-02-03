@@ -74,9 +74,9 @@ struct Flow {
         cond(currentPage)
     }
     
-    func click(_ route: Route, file: StaticString = #file, line: UInt = #line, _ cont: (Flow) throws -> ()) throws {
+    func click(_ route: Route, expectedQueries: [QueryAndResult] = [], file: StaticString = #file, line: UInt = #line, _ cont: (Flow) throws -> ()) throws {
         testLinksTo(currentPage, route: route)
-        try cont(Flow(session: session, currentPage: Flow.run(session, route, file, line)))
+        try cont(Flow(session: session, currentPage: Flow.run(session, route, connection: TestConnection(expectedQueries), file, line)))
     }
     
     func followRedirect(to action: Route, expectedQueries: [QueryAndResult] = [], file: StaticString = #file, line: UInt = #line,  _ then: (Flow) throws -> ()) throws -> () {
@@ -89,7 +89,32 @@ struct Flow {
         
         try then(Flow(session: session, currentPage: Flow.run(session, action, connection: TestConnection(expectedQueries), file, line)))
     }
-    
+
+    func follow(expectedQueries: [QueryAndResult] = [], file: StaticString = #file, line: UInt = #line, _ then: (Flow) throws -> ()) throws -> () {
+        let testConnection = TestConnection(expectedQueries)
+        var next = currentPage
+        
+        func run(_ i: TestInterpreter) -> TestInterpreter? {
+            var nextInterpreter: TestInterpreter?
+            if case let ._onComplete(promise: p, do: d) = next {
+                p.run { nextInterpreter = d($0) }
+            } else if case let TestInterpreter._execute(q, cont: c) = next {
+                if let result = try? testConnection.execute(q) {
+                    nextInterpreter = c(.left(result))
+                } else {
+                    nextInterpreter = c(.right(ServerError(privateMessage: "", publicMessage: "")))
+                }
+            }
+            return nextInterpreter
+        }
+        
+        while let n = run(next) {
+            next = n
+        }
+        testConnection.assertDone()
+        try then(Flow(session: session, currentPage: next))
+    }
+
     func fillForm(to action: Route, data: [String:String] = [:], expectedQueries: [QueryAndResult] = [], file: StaticString = #file, line: UInt = #line,  _ then: (Flow) throws -> ()) throws {
         guard let f = currentPage.forms().first(where: { $0.action == action }) else {
             XCTFail("Couldn't find a form with action \(action)", file: file, line: line)
@@ -106,8 +131,8 @@ struct Flow {
         }
         let theData = postData.merging(data, uniquingKeysWith: { $1 }).map { (key, value) in "\(key)=\(value.escapeForAttributeValue)"}.joined(separator: "&").data(using: .utf8)!
         let nextPage = cont(theData)
-        conn.assertDone()
         try then(Flow(session: session, currentPage: nextPage))
+        conn.assertDone()
     }
     
     func withSession(_ session: Session?, _ then: (Flow) throws -> ()) throws {
@@ -140,23 +165,31 @@ final class FlowTests: XCTestCase {
             testLinksTo(page, route: .login(continue: .subscription(.new(couponCode: nil, team: false))))
         }
         
+        let testSession = TestURLSession([
+            EndpointAndResult(endpoint: recurly.account(with: nonSubscribedUser.user.id), response: nil),
+        ])
+        pushGlobals(Globals(currentDate: { Date(timeIntervalSince1970: 0) }, urlSession: testSession))
+        
         let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .subscribe)
-        try notSubscribed.click(.subscription(.new(couponCode: nil, team: false)), {
+        try notSubscribed.click(.subscription(.new(couponCode: nil, team: false)), expectedQueries: []) {
             var confirmedSess = $0.session!
             confirmedSess.user.data.confirmedNameAndEmail = true
             try $0.fillForm(to: .account(.register(couponCode: nil, team: false)), expectedQueries: [
-                QueryAndResult(query: confirmedSess.user.update(), response: ())
-            ], {
+                QueryAndResult(query: confirmedSess.user.update(), response: ()),
+            ]) {
                 try $0.withSession(confirmedSess) {
-                    try $0.followRedirect(to: .subscription(.new(couponCode: nil, team: false)), expectedQueries: [
-                        QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1)),
-                        QueryAndResult(confirmedSess.user.update())
-                    ], {
-                        print($0.currentPage)
-                    })
+                    try $0.follow(expectedQueries: []) {
+                        try $0.followRedirect(to: .subscription(.new(couponCode: nil, team: false)), expectedQueries: [
+                            QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1)),
+                            QueryAndResult(query: confirmedSess.user.update(), response: ()),
+                        ]) {
+                            print($0.currentPage)
+                        }
+                    }
                 }
-            })
-        })
+            }
+        }
+        testSession.assertDone()
     }
 
     func testTeamSubscription() throws {
@@ -166,8 +199,13 @@ final class FlowTests: XCTestCase {
             testLinksTo(page, route: .login(continue: .subscription(.new(couponCode: nil, team: true))))
         }
 
+        let testSession = TestURLSession([
+            EndpointAndResult(endpoint: recurly.account(with: nonSubscribedUser.user.id), response: nil),
+        ])
+        pushGlobals(Globals(currentDate: { Date(timeIntervalSince1970: 0) }, urlSession: testSession))
+
         let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .subscribeTeam)
-        try notSubscribed.click(.subscription(.new(couponCode: nil, team: true)), {
+        try notSubscribed.click(.subscription(.new(couponCode: nil, team: true)), expectedQueries: [], {
             var confirmedSess = $0.session!
             confirmedSess.user.data.confirmedNameAndEmail = true
             confirmedSess.user.data.role = .teamManager
@@ -175,12 +213,14 @@ final class FlowTests: XCTestCase {
                 QueryAndResult(query: confirmedSess.user.update(), response: ())
             ], {
                 try $0.withSession(confirmedSess) {
-                    try $0.followRedirect(to: .subscription(.new(couponCode: nil, team: true)), expectedQueries: [
-                        QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1)),
-                        QueryAndResult(confirmedSess.user.update())
-                    ], {
-                        print($0.currentPage)
-                    })
+                    try $0.follow {
+                        try $0.followRedirect(to: .subscription(.new(couponCode: nil, team: true)), expectedQueries: [
+                            QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1)),
+                            QueryAndResult(confirmedSess.user.update())
+                        ], {
+                            print($0.currentPage)
+                        })
+                    }
                 }
             })
         })
