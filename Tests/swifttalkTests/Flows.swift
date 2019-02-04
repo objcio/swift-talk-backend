@@ -66,8 +66,9 @@ struct Flow {
         return result
     }
     
-    static func landingPage(session: Session?, file: StaticString = #file, line: UInt = #line, _ route: Route) throws -> Flow {
-        return try Flow(session: session, currentPage: run(session, route, file, line))
+    static func landingPage(session: Session?, _ route: Route, expectedQueries: [QueryAndResult] = [], file: StaticString = #file, line: UInt = #line) throws -> Flow {
+        let conn = TestConnection(expectedQueries)
+        return try Flow(session: session, currentPage: run(session, route, connection: conn, file, line))
     }
     
     func verify(cond: (TestInterpreter) -> ()) {
@@ -80,14 +81,17 @@ struct Flow {
     }
     
     func followRedirect(to action: Route, expectedQueries: [QueryAndResult] = [], file: StaticString = #file, line: UInt = #line,  _ then: (Flow) throws -> ()) throws -> () {
+        try verifyRedirect(to: action, file: file, line: line)
+        try then(Flow(session: session, currentPage: Flow.run(session, action, connection: TestConnection(expectedQueries), file, line)))
+    }
+
+    func verifyRedirect(to action: Route, file: StaticString = #file, line: UInt = #line) throws -> () {
         guard case let TestInterpreter._redirect(path: path, headers: _) = currentPage else {
             XCTFail("Expected redirect"); return
         }
         guard action.path == path else {
             XCTFail("Expected \(action), got \(path)"); return
         }
-        
-        try then(Flow(session: session, currentPage: Flow.run(session, action, connection: TestConnection(expectedQueries), file, line)))
     }
 
     func followRequests(file: StaticString = #file, line: UInt = #line, _ then: (Flow) throws -> ()) throws -> () {
@@ -135,6 +139,10 @@ final class FlowTests: XCTestCase {
     override static func setUp() {
         pushTestEnv()
         testPlans = plans
+    }
+    
+    override func setUp() {
+        setupURLSession([])
     }
     
     func setupURLSession(_ results: [EndpointAndResult]) {
@@ -206,6 +214,42 @@ final class FlowTests: XCTestCase {
                             QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1)),
                             QueryAndResult(confirmedSess.user.update())
                         ]) { _ in XCTAssert(true) }
+                    }
+                }
+            }
+        }
+    }
+    
+    func testTeamMemberSignupForNotLoggedIn() throws {
+        let teamToken = subscribedTeamManager.user.data.teamToken
+        setupURLSession([
+            EndpointAndResult(endpoint: recurly.account(with: nonSubscribedUser.user.id), response: subscribedUserAccount),
+            EndpointAndResult(endpoint: recurly.updateAccount(accountCode: nonSubscribedUser.user.id, email: nonSubscribedUser.user.data.email), response: subscribedUserAccount)
+        ])
+
+        let subscribeWithoutASession = try Flow.landingPage(session: nil, .teamMemberSignup(token: teamToken), expectedQueries: [
+            QueryAndResult(query: Row<UserData>.select(teamToken: teamToken), response: subscribedTeamManager.user)
+        ])
+        subscribeWithoutASession.verify {
+            testLinksTo($0, route: .login(continue: .teamMemberSignup(token: teamToken)))
+        }
+        
+        let teamMember = Row(id: UUID(), data: TeamMemberData(userId: subscribedTeamManager.user.id, teamMemberId: nonSubscribedUser.user.id, createdAt: globals.currentDate(), expiredAt: nil))
+        try Flow.landingPage(session: nonSubscribedUser, .teamMemberSignup(token: teamToken), expectedQueries: [
+            QueryAndResult(query: Row<UserData>.select(teamToken: teamToken), response: subscribedTeamManager.user),
+        ]).click(.subscription(.registerAsTeamMember(token: teamToken, terminate: false)), expectedQueries: [
+            QueryAndResult(query: Row<UserData>.select(teamToken: teamToken), response: subscribedTeamManager.user),
+            QueryAndResult(query: teamMember.data.insert, response: teamMember.id),
+            QueryAndResult(query: Task.syncTeamMembersWithRecurly(userId: subscribedTeamManager.user.id).schedule(minutes: 5), response: ())
+        ]) {
+            var subscribed = Session(sessionId: nonSubscribedUser.sessionId, user: nonSubscribedUser.user, teamMember: teamMember, teamManager: subscribedTeamManager.user, gifter: nil)
+            subscribed.user.data.confirmedNameAndEmail = true
+            try $0.withSession(subscribed) {
+                try $0.fillForm(to: .account(.register(couponCode: nil, team: false)), data: ["name": subscribed.user.data.name, "email": subscribed.user.data.email], expectedQueries: [
+                    QueryAndResult(query: subscribed.user.update(), response: ())
+                ]) {
+                    try $0.followRequests {
+                        try $0.verifyRedirect(to: .home)
                     }
                 }
             }

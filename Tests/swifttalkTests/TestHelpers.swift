@@ -100,7 +100,7 @@ class TestConnection: ConnectionProtocol {
     }
     
     func execute<A>(_ query: Query<A>) throws -> A {
-        
+        print(query)
         guard let idx = results.firstIndex(where: { $0.query.matches(query) }) else { XCTFail("Query not found: \(query)"); throw TestErr() }
         let response = results[idx].response as! A
         results.remove(at: idx)
