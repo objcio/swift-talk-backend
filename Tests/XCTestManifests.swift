@@ -2,8 +2,8 @@ import XCTest
 
 extension FlowTests {
     static let __allTests = [
-        ("testNewSubscription", testNewSubscription),
         ("testSubscription", testSubscription),
+        ("testTeamSubscription", testTeamSubscription),
     ]
 }
 

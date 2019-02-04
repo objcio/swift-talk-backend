@@ -141,34 +141,39 @@ struct Flow {
 }
 
 final class FlowTests: XCTestCase {
-    
+    let testDate = Date()
+    var testSession = TestURLSession([])
+
     override static func setUp() {
         pushTestEnv()
-        let testDate = Date()
-        pushGlobals(Globals(currentDate: { testDate }))
-    }
-    
-    func run(_ route: Route) -> (Session?) throws -> TestInterpreter {
-        return { (session: Session?) in
-            let env = RequestEnvironment(route: route, hashedAssetName: { $0 }, buildSession: { session }, connection: noConnection, resourcePaths: [])
-            let i: Reader<RequestEnvironment, TestInterpreter> = try route.interpret()
-            return i.run(env)
-        }
-    }
-    
-    func testSubscription() throws {
-        // todo test coupon codes
         testPlans = plans
-        
+    }
+    
+    func setupURLSession(_ results: [EndpointAndResult]) {
+        testSession = TestURLSession(results)
+        pushGlobals(Globals(currentDate: { self.testDate }, urlSession: testSession))
+    }
+    
+    func assertTestURLSessionDone() {
+        testSession.assertDone()
+    }
+    
+    override func tearDown() {
+        assertTestURLSessionDone()
+        super.tearDown()
+    }
+
+    // todo test coupon codes
+
+    func testSubscription() throws {
         let subscribeWithoutASession = try Flow.landingPage(session: nil, .subscribe)
         subscribeWithoutASession.verify { page in
             testLinksTo(page, route: .login(continue: .subscription(.new(couponCode: nil, team: false))))
         }
         
-        let testSession = TestURLSession([
+        setupURLSession([
             EndpointAndResult(endpoint: recurly.account(with: nonSubscribedUser.user.id), response: nil),
         ])
-        pushGlobals(Globals(currentDate: { Date(timeIntervalSince1970: 0) }, urlSession: testSession))
         
         let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .subscribe)
         try notSubscribed.click(.subscription(.new(couponCode: nil, team: false)), expectedQueries: []) {
@@ -182,97 +187,40 @@ final class FlowTests: XCTestCase {
                         try $0.followRedirect(to: .subscription(.new(couponCode: nil, team: false)), expectedQueries: [
                             QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1)),
                             QueryAndResult(query: confirmedSess.user.update(), response: ()),
-                        ]) {
-                            print($0.currentPage)
-                        }
+                        ]) { _ in XCTAssert(true) }
                     }
                 }
             }
         }
-        testSession.assertDone()
     }
 
     func testTeamSubscription() throws {
-        testPlans = plans
         let subscribeWithoutASession = try Flow.landingPage(session: nil, .subscribeTeam)
         subscribeWithoutASession.verify { page in
             testLinksTo(page, route: .login(continue: .subscription(.new(couponCode: nil, team: true))))
         }
 
-        let testSession = TestURLSession([
+        setupURLSession([
             EndpointAndResult(endpoint: recurly.account(with: nonSubscribedUser.user.id), response: nil),
         ])
-        pushGlobals(Globals(currentDate: { Date(timeIntervalSince1970: 0) }, urlSession: testSession))
 
         let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .subscribeTeam)
-        try notSubscribed.click(.subscription(.new(couponCode: nil, team: true)), expectedQueries: [], {
+        try notSubscribed.click(.subscription(.new(couponCode: nil, team: true)), expectedQueries: []) {
             var confirmedSess = $0.session!
             confirmedSess.user.data.confirmedNameAndEmail = true
             confirmedSess.user.data.role = .teamManager
             try $0.fillForm(to: .account(.register(couponCode: nil, team: true)), expectedQueries: [
                 QueryAndResult(query: confirmedSess.user.update(), response: ())
-            ], {
+            ]) {
                 try $0.withSession(confirmedSess) {
                     try $0.follow {
                         try $0.followRedirect(to: .subscription(.new(couponCode: nil, team: true)), expectedQueries: [
                             QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1)),
                             QueryAndResult(confirmedSess.user.update())
-                        ], {
-                            print($0.currentPage)
-                        })
+                        ]) { _ in XCTAssert(true) }
                     }
                 }
-            })
-        })
+            }
+        }
     }
-
-    func testNewSubscription() throws {
-        testPlans = plans
-        
-        // todo test coupon codes
-        let i = run(.subscription(.new(couponCode: nil, team: false)))
-        // Not logged in
-        try i(nil).testIsError()
-        
-        let form = try TestUnwrap(i(nonSubscribedUser).forms().first)
-        XCTAssertEqual(form.action, .account(.register(couponCode: nil, team: false)))
-        
-        try print(i(subscribedUser))
-    }
-    
-    // IDEA we can have a "click" test that verifies a route is present in the current page, and then proceeds to test that link. this could build up a tree structure of tests (for different combinations). we could branch out if there are multiple choices on a page.
-    
-    
-//    func testRoutes() throws {
-//        let r = try routesReachable(startingFrom: .subscribe, session: nil)
-//        print(r)
-//    }
-    
-    //    func routesReachable(startingFrom: Route, session: Session?) throws -> [Route] {
-    //        var routesChecked: [Route] = []
-    //
-    //        func helper(queue: inout [Route]) throws {
-    //            while let r = queue.popLast() {
-    //                guard !routesChecked.contains(r) else { continue }
-    //                routesChecked.append(r)
-    //                let rendered: TestInterpreter
-    //                switch r {
-    //                case .home: fatalError()
-    //                case .subscribe:
-    //
-    //                default: fatalError("\(r)")
-    //                }
-    //                queue.append(contentsOf: rendered.linkTargets())
-    //            }
-    //        }
-    //        var queue = [startingFrom]
-    //        try helper(queue: &queue)
-    //        return routesChecked
-    //    }
-
-
-    static var allTests = [
-        ("testSubscription", testSubscription),
-        ("testNewSubscription", testNewSubscription),
-    ]
 }
