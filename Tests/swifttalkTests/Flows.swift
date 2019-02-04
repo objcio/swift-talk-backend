@@ -90,28 +90,11 @@ struct Flow {
         try then(Flow(session: session, currentPage: Flow.run(session, action, connection: TestConnection(expectedQueries), file, line)))
     }
 
-    func follow(expectedQueries: [QueryAndResult] = [], file: StaticString = #file, line: UInt = #line, _ then: (Flow) throws -> ()) throws -> () {
-        let testConnection = TestConnection(expectedQueries)
+    func followRequests(file: StaticString = #file, line: UInt = #line, _ then: (Flow) throws -> ()) throws -> () {
         var next = currentPage
-        
-        func run(_ i: TestInterpreter) -> TestInterpreter? {
-            var nextInterpreter: TestInterpreter?
-            if case let ._onComplete(promise: p, do: d) = next {
-                p.run { nextInterpreter = d($0) }
-            } else if case let TestInterpreter._execute(q, cont: c) = next {
-                if let result = try? testConnection.execute(q) {
-                    nextInterpreter = c(.left(result))
-                } else {
-                    nextInterpreter = c(.right(ServerError(privateMessage: "", publicMessage: "")))
-                }
-            }
-            return nextInterpreter
+        while case let ._onComplete(promise: p, do: d) = next {
+            p.run { next = d($0) }
         }
-        
-        while let n = run(next) {
-            next = n
-        }
-        testConnection.assertDone()
         try then(Flow(session: session, currentPage: next))
     }
 
