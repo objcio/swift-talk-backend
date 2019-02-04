@@ -242,36 +242,36 @@ struct Account: Codable {
     enum State: String, Codable {
         case active, closed, subscriber, non_subscriber, past_due
     }
-    var adjustments: URL
-    var account_balance: URL
-    var billing_info: URL?
-    var invoices: URL
-    var redemption: URL?
-    var subscriptions: URL
-    var transactions: URL
+//    var adjustments: URL
+//    var account_balance: URL
+//    var billing_info: URL?
+//    var invoices: URL
+//    var redemption: URL?
+//    var subscriptions: URL
+//    var transactions: URL
     var account_code: String
-    var state: State
-    var username: String?
-    var email: String
-    var cc_emails: String?
-    var first_name: String?
-    var last_name: String?
-    var company_name: String?
-    var vat_number: String?
-    var tax_exempt: Bool
-    // var address: object
-    var accept_language: String?
+//    var state: State
+//    var username: String?
+//    var email: String
+//    var cc_emails: String?
+//    var first_name: String?
+//    var last_name: String?
+//    var company_name: String?
+//    var vat_number: String?
+//    var tax_exempt: Bool
+//    // var address: object
+//    var accept_language: String?
     var hosted_login_token: String
-    var created_at: Date
-    var updated_at: Date
-    var closed_at: Date?
-    var has_live_subscription: Bool
+//    var created_at: Date
+//    var updated_at: Date
+//    var closed_at: Date?
+//    var has_live_subscription: Bool
     var has_active_subscription: Bool
-    var has_future_subscription: Bool
+//    var has_future_subscription: Bool
     var has_canceled_subscription: Bool
-    var has_paused_subscription: String
-    var has_past_due_invoice: Bool
-    var preferred_locale: String?
+//    var has_paused_subscription: String
+//    var has_past_due_invoice: Bool
+//    var preferred_locale: String?
 }
 
 struct BillingInfo: Codable {

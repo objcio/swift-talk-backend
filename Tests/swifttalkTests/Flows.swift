@@ -118,6 +118,11 @@ struct Flow {
         conn.assertDone()
     }
     
+    func noPost(_ then: (Flow) throws -> ()) throws {
+        guard case let TestInterpreter._withPostData(d) = currentPage else { XCTFail("Expected withPostData"); return  }
+        try then(Flow(session: session, currentPage: d(Data())))
+    }
+    
     func withSession(_ session: Session?, _ then: (Flow) throws -> ()) throws {
         return try then(Flow(session: session, currentPage: currentPage))
     }
@@ -166,7 +171,7 @@ final class FlowTests: XCTestCase {
                 QueryAndResult(query: confirmedSess.user.update(), response: ()),
             ]) {
                 try $0.withSession(confirmedSess) {
-                    try $0.follow(expectedQueries: []) {
+                    try $0.followRequests {
                         try $0.followRedirect(to: .subscription(.new(couponCode: nil, team: false)), expectedQueries: [
                             QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1)),
                             QueryAndResult(query: confirmedSess.user.update(), response: ()),
@@ -196,12 +201,53 @@ final class FlowTests: XCTestCase {
                 QueryAndResult(query: confirmedSess.user.update(), response: ())
             ]) {
                 try $0.withSession(confirmedSess) {
-                    try $0.follow {
+                    try $0.followRequests {
                         try $0.followRedirect(to: .subscription(.new(couponCode: nil, team: true)), expectedQueries: [
                             QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1)),
                             QueryAndResult(confirmedSess.user.update())
                         ]) { _ in XCTAssert(true) }
                     }
+                }
+            }
+        }
+    }
+    
+    func testChangingProfileUpdatesEmailWithRecurly() throws {
+        let route = Route.account(.profile)
+        let newEmail = "new@email.com"
+        setupURLSession([
+            EndpointAndResult(endpoint: recurly.account(with: subscribedUser.user.id), response: subscribedUserAccount),
+            EndpointAndResult(endpoint: recurly.updateAccount(accountCode: subscribedUser.user.id, email: newEmail), response: subscribedUserAccount)
+        ])
+        let profilePage = try Flow.landingPage(session: subscribedUser, route)
+        try profilePage.noPost {
+            var newUser = subscribedUser.user
+            newUser.data.email = newEmail
+            try $0.fillForm(to: route, data: ["name": subscribedUser.user.data.name, "email": newEmail], expectedQueries: [
+                QueryAndResult(query: newUser.update(), response: ())
+            ]) {
+                try $0.followRequests {
+                    try $0.followRedirect(to: .account(.profile)) { _ in XCTAssert(true) }
+                }
+            }
+        }
+    }
+
+    func testChangingProfileDoesNotUpdateRecurlyWithoutRecurlyAccount() throws {
+        let route = Route.account(.profile)
+        let newEmail = "new@email.com"
+        setupURLSession([
+            EndpointAndResult(endpoint: recurly.account(with: subscribedUser.user.id), response: nil),
+        ])
+        let profilePage = try Flow.landingPage(session: subscribedUser, route)
+        try profilePage.noPost {
+            var newUser = subscribedUser.user
+            newUser.data.email = newEmail
+            try $0.fillForm(to: route, data: ["name": subscribedUser.user.data.name, "email": newEmail], expectedQueries: [
+                QueryAndResult(query: newUser.update(), response: ())
+            ]) {
+                try $0.followRequests {
+                    try $0.followRedirect(to: .account(.profile)) { _ in XCTAssert(true) }
                 }
             }
         }
