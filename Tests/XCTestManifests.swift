@@ -4,6 +4,9 @@ extension FlowTests {
     static let __allTests = [
         ("testSubscription", testSubscription),
         ("testTeamSubscription", testTeamSubscription),
+        ("testTeamMemberSignupForNotLoggedIn", testTeamMemberSignupForNotLoggedIn),
+        ("testChangingProfileUpdatesEmailWithRecurly", testChangingProfileUpdatesEmailWithRecurly),
+        ("testChangingProfileDoesNotUpdateRecurlyWithoutRecurlyAccount", testChangingProfileDoesNotUpdateRecurlyWithoutRecurlyAccount)
     ]
 }
 
