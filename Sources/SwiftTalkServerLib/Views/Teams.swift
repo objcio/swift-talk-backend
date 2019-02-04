@@ -56,7 +56,7 @@ func teamMemberSubscribeForSignedIn(signupToken: UUID) -> Node {
         .h3(classes: "center color-blue", ["Welcome to Swift Talk!"]),
         .p(classes: "center", ["To join as a team member, please confirm using the button below."]),
     ], buttons: [
-        button(route: .login(continue: .subscription(.registerAsTeamMember(token: signupToken, terminate: false))), title: "Join as a Team Member")
+        button(route: .subscription(.registerAsTeamMember(token: signupToken, terminate: false)), title: "Join as a Team Member")
     ])
 }
 
