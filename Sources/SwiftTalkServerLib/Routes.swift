@@ -81,6 +81,8 @@ indirect enum Route: Equatable {
     }
 }
 
+extension Route: RouteP {}
+
 extension Route {
     var path: String {
         guard let result = router.prettyPrint(self) else {

@@ -36,7 +36,7 @@ struct ProfileFormData {
     var name: String
 }
 
-func profile(submitTitle: String, action: Route) -> Form<ProfileFormData> {
+func profile(submitTitle: String, action: Route) -> Form<ProfileFormData, STRequestEnvironment> {
     return Form(parse: { dict in
         guard let e = dict["email"], let n = dict["name"] else { return nil }
         return ProfileFormData(email: e, name: n)
@@ -49,7 +49,7 @@ func profile(submitTitle: String, action: Route) -> Form<ProfileFormData> {
     })
 }
 
-func registerForm(couponCode: String?, team: Bool) -> Form<ProfileFormData> {
+func registerForm(couponCode: String?, team: Bool) -> Form<ProfileFormData, STRequestEnvironment> {
     return profile(submitTitle: "Create Account", action: .account(.register(couponCode: couponCode, team: team))).wrap { node in
         LayoutConfig(contents: [
             Node.header([
@@ -89,7 +89,7 @@ fileprivate func continueLink(to route: Route, title: String, extraClasses: Clas
     return Node.link(to: route, classes: linkClasses + (extraClasses ?? ""), [.text(title)])
 }
 
-fileprivate func continueLink(context: Context, coupon: Coupon?, team: Bool) -> Node {
+fileprivate func continueLink(context: STContext, coupon: Coupon?, team: Bool) -> Node {
     if context.session.premiumAccess {
         if let d = context.session?.user.data, d.canceled {
             return continueLink(to: .account(.billing), title: "Reactivate Subscription", extraClasses: "c-button--ghost")

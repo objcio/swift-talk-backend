@@ -10,8 +10,9 @@ import HTML
 
 typealias ValidationError = (field: String, message: String)
 
-struct Form<A> {
-    typealias Render = (A, [ValidationError]) -> Node
+struct Form<A, RE> {
+    typealias N = ANode<RE>
+    typealias Render = (A, [ValidationError]) -> N
     typealias Parse = ([String:String]) -> A?
     let _parse: Parse
     let render: Render
@@ -26,7 +27,7 @@ struct Form<A> {
 }
 
 extension Form {
-    func wrap(_ f: @escaping (Node) -> Node) -> Form<A> {
+    func wrap(_ f: @escaping (N) -> N) -> Form<A, RE> {
         return Form(parse: _parse, render: { value, err in
             f(self.render(value, err))
         })

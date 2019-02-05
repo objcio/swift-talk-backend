@@ -9,14 +9,18 @@ import Foundation
 import Base
 import Database
 
+typealias STRequestEnvironment = RequestEnvironment<Route, Session>
 
-struct RequestEnvironment {
+struct RequestEnvironment<R: RouteP, S: SessionP> {
     var hashedAssetName: (String) -> String = { $0 }
-    private let _session: Lazy<Session?>
-    let route: Route
-    private let _connection: Lazy<ConnectionProtocol>
+    let route: R
     let resourcePaths: [URL]
-    init(route: Route, hashedAssetName: @escaping (String) -> String, buildSession: @escaping () -> Session?, connection: Lazy<ConnectionProtocol>, resourcePaths: [URL]) {
+    var session: S? { return flatten(try? _session.get()) }
+    
+    private let _connection: Lazy<ConnectionProtocol>
+    private let _session: Lazy<S?>
+
+    init(route: R, hashedAssetName: @escaping (String) -> String, buildSession: @escaping () -> S?, connection: Lazy<ConnectionProtocol>, resourcePaths: [URL]) {
         self.hashedAssetName = hashedAssetName
         self._session = Lazy(buildSession, cleanup: { _ in () })
         self.route = route
@@ -24,9 +28,7 @@ struct RequestEnvironment {
         self.resourcePaths = resourcePaths
     }
     
-    var session: Session? { return flatten(try? _session.get()) }
-    
-    var context: Context {
+    var context: Context<R, S> {
         return Context(route: route, message: nil, session: session)
     }
     

@@ -10,6 +10,7 @@ import Promise
 import NIOWrapper
 import HTML
 import Database
+import Base
 
 
 struct Reader<Value, Result> {
@@ -53,10 +54,17 @@ extension Reader: Interpreter where Result: Interpreter {
     }
 }
 
-extension Reader: SwiftTalkInterpreter where Result: Interpreter { }
+protocol ContainsRoute {
+    associatedtype R: RouteP
+}
+
+extension RequestEnvironment: ContainsRoute {}
+
+extension Reader: SwiftTalkInterpreter where Value: ContainsRoute, Result: Interpreter {}
 
 protocol HasSession {
-    static func withSession(_ cont: @escaping (Session?) -> Self) -> Self
+    associatedtype S
+    static func withSession(_ cont: @escaping (S?) -> Self) -> Self
 }
 
 protocol HasDatabase {
@@ -92,7 +100,22 @@ extension Reader: HasDatabase where Value: CanQuery {
     }
 }
 
-extension SwiftTalkInterpreter where Self: HTML, Self: HasDatabase {
+protocol HasErrorPage {
+    static func renderError(_ error: Error) -> Self
+}
+
+extension SwiftTalkInterpreter where Self: HasErrorPage {
+    static func catchAndDisplayError(line: UInt = #line, file: StaticString = #file, _ f: () throws -> Self) -> Self {
+        do {
+            return try f()
+        } catch {
+            log(file: file, line: line, error)
+            return .renderError(error)
+        }
+    }
+}
+
+extension SwiftTalkInterpreter where Self: HTML, Self: HasDatabase, Self: HasErrorPage {
     static func query<A>(_ query: Query<A>, _ cont: @escaping (A) throws -> Self) -> Self {
         return Self.execute(query) { (result: Either<A, Error>) in
             catchAndDisplayError {
@@ -104,14 +127,6 @@ extension SwiftTalkInterpreter where Self: HTML, Self: HasDatabase {
         }
     }
     
-    static func query<A>(_ q: Query<A>?, or: @autoclosure () -> A, _ cont: @escaping (A) -> Self) -> Self {
-        if let x = q {
-            return query(x, cont)
-        } else {
-            return cont(or())
-        }
-    }
-    
     static func queryWithError<A>(_ query: Query<A>, _ cont: @escaping (Either<A, Error>) throws -> Self) -> Self {
         return Self.execute(query) { (result: Either<A, Error>) in
             catchAndDisplayError {
@@ -120,10 +135,18 @@ extension SwiftTalkInterpreter where Self: HTML, Self: HasDatabase {
         }
 
     }
+
+    static func query<A>(_ q: Query<A>?, or: @autoclosure () -> A, _ cont: @escaping (A) -> Self) -> Self {
+        if let x = q {
+            return query(x, cont)
+        } else {
+            return cont(or())
+        }
+    }
 }
 
-extension SwiftTalkInterpreter where Self: HasSession, Self: HTML {
-    static func requireSession(_ cont: @escaping (Session) throws -> Self) -> Self {
+extension SwiftTalkInterpreter where Self: HasSession, Self: HTML, Self: HasErrorPage {
+    static func requireSession(_ cont: @escaping (S) throws -> Self) -> Self {
         return withSession { sess in
             catchAndDisplayError {
                 try cont(sess ?! AuthorizationError())
@@ -133,21 +156,23 @@ extension SwiftTalkInterpreter where Self: HasSession, Self: HTML {
 }
 
 protocol ContainsSession {
-    var session: Session? { get }
+    associatedtype S: SessionP
+    var session: S? { get }
 }
 
-extension RequestEnvironment: ContainsSession { }
+extension RequestEnvironment: ContainsSession {}
 
 extension Reader: HasSession where Value: ContainsSession {
-    static func withSession(_ cont: @escaping (Session?) -> Reader<Value, Result>) -> Reader<Value, Result> {
+    typealias S = Value.S
+    static func withSession(_ cont: @escaping (S?) -> Reader<Value, Result>) -> Reader<Value, Result> {
         return Reader { value in
             cont(value.session).run(value)
         }
     }
 }
 
-extension SwiftTalkInterpreter where Self: HTML, Self: HasSession {
-    static func withSession(_ cont: @escaping (Session?) throws -> Self) -> Self {
+extension SwiftTalkInterpreter where Self: HTML, Self: HasSession, Self: HasErrorPage {
+    static func withSession(_ cont: @escaping (S?) throws -> Self) -> Self {
         return withSession { sess in
             catchAndDisplayError { try cont(sess) }
         }
@@ -155,18 +180,23 @@ extension SwiftTalkInterpreter where Self: HTML, Self: HasSession {
 }
 
 protocol HTML {
-    static func write(_ html: Node, status: HTTPResponseStatus) -> Self
+    associatedtype R: RouteP
+    associatedtype S: SessionP
+    typealias RE = RequestEnvironment<R, S>
+    static func write(_ html: ANode<RE>, status: HTTPResponseStatus) -> Self
     static func withCSRF(_ cont: @escaping (CSRFToken) -> Self) -> Self
 }
 
 extension HTML {
-    static func write(_ html: Node) -> Self {
+    static func write(_ html: ANode<RE>) -> Self {
         return self.write(html, status: .ok)
     }
 }
 
 protocol ContainsRequestEnvironment {
-    var requestEnvironment: RequestEnvironment { get }
+    associatedtype R: RouteP
+    associatedtype S: SessionP
+    var requestEnvironment: RequestEnvironment<R, S> { get }
 }
 
 extension RequestEnvironment: ContainsRequestEnvironment {
@@ -174,36 +204,43 @@ extension RequestEnvironment: ContainsRequestEnvironment {
 }
 
 extension Reader: HTML where Result: SwiftTalkInterpreter, Value: ContainsRequestEnvironment {
-    static func write(_ html: Node, status: HTTPResponseStatus) -> Reader {
+    typealias R = Value.R
+    
+    static func write(_ html: ANode<RE>, status: HTTPResponseStatus) -> Reader {
         return Reader { value in
-            return Result.write(html: html.ast(input: value.requestEnvironment), status: status)
+            return .write(html: html.ast(input: value.requestEnvironment), status: status)
         }
     }
-    
+
     static func withCSRF(_ cont: @escaping (CSRFToken) -> Reader) -> Reader {
-        return Reader { value in
+        return Reader { (value: Value) in
             return cont(value.requestEnvironment.context.csrf).run(value)
         }
     }
 }
 
-extension Reader where Result == NIOInterpreter, Value == RequestEnvironment {
+extension Reader where Value == STRequestEnvironment, Result == NIOInterpreter {
     static func write(_ html: Node, status: HTTPResponseStatus) -> Reader {
-        return Reader { value in
-            return .write(html.htmlDocument(input: value), status: status)
+        return Reader { (value: Value) -> Result in
+            return NIOInterpreter.write(html.htmlDocument(input: value.requestEnvironment), status: status)
         }
     }
 }
 
 
+protocol RouteP {
+    var path: String { get }
+}
+
 protocol SwiftTalkInterpreter: Interpreter {
+    associatedtype R: RouteP
     static func writeFile(path: String) -> Self
     static func notFound(_ string: String) -> Self
     static func write(_ string: String, status: HTTPResponseStatus) -> Self
     static func write(rss: ANode<()>, status: HTTPResponseStatus) -> Self
     static func write(html: ANode<()>, status: HTTPResponseStatus) -> Self
     static func write(json: Data, status: HTTPResponseStatus) -> Self
-    static func redirect(to route: Route, headers: [String: String]) -> Self
+    static func redirect(to route: R, headers: [String: String]) -> Self
 }
 
 
@@ -232,12 +269,12 @@ extension SwiftTalkInterpreter {
         return .write(json, status: status, headers: ["Content-Type": "application/json"])
     }
     
-    static func redirect(to route: Route, headers: [String: String] = [:]) -> Self {
+    static func redirect(to route: R, headers: [String: String] = [:]) -> Self {
         return .redirect(path: route.path, headers: headers)
     }
 }
 
-extension SwiftTalkInterpreter where Self: HTML {
+extension SwiftTalkInterpreter where Self: HTML, Self: HasErrorPage {
     static func onSuccess<A>(promise: Promise<A?>, file: StaticString = #file, line: UInt = #line, message: String = "Something went wrong.", do cont: @escaping (A) throws -> Self) -> Self {
         return onSuccess(promise: promise, file: file, line: line, do: cont, else: {
             throw ServerError(privateMessage: "Expected non-nil value, but got nil (\(file):\(line)).", publicMessage: message)
@@ -285,8 +322,8 @@ extension SwiftTalkInterpreter where Self: HTML {
     }
 
     // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
-    static func form<A,B>(_ f: Form<A>, initial: A, convert: @escaping (A) -> Either<B, [ValidationError]>, onPost: @escaping (B) throws -> Self) -> Self {
-        return verifiedPost(do: { body in
+    static func form<A,B>(_ f: Form<A, RE>, initial: A, convert: @escaping (A) -> Either<B, [ValidationError]>, onPost: @escaping (B) throws -> Self) -> Self {
+        return verifiedPost(do: { (body: [String:String]) -> Self in
             withCSRF { csrf in
             	catchAndDisplayError {
                     guard let result = f.parse(body) else { throw ServerError(privateMessage: "Couldn't parse form", publicMessage: "Something went wrong. Please try again.") }
@@ -304,7 +341,7 @@ extension SwiftTalkInterpreter where Self: HTML {
         
     }
     
-    static func form<A>(_ f: Form<A>, initial: A, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> Self) -> Self {
+    static func form<A>(_ f: Form<A, RE>, initial: A, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> Self) -> Self {
         return form(f, initial: initial, convert: { (a: A) -> Either<A, [ValidationError]> in
             let errs = validate(a)
             return errs.isEmpty ? .left(a) : .right(errs)

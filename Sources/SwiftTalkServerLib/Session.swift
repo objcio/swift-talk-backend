@@ -9,17 +9,24 @@ import Foundation
 import Database
 
 
-struct Context {
-    var route: Route
+typealias STContext = Context<Route, Session>
+
+struct Context<R, S: SessionP> {
+    var route: R
     var message: (String, FlashType)?
-    var session: Session?
+    var session: S?
     
     var csrf: CSRFToken {
-        return session?.user.data.csrfToken ?? sharedCSRF
+        return session?.csrf ?? sharedCSRF
     }
 }
 
 private let sharedCSRF = CSRFToken(UUID(uuidString: "F5F6C2AE-85CB-4989-B0BF-F471CC92E3FF")!)
+
+
+protocol SessionP {
+    var csrf: CSRFToken { get }
+}
 
 struct Session {
     var sessionId: UUID
@@ -83,5 +90,12 @@ struct Session {
         } else {
             return .noCredits
         }
+    }
+}
+
+
+extension Session: SessionP {
+    var csrf: CSRFToken {
+        return user.data.csrfToken
     }
 }

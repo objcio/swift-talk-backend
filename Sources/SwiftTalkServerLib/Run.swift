@@ -3,7 +3,9 @@ import NIOWrapper
 import Database
 
 
-extension NIOInterpreter: SwiftTalkInterpreter { }
+extension NIOInterpreter: SwiftTalkInterpreter {
+    typealias R = Route
+}
 
 public func run() throws {
     try runMigrations()
@@ -46,9 +48,7 @@ public func run() throws {
         }
         let deps = RequestEnvironment(route: route, hashedAssetName: hashedAssetName, buildSession: buildSession, connection: conn, resourcePaths: resourcePaths)
 
-        let reader: Reader<RequestEnvironment, NIOInterpreter> = catchAndDisplayError {
-            return try route.interpret()
-        }
+        let reader: Reader<STRequestEnvironment, NIOInterpreter> = try! route.interpret()
         return reader.run(deps)
     }, resourcePaths: resourcePaths)
     try server.listen(port: env.port ?? 8765)

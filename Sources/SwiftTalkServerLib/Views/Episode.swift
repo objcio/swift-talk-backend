@@ -202,7 +202,7 @@ extension Episode {
         return Node.withContext { self.show_(context: $0, playPosition: playPosition, downloadStatus: downloadStatus, otherEpisodes: otherEpisodes) }
     }
     
-    private func show_(context: Context, playPosition: Int?, downloadStatus: DownloadStatus, otherEpisodes: [EpisodeWithProgress]) -> Node {
+    private func show_(context: STContext, playPosition: Int?, downloadStatus: DownloadStatus, otherEpisodes: [EpisodeWithProgress]) -> Node {
         let canWatch = !subscriptionOnly || context.session.premiumAccess
         
         let scroller = Node.aside(attributes: ["class": "bgcolor-pale-gray pt++ js-scroller"], [

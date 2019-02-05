@@ -67,7 +67,7 @@ extension Collection {
     }
     func render(_ options: ViewOptions = ViewOptions()) -> [Node] {
         let figureStyle = "background-color: " + (options.whiteBackground ? "#FCFDFC" : "#F2F4F2")
-        let eps: (Context) -> [Episode] = { self.episodes(for: $0.session?.user.data) }
+        let eps: (STContext) -> [Episode] = { self.episodes(for: $0.session?.user.data) }
         let episodes_: [Node] = options.episodes ? [
             Node.withContext { context in
                 .ul(attributes: ["class": "mt-"],

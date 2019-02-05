@@ -7,75 +7,101 @@
 
 import Foundation
 import Database
+import NIOWrapper
 
 
 extension Swift.Collection where Element == Episode {
     func withProgress<I: Interp>(for id: UUID?, _ cont: @escaping ([EpisodeWithProgress]) -> I) -> I {
         guard let userId = id else { return cont(map { EpisodeWithProgress(episode: $0, progress: nil )}) }
         
-        return I.query(Row<PlayProgressData>.sortedDesc(for: userId).map { results in
-        	let progresses = results.map { $0.data }
-            return self.map { episode in
-            // todo this is (n*m), we should use the fact that `progresses` is sorted!
-            EpisodeWithProgress(episode: episode, progress: progresses.first { $0.episodeNumber == episode.number }?.progress)
-            }
-        }, cont)
+        fatalError()
+
+//        return I.query(Row<PlayProgressData>.sortedDesc(for: userId).map { results in
+//            let progresses = results.map { $0.data }
+//            return self.map { episode in
+//            // todo this is (n*m), we should use the fact that `progresses` is sorted!
+//            EpisodeWithProgress(episode: episode, progress: progresses.first { $0.episodeNumber == episode.number }?.progress)
+//            }
+//        }, cont)
     }
 }
 
-typealias Interp = SwiftTalkInterpreter & HTML & HasSession & HasDatabase
+extension Reader: HasErrorPage where Result: HTML, Result.RE == STRequestEnvironment {
+    static func renderError(_ error: Error) -> Reader<Value, Result> {
+        if let e = error as? ServerError {
+            return .const(.write(errorView(e.publicMessage), status: .internalServerError))
+        } else if let _ = error as? AuthorizationError {
+            return .const(.write(errorView("You're not authorized to view this page. Please login and try again."), status: .unauthorized))
+        } else {
+            return .const(.write(errorView("Something went wrong — please contact us if the problem persists."), status: .internalServerError))
+        }
+    }
+}
+
+typealias Interp = SwiftTalkInterpreter & HTML //& HasSession & HasDatabase// & HasErrorPage
 
 extension Route {
-    func interpret<I: Interp>() throws -> I {
+    func interpret<I: Interp>() throws -> I where I.RE == STRequestEnvironment {
         switch self {
 
         case .subscription(let s):
-            return try s.interpret()
+            fatalError()
+//            return try s.interpret()
             
         case .account(let action):
-            return try action.interpret()
+            fatalError()
+//            return try action.interpret()
             
         case .gift(let g):
-            return try g.interpret()
+            fatalError()
+//          return try g.interpret()
             
         case let .episode(id, action):
-            return try action.interpret(id: id)
+            fatalError()
+//          return try action.interpret(id: id)
             
         case let .login(l):
-            return try l.interpret()
+            fatalError()
+//          return try l.interpret()
             
         case let .signup(s):
-            return try s.interpret()
+            fatalError()
+//          return try s.interpret()
 
         case let .webhook(hook):
-            return try hook.interpret()
+            fatalError()
+//          return try hook.interpret()
 
         case .home:
-            return I.withSession { session in
-                let scoped = Episode.all.scoped(for: session?.user.data)
-                return scoped.withProgress(for: session?.user.id) { .write(renderHome(episodes: $0)) }
-            }
+            fatalError()
+//            return I.withSession { session in
+//                let scoped = Episode.all.scoped(for: session?.user.data)
+//                return scoped.withProgress(for: session?.user.id) { .write(renderHome(episodes: $0)) }
+//            }
             
         case .episodes:
-            return I.withSession { session in
-                let scoped = Episode.all.scoped(for: session?.user.data)
-                return scoped.withProgress(for: session?.user.id,  { I.write(index($0)) })
-            }
+            fatalError()
+//            return I.withSession { session in
+//                let scoped = Episode.all.scoped(for: session?.user.data)
+//                return scoped.withProgress(for: session?.user.id,  { I.write(index($0)) })
+//            }
             
         case .collections:
-            return I.withSession { session in
-                I.write(index(Collection.all.filter { !$0.episodes(for: session?.user.data).isEmpty }))
-            }
+            fatalError()
+//            return I.withSession { session in
+//                I.write(index(Collection.all.filter { !$0.episodes(for: session?.user.data).isEmpty }))
+//            }
 
         case .collection(let name):
-            guard let coll = Collection.all.first(where: { $0.id == name }) else {
-                return .write(errorView("No such collection"), status: .notFound)
-            }
-            return I.withSession { session in
-                return coll.episodes(for: session?.user.data).withProgress(for: session?.user.id) {
-                    I.write(coll.show(episodes: $0))
-                }
-            }
+            fatalError()
+//            guard let coll = Collection.all.first(where: { $0.id == name }) else {
+//                return .write(errorView("No such collection"), status: .notFound)
+//            }
+//            return I.withSession { session in
+//                return coll.episodes(for: session?.user.data).withProgress(for: session?.user.id) {
+//                    I.write(coll.show(episodes: $0))
+//                }
+//            }
             
         case .sitemap:
             return .write(Route.siteMap)
@@ -99,7 +125,8 @@ extension Route {
             }
             
         case .error:
-            return .write(errorView("Not found"), status: .notFound)
+            fatalError()
+//            return .write(errorView("Not found"), status: .notFound)
             
         }
     }

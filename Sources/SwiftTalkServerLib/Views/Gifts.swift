@@ -185,7 +185,7 @@ extension GiftData {
     }
 }
 
-func giftForm(submitTitle: String, plan: Plan, action: Route) -> Form<GiftStep1Data> {
+func giftForm(submitTitle: String, plan: Plan, action: Route) -> Form<GiftStep1Data, STRequestEnvironment> {
     return Form(parse: { dict in
         guard let gifteeEmail = dict["giftee_email"],
             let message = dict["message"],
@@ -213,7 +213,7 @@ func giftForm(submitTitle: String, plan: Plan, action: Route) -> Form<GiftStep1D
     })
 }
 
-func giftForm(plan: Plan) -> Form<GiftStep1Data> {
+func giftForm(plan: Plan) -> Form<GiftStep1Data, STRequestEnvironment> {
     let form = giftForm(submitTitle: "Payment", plan: plan, action: .gift(.new(planCode: plan.plan_code)))
     return form.wrap { (node: Node) -> Node in
         let result: Node = LayoutConfig(contents: [
@@ -233,7 +233,7 @@ struct GiftResult {
     var gifter_name: String = ""
 }
 
-func payGiftForm(plan: Plan, gift: GiftData, route: Route) -> Form<GiftResult> {
+func payGiftForm(plan: Plan, gift: GiftData, route: Route) -> Form<GiftResult, STRequestEnvironment> {
     return Form.init(parse: { dict in
         guard let d = dict["billing_info[token]"], let e = dict["gifter_email"], let n = dict["gifter_name"] else { return nil }
         return GiftResult(token: d, gifter_email: e, gifter_name: n)

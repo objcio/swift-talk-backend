@@ -9,7 +9,7 @@ import Foundation
 import HTML
 
 
-extension ANode where I == RequestEnvironment {
+extension ANode where I == STRequestEnvironment {
     static func hashedStylesheet(media: String = "all", href: String) -> Node {
         return ANode.withInput { deps in
             return Node.stylesheet(media: media, href: deps.hashedAssetName(href))
@@ -28,7 +28,7 @@ extension ANode where I == RequestEnvironment {
         }
     }
     
-    static func withContext(_ f: @escaping (Context) -> ANode) -> ANode {
+    static func withContext(_ f: @escaping (STContext) -> ANode) -> ANode {
         return .withInput { f($0.context) }
     }
     
@@ -41,7 +41,7 @@ extension ANode where I == RequestEnvironment {
     }
 }
 
-typealias Node = ANode<RequestEnvironment>
+typealias Node = ANode<STRequestEnvironment>
 
 struct LayoutConfig {
     var pageTitle: String
@@ -258,7 +258,7 @@ func flash(message: String, type: FlashType) -> Node {
     ])
 }
 
-func userHeader(_ context: Context) -> Node {
+func userHeader(_ context: STContext) -> Node {
     let subscribeButton = Node.li(classes: "flex items-center ml+", [
         .link(to: .signup(.subscribe), classes: "button button--tight button--themed fz-nav", [.text("Subscribe")])
     ])
