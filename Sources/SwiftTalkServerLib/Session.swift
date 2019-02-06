@@ -59,19 +59,22 @@ struct Session {
     }
     
     var downloadCredits: Int {
+        let credits: Int
         if selfPremiumAccess {
-            return user.data.downloadCredits
+            credits = user.data.downloadCredits
         } else if gifterPremiumAccess, let g = gifter {
-            return g.data.downloadCredits
+            credits = g.data.downloadCredits
         } else if teamMemberPremiumAccess, let tm = teamMember {
-            return tm.data.activeMonths * 4
+            credits = tm.data.activeMonths * 4
+        } else {
+            credits = 0
         }
-        return 0
+        return credits + user.data.downloadCreditsOffset
     }
 
     func downloadStatus(for episode: Episode, downloads: [Row<DownloadData>]) -> Episode.DownloadStatus {
         guard premiumAccess else { return user.data.role == .teamManager ? .teamManager : .notSubscribed }
-        let creditsLeft = (downloadCredits + user.data.downloadCreditsOffset) - downloads.count
+        let creditsLeft = downloadCredits - downloads.count
         if user.data.isAdmin || downloads.contains(where: { $0.data.episodeNumber == episode.number }) {
             return .reDownload
         } else if creditsLeft > 0 {
