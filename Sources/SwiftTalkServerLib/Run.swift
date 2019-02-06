@@ -31,7 +31,7 @@ public func run() throws {
             do {
                 let user = try conn.get().execute(Row<UserData>.select(sessionId: sId))
                 return try user.map { u in
-                    if u.data.premiumAccess || u.data.role == .teamManager {
+                    if u.data.premiumAccess {
                         return Session(sessionId: sId, user: u, teamMember: nil, teamManager: nil, gifter: nil)
                     } else {
                         let teamMember = try conn.get().execute(u.teamMember)
