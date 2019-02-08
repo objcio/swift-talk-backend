@@ -11,7 +11,6 @@ import WebServer
 
 
 typealias STRequestEnvironment = RequestEnvironment<Route, Session>
-typealias STContext = Context<Route, Session>
 
 public struct Session {
     var sessionId: UUID

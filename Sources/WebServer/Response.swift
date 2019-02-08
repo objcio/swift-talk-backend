@@ -270,7 +270,7 @@ extension Reader: ResponseRequiringEnvironment where Result: Response, Value == 
     
     public static func withCSRF(_ cont: @escaping (CSRFToken) -> Reader) -> Reader {
         return Reader { (value: Value) in
-            return cont(value.context.csrf).run(value)
+            return cont(value.csrf).run(value)
         }
     }
 

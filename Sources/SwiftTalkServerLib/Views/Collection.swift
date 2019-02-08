@@ -48,7 +48,7 @@ extension Collection {
                 Node.ul(attributes: ["class": "offset-content"], episodes.map { e in
                     Node.li(attributes: ["class": "flex justify-center mb++ m+|mb+++"], [
                         Node.div(classes: "width-1 ms1 mr- color-theme-highlight bold lh-110 m-|hide", [.raw("&rarr;")]),
-                        Node.withContext { context in e.episode.render(.init(wide: true, synopsis: true, watched: e.watched, canWatch: e.episode.canWatch(session: context.session), collection: false)) }
+                        Node.withSession { e.episode.render(.init(wide: true, synopsis: true, watched: e.watched, canWatch: e.episode.canWatch(session: $0), collection: false)) }
                     ])
                 })
             ]),
@@ -67,11 +67,11 @@ extension Collection {
     }
     func render(_ options: ViewOptions = ViewOptions()) -> [Node] {
         let figureStyle = "background-color: " + (options.whiteBackground ? "#FCFDFC" : "#F2F4F2")
-        let eps: (STContext) -> [Episode] = { self.episodes(for: $0.session?.user.data) }
+        let eps: (Session?) -> [Episode] = { self.episodes(for: $0?.user.data) }
         let episodes_: [Node] = options.episodes ? [
-            Node.withContext { context in
+            Node.withSession { session in
                 .ul(attributes: ["class": "mt-"],
-                    eps(context).map { e in
+                    eps(session).map { e in
                         let title = e.title(in: self)
                         return Node.li(attributes: ["class": "flex items-baseline justify-between ms-1 line-125"], [
                             Node.span(attributes: ["class": "nowrap overflow-hidden text-overflow-ellipsis pv- color-gray-45"], [
@@ -94,8 +94,8 @@ extension Collection {
                 ] + (new ? [
                     Node.span(attributes: ["class": "flex-none label smallcaps color-white bgcolor-blue nowrap ml-"], [Node.text("New")])
                 ] : [])),
-                Node.withContext { context in
-                    let e = eps(context)
+                Node.withSession { session in
+                    let e = eps(session)
                     return Node.p(attributes: ["class": "ms-1 color-gray-55 lh-125 mt--"], [
                         .text("\(e.count) \("Episode".pluralize(e.count))"),
                         .span(attributes: ["class": "ph---"], [Node.raw("&middot;")]),

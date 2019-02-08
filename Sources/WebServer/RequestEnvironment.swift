@@ -17,6 +17,46 @@ public protocol SessionP {
     var csrf: CSRFToken { get }
 }
 
+public struct RequestEnvironment<R: RouteP, S: SessionP> {
+    public var hashedAssetName: (String) -> String = { $0 }
+    public var route: R
+    public var resourcePaths: [URL]
+    public var session: S? { return flatten(try? _session.get()) }
+    
+    private let _connection: Lazy<ConnectionProtocol>
+    private let _session: Lazy<S?>
+
+    public init(route: R, hashedAssetName: @escaping (String) -> String, buildSession: @escaping () -> S?, connection: Lazy<ConnectionProtocol>, resourcePaths: [URL]) {
+        self.hashedAssetName = hashedAssetName
+        self._session = Lazy(buildSession, cleanup: { _ in () })
+        self.route = route
+        self._connection = connection
+        self.resourcePaths = resourcePaths
+    }
+    
+    public var csrf: CSRFToken {
+        return session?.csrf ?? sharedCSRF
+    }
+    
+    func connection() throws -> ConnectionProtocol {
+        return try _connection.get()
+    }
+
+    func execute<A>(_ query: Query<A>) -> Either<A, Error> {
+        do {
+            return try .left(connection().execute(query))
+        } catch {
+            return .right(error)
+        }
+    }
+    
+    @available(*, deprecated)
+    func getConnection() -> Either<ConnectionProtocol, Error> {
+        do { return try .left(connection()) }
+        catch { return .right(error) }
+    }
+}
+
 public struct CSRFToken: Codable, Equatable, Hashable {
     public var value: UUID
     
@@ -34,63 +74,6 @@ public struct CSRFToken: Codable, Equatable, Hashable {
     
     public var stringValue: String {
         return value.uuidString
-    }
-}
-
-public struct RequestEnvironment<R: RouteP, S: SessionP> {
-    public var hashedAssetName: (String) -> String = { $0 }
-    let route: R
-    public let resourcePaths: [URL]
-    var session: S? { return flatten(try? _session.get()) }
-    
-    private let _connection: Lazy<ConnectionProtocol>
-    private let _session: Lazy<S?>
-
-    public init(route: R, hashedAssetName: @escaping (String) -> String, buildSession: @escaping () -> S?, connection: Lazy<ConnectionProtocol>, resourcePaths: [URL]) {
-        self.hashedAssetName = hashedAssetName
-        self._session = Lazy(buildSession, cleanup: { _ in () })
-        self.route = route
-        self._connection = connection
-        self.resourcePaths = resourcePaths
-    }
-    
-    public var context: Context<R, S> {
-        return Context(route: route, message: nil, session: session)
-    }
-    
-    func connection() throws -> ConnectionProtocol {
-        return try _connection.get()
-    }
-}
-
-extension RequestEnvironment {
-    func execute<A>(_ query: Query<A>) -> Either<A, Error> {
-        do {
-            return try .left(connection().execute(query))
-        } catch {
-            return .right(error)
-        }
-    }
-    
-    @available(*, deprecated)
-    func getConnection() -> Either<ConnectionProtocol, Error> {
-        do { return try .left(connection()) }
-        catch { return .right(error) }
-    }
-}
-
-public enum FlashType {
-    case notice
-    case alert
-}
-
-public struct Context<R, S: SessionP> {
-    public var route: R
-    public var message: (String, FlashType)?
-    public var session: S?
-    
-    public var csrf: CSRFToken {
-        return session?.csrf ?? sharedCSRF
     }
 }
 

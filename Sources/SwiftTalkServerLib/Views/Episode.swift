@@ -23,7 +23,7 @@ func index(_ episodes: [EpisodeWithProgress]) -> Node {
             ]),
             .ul(attributes: ["class": "cols s+|cols--2n m+|cols--3n xl+|cols--4n"], episodes.map { e in
                 Node.li(attributes: ["class": "col mb++ width-full s+|width-1/2 m+|width-1/3 xl+|width-1/4"], [
-                    Node.withContext { context in e.episode.render(.init(synopsis: true, watched: e.watched, canWatch: e.episode.canWatch(session: context.session))) }
+                    Node.withSession { e.episode.render(.init(synopsis: true, watched: e.watched, canWatch: e.episode.canWatch(session: $0))) }
                 ])
             })
         ])
@@ -200,11 +200,11 @@ extension Episode {
     }
     
     func show(playPosition: Int?, downloadStatus: DownloadStatus, otherEpisodes: [EpisodeWithProgress]) -> Node {
-        return Node.withContext { self.show_(context: $0, playPosition: playPosition, downloadStatus: downloadStatus, otherEpisodes: otherEpisodes) }
+        return Node.withSession { self.show_(session: $0, playPosition: playPosition, downloadStatus: downloadStatus, otherEpisodes: otherEpisodes) }
     }
     
-    private func show_(context: STContext, playPosition: Int?, downloadStatus: DownloadStatus, otherEpisodes: [EpisodeWithProgress]) -> Node {
-        let canWatch = !subscriptionOnly || context.session.premiumAccess
+    private func show_(session: Session?, playPosition: Int?, downloadStatus: DownloadStatus, otherEpisodes: [EpisodeWithProgress]) -> Node {
+        let canWatch = !subscriptionOnly || session.premiumAccess
         
         let scroller = Node.aside(attributes: ["class": "bgcolor-pale-gray pt++ js-scroller"], [
             Node.header(attributes: ["class": "container-h flex items-center justify-between"], [
@@ -224,7 +224,7 @@ extension Episode {
             Node.div(classes: "flex scroller js-scroller-container p-edges pt pb++", [
                 Node.div(classes: "scroller__offset flex-none")
             ] + otherEpisodes.map { e in
-                Node.div(classes: "flex-110 pr+ min-width-5", [e.episode.render(.init(synopsis: false, watched: e.watched, canWatch: e.episode.canWatch(session: context.session)))])
+                Node.div(classes: "flex-110 pr+ min-width-5", [e.episode.render(.init(synopsis: false, watched: e.watched, canWatch: e.episode.canWatch(session: session)))])
             })
         ])
         
@@ -370,7 +370,7 @@ extension Episode {
         }
 
         let transcriptAvailable: [Node] = [
-            context.session.premiumAccess ? .raw("") : .raw(subscriptionPitch),
+            session.premiumAccess ? .raw("") : .raw(subscriptionPitch),
             .div(classes: "l+|flex l-|stack+++ m-cols", [
                 .div(classes: "p-col l+|flex-auto l+|width-2/3 xl+|width-7/10 flex flex-column", [
                     Node.div(classes: "text-wrapper", [
@@ -404,7 +404,7 @@ extension Episode {
             ])
         ]
         
-        let scripts: [Node] = (context.session?.user.data.csrfToken).map { token in
+        let scripts: [Node] = (session?.user.data.csrfToken).map { token in
             return [
                 Node.script(src: "https://player.vimeo.com/api/player.js"),
                 Node.script(code: """
@@ -464,7 +464,7 @@ extension Episode {
         ])
         
         let data = StructuredData(title: title, description: synopsis, url: Route.episode(id, .view(playPosition: nil)).url, image: posterURL(width: 600, height: 338), type: .video(duration: Int(mediaDuration), releaseDate: releaseAt))
-        return LayoutConfig(contents: [main, scroller] + (context.session.premiumAccess ? [] : [subscribeBanner()]), footerContent: scripts, structuredData: data).layout
+        return LayoutConfig(contents: [main, scroller] + (session.premiumAccess ? [] : [subscribeBanner()]), footerContent: scripts, structuredData: data).layout
     }
 }
 

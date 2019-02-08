@@ -90,14 +90,14 @@ fileprivate func continueLink(to route: Route, title: String, extraClasses: Clas
     return Node.link(to: route, classes: linkClasses + (extraClasses ?? ""), [.text(title)])
 }
 
-fileprivate func continueLink(context: STContext, coupon: Coupon?, team: Bool) -> Node {
-    if context.session.premiumAccess {
-        if let d = context.session?.user.data, d.canceled {
+fileprivate func continueLink(session: Session?, coupon: Coupon?, team: Bool) -> Node {
+    if session.premiumAccess {
+        if let d = session?.user.data, d.canceled {
             return continueLink(to: .account(.billing), title: "Reactivate Subscription", extraClasses: "c-button--ghost")
         } else {
             return continueLink(to: .account(.billing), title: "You're already subscribed", extraClasses: "c-button--ghost")
         }
-    } else if context.session?.user != nil {
+    } else if session?.user != nil {
         return continueLink(to: .subscription(.new(couponCode: coupon?.coupon_code, team: team)), title: "Proceed to payment")
     } else {
         return continueLink(to: .login(.login(continue: Route.subscription(.new(couponCode: coupon?.coupon_code, team: team)))), title: "Sign in with Github")
@@ -105,7 +105,7 @@ fileprivate func continueLink(context: STContext, coupon: Coupon?, team: Bool) -
 }
 
 func renderSubscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node {
-    return .withContext { context in
+    return .withSession { session in
         let contents: [Node] = [
             pageHeader(.other(header: "Subscribe to Swift Talk", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),
             .div(classes: "container pt0", [
@@ -123,7 +123,7 @@ func renderSubscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node
                         ])
                     ]),
                     .div([
-                        continueLink(context: context, coupon: coupon, team: false)
+                        continueLink(session: session, coupon: coupon, team: false)
                     ])
                 ]),
                 benefits(subscriptionBenefits),
@@ -151,7 +151,7 @@ func renderSubscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node
 }
 
 func renderSubscribeTeam(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node {
-    return .withContext { context in
+    return .withSession { session in
         let contents: [Node] = [
             pageHeader(.other(header: "Swift Talk Team Subscription", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),
             .div(classes: "container pt0", [
@@ -169,7 +169,7 @@ func renderSubscribeTeam(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> 
                         ])
                     ]),
                     .div([
-                        continueLink(context: context, coupon: coupon, team: true)
+                        continueLink(session: session, coupon: coupon, team: true)
                     ])
                 ]),
                 benefits([

@@ -15,13 +15,13 @@ import WebServer
 fileprivate let accountHeader = pageHeader(.other(header: "Account", blurb: nil, extraClasses: "ms4"))
 
 func accountContainer(content: Node, forRoute: Route) -> Node {
-    return .withContext { context in
+    return .withSession { session in
         var items: [(Route, title: String)] = [
             (Route.account(.profile), title: "Profile"),
             (Route.account(.billing), title: "Billing"),
             (Route.account(.logout), title: "Logout"),
         ]
-        if context.session?.selfPremiumAccess == true || context.session?.user.data.role == .teamManager {
+        if session?.selfPremiumAccess == true || session?.user.data.role == .teamManager {
             items.insert((Route.account(.teamMembers), title: "Team Members"), at: 2)
         }
         return .div(classes: "container pb0", [
@@ -306,12 +306,10 @@ func billingLayout(_ content: [Node]) -> Node {
 
 func teamMemberBillingContent() -> [Node] {
     return [
-        .withContext { context in
-            .div([
-                heading("Subscription"),
-                .p(classes: "lh-110", [.text("You have a team member account, which doesn't have its own billing info.")])
-            ])
-        }
+        .div([
+            heading("Subscription"),
+            .p(classes: "lh-110", [.text("You have a team member account, which doesn't have its own billing info.")])
+        ])
     ]
 }
 
@@ -335,8 +333,8 @@ func unsubscribedBillingContent() -> [Node] {
 }
 
 func billingView(subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo, redemptions: [(Redemption, Coupon)]) -> Node {
-    return Node.withContext { context in
-        guard let session = context.session else { return billingLayout(unsubscribedBillingContent()) }
+    return Node.withSession { session in
+        guard let session = session else { return billingLayout(unsubscribedBillingContent()) }
         let user = session.user
         let subscriptionInfo: [Node]
         if let (sub, addOn) = subscription {
@@ -402,7 +400,7 @@ func billingView(subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice,
         } else if session.teamMemberPremiumAccess {
             subscriptionInfo = teamMemberBillingContent()
         } else {
-            subscriptionInfo = context.session?.activeSubscription == true ? [] : unsubscribedBillingContent()
+            subscriptionInfo = session.activeSubscription ? [] : unsubscribedBillingContent()
         }
         return billingLayout(subscriptionInfo + [Node.div(invoicesView(user: user, invoices: invoices))])
     }

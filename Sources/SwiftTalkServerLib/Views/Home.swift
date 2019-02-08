@@ -20,16 +20,16 @@ func renderHome(episodes: [EpisodeWithProgress]) -> Node {
     if episodes.count >= 5 {
         let slice = episodes[0..<5]
         let featured = slice[0]
-        recentNodes.append(.withContext { context in
+        recentNodes.append(.withSession { session in
             .div(classes: "m-cols flex flex-wrap", [
                 .div(classes: "mb++ p-col width-full l+|width-1/2", [
-                    featured.episode.render(Episode.ViewOptions(featured: true, synopsis: true, watched: featured.watched, canWatch: featured.episode.canWatch(session: context.session)))
+                    featured.episode.render(Episode.ViewOptions(featured: true, synopsis: true, watched: featured.watched, canWatch: featured.episode.canWatch(session: session)))
                 ]),
                 .div(classes: "p-col width-full l+|width-1/2", [
                     .div(classes: "s+|cols s+|cols--2n",
                         slice.dropFirst().map { e in
                             .div(classes: "mb++ s+|col s+|width-1/2", [
-                                e.episode.render(Episode.ViewOptions(synopsis: false, watched: e.watched, canWatch: e.episode.canWatch(session: context.session)))
+                                e.episode.render(Episode.ViewOptions(synopsis: false, watched: e.watched, canWatch: e.episode.canWatch(session: session)))
                             ])
                         }
                     )

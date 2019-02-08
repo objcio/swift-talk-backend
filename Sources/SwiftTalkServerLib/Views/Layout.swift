@@ -29,16 +29,20 @@ extension ANode where I == STRequestEnvironment {
         }
     }
     
-    static func withContext(_ f: @escaping (STContext) -> ANode) -> ANode {
-        return .withInput { f($0.context) }
-    }
-    
     static func withCSRF(_ f: @escaping (CSRFToken) -> ANode) -> ANode {
-        return .withInput { f($0.context.csrf) }
+        return .withInput { f($0.csrf) }
     }
-    
+
+    static func withSession(_ f: @escaping (Session?) -> ANode) -> ANode {
+        return .withInput { f($0.session) }
+    }
+
     static func withResourcePaths(_ f: @escaping ([URL]) -> ANode) -> ANode {
         return .withInput { f($0.resourcePaths) }
+    }
+    
+    static func withRoute(_ f: @escaping (Route) -> ANode) -> ANode {
+        return .withInput { f($0.route) }
     }
 }
 
@@ -172,14 +176,14 @@ extension LayoutConfig {
                 .div(classes: "container-h flex-grow flex", [
                     logo,
                     navigation,
-                    .withContext(userHeader)
+                    .withSession(userHeader)
                 ])
             ])
         ])
         var bodyChildren: [Node] = [
             header,
             .main(
-                [.withContext { $0.message.map(flash) ?? .none }] +
+                [.none] + // TODO flash messsage should go here (there's a flash helper below)
                 contents
             )]
         // these are appends because of compile time
@@ -240,6 +244,11 @@ extension LayoutConfig {
     }
 }
 
+public enum FlashType {
+    case notice
+    case alert
+}
+
 func flash(message: String, type: FlashType) -> Node {
     let classes: Class
     switch type {
@@ -254,7 +263,7 @@ func flash(message: String, type: FlashType) -> Node {
     ])
 }
 
-func userHeader(_ context: STContext) -> Node {
+func userHeader(_ session: Session?) -> Node {
     let subscribeButton = Node.li(classes: "flex items-center ml+", [
         .link(to: .signup(.subscribe), classes: "button button--tight button--themed fz-nav", [.text("Subscribe")])
     ])
@@ -266,12 +275,15 @@ func userHeader(_ context: STContext) -> Node {
     }
     
     let items: [Node]
-    if let s = context.session {
+    if let s = session {
         let account = link(to: .account(.profile), text: "Account")
         let logout = link(to: .account(.logout), text: "Log out")
         items = s.activeSubscription ? [account, logout] : [account, subscribeButton]
     } else {
-        items = [link(to: .login(.login(continue: context.route)), text: "Log in"), subscribeButton]
+        items = [
+            .withRoute { link(to: .login(.login(continue: $0)), text: "Log in") },
+            subscribeButton
+        ]
     }
     return .nav(classes: "flex-none self-center border-left border-1 border-color-gray-85 flex ml+", [
         .ul(classes: "flex items-stretch", items)
