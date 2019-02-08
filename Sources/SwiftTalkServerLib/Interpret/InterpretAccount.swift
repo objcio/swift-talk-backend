@@ -19,11 +19,11 @@ extension ProfileFormData {
 }
 
 extension Route.Account {
-    func interpret<I: ResponseRequiringEnvironment>() throws -> I where I.RE == STRequestEnvironment {
+    func interpret<I: ResponseRequiringEnvironment>() throws -> I where I.Env == STRequestEnvironment {
         return .requireSession { try self.interpret(session: $0)}
     }
     
-    private func interpret<I: ResponseRequiringEnvironment>(session sess: Session) throws -> I where I.RE == STRequestEnvironment {
+    private func interpret<I: ResponseRequiringEnvironment>(session sess: Session) throws -> I where I.Env == STRequestEnvironment {
         switch self {
         
         case .logout:

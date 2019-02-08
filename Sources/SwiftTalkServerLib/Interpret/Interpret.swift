@@ -23,7 +23,7 @@ extension Swift.Collection where Element == Episode {
     }
 }
 
-extension Reader where Result: ResponseRequiringEnvironment, Value == STRequestEnvironment, Result.R == Route, Result.S == Session {
+extension Reader where Result: ResponseRequiringEnvironment, Value == STRequestEnvironment, Result.Env == Value {
     static func renderError(_ error: Error) -> Reader<Value, Result> {
         if let e = error as? ServerError {
             return .const(.write(html: errorView(e.publicMessage), status: .internalServerError))
@@ -36,7 +36,7 @@ extension Reader where Result: ResponseRequiringEnvironment, Value == STRequestE
 }
 
 extension Route {
-    func interpret<I: ResponseRequiringEnvironment>() throws -> I where I.R == Route, I.S == Session {
+    func interpret<I: ResponseRequiringEnvironment>() throws -> I where I.Env == STRequestEnvironment {
         switch self {
 
         case .subscription(let s):

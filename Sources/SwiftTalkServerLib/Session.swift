@@ -10,8 +10,6 @@ import Database
 import WebServer
 
 
-typealias STRequestEnvironment = RequestEnvironment<Route, Session>
-
 public struct Session {
     var sessionId: UUID
     var user: Row<UserData>
@@ -74,12 +72,5 @@ public struct Session {
         } else {
             return .noCredits
         }
-    }
-}
-
-
-extension Session: SessionP {
-    public var csrf: CSRFToken {
-        return user.data.csrfToken
     }
 }

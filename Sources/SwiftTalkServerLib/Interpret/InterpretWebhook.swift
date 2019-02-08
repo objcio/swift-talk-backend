@@ -12,7 +12,7 @@ import WebServer
 
 
 extension Route.Webhook {
-    func interpret<I: ResponseRequiringEnvironment>() throws -> I where I.RE == STRequestEnvironment {
+    func interpret<I: ResponseRequiringEnvironment>() throws -> I where I.Env == STRequestEnvironment {
         switch self {
         
         case .recurlyWebhook:

@@ -13,38 +13,13 @@ public protocol RouteP {
     var path: String { get }
 }
 
-public protocol SessionP {
+public protocol RequestEnvironment {
+    associatedtype R: RouteP
+    associatedtype S
+    var route: R { get }
+    var session: S? { get }
     var csrf: CSRFToken { get }
-}
-
-public struct RequestEnvironment<R: RouteP, S: SessionP> {
-    public var hashedAssetName: (String) -> String = { $0 }
-    public var route: R
-    public var resourcePaths: [URL]
-    public var session: S? { return flatten(try? _session.get()) }
-    
-    private let _connection: Lazy<ConnectionProtocol>
-    private let _session: Lazy<S?>
-
-    public init(route: R, hashedAssetName: @escaping (String) -> String, buildSession: @escaping () -> S?, connection: Lazy<ConnectionProtocol>, resourcePaths: [URL]) {
-        self.hashedAssetName = hashedAssetName
-        self._session = Lazy(buildSession, cleanup: { _ in () })
-        self.route = route
-        self._connection = connection
-        self.resourcePaths = resourcePaths
-    }
-    
-    public var csrf: CSRFToken {
-        return session?.csrf ?? sharedCSRF
-    }
-    
-    func execute<A>(_ query: Query<A>) -> Either<A, Error> {
-        do {
-            return try .left(_connection.get().execute(query))
-        } catch {
-            return .right(error)
-        }
-    }
+    func execute<A>(_ query: Query<A>) -> Either<A, Error>
 }
 
 public struct CSRFToken: Codable, Equatable, Hashable {
@@ -66,6 +41,4 @@ public struct CSRFToken: Codable, Equatable, Hashable {
         return value.uuidString
     }
 }
-
-private let sharedCSRF = CSRFToken(UUID(uuidString: "F5F6C2AE-85CB-4989-B0BF-F471CC92E3FF")!)
 

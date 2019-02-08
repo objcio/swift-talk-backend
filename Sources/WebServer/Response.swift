@@ -13,25 +13,6 @@ import Database
 import Base
 
 
-public struct ServerError: LocalizedError {
-    /// Private message for logging
-    public let privateMessage: String
-    /// Message shown to the user
-    public let publicMessage: String
-    
-    public init(privateMessage: String, publicMessage: String) {
-        self.privateMessage = privateMessage
-        self.publicMessage = publicMessage
-    }
-    
-    public var errorDescription: String? {
-        return "ServerError: \(privateMessage)"
-    }
-}
-
-public struct AuthorizationError: Error { }
-
-
 public struct Reader<Value, Result> {
     public let run: (Value) -> Result
     
@@ -76,8 +57,6 @@ extension Reader: NIOWrapper.Response where Result: NIOWrapper.Response {
 
 public protocol Response: NIOWrapper.Response {
     associatedtype R: RouteP
-    associatedtype S: SessionP
-    typealias RE = RequestEnvironment<R, S>
     static func write(_ string: String, status: HTTPResponseStatus) -> Self
     static func write(html: ANode<()>, status: HTTPResponseStatus) -> Self
     static func write(rss: ANode<()>, status: HTTPResponseStatus) -> Self
@@ -86,10 +65,11 @@ public protocol Response: NIOWrapper.Response {
     static func renderError(_ error: Error) -> Self
 }
 
-public protocol ResponseRequiringEnvironment: Response {
-    static func write(html: ANode<RE>, status: HTTPResponseStatus) -> Self
+public protocol ResponseRequiringEnvironment: Response where Self.R == Env.R {
+    associatedtype Env: RequestEnvironment
+    static func write(html: ANode<Env>, status: HTTPResponseStatus) -> Self
     static func withCSRF(_ cont: @escaping (CSRFToken) -> Self) -> Self
-    static func withSession(_ cont: @escaping (S?) -> Self) -> Self
+    static func withSession(_ cont: @escaping (Env.S?) -> Self) -> Self
     static func execute<A>(_ query: Query<A>, _ cont: @escaping (Either<A, Error>) -> Self) -> Self
 }
 
@@ -201,7 +181,7 @@ extension ResponseRequiringEnvironment {
     }
     
     // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
-    public static func form<A,B>(_ f: Form<A, RequestEnvironment<R, S>>, initial: A, convert: @escaping (A) -> Either<B, [ValidationError]>, onPost: @escaping (B) throws -> Self) -> Self {
+    public static func form<A, B>(_ f: Form<A, Env>, initial: A, convert: @escaping (A) -> Either<B, [ValidationError]>, onPost: @escaping (B) throws -> Self) -> Self where Env.R == R {
         return verifiedPost(do: { (body: [String:String]) -> Self in
             withCSRF { csrf in
                 catchAndDisplayError {
@@ -220,24 +200,24 @@ extension ResponseRequiringEnvironment {
         
     }
 
-    public static func form<A>(_ f: Form<A, RequestEnvironment<R, S>>, initial: A, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> Self) -> Self {
+    public static func form<A>(_ f: Form<A, Env>, initial: A, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> Self) -> Self where Env.R == R {
         return form(f, initial: initial, convert: { (a: A) -> Either<A, [ValidationError]> in
             let errs = validate(a)
             return errs.isEmpty ? .left(a) : .right(errs)
         }, onPost: onPost)
     }
 
-    public static func write(html: ANode<RE>, status: HTTPResponseStatus = .ok) -> Self {
+    public static func write(html: ANode<Env>, status: HTTPResponseStatus = .ok) -> Self {
         return .write(html: html, status: status)
     }
 
-    public static func withSession(_ cont: @escaping (S?) throws -> Self) -> Self {
+    public static func withSession(_ cont: @escaping (Env.S?) throws -> Self) -> Self {
         return withSession { sess in
             catchAndDisplayError { try cont(sess) }
         }
     }
     
-    public static func requireSession(_ cont: @escaping (S) throws -> Self) -> Self {
+    public static func requireSession(_ cont: @escaping (Env.S) throws -> Self) -> Self {
         return withSession { sess in
             catchAndDisplayError {
                 try cont(sess ?! AuthorizationError())
@@ -246,23 +226,23 @@ extension ResponseRequiringEnvironment {
     }
 }
 
-extension Reader: Response where Result: Response, Value == RequestEnvironment<Result.R, Result.S> {}
+extension Reader: Response where Result: Response, Value: RequestEnvironment, Result.R == Value.R {}
 
-extension Reader: ResponseRequiringEnvironment where Result: Response, Value == RequestEnvironment<Result.R, Result.S> {
+extension Reader: ResponseRequiringEnvironment where Result: Response, Value: RequestEnvironment, Result.R == Value.R {
+    public typealias Env = Value
     public typealias R = Result.R
-    public typealias S = Result.S
 
     public static func renderError(_ error: Error) -> Reader<Value, Result> {
         fatalError()
     }
     
-    public static func withSession(_ cont: @escaping (Result.S?) -> Reader<Value, Result>) -> Reader<Value, Result> {
+    public static func withSession(_ cont: @escaping (Env.S?) -> Reader<Value, Result>) -> Reader<Value, Result> {
         return Reader { value in
             cont(value.session).run(value)
         }
     }
 
-    public static func write(html: ANode<RE>, status: HTTPResponseStatus = .ok) -> Reader<Value, Result> {
+    public static func write(html: ANode<Env>, status: HTTPResponseStatus = .ok) -> Reader<Value, Result> {
         return Reader { (value: Value) -> Result in
             return Result.write(html: html.ast(input: value), status: status)
         }

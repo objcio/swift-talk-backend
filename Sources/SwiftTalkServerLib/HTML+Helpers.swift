@@ -20,7 +20,7 @@ extension Route: LinkTarget {
     var absoluteString: String { return path }
 }
 
-extension ANode where I == RequestEnvironment<Route, Session> {
+extension ANode where I == STRequestEnvironment {
     static func link(to: Route, classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
         return Node.a(classes: classes, attributes: attributes, children, href: to.path)
     }

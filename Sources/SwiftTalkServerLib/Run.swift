@@ -2,6 +2,7 @@ import Foundation
 import NIOWrapper
 import Database
 import WebServer
+import Base
 
 
 extension NIOInterpreter: WebServer.Response {
@@ -48,7 +49,7 @@ public func run() throws {
                 return nil
             }
         }
-        let deps = RequestEnvironment(route: route, hashedAssetName: hashedAssetName, buildSession: buildSession, connection: conn, resourcePaths: resourcePaths)
+        let deps = STRequestEnvironment(route: route, hashedAssetName: hashedAssetName, buildSession: buildSession, connection: conn, resourcePaths: resourcePaths)
 
         let reader: Reader<STRequestEnvironment, NIOInterpreter> = try! route.interpret()
         return reader.run(deps)
