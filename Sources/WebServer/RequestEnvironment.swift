@@ -38,22 +38,12 @@ public struct RequestEnvironment<R: RouteP, S: SessionP> {
         return session?.csrf ?? sharedCSRF
     }
     
-    func connection() throws -> ConnectionProtocol {
-        return try _connection.get()
-    }
-
     func execute<A>(_ query: Query<A>) -> Either<A, Error> {
         do {
-            return try .left(connection().execute(query))
+            return try .left(_connection.get().execute(query))
         } catch {
             return .right(error)
         }
-    }
-    
-    @available(*, deprecated)
-    func getConnection() -> Either<ConnectionProtocol, Error> {
-        do { return try .left(connection()) }
-        catch { return .right(error) }
     }
 }
 
