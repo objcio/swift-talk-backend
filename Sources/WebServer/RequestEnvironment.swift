@@ -9,14 +9,8 @@ import Foundation
 import Base
 import Database
 
-public protocol RouteP {
-    var path: String { get }
-}
-
 public protocol RequestEnvironment {
-    associatedtype R: RouteP
     associatedtype S
-    var route: R { get }
     var session: S? { get }
     var csrf: CSRFToken { get }
     func execute<A>(_ query: Query<A>) -> Either<A, Error>

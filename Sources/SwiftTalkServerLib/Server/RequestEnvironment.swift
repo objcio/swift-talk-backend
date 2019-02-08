@@ -21,7 +21,7 @@ public struct STRequestEnvironment: RequestEnvironment {
     private let _connection: Lazy<ConnectionProtocol>
     private let _session: Lazy<S?>
     
-    public init(route: R, hashedAssetName: @escaping (String) -> String, buildSession: @escaping () -> S?, connection: Lazy<ConnectionProtocol>, resourcePaths: [URL]) {
+    public init(route: Route, hashedAssetName: @escaping (String) -> String, buildSession: @escaping () -> S?, connection: Lazy<ConnectionProtocol>, resourcePaths: [URL]) {
         self.hashedAssetName = hashedAssetName
         self._session = Lazy(buildSession, cleanup: { _ in () })
         self.route = route

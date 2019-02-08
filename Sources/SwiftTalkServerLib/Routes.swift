@@ -82,7 +82,7 @@ public indirect enum Route: Equatable {
     }
 }
 
-extension Route: RouteP {
+extension Route {
     public var path: String {
         guard let result = router.prettyPrint(self) else {
             log(error: "Couldn't print path for \(self))")
@@ -90,9 +90,7 @@ extension Route: RouteP {
         }
         return result
     }
-}
 
-extension Route {
     var url: URL {
         return env.baseURL.appendingPathComponent(path)
     }

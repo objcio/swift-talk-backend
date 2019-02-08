@@ -56,16 +56,14 @@ extension Reader: NIOWrapper.Response where Result: NIOWrapper.Response {
 
 
 public protocol Response: NIOWrapper.Response {
-    associatedtype R: RouteP
     static func write(_ string: String, status: HTTPResponseStatus) -> Self
     static func write(html: ANode<()>, status: HTTPResponseStatus) -> Self
     static func write(rss: ANode<()>, status: HTTPResponseStatus) -> Self
     static func write(json: Data, status: HTTPResponseStatus) -> Self
-    static func redirect(to R: R, headers: [String: String]) -> Self
     static func renderError(_ error: Error) -> Self
 }
 
-public protocol ResponseRequiringEnvironment: Response where Self.R == Env.R {
+public protocol ResponseRequiringEnvironment: Response {
     associatedtype Env: RequestEnvironment
     static func write(html: ANode<Env>, status: HTTPResponseStatus) -> Self
     static func withCSRF(_ cont: @escaping (CSRFToken) -> Self) -> Self
@@ -93,10 +91,6 @@ extension Response {
     
     public static func write(json: Data, status: HTTPResponseStatus = .ok) -> Self {
         return .write(json, status: status, headers: ["Content-Type": "application/json"])
-    }
-    
-    public static func redirect(to route: R, headers: [String: String] = [:]) -> Self {
-        return .redirect(path: route.path, headers: headers)
     }
     
     public static func renderError(_ error: Error) -> Self {
@@ -181,7 +175,7 @@ extension ResponseRequiringEnvironment {
     }
     
     // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
-    public static func form<A, B>(_ f: Form<A, Env>, initial: A, convert: @escaping (A) -> Either<B, [ValidationError]>, onPost: @escaping (B) throws -> Self) -> Self where Env.R == R {
+    public static func form<A, B>(_ f: Form<A, Env>, initial: A, convert: @escaping (A) -> Either<B, [ValidationError]>, onPost: @escaping (B) throws -> Self) -> Self {
         return verifiedPost(do: { (body: [String:String]) -> Self in
             withCSRF { csrf in
                 catchAndDisplayError {
@@ -200,7 +194,7 @@ extension ResponseRequiringEnvironment {
         
     }
 
-    public static func form<A>(_ f: Form<A, Env>, initial: A, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> Self) -> Self where Env.R == R {
+    public static func form<A>(_ f: Form<A, Env>, initial: A, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> Self) -> Self {
         return form(f, initial: initial, convert: { (a: A) -> Either<A, [ValidationError]> in
             let errs = validate(a)
             return errs.isEmpty ? .left(a) : .right(errs)
@@ -226,11 +220,10 @@ extension ResponseRequiringEnvironment {
     }
 }
 
-extension Reader: Response where Result: Response, Value: RequestEnvironment, Result.R == Value.R {}
+extension Reader: Response where Result: Response, Value: RequestEnvironment {}
 
-extension Reader: ResponseRequiringEnvironment where Result: Response, Value: RequestEnvironment, Result.R == Value.R {
+extension Reader: ResponseRequiringEnvironment where Result: Response, Value: RequestEnvironment {
     public typealias Env = Value
-    public typealias R = Result.R
 
     public static func renderError(_ error: Error) -> Reader<Value, Result> {
         fatalError()
