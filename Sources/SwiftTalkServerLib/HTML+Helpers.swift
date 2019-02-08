@@ -9,6 +9,7 @@ import Foundation
 import CommonMark
 import Base
 import HTML
+import WebServer
 
 
 protocol LinkTarget {

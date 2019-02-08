@@ -15,7 +15,7 @@ import Promise
 
 public typealias HTTPResponseStatus = NIOHTTP1.HTTPResponseStatus
 
-public protocol Interpreter {
+public protocol Response {
     static func write(_ string: String, status: HTTPResponseStatus, headers: [String: String]) -> Self
     static func write(_ data: Data, status: HTTPResponseStatus, headers: [String: String]) -> Self
     static func writeFile(path: String, maxAge: UInt64?) -> Self
@@ -24,7 +24,7 @@ public protocol Interpreter {
     static func withPostData(do cont: @escaping (Data) -> Self) -> Self
 }
 
-public struct NIOInterpreter: Interpreter {
+public struct NIOInterpreter: Response {
     struct Deps {
         let header: HTTPRequestHead
         let ctx: ChannelHandlerContext

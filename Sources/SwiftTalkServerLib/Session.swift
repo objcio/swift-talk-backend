@@ -7,28 +7,13 @@
 
 import Foundation
 import Database
+import WebServer
 
 
+typealias STRequestEnvironment = RequestEnvironment<Route, Session>
 typealias STContext = Context<Route, Session>
 
-struct Context<R, S: SessionP> {
-    var route: R
-    var message: (String, FlashType)?
-    var session: S?
-    
-    var csrf: CSRFToken {
-        return session?.csrf ?? sharedCSRF
-    }
-}
-
-private let sharedCSRF = CSRFToken(UUID(uuidString: "F5F6C2AE-85CB-4989-B0BF-F471CC92E3FF")!)
-
-
-protocol SessionP {
-    var csrf: CSRFToken { get }
-}
-
-struct Session {
+public struct Session {
     var sessionId: UUID
     var user: Row<UserData>
     private var teamMember: Row<TeamMemberData>?
@@ -95,7 +80,7 @@ struct Session {
 
 
 extension Session: SessionP {
-    var csrf: CSRFToken {
+    public var csrf: CSRFToken {
         return user.data.csrfToken
     }
 }

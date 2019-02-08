@@ -95,3 +95,37 @@ public func measure<A>(message: String, file: StaticString = #file, line: UInt =
     return result
 }
 
+public func flatten<A>(_ value: A??) -> A? {
+    guard let x = value else { return nil }
+    return x
+}
+
+public enum Either<A, B> {
+    case left(A)
+    case right(B)
+}
+
+extension Either {
+    public init(_ value: A?, or: @autoclosure () -> B) {
+        if let x = value {
+            self = .left(x)
+        } else {
+            self = .right(or())
+        }
+    }
+    
+    public var err: B? {
+        guard case let .right(e) = self else { return nil }
+        return e
+    }
+}
+
+
+infix operator ?!: NilCoalescingPrecedence
+public func ?!<A>(lhs: A?, rhs: Error) throws -> A {
+    guard let value = lhs else {
+        throw rhs
+    }
+    return value
+}
+

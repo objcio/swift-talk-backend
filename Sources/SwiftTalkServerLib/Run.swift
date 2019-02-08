@@ -1,10 +1,13 @@
 import Foundation
 import NIOWrapper
 import Database
+import HTML
+import WebServer
 
 
-extension NIOInterpreter: SwiftTalkInterpreter {
-    typealias R = Route
+extension NIOInterpreter: WebServer.Response {
+    public typealias R = Route
+    public typealias S = Session
 }
 
 public func run() throws {

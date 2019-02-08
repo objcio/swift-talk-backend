@@ -8,6 +8,7 @@
 import Foundation
 import Database
 import PostgreSQL
+import WebServer
 
 
 let postgres = env.databaseURL.map { Postgres(url: $0) } ?? Postgres(host: env.databaseHost, name: env.databaseName, user: env.databaseUser, password: env.databasePassword)
@@ -87,25 +88,8 @@ struct DownloadData: Codable, Insertable {
     static let tableName: String = "downloads"
 }
 
-struct CSRFToken: Codable, Equatable, Hashable {
-    var value: UUID
-    init(_ uuid: UUID) {
-        self.value = uuid
-    }
-    init(from decoder: Decoder) throws {
-        self.init(try UUID(from: decoder))
-    }
-    func encode(to encoder: Encoder) throws {
-        try value.encode(to: encoder)
-    }
-    
-    var stringValue: String {
-        return value.uuidString
-    }
-}
-
 extension CSRFToken: NodeRepresentable {
-    func makeNode(in context: PostgreSQL.Context?) throws -> PostgreSQL.Node {
+    public func makeNode(in context: PostgreSQL.Context?) throws -> PostgreSQL.Node {
         return value.makeNode(in: context)
     }
 }

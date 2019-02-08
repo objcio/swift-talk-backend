@@ -18,19 +18,6 @@ public func myAssert(_ cond: @autoclosure () -> Bool, _ message: @autoclosure ()
     }
 }
 
-infix operator ?!: NilCoalescingPrecedence
-func ?!<A>(lhs: A?, rhs: Error) throws -> A {
-    guard let value = lhs else {
-        throw rhs
-    }
-    return value
-}
-
-func flatten<A>(_ value: A??) -> A? {
-    guard let x = value else { return nil }
-    return x
-}
-
 final class Atomic<A> {
     private let queue = DispatchQueue(label: "Atomic serial queue")
     private var _value: A
@@ -115,26 +102,6 @@ extension Data {
     var md5: String {
         let data = Data(Digest(using: .md5).update(data: self)?.final() ?? [])
         return data.map { String(format: "%02hhx", $0) }.joined()
-    }
-}
-
-public enum Either<A, B> {
-    case left(A)
-    case right(B)
-}
-
-extension Either {
-    init(_ value: A?, or: @autoclosure () -> B) {
-        if let x = value {
-            self = .left(x)
-        } else {
-            self = .right(or())
-        }
-    }
-    
-    var err: B? {
-        guard case let .right(e) = self else { return nil }
-        return e
     }
 }
 

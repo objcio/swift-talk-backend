@@ -8,6 +8,7 @@
 import Foundation
 import Base
 import HTML
+import WebServer
 
 
 let subscriptionBenefits: [(icon: String, name: String, description: String)] = [

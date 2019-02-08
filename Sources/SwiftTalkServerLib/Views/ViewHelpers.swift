@@ -8,37 +8,6 @@
 import Foundation
 import Base
 
-
-struct ServerError: LocalizedError {
-    /// Private message for logging
-    let privateMessage: String
-    /// Message shown to the user
-    let publicMessage: String
-    
-    var errorDescription: String? {
-        return "ServerError: \(privateMessage)"
-    }
-}
-
-struct AuthorizationError: Error { }
-
-
-func catchAndDisplayError<I: Interp>(line: UInt = #line, file: StaticString = #file, _ f: () throws -> I) -> I /*where I.RE == STRequestEnvironment*/ {
-    fatalError()
-//    do {
-//        return try f()
-//    } catch {
-//        log(file: file, line: line, error)
-//        if let e = error as? ServerError {
-//            return .write(errorView(e.publicMessage), status: .internalServerError)
-//        } else if let _ = error as? AuthorizationError {
-//            return .write(errorView("You're not authorized to view this page. Please login and try again."), status: .unauthorized)
-//        } else {
-//            return .write(errorView("Something went wrong — please contact us if the problem persists."), status: .internalServerError)
-//        }
-//    }
-}
-
 extension Optional where Wrapped == Session {
     var premiumAccess: Bool {
         return self?.premiumAccess ?? false

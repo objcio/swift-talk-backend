@@ -8,8 +8,9 @@
 import Foundation
 import Routing
 import Base
+import WebServer
 
-indirect enum Route: Equatable {
+public indirect enum Route: Equatable {
     case home
     case episodes
     case collections
@@ -29,30 +30,30 @@ indirect enum Route: Equatable {
     case signup(Signup)
     case subscription(Subscription)
 
-    enum Signup: Equatable {
+    public enum Signup: Equatable {
         case promoCode(String)
         case subscribe
         case subscribeTeam
         case teamMember(token: UUID)
     }
     
-    enum Login: Equatable {
+    public enum Login: Equatable {
         case login(continue: Route?)
         case githubCallback(code: String?, origin: String?)
     }
     
-    enum Webhook: Equatable {
+    public enum Webhook: Equatable {
         case recurlyWebhook
         case githubWebhook
     }
 
-    enum EpisodeR: Equatable {
+    public enum EpisodeR: Equatable {
         case download
         case view(playPosition: Int?)
         case playProgress
     }
     
-    enum Subscription: Equatable {
+    public enum Subscription: Equatable {
         case cancel
         case reactivate
         case upgrade
@@ -61,7 +62,7 @@ indirect enum Route: Equatable {
         case registerAsTeamMember(token: UUID, terminate: Bool)
     }
    
-    enum Account: Equatable {
+    public enum Account: Equatable {
         case register(couponCode: String?, team: Bool)
         case profile
         case billing
@@ -72,7 +73,7 @@ indirect enum Route: Equatable {
         case logout
     }
     
-    enum Gifts: Equatable {
+    public enum Gifts: Equatable {
         case home
         case new(planCode: String)
         case pay(UUID)
@@ -81,17 +82,17 @@ indirect enum Route: Equatable {
     }
 }
 
-extension Route: RouteP {}
-
-extension Route {
-    var path: String {
+extension Route: RouteP {
+    public var path: String {
         guard let result = router.prettyPrint(self) else {
             log(error: "Couldn't print path for \(self))")
             return ""
         }
         return result
     }
-    
+}
+
+extension Route {
     var url: URL {
         return env.baseURL.appendingPathComponent(path)
     }

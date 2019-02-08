@@ -7,6 +7,7 @@
 
 import Foundation
 import HTML
+import WebServer
 
 
 extension ANode where I == STRequestEnvironment {
@@ -237,11 +238,6 @@ extension LayoutConfig {
         ] + footerContent)
         return Node.html(attributes: ["lang": "en"], [head, body])
     }
-}
-
-enum FlashType {
-    case notice
-    case alert
 }
 
 func flash(message: String, type: FlashType) -> Node {

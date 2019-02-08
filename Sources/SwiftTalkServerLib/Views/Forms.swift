@@ -7,32 +7,8 @@
 
 import Foundation
 import HTML
+import WebServer
 
-typealias ValidationError = (field: String, message: String)
-
-struct Form<A, RE> {
-    typealias N = ANode<RE>
-    typealias Render = (A, [ValidationError]) -> N
-    typealias Parse = ([String:String]) -> A?
-    let _parse: Parse
-    let render: Render
-    init(parse: @escaping Parse, render: @escaping Render) {
-        self._parse = parse
-        self.render = render
-    }
-
-    func parse(_ data: [String:String]) -> A? {
-        return _parse(data)
-    }
-}
-
-extension Form {
-    func wrap(_ f: @escaping (N) -> N) -> Form<A, RE> {
-        return Form(parse: _parse, render: { value, err in
-            f(self.render(value, err))
-        })
-    }
-}
 
 struct FormView {
     indirect enum Field {
