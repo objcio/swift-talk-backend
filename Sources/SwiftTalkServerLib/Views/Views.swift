@@ -23,12 +23,12 @@ enum HeaderContent {
                 .h1(classes: classes, [.text(text)]), // todo add pb class where blurb = nil
             ] + (blurb == nil ? [] : [
                 .div(classes: "mt--", [
-                .p(attributes: ["class": "ms2 color-darken-50 lh-110 mw7"], [Node.text(blurb!)])
+                .p(classes: "ms2 color-darken-50 lh-110 mw7", [Node.text(blurb!)])
                 ])
         	])
         case let .link(header, backlink, label): return [
-        	.link(to: backlink, attributes: ["class": "ms1 inline-block no-decoration lh-100 pb- color-white opacity-70 hover-underline"], [.text(label)]),
-            .h1(attributes: ["class": "color-white bold ms4"], [.text(header)])
+        	.link(to: backlink, classes: "ms1 inline-block no-decoration lh-100 pb- color-white opacity-70 hover-underline", [.text(label)]),
+            .h1(classes: "color-white bold ms4", [.text(header)])
         ]
         }
     }

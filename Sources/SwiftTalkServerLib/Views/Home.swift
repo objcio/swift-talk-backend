@@ -12,9 +12,9 @@ import HTML
 func renderHome(episodes: [EpisodeWithProgress]) -> Node {
     let header = pageHeader(HeaderContent.other(header: "Swift Talk", blurb: "A weekly video series on Swift programming.", extraClasses: "ms4"))
     var recentNodes = [
-        Node.header(attributes: ["class": "mb+"], [
-            .h2(attributes: ["class": "inline-block bold color-black"], [.text("Recent Episodes")]),
-            .link(to: .episodes, attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-under"], [.text("See All")])
+        Node.header(classes: "mb+", [
+            .h2(classes: "inline-block bold color-black", [.text("Recent Episodes")]),
+            .link(to: .episodes, classes: "inline-block ms-1 ml- color-blue no-decoration hover-under", [.text("See All")])
         ])
     ]
     if episodes.count >= 5 {
@@ -37,16 +37,16 @@ func renderHome(episodes: [EpisodeWithProgress]) -> Node {
         ])})
     }
     let recentEpisodes: Node = .section(classes: "container", recentNodes)
-    let collections: Node = .section(attributes: ["class": "container"], [
-        .header(attributes: ["class": "mb+"], [
-            .h2(attributes: ["class": "inline-block bold lh-100 mb---"], [.text("Collections")]),
-            .link(to: .collections, attributes: ["class": "inline-block ms-1 ml- color-blue no-decoration hover-underline"], [.text("Show Contents")]),
-            .p(attributes: ["class": "lh-125 color-gray-60"], [
+    let collections: Node = .section(classes: "container", [
+        .header(classes: "mb+", [
+            .h2(classes: "inline-block bold lh-100 mb---", [.text("Collections")]),
+            .link(to: .collections, classes: "inline-block ms-1 ml- color-blue no-decoration hover-underline", [.text("Show Contents")]),
+            .p(classes: "lh-125 color-gray-60", [
                 .text("Browse all Swift Talk episodes by topic.")
                 ])
             ]),
-        .ul(attributes: ["class": "cols s+|cols--2n l+|cols--3n"], Collection.all.map { coll in
-            Node.li(attributes: ["class": "col width-full s+|width-1/2 l+|width-1/3 mb++"], coll.render())
+        .ul(classes: "cols s+|cols--2n l+|cols--3n", Collection.all.map { coll in
+            Node.li(classes: "col width-full s+|width-1/2 l+|width-1/3 mb++", coll.render())
         })
         ])
     return LayoutConfig(contents: [header, recentEpisodes, collections]).layout

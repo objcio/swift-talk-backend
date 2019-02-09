@@ -119,13 +119,13 @@ extension LayoutConfig {
             .hashedScript(src: "/assets/application.js"),
             googleAnalytics,
         ] + structured)
-        let logo = Node.link(to: URL(string: "https://www.objc.io")!, attributes: ["class": "flex-none outline-none mr++ flex"], [
-            .inlineSvg(path: "logo.svg", attributes: ["class": "block logo logo--themed height-auto"]), // todo scaling parameter?
-            .h1(attributes: ["class":"visuallyhidden"], [.text("objc.io")])
+        let logo = Node.link(to: URL(string: "https://www.objc.io")!, classes: "flex-none outline-none mr++ flex", [
+            .inlineSvg(classes: "block logo logo--themed height-auto", path: "logo.svg"),
+            .h1(classes: "visuallyhidden", [.text("objc.io")])
         ] as [Node])
-        let navigation = Node.nav(attributes: ["class": "flex flex-grow"], [
-            .ul(attributes: ["class": "flex flex-auto"], navigationItems.map { l in
-                .li(attributes: ["class": "flex mr+"], [
+        let navigation = Node.nav(classes: "flex flex-grow", [
+            .ul(classes: "flex flex-auto", navigationItems.map { l in
+                .li(classes: "flex mr+", [
                     .link(to: l.0, attributes: [
                         "class": "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration"
                     ], [.span([.text(l.1)])])
@@ -133,7 +133,7 @@ extension LayoutConfig {
             }) // todo: search
         ])
 
-        let header = Node.header(attributes: ["class": "bgcolor-white"], [
+        let header = Node.header(classes: "bgcolor-white", [
             .div(classes: "height-3 flex scroller js-scroller js-scroller-container", [
                 .div(classes: "container-h flex-grow flex", [
                     logo,
@@ -181,10 +181,10 @@ extension LayoutConfig {
         ] + structured)
         let linkClasses: Class = "no-decoration color-inherit hover-color-black mr"
         let body: Node = .body(attributes: ["class": "theme-" + theme], [
-            .header(attributes: ["class": "site-header"], [
+            .header(classes: "site-header", [
         		.div(classes: "site-header__nav flex", [
                     .div(classes: "container-h flex-grow flex items-center height-3", [
-                        .link(to: .home, attributes: ["class": "block flex-none outline-none mr++"], [
+                        .link(to: .home, classes: "block flex-none outline-none mr++", [
                             .inlineSvg(classes: "logo height-auto", path: "logo.svg"),
                             .h1(classes: "visuallyhidden", [.text("objc.io")])
                         ] as [Node]),
