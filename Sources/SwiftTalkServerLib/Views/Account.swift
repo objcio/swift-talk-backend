@@ -285,7 +285,7 @@ extension BillingInfo {
 
 fileprivate func button(to route: Route, text: String, classes: Class = "") -> Node {
     return Node.withCSRF { csrf in
-    	return Node.button(to: route, [.text(text)], classes: "bold reset-button border-bottom border-1 hover-color-black" + classes)
+    	return Node.button(to: route, classes: "bold reset-button border-bottom border-1 hover-color-black" + classes, [.text(text)])
     }
 }
 
@@ -422,7 +422,7 @@ func teamMembersView(teamMembers: [Row<UserData>], signupLink: URL) -> Node {
     func row(avatarURL: String, name: String, email: String, githubLogin: String, deleteRoute: Route?) -> Node {
         return Node.div(classes: "flex items-center pv- border-top border-1 border-color-gray-90", [
             .div(classes: "block radius-full ms-2 width-2 mr", [
-                Node.img(src: avatarURL, classes: "block radius-full ms-2 width-2 mr")
+                Node.img(classes: "block radius-full ms-2 width-2 mr", src: avatarURL)
             ]),
             .div(classes: "cols flex-grow" + (deleteRoute == nil ? "bold" : ""), [
                 .div(classes: "col width-1/3", [.text(name)]),
@@ -430,7 +430,7 @@ func teamMembersView(teamMembers: [Row<UserData>], signupLink: URL) -> Node {
                 .div(classes: "col width-1/3", [.text(githubLogin)]),
             ]),
             .div(classes: "block width-2", [
-                deleteRoute.map { Node.button(to: $0, [.raw("&times;")], classes: "button-input ms-1", confirm: "Are you sure to delete this team member?") } ?? ""
+                deleteRoute.map { Node.button(to: $0, confirm: "Are you sure to delete this team member?", classes: "button-input ms-1", [.raw("&times;")]) } ?? ""
             ]),
         ])
     }
@@ -453,7 +453,7 @@ func teamMembersView(teamMembers: [Row<UserData>], signupLink: URL) -> Node {
                     .p(["To add team members, please send them the following link for signup:"]),
                     .div(classes: "type-mono ms-1 mv", [.text(signupLink.absoluteString)]),
                     .p(classes: "color-gray-50 ms-1", ["Team members cost $10/month or $100/year (excl. VAT), depending on your subscription."]),
-                    .button(to: .account(.invalidateTeamToken), ["Generate New Signup Link"], classes: "button mt+", confirm: "WARNING: This will invalidate the current signup link. Do you want to proceed?"),
+                    .button(to: .account(.invalidateTeamToken), confirm: "WARNING: This will invalidate the current signup link. Do you want to proceed?", classes: "button mt+", ["Generate New Signup Link"]),
                 ])
             ]),
             Node.div([

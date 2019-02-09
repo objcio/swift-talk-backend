@@ -10,44 +10,6 @@ import HTML
 import WebServer
 
 
-extension ANode where I == STRequestEnvironment {
-    static func hashedStylesheet(media: String = "all", href: String) -> Node {
-        return ANode.withInput { deps in
-            return Node.stylesheet(media: media, href: deps.hashedAssetName(href))
-        }
-    }
-    
-    static func hashedScript(src: String) -> ANode {
-        return ANode.withInput { deps in
-            return Node.script(src: deps.hashedAssetName(src))
-        }
-    }
-    
-    static func hashedImg(src: String, alt: String = "", classes: Class? = nil, attributes: [String:String] = [:]) -> ANode {
-        return ANode.withInput { deps in
-            return Node.img(src: deps.hashedAssetName(src), alt: alt, classes: classes, attributes: attributes)
-        }
-    }
-    
-    static func withCSRF(_ f: @escaping (CSRFToken) -> ANode) -> ANode {
-        return .withInput { f($0.csrf) }
-    }
-
-    static func withSession(_ f: @escaping (Session?) -> ANode) -> ANode {
-        return .withInput { f($0.session) }
-    }
-
-    static func withResourcePaths(_ f: @escaping ([URL]) -> ANode) -> ANode {
-        return .withInput { f($0.resourcePaths) }
-    }
-    
-    static func withRoute(_ f: @escaping (Route) -> ANode) -> ANode {
-        return .withInput { f($0.route) }
-    }
-}
-
-typealias Node = ANode<STRequestEnvironment>
-
 struct LayoutConfig {
     var pageTitle: String
     var contents: [Node]
@@ -140,13 +102,13 @@ extension LayoutConfig {
             .meta(attributes: ["name": "viewport", "content": "'width=device-width, initial-scale=1, user-scalable=no'"]),
         ] + [
             .title(pageTitle),
-            Node.xml("link", attributes: [
+            Node.xml(name: "link", attributes: [
                 "href": rssURL,
                 "rel": "alternate",
                 "title": "RSS",
                 "type": "application/rss+xml"
                 ]),
-            Node.xml("link", attributes: [
+            Node.xml(name: "link", attributes: [
                 "href": rssURL,
                 "rel": "alternate",
                 "title": "Atom",
@@ -200,13 +162,13 @@ extension LayoutConfig {
             .meta(attributes: ["http-equiv": "X-UA-Compatible", "content": "IE=edge"]),
             .meta(attributes: ["name": "viewport", "content": "'width=device-width, initial-scale=1, user-scalable=no'"]),
             .title(pageTitle),
-            Node.xml("link", attributes: [
+            Node.xml(name: "link", attributes: [
                 "href": rssURL,
                 "rel": "alternate",
                 "title": "RSS",
                 "type": "application/rss+xml"
             ]),
-            Node.xml("link", attributes: [
+            Node.xml(name: "link", attributes: [
                 "href": rssURL,
                 "rel": "alternate",
                 "title": "Atom",
@@ -223,7 +185,7 @@ extension LayoutConfig {
         		.div(classes: "site-header__nav flex", [
                     .div(classes: "container-h flex-grow flex items-center height-3", [
                         .link(to: .home, attributes: ["class": "block flex-none outline-none mr++"], [
-                            .inlineSvg(path: "logo.svg", classes: "logo height-auto"),
+                            .inlineSvg(classes: "logo height-auto", path: "logo.svg"),
                             .h1(classes: "visuallyhidden", [.text("objc.io")])
                         ] as [Node]),
                     ])
@@ -234,7 +196,7 @@ extension LayoutConfig {
             Node.footer([
                 Node.div(classes: "container-h pv", [
                     Node.div(classes: "ms-1 color-gray-60", [
-                        Node.a(classes: linkClasses, [Node.text("Email")], href: "mailto:mail@objc.io"),
+                        Node.a(classes: linkClasses, href: "mailto:mail@objc.io", [Node.text("Email")]),
                         Node.link(to: URL(string: "https://www.objc.io/imprint")!, classes: linkClasses, ["Imprint"])
                     ])
                 ])

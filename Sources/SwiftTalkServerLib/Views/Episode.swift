@@ -67,7 +67,7 @@ extension Episode {
         
         let smallIcon: [Node] = options.largeIcon ? [] : [.inlineSvg(path: iconFile, attributes: ["class": "svg-fill-current icon-26"])]
         let largeIconSVGClass: Class = "svg-fill-current" + (options.largeIcon ? "icon-46" : "icon-26")
-        let largeIcon: [Node] = options.largeIcon ? [.div(classes: largeIconClasses, [.inlineSvg(path: iconFile, classes: largeIconSVGClass)])] : []
+        let largeIcon: [Node] = options.largeIcon ? [.div(classes: largeIconClasses, [.inlineSvg(classes: largeIconSVGClass, path: iconFile)])] : []
         
         let contentClasses: Class = "flex-auto flex flex-column" +
             (options.wide ? "m+|width-2/3" : "flex-auto justify-center") +
@@ -156,7 +156,7 @@ extension Episode {
         return .div(classes: "ratio ratio--16/9", [
             .div(classes: "ratio__container", [
                 .figure(attributes: ["class":"stretch relative"], [
-                    Node.iframe(URL(string: "https://player.vimeo.com/video/\(videoId)\(startTime)")!, attributes: [
+                    Node.iframe(source: URL(string: "https://player.vimeo.com/video/\(videoId)\(startTime)")!, attributes: [
                         "width": "100%",
                         "height": "100%",
                         "webkitallowfullscreen": "",
@@ -176,10 +176,10 @@ extension Episode {
                 return Node.span(attributes: ["class": wrapperClasses], [.text(entry.title)])
             }
             
-            return Node.a(attributes: ["data-time": "\(entry.0)", "class": wrapperClasses + " items-baseline no-decoration hover-cascade js-episode-seek"], [
+            return Node.a(href: "?t=\(Int(entry.0))", attributes: ["data-time": "\(entry.0)", "class": wrapperClasses + " items-baseline no-decoration hover-cascade js-episode-seek"], [
                 Node.span(attributes: ["class": "hover-cascade__underline"], [.text(entry.title)]),
                 Node.span(attributes: ["class": "ml-auto color-orange pl-"], [.text(entry.0.timeString)]),
-            ], href: "?t=\(Int(entry.0))")
+            ])
         }
         
         let items = [(6, title: "Introduction")] + tableOfContents
@@ -246,9 +246,9 @@ extension Episode {
         let episodeResource: [[Node]] = self.resources.map { res in
             [
                 Node.div(classes: "flex-none mr-", [
-                    Node.a(classes: "block bgcolor-orange radius-5 hover-bgcolor-blue", attributes: linkAttrs, [
-                        Node.inlineSvg(path: "icon-resource-code.svg", classes: "block icon-40")
-                        ], href: res.url.absoluteString)
+                    Node.a(classes: "block bgcolor-orange radius-5 hover-bgcolor-blue", href: res.url.absoluteString, attributes: linkAttrs, [
+                        Node.inlineSvg(classes: "block icon-40", path: "icon-resource-code.svg")
+                    ])
                 ]),
                 Node.div(classes: "ms-1 lh-125", [
                     smallH4(.text(res.title), link: res.url),
@@ -256,7 +256,7 @@ extension Episode {
                 ])
             ]
         }
-        let downloadImage = Node.inlineSvg(path: "icon-resource-download.svg", classes: "block icon-40")
+        let downloadImage = Node.inlineSvg(classes: "block icon-40", path: "icon-resource-download.svg")
         let download: [[Node]] = [
             [
                 Node.div(classes: "flex-none mr-", [

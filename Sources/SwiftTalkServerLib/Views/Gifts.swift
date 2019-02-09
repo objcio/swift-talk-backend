@@ -34,7 +34,7 @@ func giftHome(plans: [Plan]) throws -> Node {
     let benefits: [Node] = [
         Node.div(classes: "text-center mt+", [
             .div(classes: "color-orange", [
-                .inlineSvg(path: "icon-benefit-gift.svg", classes: "svg-fill-current")
+                .inlineSvg(classes: "svg-fill-current", path: "icon-benefit-gift.svg")
             ]),
             .div([
                 .h3(classes: "bold color-blue mt- mb-", [.text("The Perfect Gift for Swift Developers")]),
@@ -43,7 +43,7 @@ func giftHome(plans: [Plan]) throws -> Node {
         ]),
         Node.div(classes: "text-center mt+", [
             .div(classes: "color-orange", [
-                .inlineSvg(path: "icon-play.svg", classes: "svg-fill-current")
+                .inlineSvg(classes: "svg-fill-current", path: "icon-play.svg")
             ]),
             .div([
                 .h3(classes: "bold color-blue mt- mb-", [.text("Plenty of Content")]),
@@ -52,8 +52,8 @@ func giftHome(plans: [Plan]) throws -> Node {
             ]),
         Node.div(classes: "text-center mt+", [
             .div(classes: "color-orange", [
-                .inlineSvg(path: "icon-benefit-protect.svg", classes: "svg-fill-current")
-                ]),
+                .inlineSvg(classes: "svg-fill-current", path: "icon-benefit-protect.svg")
+            ]),
             .div([
                 .h3(classes: "bold color-blue mt- mb-", [.text("Non-Renewing")]),
             .p(classes: "color-gray-50 lh-125", [.text("You select the subscription period, and make a one-time payment on the day it is delivered. Gift subscriptions don’t auto-renew.")]),
@@ -111,7 +111,7 @@ func redeemGiftSub(gift: Row<GiftData>, plan: Plan) throws -> Node {
             .div(classes: "bgcolor-white pa- radius-8 max-width-7 box-sizing-content center stack-", [
                 Node.div(classes: "text-center mt+", [
                     .div(classes: "color-orange", [
-                        .inlineSvg(path: "icon-benefit-gift.svg", classes: "svg-fill-current")
+                        .inlineSvg(classes: "svg-fill-current", path: "icon-benefit-gift.svg")
                     ]),
                     .div(classes: "c-text mt mb-", [
                         .p([.text("We’re pleased to say that \(gift.data.gifterName ?? "unknown") has gifted you a \(plan.prettyDuration.lowercased()) Swift Talk subscription, which starts today!")]),
@@ -133,7 +133,7 @@ func giftThankYou(gift: GiftData) -> Node {
             .div(classes: "bgcolor-white pa- radius-8 max-width-7 box-sizing-content center stack-", [
                 Node.div(classes: "text-center mt+", [
                     .div(classes: "color-orange", [
-                        .inlineSvg(path: "icon-benefit-gift.svg", classes: "svg-fill-current")
+                        .inlineSvg(classes: "svg-fill-current", path: "icon-benefit-gift.svg")
                     ]),
                     .div(classes: "c-text mt mb-", [
                         .p([.text("Thank you for gifting Swift Talk!")]),

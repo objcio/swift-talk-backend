@@ -20,16 +20,16 @@ extension Route: LinkTarget {
     var absoluteString: String { return path }
 }
 
-extension ANode where I == STRequestEnvironment {
+extension HTML.Node where I == STRequestEnvironment {
     static func link(to: Route, classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
-        return Node.a(classes: classes, attributes: attributes, children, href: to.path)
+        return Node.a(classes: classes, href: to.path, attributes: attributes, children)
     }
 
     static func link(to: LinkTarget, classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
-        return Node.a(classes: classes, attributes: attributes, children, href: to.absoluteString)
+        return Node.a(classes: classes, href: to.absoluteString, attributes: attributes, children)
     }
     
-    static func button(to route: Route, _ children: [Node], classes: Class? = nil, attributes: [String:String] = [:], confirm: String? = "Are you sure?") -> Node {
+    static func button(to route: Route, confirm: String? = "Are you sure?", classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
         var attrs = ["type": "submit"]
         if let c = confirm {
             attrs["data-confirm"] = c
@@ -42,7 +42,7 @@ extension ANode where I == STRequestEnvironment {
         }
     }
     
-    static func inlineSvg(path: String, preserveAspectRatio: String? = nil, classes: Class? = nil, attributes: [String:String] = [:]) -> Node {
+    static func inlineSvg(classes: Class? = nil, path: String, preserveAspectRatio: String? = nil, attributes: [String:String] = [:]) -> Node {
         // don't render inline svg's in tests
         if ProcessInfo.processInfo.environment.keys.contains("IDEiPhoneInternalTestBundleName") {
             return Node.none

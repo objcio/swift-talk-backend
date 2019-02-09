@@ -6,66 +6,24 @@
 //
 
 import Foundation
-import Promise
+import Base
 import NIOWrapper
 import HTML
 import Database
-import Base
-
-
-public struct Reader<Value, Result> {
-    public let run: (Value) -> Result
-    
-    public init(_ run: @escaping (Value) -> Result) {
-        self.run = run
-    }
-    
-    public static func const(_ value: Result) -> Reader {
-        return Reader { _ in value }
-    }
-}
-
-extension Reader: NIOWrapper.Response where Result: NIOWrapper.Response {
-    typealias I = Result
-    public static func write(_ string: String, status: HTTPResponseStatus, headers: [String : String]) -> Reader<Value, Result> {
-        return .const(.write(string, status: status, headers: headers))
-    }
-    
-    public static func write(_ data: Data, status: HTTPResponseStatus, headers: [String : String]) -> Reader<Value, Result> {
-        return .const(.write(data, status: status, headers: headers))
-    }
-    
-    public static func writeFile(path: String, maxAge: UInt64?) -> Reader<Value, Result> {
-        return .const(.writeFile(path: path, maxAge: maxAge))
-    }
-    
-    public static func redirect(path: String, headers: [String : String]) -> Reader<Value, Result> {
-        return .const(.redirect(path: path, headers: headers))
-    }
-    
-    public static func onComplete<A>(promise: Promise<A>, do cont: @escaping (A) -> Reader<Value, Result>) -> Reader<Value, Result> {
-        return Reader { value in .onComplete(promise: promise, do: { x in
-            cont(x).run(value)
-        })}
-    }
-    
-    public static func withPostData(do cont: @escaping (Data) -> Reader<Value, Result>) -> Reader<Value, Result> {
-        return Reader { value in I.withPostData(do: { cont($0).run(value) }) }
-    }
-}
+import Promise
 
 
 public protocol Response: NIOWrapper.Response {
     static func write(_ string: String, status: HTTPResponseStatus) -> Self
-    static func write(html: ANode<()>, status: HTTPResponseStatus) -> Self
-    static func write(rss: ANode<()>, status: HTTPResponseStatus) -> Self
+    static func write(html: Node<()>, status: HTTPResponseStatus) -> Self
+    static func write(rss: Node<()>, status: HTTPResponseStatus) -> Self
     static func write(json: Data, status: HTTPResponseStatus) -> Self
     static func renderError(_ error: Error) -> Self
 }
 
 public protocol ResponseRequiringEnvironment: Response {
     associatedtype Env: RequestEnvironment
-    static func write(html: ANode<Env>, status: HTTPResponseStatus) -> Self
+    static func write(html: Node<Env>, status: HTTPResponseStatus) -> Self
     static func withCSRF(_ cont: @escaping (CSRFToken) -> Self) -> Self
     static func withSession(_ cont: @escaping (Env.S?) -> Self) -> Self
     static func execute<A>(_ query: Query<A>, _ cont: @escaping (Either<A, Error>) -> Self) -> Self
@@ -81,11 +39,11 @@ extension Response {
         return .write(string, status: status, headers: ["Content-Type": "text/plain; charset=utf-8"])
     }
     
-    public static func write(html: ANode<()>, status: HTTPResponseStatus = .ok) -> Self {
+    public static func write(html: Node<()>, status: HTTPResponseStatus = .ok) -> Self {
         return .write(html.htmlDocument(input: ()), status: status, headers: ["Content-Type": "text/html; charset=utf-8"])
     }
     
-    public static func write(rss: ANode<()>, status: HTTPResponseStatus = .ok) -> Self {
+    public static func write(rss: Node<()>, status: HTTPResponseStatus = .ok) -> Self {
         return .write(rss.xmlDocument, status: status, headers: ["Content-Type": "application/rss+xml; charset=utf-8"])
     }
     
@@ -201,7 +159,7 @@ extension ResponseRequiringEnvironment {
         }, onPost: onPost)
     }
 
-    public static func write(html: ANode<Env>, status: HTTPResponseStatus = .ok) -> Self {
+    public static func write(html: Node<Env>, status: HTTPResponseStatus = .ok) -> Self {
         return .write(html: html, status: status)
     }
 
@@ -216,40 +174,6 @@ extension ResponseRequiringEnvironment {
             catchAndDisplayError {
                 try cont(sess ?! AuthorizationError())
             }
-        }
-    }
-}
-
-extension Reader: Response where Result: Response, Value: RequestEnvironment {}
-
-extension Reader: ResponseRequiringEnvironment where Result: Response, Value: RequestEnvironment {
-    public typealias Env = Value
-
-    public static func renderError(_ error: Error) -> Reader<Value, Result> {
-        fatalError()
-    }
-    
-    public static func withSession(_ cont: @escaping (Env.S?) -> Reader<Value, Result>) -> Reader<Value, Result> {
-        return Reader { value in
-            cont(value.session).run(value)
-        }
-    }
-
-    public static func write(html: ANode<Env>, status: HTTPResponseStatus = .ok) -> Reader<Value, Result> {
-        return Reader { (value: Value) -> Result in
-            return Result.write(html: html.ast(input: value), status: status)
-        }
-    }
-    
-    public static func withCSRF(_ cont: @escaping (CSRFToken) -> Reader) -> Reader {
-        return Reader { (value: Value) in
-            return cont(value.csrf).run(value)
-        }
-    }
-
-    public static func execute<A>(_ query: Query<A>, _ cont: @escaping (Either<A, Error>) -> Reader<Value, Result>) -> Reader<Value, Result> {
-        return Reader { env in
-            return cont(env.execute(query)).run(env)
         }
     }
 }

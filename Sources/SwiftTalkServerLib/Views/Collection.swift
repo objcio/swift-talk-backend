@@ -86,9 +86,9 @@ extension Collection {
             Node.article(attributes: [:], [
                 Node.link(to: .collection(id), [
                     Node.figure(attributes: ["class": "mb-", "style": figureStyle], [
-                        Node.hashedImg(src: artwork, attributes: ["class": "block width-full height-auto"])
-                        ]),
+                        Node.hashedImg(classes: "block width-full height-auto", src: artwork)
                     ]),
+                ]),
                 Node.div(classes: "flex items-center pt--", [
                     Node.h3([Node.link(to: .collection(id), attributes: ["class": "inline-block lh-110 no-decoration bold color-black hover-under"], [Node.text(title)])])
                 ] + (new ? [

@@ -22,8 +22,8 @@ func benefits(_ items: [(icon: String, name: String, description: String)]) -> N
     return Node.ul(classes: "lh-110 text-center cols max-width-9 center mb- pv++ m-|stack+", items.map { b in
         Node.li(classes: "m+|col m+|width-1/3", [
             .div(classes: "color-orange", [
-                .inlineSvg(path: b.icon, classes: "svg-fill-current")
-                ]),
+                .inlineSvg(classes: "svg-fill-current", path: b.icon)
+            ]),
             .div([
                 .h3(classes: "bold color-blue mt- mb---", [.text(b.name)]),
                 .p(classes: "color-gray-50 lh-125", [.text(b.description)])
@@ -129,7 +129,7 @@ func renderSubscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node
                 benefits(subscriptionBenefits),
                 Node.ul(classes: "text-center max-width-7 center pt++ pb++", [
                     .div(classes: "color-orange", [
-                        .inlineSvg(path: "icon-benefit-team.svg", classes: "svg-fill-current")
+                        .inlineSvg(classes: "svg-fill-current", path: "icon-benefit-team.svg")
                     ]),
                     .div(classes: "mb+", [
                         .link(to: .signup(.subscribeTeam), classes: "no-decoration", [.h3(classes: "bold color-blue ms3 mt-- mb-", ["Team Subscriptions"])]),

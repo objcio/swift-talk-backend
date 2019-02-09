@@ -11,7 +11,7 @@ import HTML
 public typealias ValidationError = (field: String, message: String)
 
 public struct Form<A, RE> {
-    public typealias N = ANode<RE>
+    public typealias N = Node<RE>
     public typealias Render = (A, [ValidationError]) -> N
     public typealias Parse = ([String:String]) -> A?
     private let _parse: Parse
