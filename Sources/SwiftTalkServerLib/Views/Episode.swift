@@ -22,8 +22,8 @@ func index(_ episodes: [EpisodeWithProgress]) -> Node {
                 ])
             ]),
             .ul(classes: "cols s+|cols--2n m+|cols--3n xl+|cols--4n", episodes.map { e in
-                Node.li(classes: "col mb++ width-full s+|width-1/2 m+|width-1/3 xl+|width-1/4", [
-                    Node.withSession { e.episode.render(.init(synopsis: true, watched: e.watched, canWatch: e.episode.canWatch(session: $0))) }
+                .li(classes: "col mb++ width-full s+|width-1/2 m+|width-1/3 xl+|width-1/4", [
+                    .withSession { e.episode.render(.init(synopsis: true, watched: e.watched, canWatch: e.episode.canWatch(session: $0))) }
                 ])
             })
         ])
@@ -76,7 +76,7 @@ extension Episode {
         
         let coll: [Node]
         if options.collection, let collection = primaryCollection {
-            coll = [Node.link(to: Route.collection(collection.id), attributes: [
+            coll = [.link(to: Route.collection(collection.id), attributes: [
                 "class": "inline-block no-decoration color-blue hover-underline mb--" + (options.featured ? "" : " ms-1")
             ], [.text(collection.title)])]
         } else { coll = [] }
@@ -92,26 +92,26 @@ extension Episode {
         
         let poster = options.featured ? posterURL(width: 1260, height: 630) : posterURL(width: 590, height: 270)
         
-        return Node.article(classes: classes, [
-            Node.div(classes: pictureClasses, [
+        return .article(classes: classes, [
+            .div(classes: pictureClasses, [
                 .link(to: .episode(id, .view(playPosition: nil)), classes: pictureLinkClasses, [
-                    Node.div(classes: "ratio__container bg-center bg-cover", attributes: ["style": "background-image: url('\(poster)')"]),
-                    Node.div(classes: "absolute position-stretch opacity-60 blend-darken gradient-episode-black"),
-                    Node.div(classes: "absolute position-stretch flex flex-column", [
-                        Node.div(classes: "mt-auto width-full flex items-center lh-100 ms-1 pa- color-white", smallIcon + [Node.span(classes: "ml-auto bold text-shadow-20", [.text("\(mediaDuration.minutes)")])]
+                    .div(classes: "ratio__container bg-center bg-cover", attributes: ["style": "background-image: url('\(poster)')"]),
+                    .div(classes: "absolute position-stretch opacity-60 blend-darken gradient-episode-black"),
+                    .div(classes: "absolute position-stretch flex flex-column", [
+                        .div(classes: "mt-auto width-full flex items-center lh-100 ms-1 pa- color-white", smallIcon + [.span(classes: "ml-auto bold text-shadow-20", [.text("\(mediaDuration.minutes)")])]
                         )
                     ])
-                ] + largeIcon)
+                ] as [Node] + largeIcon)
             ]),
-            Node.div(classes: contentClasses, [
+            .div(classes: contentClasses, [
                 Node.header(coll + ([
-                    Node.h3([Node.link(to: .episode(id, .view(playPosition: nil)), classes: titleClasses, [Node.text(title + (released ? "" : " (unreleased)"))])])
-                ] as [Node])),
+                    .h3([.link(to: .episode(id, .view(playPosition: nil)), classes: titleClasses, [.text(title + (released ? "" : " (unreleased)"))])])
+                ])),
             ] + synopsisNode + [
                 .p(classes: footerClasses, [
-                    Node.text("Episode \(number)"),
-                    Node.span(classes: "ph---", [.raw("&middot;")]),
-                    Node.text(releaseAt.pretty)
+                    .text("Episode \(number)"),
+                    .span(classes: "ph---", [.raw("&middot;")]),
+                    .text(releaseAt.pretty)
                 ])
             ]),
         ])
@@ -155,14 +155,14 @@ extension Episode {
         return .div(classes: "ratio ratio--16/9", [
             .div(classes: "ratio__container", [
                 .figure(classes: "stretch relative", [
-                    Node.iframe(source: URL(string: "https://player.vimeo.com/video/\(videoId)\(startTime)")!, attributes: [
+                    .iframe(source: URL(string: "https://player.vimeo.com/video/\(videoId)\(startTime)")!, attributes: [
                         "width": "100%",
                         "height": "100%",
                         "webkitallowfullscreen": "",
                         "mozallowfullscreen": "",
                         "allowfullscreen": ""
                     ])
-                ] + (canWatch ? [] : [Node.raw(previewBadge)]))
+                ] + (canWatch ? [] : [.raw(previewBadge)]))
             ])
         ])
     }
@@ -172,25 +172,25 @@ extension Episode {
         
         func item(_ entry: (TimeInterval, title: String)) -> Node {
             guard canWatch else {
-                return Node.span(attributes: ["class": wrapperClasses], [.text(entry.title)])
+                return .span(attributes: ["class": wrapperClasses], [.text(entry.title)])
             }
             
-            return Node.a(href: "?t=\(Int(entry.0))", attributes: ["data-time": "\(entry.0)", "class": wrapperClasses + " items-baseline no-decoration hover-cascade js-episode-seek"], [
-                Node.span(classes: "hover-cascade__underline", [.text(entry.title)]),
-                Node.span(classes: "ml-auto color-orange pl-", [.text(entry.0.timeString)]),
+            return .a(href: "?t=\(Int(entry.0))", attributes: ["data-time": "\(entry.0)", "class": wrapperClasses + " items-baseline no-decoration hover-cascade js-episode-seek"], [
+                .span(classes: "hover-cascade__underline", [.text(entry.title)]),
+                .span(classes: "ml-auto color-orange pl-", [.text(entry.0.timeString)]),
             ])
         }
         
         let items = [(6, title: "Introduction")] + tableOfContents
         
         return .div(classes: "l+|absolute l+|position-stretch stretch width-full flex flex-column", [
-            Node.h3(classes: "color-blue border-top border-2 pt mb+ flex-none flex items-baseline", [
+            .h3(classes: "color-blue border-top border-2 pt mb+ flex-none flex items-baseline", [
                 .span(classes: "smallcaps", [.text(canWatch ? "In this episode" : "In the full episode")]),
                 .span(classes: "ml-auto ms-1 bold", [.text(mediaDuration.timeString)])
             ]),
-            Node.div(classes: "flex-auto overflow-auto border-color-lighten-10 border-1 border-top", [
-                Node.ol(classes: "lh-125 ms-1 color-white", items.map { entry in
-                    Node.li(classes: "border-bottom border-1 border-color-lighten-10", [
+            .div(classes: "flex-auto overflow-auto border-color-lighten-10 border-1 border-top", [
+                .ol(classes: "lh-125 ms-1 color-white", items.map { entry in
+                    .li(classes: "border-bottom border-1 border-color-lighten-10", [
                         item(entry)
                     ])
                 })
@@ -199,71 +199,71 @@ extension Episode {
     }
     
     func show(playPosition: Int?, downloadStatus: DownloadStatus, otherEpisodes: [EpisodeWithProgress]) -> Node {
-        return Node.withSession { self.show_(session: $0, playPosition: playPosition, downloadStatus: downloadStatus, otherEpisodes: otherEpisodes) }
+        return .withSession { self.show_(session: $0, playPosition: playPosition, downloadStatus: downloadStatus, otherEpisodes: otherEpisodes) }
     }
     
     private func show_(session: Session?, playPosition: Int?, downloadStatus: DownloadStatus, otherEpisodes: [EpisodeWithProgress]) -> Node {
         let canWatch = !subscriptionOnly || session.premiumAccess
         
         let scroller = Node.aside(classes: "bgcolor-pale-gray pt++ js-scroller", [
-            Node.header(classes: "container-h flex items-center justify-between", [
-                Node.div([
-                    Node.h3(classes: "inline-block bold color-black", [.text("Recent Episodes")]),
-                    Node.link(to: .episodes, classes: "inline-block ms-1 ml- color-blue no-decoration hover-underline", [.text("See All")])
+            .header(classes: "container-h flex items-center justify-between", [
+                .div([
+                    .h3(classes: "inline-block bold color-black", [.text("Recent Episodes")]),
+                    .link(to: .episodes, classes: "inline-block ms-1 ml- color-blue no-decoration hover-underline", [.text("See All")])
+                ]),
+                .div(classes: "js-scroller-buttons flex items-center", [
+                    .button(classes: "scroller-button no-js-hide js-scroller-button-left ml-", attributes: ["label": "Scroll left"], [
+                        .inlineSvg(classes: "icon-16 color-white svg-fill-current block", path: "icon-arrow-16-left.svg", preserveAspectRatio: "xMinYMid meet")
                     ]),
-                Node.div(classes: "js-scroller-buttons flex items-center", [
-                    Node.button(classes: "scroller-button no-js-hide js-scroller-button-left ml-", attributes: ["label": "Scroll left"], [
-                        Node.inlineSvg(classes: "icon-16 color-white svg-fill-current block", path: "icon-arrow-16-left.svg", preserveAspectRatio: "xMinYMid meet")
-                    ]),
-                    Node.button(classes: "scroller-button no-js-hide js-scroller-button-right ml-", attributes: ["label": "Scroll right"], [
-                        Node.inlineSvg(classes: "icon-16 color-white svg-fill-current block", path: "icon-arrow-16.svg", preserveAspectRatio: "xMinYMid meet")
+                    .button(classes: "scroller-button no-js-hide js-scroller-button-right ml-", attributes: ["label": "Scroll right"], [
+                        .inlineSvg(classes: "icon-16 color-white svg-fill-current block", path: "icon-arrow-16.svg", preserveAspectRatio: "xMinYMid meet")
                     ])
                 ])
             ]),
-            Node.div(classes: "flex scroller js-scroller-container p-edges pt pb++", [
-                Node.div(classes: "scroller__offset flex-none")
+            .div(classes: "flex scroller js-scroller-container p-edges pt pb++", [
+                .div(classes: "scroller__offset flex-none")
             ] + otherEpisodes.map { e in
-                Node.div(classes: "flex-110 pr+ min-width-5", [e.episode.render(.init(synopsis: false, watched: e.watched, canWatch: e.episode.canWatch(session: session)))])
+                .div(classes: "flex-110 pr+ min-width-5", [e.episode.render(.init(synopsis: false, watched: e.watched, canWatch: e.episode.canWatch(session: session)))])
             })
         ])
         
         func smallBlueH3(_ text: Node) -> Node {
-            return Node.h3(classes: "color-blue mb", [Node.span(classes: "smallcaps", [text])])
+            return .h3(classes: "color-blue mb", [.span(classes: "smallcaps", [text])])
         }
         
         let linkAttrs: [String:String] = ["target": "_blank", "rel": "external"]
 
         // nil link displays a "not allowed" span
         func smallH4(_ text: Node, link: LinkTarget?) -> Node {
-            return Node.h4(classes: "mb---", [
+            return .h4(classes: "mb---", [
                 link.map { l in
-                    Node.link(to: l, classes: "bold color-black hover-underline no-decoration", attributes: linkAttrs, [text])
-                } ?? Node.span(classes: "bold color-gray-40 cursor-not-allowed", [text])
+                    .link(to: l, classes: "bold color-black hover-underline no-decoration", attributes: linkAttrs, [text])
+                } ?? .span(classes: "bold color-gray-40 cursor-not-allowed", [text])
             ])
         }
         
         let episodeResource: [[Node]] = self.resources.map { res in
             [
-                Node.div(classes: "flex-none mr-", [
-                    Node.a(classes: "block bgcolor-orange radius-5 hover-bgcolor-blue", href: res.url.absoluteString, attributes: linkAttrs, [
-                        Node.inlineSvg(classes: "block icon-40", path: "icon-resource-code.svg")
+                .div(classes: "flex-none mr-", [
+                    .a(classes: "block bgcolor-orange radius-5 hover-bgcolor-blue", href: res.url.absoluteString, attributes: linkAttrs, [
+                        .inlineSvg(classes: "block icon-40", path: "icon-resource-code.svg")
                     ])
                 ]),
-                Node.div(classes: "ms-1 lh-125", [
+                .div(classes: "ms-1 lh-125", [
                     smallH4(.text(res.title), link: res.url),
-                    Node.p(classes: "color-gray-50", [.text(res.subtitle)])
+                    .p(classes: "color-gray-50", [.text(res.subtitle)])
                 ])
             ]
         }
         let downloadImage = Node.inlineSvg(classes: "block icon-40", path: "icon-resource-download.svg")
         let download: [[Node]] = [
             [
-                Node.div(classes: "flex-none mr-", [
+                .div(classes: "flex-none mr-", [
                     downloadStatus.allowed
-                        ? Node.link(to: Route.episode(id, .download), classes: "block bgcolor-orange radius-5 hover-bgcolor-blue", [downloadImage])
-                        : Node.span(classes: "block bgcolor-orange radius-5 cursor-not-allowed", [downloadImage])
+                        ? .link(to: Route.episode(id, .download), classes: "block bgcolor-orange radius-5 hover-bgcolor-blue", [downloadImage])
+                        : .span(classes: "block bgcolor-orange radius-5 cursor-not-allowed", [downloadImage])
                 ]),
-                Node.div(classes: "ms-1 lh-125", [
+                .div(classes: "ms-1 lh-125", [
                     smallH4(.text("Episode Video"), link: downloadStatus.allowed ? Route.episode(id, .download) : nil),
                     .p(classes: "color-gray-50", [.text(downloadStatus.text)])
                 ])
@@ -271,23 +271,23 @@ extension Episode {
         ]
         let resourceItems: [[Node]] = episodeResource + download
         let resources: [Node] = canWatch ? [
-            Node.section(classes: "pb++", [
+            .section(classes: "pb++", [
                 smallBlueH3("Resources"),
-            Node.ul(classes: "stack", resourceItems.map { Node.li(classes: "flex", $0)})
+                .ul(classes: "stack", resourceItems.map { .li(classes: "flex", $0)})
             ])
         ] : []
         
         let inCollection: [Node] = primaryCollection.map { coll in
             [
-                Node.section(classes: "pb++", [
+                .section(classes: "pb++", [
                     smallBlueH3("In Collection")
                 ] +
                 coll.render(.init(episodes: true))
                 + [
-                    Node.p(classes: "ms-1 mt text-right", [
-                        Node.link(to: .collections, classes: "no-decoration color-blue hover-cascade", [
-                            Node.span(classes: "hover-cascade__border-bottom", ["See All Collections"]),
-                            Node.span(classes: "bold", [Node.raw("&rarr;")])
+                    .p(classes: "ms-1 mt text-right", [
+                        .link(to: .collections, classes: "no-decoration color-blue hover-cascade", [
+                            .span(classes: "hover-cascade__border-bottom", ["See All Collections"]),
+                            .span(classes: "bold", [.raw("&rarr;")])
                         ])
                     ])
                 ])
@@ -298,22 +298,22 @@ extension Episode {
         ] + theCollaborators.sorted(by: { $0.role < $1.role }).map { coll in
             (coll.role.name, coll.name, .some(coll.url))
         }
-        let details = canWatch ? [
-            Node.div(classes: "pb++", [
+        let details: [Node] = canWatch ? [
+            .div(classes: "pb++", [
                 smallBlueH3("Episode Details"),
-                Node.ul(classes: "ms-1 stack", detailItems.map { key, value, url in
-                    Node.li([
-                        Node.dl(classes: "flex justify-between", [
-                            Node.dt(classes: "color-gray-60", [.text(key)]),
-                            Node.dd(classes: "color-gray-15 text-right", [url.map { u in
-                                Node.link(to: u, classes: "color-gray-15 hover-underline no-decoration", [.text(value)])
+                .ul(classes: "ms-1 stack", detailItems.map { key, value, url in
+                    .li([
+                        .dl(classes: "flex justify-between", [
+                            .dt(classes: "color-gray-60", [.text(key)]),
+                            .dd(classes: "color-gray-15 text-right", [url.map { u in
+                                .link(to: u, classes: "color-gray-15 hover-underline no-decoration", [.text(value)])
                             } ?? .text(value)])
                         ])
                     ])
                 })
             ])
         ] : []
-        let sidebar: Node = Node.aside(classes: "p-col max-width-7 center stack l+|width-1/3 xl+|width-3/10 l+|flex-auto", resources + inCollection + details)
+        let sidebar = Node.aside(classes: "p-col max-width-7 center stack l+|width-1/3 xl+|width-3/10 l+|flex-auto", resources + inCollection + details)
         let epTitle: [Node] = [
             .p(classes: "color-orange ms1", [
                 .link(to: .home, classes: "color-inherit no-decoration bold hover-border-bottom", [.text("Swift Talk")]),
@@ -323,10 +323,10 @@ extension Episode {
         ]
         let guests: [Node] = guestHosts.isEmpty ? [] : [
             .p(classes: "color-white opacity-70 mt-", [
-                Node.text("with special \("guest".pluralize(guestHosts.count))")
+                .text("with special \("guest".pluralize(guestHosts.count))")
             ] + guestHosts.map { gh in
-                Node.link(to: gh.url, classes: "color-inherit bold no-decoration hover-border-bottom", [
-                    Node.text(gh.name)
+                .link(to: gh.url, classes: "color-inherit bold no-decoration hover-border-bottom", [
+                    .text(gh.name)
                 ])
             })
         ]
@@ -372,16 +372,16 @@ extension Episode {
             session.premiumAccess ? .raw("") : .raw(subscriptionPitch),
             .div(classes: "l+|flex l-|stack+++ m-cols", [
                 .div(classes: "p-col l+|flex-auto l+|width-2/3 xl+|width-7/10 flex flex-column", [
-                    Node.div(classes: "text-wrapper", [
-                        Node.div(classes: "lh-140 color-blue-darkest ms1 bold mb+", [
+                    .div(classes: "text-wrapper", [
+                        .div(classes: "lh-140 color-blue-darkest ms1 bold mb+", [
                             .markdown(synopsis),
                         ])
                     ]),
                 ] + episodeUpdates + [
                     .div(classes: "flex-auto relative min-height-5", [
                         .div(classes: "js-transcript js-expandable z-0", attributes: ["data-expandable-collapsed": "absolute position-stretch position-nw overflow-hidden", "id": "transcript"], [
-                            Node.raw(expandTranscript),
-                            Node.div(classes: "c-text c-text--fit-code z-0 js-has-codeblocks", [
+                            .raw(expandTranscript),
+                            .div(classes: "c-text c-text--fit-code z-0 js-has-codeblocks", [
                                 .raw(highlightedTranscript ?? "No transcript yet.")
                             ])
                         ])
@@ -392,21 +392,21 @@ extension Episode {
         ]
         let noTranscript: [Node] = [
             .div(classes: "bgcolor-pale-blue border border-1 border-color-subtle-blue radius-5 ph pv++ flex flex-column justify-center items-center text-center min-height-6", [
-                Node.inlineSvg(path: "icon-blocked.svg"),
+                .inlineSvg(path: "icon-blocked.svg"),
                 .div(classes: "mv", [
                     .h3(classes: "ms1 bold color-blue-darkest", [.text("This episode is exclusive to Subscribers")]),
                     .p(classes: "mt- lh-135 color-blue-darkest opacity-60 max-width-8", [
                         .text("Become a subscriber to watch future and all \(Episode.subscriberOnly) current subscriber-only episodes, plus enjoy access to episode video downloads and \(teamDiscount)% discount for your team members.")
                     ])
                 ]),
-                Node.link(to: .signup(.subscribe), classes: "button button--themed", [.text("Become a subscriber")])
+                .link(to: .signup(.subscribe), classes: "button button--themed", [.text("Become a subscriber")])
             ])
         ]
         
         let scripts: [Node] = (session?.user.data.csrfToken).map { token in
             return [
-                Node.script(src: "https://player.vimeo.com/api/player.js"),
-                Node.script(code: """
+                .script(src: "https://player.vimeo.com/api/player.js"),
+                .script(code: """
                     $(function () {
                         var player = new Vimeo.Player(document.querySelector('iframe'));
                         var playedUntil = 0
@@ -455,7 +455,7 @@ extension Episode {
             ]
         } ?? []
         
-        let main: Node = Node.div(classes: "js-episode", [
+        let main = Node.div(classes: "js-episode", [
             headerAndPlayer,
             .div(classes: "bgcolor-white l+|pt++", [
                 .div(classes: "container", canWatch ? transcriptAvailable : noTranscript)
@@ -507,33 +507,33 @@ extension Episode {
 }
 
 func subscribeBanner() -> Node {
-    return Node.aside(classes: "bgcolor-blue", [
-        Node.div(classes: "container", [
-            Node.div(classes: "cols relative s-|stack+", [
-                Node.raw("""
+    return .aside(classes: "bgcolor-blue", [
+        .div(classes: "container", [
+            .div(classes: "cols relative s-|stack+", [
+                .raw("""
                     <div class="col s+|width-1/2 relative">
                         <p class="smallcaps color-orange mb">Unlock Full Access</p>
                         <h2 class="color-white bold ms3">Subscribe to Swift Talk</h2>
                     </div>
                     """
                 ),
-                Node.div(classes: "col s+|width-1/2", [
-                    Node.ul(classes: "stack+ lh-110", subscriptionBenefits.map { b in
-                        Node.li([
-                            Node.div(classes: "flag", [
-                                Node.div(classes: "flag__image pr color-orange", [
-                                    Node.inlineSvg(classes: "svg-fill-current", path: b.icon)
+                .div(classes: "col s+|width-1/2", [
+                    .ul(classes: "stack+ lh-110", subscriptionBenefits.map { b in
+                        .li([
+                            .div(classes: "flag", [
+                                .div(classes: "flag__image pr color-orange", [
+                                    .inlineSvg(classes: "svg-fill-current", path: b.icon)
                                 ]),
-                                Node.div(classes: "flag__body", [
-                                    Node.h3(classes: "bold color-white mb---", [Node.text(b.name)]),
-                                    Node.p(classes: "color-blue-darkest lh-125", [Node.text(b.description)])
+                                .div(classes: "flag__body", [
+                                    .h3(classes: "bold color-white mb---", [.text(b.name)]),
+                                    .p(classes: "color-blue-darkest lh-125", [.text(b.description)])
                                 ])
                             ])
                         ])
                     })
                 ]),
-                Node.div(classes: "s+|absolute s+|position-sw col s+|width-1/2", [
-                    Node.link(to: .signup(.subscribe), classes: "c-button", [.raw("Pricing &amp; Sign Up")])
+                .div(classes: "s+|absolute s+|position-sw col s+|width-1/2", [
+                    .link(to: .signup(.subscribe), classes: "c-button", [.raw("Pricing &amp; Sign Up")])
                 ])
             ])
         ])

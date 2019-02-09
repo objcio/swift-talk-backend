@@ -76,10 +76,10 @@ extension FormView {
                 let id = fields.firstId ?? ""
                 let isErr = errors.contains { $0.field == id }
                 let children = fields.count == 1 ? renderField(fields[0]) : Node.div(classes: "flex items-center width-full max-width-6", fields.map(renderField))
-                return Node.fieldset(classes: "input-unit mb+", [
-                    Node.label(classes: "input-label" + (required ? "input-label--required" : "") + (isErr ? "color-invalid" : ""), attributes: ["for": id], [.text(title)]),
+                return .fieldset(classes: "input-unit mb+", [
+                    .label(classes: "input-label" + (required ? "input-label--required" : "") + (isErr ? "color-invalid" : ""), attributes: ["for": id], [.text(title)]),
                     children,
-                    note.map { Node.label(classes: "input-note mt-", attributes: ["for": id], [
+                    note.map { .label(classes: "input-note mt-", attributes: ["for": id], [
                         .span(classes: "bold", [.raw("Note: ")]),
                         .raw($0)
                     ]) } ?? .none
@@ -90,24 +90,24 @@ extension FormView {
                 if let p = placeHolder {
                     atts["placeholder"] = p
                 }
-                return Node.input(classes: "text-input block width-full max-width-6", name: id, type: type, attributes: atts.merging(attributes, uniquingKeysWith: { $1 }))
+                return .input(classes: "text-input block width-full max-width-6", name: id, type: type, attributes: atts.merging(attributes, uniquingKeysWith: { $1 }))
             case let .flex(field, amount):
-                return Node.div(classes: Class(stringLiteral: "flex-\(amount)"), [renderField(field)])
+                return .div(classes: Class(stringLiteral: "flex-\(amount)"), [renderField(field)])
             case let .custom(n): return n
             case .textarea(let id, let value, let placeHolder, let lines, let otherAttributes):
-                return Node.textArea(classes: "text-input block width-full max-width-6", name: id, value: value, placeHolder: placeHolder, rows: lines, attributes: otherAttributes)
+                return .textArea(classes: "text-input block width-full max-width-6", name: id, value: value, placeHolder: placeHolder, rows: lines, attributes: otherAttributes)
             }
         }
         
         return [
-            errors.isEmpty ? .none : Node.ul(classes: "mb++ bgcolor-invalid color-white ms-1 pa radius-3 bold", errors.map { Node.li([Node.text($0.message)]) }),
-            Node.div(classes: "", [
-                Node.form(classes: classes, action: action.path, attributes: ["id": id], [
-                    Node.withCSRF { csrf in Node.input(name: "csrf", id: "csrf", type: "hidden", attributes: ["value": csrf.stringValue], []) },
-                    Node.div(classes: "stack+", fields.map(renderField) + [
+            errors.isEmpty ? .none : .ul(classes: "mb++ bgcolor-invalid color-white ms-1 pa radius-3 bold", errors.map { .li([.text($0.message)]) }),
+            .div(classes: "", [
+                .form(classes: classes, action: action.path, attributes: ["id": id], [
+                    .withCSRF { csrf in .input(name: "csrf", id: "csrf", type: "hidden", attributes: ["value": csrf.stringValue], []) },
+                    .div(classes: "stack+", fields.map(renderField) + [
                             .div([
-                                Node.input(classes: "c-button c-button--blue", name: "commit", type: "submit", attributes: ["value": submitTitle, "data-disable-with": submitTitle], []),
-                                submitNote.map { Node.p(classes: "ms-1 color-gray-40 mt", [.raw($0)]) } ?? .none
+                                .input(classes: "c-button c-button--blue", name: "commit", type: "submit", attributes: ["value": submitTitle, "data-disable-with": submitTitle], []),
+                                submitNote.map { .p(classes: "ms-1 color-gray-40 mt", [.raw($0)]) } ?? .none
                             ])
                         ])
                     ])

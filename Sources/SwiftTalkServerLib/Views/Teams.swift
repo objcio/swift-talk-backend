@@ -24,7 +24,7 @@ fileprivate func template(content: [Node], buttons: [Node]) -> Node {
 }
 
 fileprivate func button(route: Route, title: String, highlighted: Bool = false) -> Node {
-    return Node.link(to: route, classes: "mb c-button c-button--big ph+++" + (highlighted ? "c-button--orange" : "c-button--blue"), [.text(title)])
+    return .link(to: route, classes: "mb c-button c-button--big ph+++" + (highlighted ? "c-button--orange" : "c-button--blue"), [.text(title)])
 }
 
 func teamMemberSubscribeForSelfSubscribed(signupToken: UUID) -> Node {

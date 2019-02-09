@@ -73,9 +73,9 @@ struct StructuredData {
             og["video:duration"] = "\(duration)"
         }
         return twitter.map { (k,v) in
-            Node.meta(attributes: ["name": "twitter:" + k, "content": v])
+            .meta(attributes: ["name": "twitter:" + k, "content": v])
             } + og.map { (k,v) in
-                Node.meta(attributes: ["property": k, "content": v])
+                .meta(attributes: ["property": k, "content": v])
         }
     }
 }
@@ -96,19 +96,19 @@ extension LayoutConfig {
     }
     
     var layout: Node {
-        let head: Node = Node.head([
+        let head = Node.head([
             .meta(attributes: ["charset": "utf-8"]),
             .meta(attributes: ["http-equiv": "X-UA-Compatible", "content": "IE=edge"]),
             .meta(attributes: ["name": "viewport", "content": "'width=device-width, initial-scale=1, user-scalable=no'"]),
         ] + [
             .title(pageTitle),
-            Node.xml(name: "link", attributes: [
+            .xml(name: "link", attributes: [
                 "href": rssURL,
                 "rel": "alternate",
                 "title": "RSS",
                 "type": "application/rss+xml"
                 ]),
-            Node.xml(name: "link", attributes: [
+            .xml(name: "link", attributes: [
                 "href": rssURL,
                 "rel": "alternate",
                 "title": "Atom",
@@ -147,28 +147,29 @@ extension LayoutConfig {
             .main(
                 [.none] + // TODO flash messsage should go here (there's a flash helper below)
                 contents
-            )]
+            )
+        ]
         // these are appends because of compile time
         bodyChildren.append(contentsOf: preFooter)
         bodyChildren.append(.raw(footer))
         bodyChildren.append(contentsOf: footerContent)
-        let body: Node = Node.body(attributes: ["class": "theme-" + theme], bodyChildren)
-        return Node.html(attributes: ["lang": "en"], [head, body])
+        let body = Node.body(attributes: ["class": "theme-" + theme], bodyChildren)
+        return .html(attributes: ["lang": "en"], [head, body])
     }
     
     var layoutForCheckout: Node {
-        let head: Node = .head([
+        let head = Node.head([
             .meta(attributes: ["charset": "utf-8"]),
             .meta(attributes: ["http-equiv": "X-UA-Compatible", "content": "IE=edge"]),
             .meta(attributes: ["name": "viewport", "content": "'width=device-width, initial-scale=1, user-scalable=no'"]),
             .title(pageTitle),
-            Node.xml(name: "link", attributes: [
+            .xml(name: "link", attributes: [
                 "href": rssURL,
                 "rel": "alternate",
                 "title": "RSS",
                 "type": "application/rss+xml"
             ]),
-            Node.xml(name: "link", attributes: [
+            .xml(name: "link", attributes: [
                 "href": rssURL,
                 "rel": "alternate",
                 "title": "Atom",
@@ -180,7 +181,7 @@ extension LayoutConfig {
             googleAnalytics,
         ] + structured)
         let linkClasses: Class = "no-decoration color-inherit hover-color-black mr"
-        let body: Node = .body(attributes: ["class": "theme-" + theme], [
+        let body = Node.body(attributes: ["class": "theme-" + theme], [
             .header(classes: "site-header", [
         		.div(classes: "site-header__nav flex", [
                     .div(classes: "container-h flex-grow flex items-center height-3", [
@@ -193,16 +194,16 @@ extension LayoutConfig {
             ]),
             .main(contents),
         ] + preFooter + [
-            Node.footer([
-                Node.div(classes: "container-h pv", [
-                    Node.div(classes: "ms-1 color-gray-60", [
-                        Node.a(classes: linkClasses, href: "mailto:mail@objc.io", [Node.text("Email")]),
-                        Node.link(to: URL(string: "https://www.objc.io/imprint")!, classes: linkClasses, ["Imprint"])
+            .footer([
+                .div(classes: "container-h pv", [
+                    .div(classes: "ms-1 color-gray-60", [
+                        .a(classes: linkClasses, href: "mailto:mail@objc.io", [.text("Email")]),
+                        .link(to: URL(string: "https://www.objc.io/imprint")!, classes: linkClasses, ["Imprint"])
                     ])
                 ])
             ])
         ] + footerContent)
-        return Node.html(attributes: ["lang": "en"], [head, body])
+        return .html(attributes: ["lang": "en"], [head, body])
     }
 }
 
@@ -220,7 +221,7 @@ func flash(message: String, type: FlashType) -> Node {
     return .div(classes: "p-edges pv" + classes + "color-white js-closeable pattern-shade", [
         .div(classes: "wrapper flex items-center justify-between", [
             .p(classes: "bold flex-auto", [.text(message)]),
-            Node.button(classes: "smallcaps reset-button color-inherit hover-color-black js-closeable-toggle", attributes: ["type": "button"], [.text("Close")])
+            .button(classes: "smallcaps reset-button color-inherit hover-color-black js-closeable-toggle", attributes: ["type": "button"], [.text("Close")])
         ])
     ])
 }
