@@ -26,7 +26,6 @@ public struct Reader<Value, Result> {
 }
 
 extension Reader: NIOWrapper.Response where Result: NIOWrapper.Response {
-    typealias I = Result
     public static func write(_ string: String, status: HTTPResponseStatus, headers: [String : String]) -> Reader<Value, Result> {
         return .const(.write(string, status: status, headers: headers))
     }
@@ -50,11 +49,11 @@ extension Reader: NIOWrapper.Response where Result: NIOWrapper.Response {
     }
     
     public static func withPostData(do cont: @escaping (Data) -> Reader<Value, Result>) -> Reader<Value, Result> {
-        return Reader { value in I.withPostData(do: { cont($0).run(value) }) }
+        return Reader { value in .withPostData(do: { cont($0).run(value) }) }
     }
 }
 
-extension Reader: Response where Result: Response, Value: RequestEnvironment {}
+extension Reader: Response where Result: Response {}
 
 extension Reader: ResponseRequiringEnvironment where Result: Response, Value: RequestEnvironment {
     public typealias Env = Value

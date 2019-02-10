@@ -5,11 +5,6 @@ import WebServer
 import Base
 
 
-extension NIOInterpreter: WebServer.Response {
-    public typealias R = Route
-    public typealias S = Session
-}
-
 public func run() throws {
     try runMigrations()
     refreshStaticData()

@@ -20,6 +20,8 @@ public protocol Response: NIOWrapper.Response {
     static func write(json: Data, status: HTTPResponseStatus) -> Self
 }
 
+extension NIOInterpreter: Response {}
+
 public protocol FailableResponse {
     static func renderError(_ error: Error) -> Self
 }
