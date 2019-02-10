@@ -5,7 +5,7 @@
 //  Created by Chris Eidhof on 22.11.18.
 //
 
-typealias Token = Int
+public typealias Token = Int
 
 fileprivate struct Register<A> {
     private var items: [Token:A] = [:]
@@ -79,20 +79,22 @@ final class Queue {
     }
 }
 
-class Observable<A> {
+public class Observable<A> {
     fileprivate typealias Observers = Register<Observer>
     fileprivate var observers: Observers = Observers()
-    var value: A
-    init(_ value: A) {
+    public var value: A
+    
+    public init(_ value: A) {
         self.value = value
     }
     
-    func send(_ value: A) {
+    public func send(_ value: A) {
         self.value = value
         Queue.shared.enqueue(Array(observers.values))
     }
     
-    @discardableResult func observe(_ observer: @escaping (A) -> ()) -> Token {
+    @discardableResult
+    public func observe(_ observer: @escaping (A) -> ()) -> Token {
         observer(value)
         return observers.add(Observer(fire: {
             observer(self.value)
@@ -118,7 +120,7 @@ class Observable<A> {
         }))
     }
     
-    func map<B>(_ f: @escaping (A) -> B) -> Observable<B> {
+    public func map<B>(_ f: @escaping (A) -> B) -> Observable<B> {
         let result = Observable<B>(f(value))
         addChild(fire: {
             result.send(f(self.value))
@@ -128,7 +130,7 @@ class Observable<A> {
         return result
     }
     
-    func flatMap<B>(_ f: @escaping (A) -> Observable<B>) -> Observable<B> {
+    public func flatMap<B>(_ f: @escaping (A) -> Observable<B>) -> Observable<B> {
         var currentBody = f(value)
         let result = Observable<B>(f(value).value)
         var token: Token?

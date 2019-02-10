@@ -15,6 +15,7 @@ let package = Package(
         .library(name: "HTML", targets: ["HTML"]),
         .library(name: "Database", targets: ["Database"]),
         .library(name: "WebServer", targets: ["WebServer"]),
+        .library(name: "Incremental", targets: ["Incremental"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-nio.git", from: "1.5.0"),
@@ -25,6 +26,12 @@ let package = Package(
         .package(url: "https://github.com/jpsim/SourceKitten", from: "0.22.0"),
     ],
     targets: [
+        .target(
+            name: "Incremental",
+            dependencies: [
+            ],
+            path: "Sources/Incremental"
+        ),
         .target(
             name: "Base",
             dependencies: [
@@ -90,6 +97,7 @@ let package = Package(
         .target(
             name: "SwiftTalkServerLib",
             dependencies: [
+                "Incremental",
                 "Networking",
                 "Promise",
                 "Base",

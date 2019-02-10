@@ -7,6 +7,7 @@
 
 import Foundation
 import Base
+import Incremental
 
 
 final class Static<A> {
