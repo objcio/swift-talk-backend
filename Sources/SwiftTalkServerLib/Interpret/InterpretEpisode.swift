@@ -12,13 +12,13 @@ import WebServer
 
 
 extension Route.EpisodeR {
-    func interpret<I: ResponseRequiringEnvironment>(id: Id<Episode>) throws -> I where I.Env == STRequestEnvironment {
+    func interpret<I: STResponse>(id: Id<Episode>) throws -> I where I.Env == STRequestEnvironment {
         return .withSession {
             try self.interpret(id: id, session: $0)
         }
     }
     
-    private func interpret<I: ResponseRequiringEnvironment>(id: Id<Episode>, session: Session?) throws -> I where I.Env == STRequestEnvironment {
+    private func interpret<I: STResponse>(id: Id<Episode>, session: Session?) throws -> I where I.Env == STRequestEnvironment {
         guard let ep = Episode.all.findEpisode(with: id, scopedFor: session?.user.data) else {
             return .write(html: errorView("No such episode"), status: .notFound)
         }

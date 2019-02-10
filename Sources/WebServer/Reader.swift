@@ -59,10 +59,6 @@ extension Reader: Response where Result: Response, Value: RequestEnvironment {}
 extension Reader: ResponseRequiringEnvironment where Result: Response, Value: RequestEnvironment {
     public typealias Env = Value
     
-    public static func renderError(_ error: Error) -> Reader<Value, Result> {
-        fatalError()
-    }
-    
     public static func withSession(_ cont: @escaping (Env.S?) -> Reader<Value, Result>) -> Reader<Value, Result> {
         return Reader { value in
             cont(value.session).run(value)

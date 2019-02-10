@@ -18,6 +18,9 @@ public protocol Response: NIOWrapper.Response {
     static func write(html: Node<()>, status: HTTPResponseStatus) -> Self
     static func write(rss: Node<()>, status: HTTPResponseStatus) -> Self
     static func write(json: Data, status: HTTPResponseStatus) -> Self
+}
+
+public protocol FailableResponse {
     static func renderError(_ error: Error) -> Self
 }
 
@@ -50,11 +53,9 @@ extension Response {
     public static func write(json: Data, status: HTTPResponseStatus = .ok) -> Self {
         return .write(json, status: status, headers: ["Content-Type": "application/json"])
     }
-    
-    public static func renderError(_ error: Error) -> Self {
-        return .write("Server Error: \(String(describing: error))", status: .internalServerError)
-    }
+}
 
+extension Response where Self: FailableResponse {
     public static func onSuccess<A>(promise: Promise<A?>, file: StaticString = #file, line: UInt = #line, message: String = "Something went wrong.", do cont: @escaping (A) throws -> Self) -> Self {
         return onSuccess(promise: promise, file: file, line: line, do: cont, else: {
             throw ServerError(privateMessage: "Expected non-nil value, but got nil (\(file):\(line)).", publicMessage: message)
@@ -89,7 +90,7 @@ extension Response {
     }
 }
 
-extension ResponseRequiringEnvironment {
+extension ResponseRequiringEnvironment where Self: FailableResponse {
     public static func query<A>(_ query: Query<A>, _ cont: @escaping (A) throws -> Self) -> Self {
         return Self.execute(query) { (result: Either<A, Error>) in
             catchAndDisplayError {

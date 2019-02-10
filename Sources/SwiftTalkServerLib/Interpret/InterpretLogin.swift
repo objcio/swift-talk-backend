@@ -12,7 +12,7 @@ import WebServer
 
 
 extension Route.Login {
-    func interpret<I: ResponseRequiringEnvironment>() throws -> I {
+    func interpret<I: STResponse>() throws -> I {
         switch self {
         
         case .login(let cont):

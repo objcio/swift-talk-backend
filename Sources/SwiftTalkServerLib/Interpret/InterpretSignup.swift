@@ -11,7 +11,7 @@ import WebServer
 
 
 extension Route.Signup {
-    func interpret<I: ResponseRequiringEnvironment>() throws -> I where I.Env == STRequestEnvironment {
+    func interpret<I: STResponse>() throws -> I where I.Env == STRequestEnvironment {
         switch self {
         
         case .subscribe:

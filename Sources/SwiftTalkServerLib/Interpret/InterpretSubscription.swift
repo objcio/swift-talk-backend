@@ -12,13 +12,13 @@ import WebServer
 
 
 extension Route.Subscription {
-    func interpret<I: ResponseRequiringEnvironment>() throws -> I where I.Env == STRequestEnvironment {
+    func interpret<I: STResponse>() throws -> I where I.Env == STRequestEnvironment {
         return .requireSession { sess in
             try self.interpret(sesssion: sess)
         }
     }
 
-    private func interpret<I: ResponseRequiringEnvironment>(sesssion sess: Session) throws -> I where I.Env == STRequestEnvironment {
+    private func interpret<I: STResponse>(sesssion sess: Session) throws -> I where I.Env == STRequestEnvironment {
         func newSubscription(couponCode: String?, team: Bool, errs: [String]) throws -> I {
             if let c = couponCode {
                 return .onSuccess(promise: recurly.coupon(code: c).promise, do: { coupon in

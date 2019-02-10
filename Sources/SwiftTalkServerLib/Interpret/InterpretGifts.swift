@@ -12,7 +12,7 @@ import WebServer
 
 
 extension Route.Gifts {
-    func interpret<I: ResponseRequiringEnvironment>() throws -> I where I.Env == STRequestEnvironment {
+    func interpret<I: STResponse>() throws -> I where I.Env == STRequestEnvironment {
         switch self {
             
         case .home:

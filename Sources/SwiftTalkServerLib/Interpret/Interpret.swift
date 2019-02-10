@@ -11,7 +11,7 @@ import WebServer
 
 
 extension Swift.Collection where Element == Episode {
-    func withProgress<I: ResponseRequiringEnvironment>(for id: UUID?, _ cont: @escaping ([EpisodeWithProgress]) -> I) -> I {
+    func withProgress<I: STResponse>(for id: UUID?, _ cont: @escaping ([EpisodeWithProgress]) -> I) -> I {
         guard let userId = id else { return cont(map { EpisodeWithProgress(episode: $0, progress: nil )}) }
         return .query(Row<PlayProgressData>.sortedDesc(for: userId).map { results in
             let progresses = results.map { $0.data }
@@ -23,8 +23,10 @@ extension Swift.Collection where Element == Episode {
     }
 }
 
+typealias STResponse = ResponseRequiringEnvironment & FailableResponse
+
 extension Route {
-    func interpret<I: ResponseRequiringEnvironment>() throws -> I where I.Env == STRequestEnvironment {
+    func interpret<I: STResponse>() throws -> I where I.Env == STRequestEnvironment {
         switch self {
 
         case .subscription(let s):
