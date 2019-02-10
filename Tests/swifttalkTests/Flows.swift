@@ -1,7 +1,9 @@
 
 import XCTest
+import Base
 @testable import SwiftTalkServerLib
 import Database
+import WebServer
 
 
 struct QueryAndResult {
@@ -24,45 +26,16 @@ extension QueryAndResult: Equatable {
     }
 }
 
-struct TestEnv {
-    let requestEnvironment: RequestEnvironment
-    let connection: TestConnection?
-    let file: StaticString
-    let line: UInt
-}
-
-extension TestEnv: ContainsRequestEnvironment {}
-extension TestEnv: ContainsSession {
-    var session: Session? { return requestEnvironment.session }
-}
-
-extension TestEnv: CanQuery {
-    func execute<A>(_ query: Query<A>) -> Either<A, Error> {
-        guard let c = connection else { XCTFail(); return .right(TestErr()) }
-        do {
-            return .left(try c.execute(query))
-        } catch {
-            return .right(error)
-        }
-    }
-    
-    func getConnection() -> Either<ConnectionProtocol, Error> {
-        fatalError("not implemented yet")
-    }
-    
-    
-}
-
 struct Flow {
     let session: Session?
     let currentPage: TestInterpreter
 
-    private static func run(_ session: Session?, _ route: Route, connection: TestConnection? = nil, assertQueriesDone: Bool = true, _ file: StaticString, _ line: UInt) throws -> TestInterpreter {
-        let env = RequestEnvironment(route: route, hashedAssetName: { $0 }, buildSession: { session }, connection: noConnection, resourcePaths: [])
-        let testEnv = TestEnv(requestEnvironment: env, connection: connection, file: file, line: line)
-        let t: Reader<TestEnv, TestInterpreter> = try route.interpret()
-        let result = t.run(testEnv)
-        if let c = connection, assertQueriesDone { c.assertDone() }
+    private static func run(_ session: Session?, _ route: Route, connection: TestConnection = TestConnection([]), assertQueriesDone: Bool = true, _ file: StaticString, _ line: UInt) throws -> TestInterpreter {
+        let lazyConn: Lazy<ConnectionProtocol> = Lazy({ connection }, cleanup: { _ in })
+        let env = STRequestEnvironment(route: route, hashedAssetName: { $0 }, buildSession: { session }, connection: lazyConn, resourcePaths: [])
+        let reader: Reader<STRequestEnvironment, TestInterpreter> = try route.interpret()
+        let result = reader.run(env)
+        if assertQueriesDone { connection.assertDone() }
         return result
     }
     
@@ -125,9 +98,10 @@ final class FlowTests: XCTestCase {
     
     func run(_ route: Route) -> (Session?) throws -> TestInterpreter {
         return { (session: Session?) in
-            let env = RequestEnvironment(route: route, hashedAssetName: { $0 }, buildSession: { session }, connection: noConnection, resourcePaths: [])
-            let i: Reader<RequestEnvironment, TestInterpreter> = try route.interpret()
-            return i.run(env)
+            let lazyConn: Lazy<ConnectionProtocol> = Lazy({ TestConnection() }, cleanup: { _ in })
+            let env = STRequestEnvironment(route: route, hashedAssetName: { $0 }, buildSession: { session }, connection: lazyConn, resourcePaths: [])
+            let reader: Reader<STRequestEnvironment, TestInterpreter> = try route.interpret()
+            return reader.run(env)
         }
     }
     
@@ -188,48 +162,15 @@ final class FlowTests: XCTestCase {
 
     func testNewSubscription() throws {
         testPlans = plans
-        
-        // todo test coupon codes
-        let i = run(.subscription(.new(couponCode: nil, team: false)))
-        // Not logged in
-        try i(nil).testIsError()
-        
-        let form = try TestUnwrap(i(nonSubscribedUser).forms().first)
-        XCTAssertEqual(form.action, .account(.register(couponCode: nil, team: false)))
-        
-        try print(i(subscribedUser))
+        let noSession = try Flow.landingPage(session: nil, .subscription(.new(couponCode: nil, team: false)))
+        noSession.verify{ $0.testIsError() }
+
+        let withSession = try Flow.landingPage(session: nonSubscribedUser, .subscription(.new(couponCode: nil, team: false)))
+        withSession.verify {
+            XCTAssertEqual($0.forms().first?.action, .account(.register(couponCode: nil, team: false)))
+        }
     }
     
-    // IDEA we can have a "click" test that verifies a route is present in the current page, and then proceeds to test that link. this could build up a tree structure of tests (for different combinations). we could branch out if there are multiple choices on a page.
-    
-    
-//    func testRoutes() throws {
-//        let r = try routesReachable(startingFrom: .subscribe, session: nil)
-//        print(r)
-//    }
-    
-    //    func routesReachable(startingFrom: Route, session: Session?) throws -> [Route] {
-    //        var routesChecked: [Route] = []
-    //
-    //        func helper(queue: inout [Route]) throws {
-    //            while let r = queue.popLast() {
-    //                guard !routesChecked.contains(r) else { continue }
-    //                routesChecked.append(r)
-    //                let rendered: TestInterpreter
-    //                switch r {
-    //                case .home: fatalError()
-    //                case .subscribe:
-    //
-    //                default: fatalError("\(r)")
-    //                }
-    //                queue.append(contentsOf: rendered.linkTargets())
-    //            }
-    //        }
-    //        var queue = [startingFrom]
-    //        try helper(queue: &queue)
-    //        return routesChecked
-    //    }
-
 
     static var allTests = [
         ("testSubscription", testSubscription),
