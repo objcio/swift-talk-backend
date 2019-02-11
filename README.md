@@ -1,4 +1,4 @@
-# video-swift-backend
+# Swift Talk Backend
 
 This is the source code of the Swift Talk backend: https://talk.objc.io/.
 
