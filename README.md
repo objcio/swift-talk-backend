@@ -73,7 +73,7 @@ npm install -g browserify
 
 Then generate the javascript:
 
-````
+```
 npm install
 browserify assets_source/javascripts/application.js > assets/application.js
 ```
