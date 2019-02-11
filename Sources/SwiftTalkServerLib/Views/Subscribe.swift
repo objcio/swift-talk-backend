@@ -19,14 +19,14 @@ let subscriptionBenefits: [(icon: String, name: String, description: String)] = 
 
 
 func benefits(_ items: [(icon: String, name: String, description: String)]) -> Node {
-    return .ul(classes: "lh-110 text-center cols max-width-9 center mb- pv++ m-|stack+", items.map { b in
-        .li(classes: "m+|col m+|width-1/3", [
-            .div(classes: "color-orange", [
-                .inlineSvg(classes: "svg-fill-current", path: b.icon)
+    return .ul(class: "lh-110 text-center cols max-width-9 center mb- pv++ m-|stack+", items.map { b in
+        .li(class: "m+|col m+|width-1/3", [
+            .div(class: "color-orange", [
+                .inlineSvg(class: "svg-fill-current", path: b.icon)
             ]),
             .div([
-                .h3(classes: "bold color-blue mt- mb---", [.text(b.name)]),
-                .p(classes: "color-gray-50 lh-125", [.text(b.description)])
+                .h3(class: "bold color-blue mt- mb---", [.text(b.name)]),
+                .p(class: "color-gray-50 lh-125", [.text(b.description)])
             ])
         ])
     })
@@ -54,11 +54,11 @@ func registerForm(couponCode: String?, team: Bool) -> Form<ProfileFormData, STRe
     return profile(submitTitle: "Create Account", action: .account(.register(couponCode: couponCode, team: team))).wrap { node in
         LayoutConfig(contents: [
             .header([
-                .div(classes: "container-h pb+ pt-", [
-                    .h1(classes: "ms4 color-blue bold", ["Create Your Account"])
+                .div(class: "container-h pb+ pt-", [
+                    .h1(class: "ms4 color-blue bold", ["Create Your Account"])
                 ]),
             ]),
-            .div(classes: "container", [node])
+            .div(class: "container", [node])
         ]).layoutForCheckout
     }
 }
@@ -75,19 +75,19 @@ fileprivate extension Plan {
         let basePriceKey: KeyPath<Plan, Amount> = team ? \.teamMemberPrice : \.unit_amount_in_cents
         let price = discountedPrice(basePrice: basePriceKey, coupon: coupon)
         return .div([
-            .div(classes: "smallcaps-large mb-", [.text(prettyInterval)]),
-            .span(classes: "ms7", [
-                .span(classes: "opacity-50", ["$"]),
-                .span(classes: "bold", [.text(price.pretty)])
+            .div(class: "smallcaps-large mb-", [.text(prettyInterval)]),
+            .span(class: "ms7", [
+                .span(class: "opacity-50", ["$"]),
+                .span(class: "bold", [.text(price.pretty)])
             ]),
-            team ? .div(classes: "smallcaps-large mt-", [.raw("Per Person<sup>*</sup>")]) : .none
+            team ? .div(class: "smallcaps-large mt-", [.raw("Per Person<sup>*</sup>")]) : .none
         ])
     }
 }
 
 fileprivate func continueLink(to route: Route, title: String, extraClasses: Class? = nil) -> Node {
     let linkClasses: Class = "c-button c-button--big c-button--blue c-button--wide"
-    return .link(to: route, classes: linkClasses + (extraClasses ?? ""), [.text(title)])
+    return .link(to: route, class: linkClasses + (extraClasses ?? ""), [.text(title)])
 }
 
 fileprivate func continueLink(session: Session?, coupon: Coupon?, team: Bool) -> Node {
@@ -108,16 +108,16 @@ func renderSubscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node
     return .withSession { session in
         let contents: [Node] = [
             pageHeader(.other(header: "Subscribe to Swift Talk", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),
-            .div(classes: "container pt0", [
-                .div(classes: "bgcolor-white pa- radius-8 max-width-7 box-sizing-content center stack-", [
+            .div(class: "container pt0", [
+                .div(class: "bgcolor-white pa- radius-8 max-width-7 box-sizing-content center stack-", [
                     coupon.map { c in
-                        .div(classes: "bgcolor-orange-dark text-center color-white pa- lh-125 radius-3", [
-                            .span(classes: "smallcaps inline-block", [.text("Special Deal")]),
-                            .p(classes: "ms-1", [.text(c.description)])
+                        .div(class: "bgcolor-orange-dark text-center color-white pa- lh-125 radius-3", [
+                            .span(class: "smallcaps inline-block", [.text("Special Deal")]),
+                            .p(class: "ms-1", [.text(c.description)])
                         ])
                     } ?? .none,
-                    .div(classes: "pattern-gradient pattern-gradient--swifttalk pv++ ph+ radius-5", [
-                        .div(classes: "flex items-center justify-around text-center color-white", [
+                    .div(class: "pattern-gradient pattern-gradient--swifttalk pv++ ph+ radius-5", [
+                        .div(class: "flex items-center justify-around text-center color-white", [
                             monthly.priceBox(coupon: coupon),
                             yearly.priceBox(coupon: coupon),
                         ])
@@ -127,19 +127,19 @@ func renderSubscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node
                     ])
                 ]),
                 benefits(subscriptionBenefits),
-                .ul(classes: "text-center max-width-7 center pt++ pb++", [
-                    .div(classes: "color-orange", [
-                        .inlineSvg(classes: "svg-fill-current", path: "icon-benefit-team.svg")
+                .ul(class: "text-center max-width-7 center pt++ pb++", [
+                    .div(class: "color-orange", [
+                        .inlineSvg(class: "svg-fill-current", path: "icon-benefit-team.svg")
                     ]),
-                    .div(classes: "mb+", [
-                        .link(to: .signup(.subscribeTeam), classes: "no-decoration", [.h3(classes: "bold color-blue ms3 mt-- mb-", ["Team Subscriptions"])]),
-                        .p(classes: "color-gray-50 lh-125", [
+                    .div(class: "mb+", [
+                        .link(to: .signup(.subscribeTeam), class: "no-decoration", [.h3(class: "bold color-blue ms3 mt-- mb-", ["Team Subscriptions"])]),
+                        .p(class: "color-gray-50 lh-125", [
                             "Our team subscription includes a 30% discount and comes with a central account that lets you manage billing and access for your entire team.",
-                            .link(to: .signup(.subscribeTeam), classes: "no-decoration color-blue", ["Learn more..."])
+                            .link(to: .signup(.subscribeTeam), class: "no-decoration color-blue", ["Learn more..."])
                         ])
                     ])
                 ]),
-                .div(classes: "ms-1 color-gray-65 lh-110 text-center pt+", [
+                .div(class: "ms-1 color-gray-65 lh-110 text-center pt+", [
                     smallPrint([
                         "All prices shown excluding VAT (only applies to EU customers).",
                     ])
@@ -154,16 +154,16 @@ func renderSubscribeTeam(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> 
     return .withSession { session in
         let contents: [Node] = [
             pageHeader(.other(header: "Swift Talk Team Subscription", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),
-            .div(classes: "container pt0", [
-                .div(classes: "bgcolor-white pa- radius-8 max-width-7 box-sizing-content center stack-", [
+            .div(class: "container pt0", [
+                .div(class: "bgcolor-white pa- radius-8 max-width-7 box-sizing-content center stack-", [
                     coupon.map { c in
-                        .div(classes: "bgcolor-orange-dark text-center color-white pa- lh-125 radius-3", [
-                            .span(classes: "smallcaps inline-block", [.text("Special Deal")]),
-                            .p(classes: "ms-1", [.text(c.description)])
+                        .div(class: "bgcolor-orange-dark text-center color-white pa- lh-125 radius-3", [
+                            .span(class: "smallcaps inline-block", [.text("Special Deal")]),
+                            .p(class: "ms-1", [.text(c.description)])
                         ])
                     } ?? .none,
-                    .div(classes: "pattern-gradient pattern-gradient--swifttalk pv++ ph+ radius-5", [
-                        .div(classes: "flex items-center justify-around text-center color-white", [
+                    .div(class: "pattern-gradient pattern-gradient--swifttalk pv++ ph+ radius-5", [
+                        .div(class: "flex items-center justify-around text-center color-white", [
                             monthly.priceBox(coupon: coupon, team: true),
                             yearly.priceBox(coupon: coupon, team: true),
                         ])
@@ -177,17 +177,17 @@ func renderSubscribeTeam(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> 
                     ("icon-benefit-manager.svg", "Team Manager Account", "A central account to manage billing and team members"),
                     ("icon-benefit-download.svg", "Download Episodes", "Take Swift Talk with you when you're offline"),
                 ]),
-                .ul(classes: "text-center max-width-7 center pv+", [
-                    .div(classes: "mb+", [
-                        .h3(classes: "bold color-blue ms1 mt-- mb-", ["Enterprise Subscriptions"]),
-                        .p(classes: "color-gray-50 lh-125", [
+                .ul(class: "text-center max-width-7 center pv+", [
+                    .div(class: "mb+", [
+                        .h3(class: "bold color-blue ms1 mt-- mb-", ["Enterprise Subscriptions"]),
+                        .p(class: "color-gray-50 lh-125", [
                             "Please ",
-                            .link(to: URL(string: "mailto:\(email)")!, classes: "no-decoration color-blue", ["get in touch"]),
+                            .link(to: URL(string: "mailto:\(email)")!, class: "no-decoration color-blue", ["get in touch"]),
                             " for teams with more than 30 members."
                             ])
                         ])
                     ]),
-                .div(classes: "ms-1 color-gray-65 lh-110 text-center center pt+ max-width-8", [
+                .div(class: "ms-1 color-gray-65 lh-110 text-center center pt+ max-width-8", [
                     smallPrint([
                         .span([.raw("<sup>*</sup>"), .text("Prices apply from the 2nd team member. The first team member is included in the subscription base price, $\(monthly.discountedPrice(coupon: coupon).pretty)/month or $\(yearly.discountedPrice(coupon: coupon).pretty)/year")]),
                         "All prices shown excluding VAT (only applies to EU customers).",
@@ -200,7 +200,7 @@ func renderSubscribeTeam(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> 
 }
 
 fileprivate func smallPrint(_ lines: [Node]) -> Node {
-    return .ul(classes: "stack pl", lines.map { .li([$0])})
+    return .ul(class: "stack pl", lines.map { .li([$0])})
 }
 
 func newSub(coupon: Coupon?, team: Bool, errs: [String]) throws -> Node {
@@ -213,11 +213,11 @@ func newSub(coupon: Coupon?, team: Bool, errs: [String]) throws -> Node {
             ], payment_errors: errs, method: .post, coupon: coupon.map(NewSubscriptionData.Coupon.init), csrf: csrf)
         return LayoutConfig(contents: [
             .header([
-                .div(classes: "container-h pb+ pt+", [
-                    .h1(classes: "ms4 color-blue bold", ["Subscribe to Swift Talk"])
+                .div(class: "container-h pb+ pt+", [
+                    .h1(class: "ms4 color-blue bold", ["Subscribe to Swift Talk"])
                 ])
             ]),
-            .div(classes: "container", [
+            .div(class: "container", [
                 ReactComponent.newSubscription.build(data)
             ])
         ], includeRecurlyJS: true).layoutForCheckout

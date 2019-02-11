@@ -395,7 +395,7 @@ func decodeXML<T: Decodable>(from data: Data) throws -> T {
 
 extension Element {
     init(_ name: String, contents: String) {
-        self.init(name: name, block: false, classes: nil, attributes: [:], children: [.text(contents)])
+        self.init(name: name, block: false, class: nil, attributes: [:], children: [.text(contents)])
     }
     
     mutating func add(child: Element) {
@@ -411,7 +411,7 @@ final class RecurlyXMLEncoder: Encoder {
         rootElement.add(child: el)
     }
     init(_ name: String) {
-        rootElement = Element(name: name, block: true, classes: nil, attributes: [:], children: [])
+        rootElement = Element(name: name, block: true, class: nil, attributes: [:], children: [])
     }
     
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {

@@ -35,9 +35,9 @@ extension HTML.Node where I == STRequestEnvironment {
         }
     }
     
-    static func hashedImg(classes: Class? = nil, src: String, alt: String = "", attributes: [String:String] = [:]) -> Node {
+    static func hashedImg(class: Class? = nil, src: String, alt: String = "", attributes: [String:String] = [:]) -> Node {
         return Node.withInput { deps in
-            return Node.img(classes: classes, src: deps.hashedAssetName(src), alt: alt, attributes: attributes)
+            return Node.img(class: `class`, src: deps.hashedAssetName(src), alt: alt, attributes: attributes)
         }
     }
     
@@ -57,28 +57,28 @@ extension HTML.Node where I == STRequestEnvironment {
         return .withInput { f($0.route) }
     }
 
-    static func link(to: Route, classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
-        return Node.a(classes: classes, href: to.path, attributes: attributes, children)
+    static func link(to: Route, class: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
+        return Node.a(class: `class`, href: to.path, attributes: attributes, children)
     }
     
-    static func link(to: LinkTarget, classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
-        return Node.a(classes: classes, href: to.absoluteString, attributes: attributes, children)
+    static func link(to: LinkTarget, class: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
+        return Node.a(class: `class`, href: to.absoluteString, attributes: attributes, children)
     }
     
-    static func button(to route: Route, confirm: String? = "Are you sure?", classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
+    static func button(to route: Route, confirm: String? = "Are you sure?", class: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
         var attrs = ["type": "submit"]
         if let c = confirm {
             attrs["data-confirm"] = c
         }
         return Node.withCSRF { csrf in
-            Node.form(classes: "button_to", action: route.path, method: .post, [
+            Node.form(class: "button_to", action: route.path, method: .post, [
                 Node.input(name: "csrf", id: "csrf", type: "hidden", attributes: ["value": csrf.stringValue], []),
-                Node.button(classes: classes, attributes: attrs, children)
+                Node.button(class: `class`, attributes: attrs, children)
                 ])
         }
     }
     
-    static func inlineSvg(classes: Class? = nil, path: String, preserveAspectRatio: String? = nil, attributes: [String:String] = [:]) -> Node {
+    static func inlineSvg(class: Class? = nil, path: String, preserveAspectRatio: String? = nil, attributes: [String:String] = [:]) -> Node {
         // don't render inline svg's in tests
         if ProcessInfo.processInfo.environment.keys.contains("IDEiPhoneInternalTestBundleName") {
             return Node.none
@@ -89,8 +89,8 @@ extension HTML.Node where I == STRequestEnvironment {
                 return .none
             }
             var a = attributes
-            if let c = classes {
-                a["class", default: ""] += c.classes
+            if let c = `class` {
+                a["class", default: ""] += c.class
             }
             // NOTE This has worked fine so far, but could be done with proper xml parsing if necessary
             let contents = try! String(contentsOf: name).replacingOccurrences(of: "<svg", with: "<svg " + a.asAttributes)

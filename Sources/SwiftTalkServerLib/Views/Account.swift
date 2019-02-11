@@ -24,23 +24,23 @@ func accountContainer(content: Node, forRoute: Route) -> Node {
         if session?.selfPremiumAccess == true || session?.user.data.role == .teamManager {
             items.insert((Route.account(.teamMembers), title: "Team Members"), at: 2)
         }
-        return .div(classes: "container pb0", [
-            .div(classes: "cols m-|stack++", [
-                .div(classes: "col width-full m+|width-1/4", [
-                    .div(classes: "submenu", items.map { item in
-                        .link(to: item.0, classes: "submenu__item" + (item.0 == forRoute ? "is-active" : ""), attributes: [:], [.text(item.title)])
+        return .div(class: "container pb0", [
+            .div(class: "cols m-|stack++", [
+                .div(class: "col width-full m+|width-1/4", [
+                    .div(class: "submenu", items.map { item in
+                        .link(to: item.0, class: "submenu__item" + (item.0 == forRoute ? "is-active" : ""), attributes: [:], [.text(item.title)])
                     })
                 ]),
-                .div(classes: "col width-full m+|width-3/4", [content])
+                .div(class: "col width-full m+|width-3/4", [content])
             ])
         ])
     }
 }
 
 // Icon from font-awesome
-func faIcon(name: String, classes: Class = "") -> Node {
+func faIcon(name: String, class: Class = "") -> Node {
     let iconName = Class(stringLiteral: "fa-" + name)
-    return .i(classes: "fa" + iconName + classes)
+    return .i(class: "fa" + iconName + `class`)
 }
 
 extension Invoice.State {
@@ -67,7 +67,7 @@ extension Invoice.State {
 }
 
 func screenReader(_ text: String) -> Node {
-    return .span(classes: "sr-only", [.text(text)])
+    return .span(class: "sr-only", [.text(text)])
 }
 
 struct Column {
@@ -86,30 +86,30 @@ struct Column {
 
 struct Cell {
     var children: [Node]
-    var classes: Class = ""
-    init(_ children: [Node], classes: Class = "") {
+    var `class`: Class = ""
+    init(_ children: [Node], class: Class = "") {
         self.children = children
-        self.classes = classes
+        self.class = `class`
     }
     
-    init(_ text: String, classes: Class = "") {
+    init(_ text: String, class: Class = "") {
         self.children = [.text(text)]
-        self.classes = classes
+        self.class = `class`
     }
     
 }
 func table(columns: [Column], cells: [[Cell]]) -> Node {
-    return .div(classes: "table-responsive", [
-        .table(classes: "width-full ms-1", [
-            .thead(classes: "bold color-gray-15", [
+    return .div(class: "table-responsive", [
+        .table(class: "width-full ms-1", [
+            .thead(class: "bold color-gray-15", [
                 .tr(columns.map { column in
                     let align = Class(stringLiteral: "text-" + column.alignment.rawValue)
-                    return .th(classes: "pv ph-" + align, attributes: ["scope": "col"], [.text(column.title)])
+                    return .th(class: "pv ph-" + align, attributes: ["scope": "col"], [.text(column.title)])
                 })
             ]),
-            .tbody(classes: "color-gray-30", cells.map { row in
-                return .tr(classes: "border-top border-1 border-color-gray-90", row.map { cell in
-                    .td(classes: "pv ph- no-wrap" + cell.classes, cell.children)
+            .tbody(class: "color-gray-30", cells.map { row in
+                return .tr(class: "border-top border-1 border-color-gray-90", row.map { cell in
+                    .td(class: "pv ph- no-wrap" + cell.class, cell.children)
                 })
             })
         ])
@@ -118,8 +118,8 @@ func table(columns: [Column], cells: [[Cell]]) -> Node {
 
 func invoicesView(user: Row<UserData>, invoices: [(Invoice, pdfURL: URL)]) -> [Node] {
     guard !invoices.isEmpty else { return  [
-        .div(classes: "text-center", [
-        	.p(classes: "color-gray-30 ms1 mb", [.text("No invoices yet.")])
+        .div(class: "text-center", [
+        	.p(class: "color-gray-30 ms1 mb", [.text("No invoices yet.")])
     	])
     ] }
     
@@ -135,8 +135,8 @@ func invoicesView(user: Row<UserData>, invoices: [(Invoice, pdfURL: URL)]) -> [N
             Cell(invoice.state.rawValue),
             Cell("# \(invoice.invoice_number)"),
             Cell(DateFormatter.fullPretty.string(from: invoice.created_at)),
-            Cell(dollarAmount(cents: invoice.total_in_cents), classes: "type-mono text-right"),
-            Cell([.link(to: pdfURL, classes: "", [.text("\(invoice.invoice_number).pdf")])], classes: "text-center"),
+            Cell(dollarAmount(cents: invoice.total_in_cents), class: "type-mono text-right"),
+            Cell([.link(to: pdfURL, class: "", [.text("\(invoice.invoice_number).pdf")])], class: "text-center"),
         ]
     }
     return [
@@ -146,7 +146,7 @@ func invoicesView(user: Row<UserData>, invoices: [(Invoice, pdfURL: URL)]) -> [N
 }
 
 fileprivate func heading(_ string: String) -> Node {
-    return .h2(classes: "color-blue bold ms2 mb", [.text(string)])
+    return .h2(class: "color-blue bold ms2 mb", [.text(string)])
 }
 
 extension Subscription.State {
@@ -178,13 +178,13 @@ extension Subscription.Upgrade {
         }
         return [
                 .p([.text("Upgrade to the \(plan.name) plan.")]),
-                .p(classes: "lh-110", [.text(
+                .p(class: "lh-110", [.text(
                     "Your new plan will cost \(dollarAmount(cents: total_in_cents)) \(plan.prettyInterval)" +
                         vat +
                         teamMemberText +
                     ". You'll be charged immediately, and credited for the remainder of the current billing period."
                     )]),
-                button(to: .subscription(.upgrade), text: "Upgrade Subscription", classes: "color-invalid")
+                button(to: .subscription(.upgrade), text: "Upgrade Subscription", class: "color-invalid")
             ]
     }
 }
@@ -245,7 +245,7 @@ func updatePaymentView(data: PaymentViewData) -> Node {
         accountHeader,
         accountContainer(content: .div([
             heading("Update Payment Method"),
-            .div(classes: "container", [
+            .div(class: "container", [
                ReactComponent.creditCard.build(data)
             ])
         ]), forRoute: .account(.updatePayment))
@@ -257,8 +257,8 @@ extension BillingInfo {
         return "\(first_six.first!)*** **** **** \(last_four)"
     }
     var show: [Node] {
-        func item(key: String, value v: String, classes: Class? = nil) -> Node {
-            return .li(classes: "flex", [
+        func item(key: String, value v: String, class: Class? = nil) -> Node {
+            return .li(class: "flex", [
                 label(text: key),
                 value(text: v)
             ])
@@ -266,38 +266,38 @@ extension BillingInfo {
         return [
             heading("Billing Info"),
             .div([
-                .ul(classes: "stack- mb", [
+                .ul(class: "stack- mb", [
                     item(key: "Type", value: card_type),
-                    item(key: "Number", value: cardMask, classes: .some("type-mono")) as Node,
+                    item(key: "Number", value: cardMask, class: .some("type-mono")) as Node,
                     item(key: "Expiry", value: "\(month)/\(year)") as Node,
                     vat_number?.nonEmpty.map { num in
                         item(key: "VAT Number", value: num)
                     } ?? .none
                 ])
             ]),
-            .link(to: .account(.updatePayment), classes: "color-blue no-decoration border-bottom border-1 hover-color-black bold", [.text("Update Billing Info")])
+            .link(to: .account(.updatePayment), class: "color-blue no-decoration border-bottom border-1 hover-color-black bold", [.text("Update Billing Info")])
         ]
     }
 }
 
-fileprivate func button(to route: Route, text: String, classes: Class = "") -> Node {
+fileprivate func button(to route: Route, text: String, class: Class = "") -> Node {
     return .withCSRF { csrf in
-    	return .button(to: route, classes: "bold reset-button border-bottom border-1 hover-color-black" + classes, [.text(text)])
+    	return .button(to: route, class: "bold reset-button border-bottom border-1 hover-color-black" + `class`, [.text(text)])
     }
 }
 
-fileprivate func label(text: String, classes: Class = "") -> Node {
-    return .strong(classes: "flex-none width-4 bold color-gray-15" + classes, [.text(text)])
+fileprivate func label(text: String, class: Class = "") -> Node {
+    return .strong(class: "flex-none width-4 bold color-gray-15" + `class`, [.text(text)])
 }
 
-fileprivate func value(text: String, classes: Class = "") -> Node {
-    return .span(classes: "flex-auto color-gray-30" + classes, [.text(text)])
+fileprivate func value(text: String, class: Class = "") -> Node {
+    return .span(class: "flex-auto color-gray-30" + `class`, [.text(text)])
 }
 
 func billingLayout(_ content: [Node]) -> Node {
     return LayoutConfig(contents: [
         accountHeader,
-        accountContainer(content: .div(classes: "stack++", content), forRoute: .account(.billing))
+        accountContainer(content: .div(class: "stack++", content), forRoute: .account(.billing))
     ]).layout
 }
 
@@ -305,7 +305,7 @@ func teamMemberBillingContent() -> [Node] {
     return [
         .div([
             heading("Subscription"),
-            .p(classes: "lh-110", [.text("You have a team member account, which doesn't have its own billing info.")])
+            .p(class: "lh-110", [.text("You have a team member account, which doesn't have its own billing info.")])
         ])
     ]
 }
@@ -314,7 +314,7 @@ func gifteeBillingContent() -> [Node] {
     return [
         .div([
             heading("Subscription"),
-            .p(classes: "lh-110", [.text("You currently have an active gift subscription, which doesn't have its own billing info.")])
+            .p(class: "lh-110", [.text("You currently have an active gift subscription, which doesn't have its own billing info.")])
         ])
     ]
 }
@@ -323,8 +323,8 @@ func unsubscribedBillingContent() -> [Node] {
     return [
         .div([
             heading("Subscription"),
-            .p(classes: "mb", [.text("You don't have an active subscription.")]),
-            .link(to: .signup(.subscribe), classes: "c-button", [.text("Become a Subscriber")])
+            .p(class: "mb", [.text("You don't have an active subscription.")]),
+            .link(to: .signup(.subscribe), class: "c-button", [.text("Become a Subscriber")])
         ])
     ]
 }
@@ -340,51 +340,51 @@ func billingView(subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice,
                 .div([
                     heading("Subscription"),
                     .div([
-                        .ul(classes: "stack- mb", [
-                            .li(classes: "flex", [
+                        .ul(class: "stack- mb", [
+                            .li(class: "flex", [
                                 label(text: "Plan"),
                                 value(text: sub.plan.name)
                             ]),
-                            .li(classes: "flex", [
+                            .li(class: "flex", [
                                 label(text: "State"),
                                 value(text: sub.state.pretty)
                             ]),
                             sub.trial_ends_at.map { trialEndDate in
-                                .li(classes: "flex", [
+                                .li(class: "flex", [
                                     label(text: "Trial Ends At"),
                                     value(text: DateFormatter.fullPretty.string(from: trialEndDate))
                                 ])
                             } ?? Node.none,
-                            sub.state == .active ? Node.li(classes: "flex", [
+                            sub.state == .active ? Node.li(class: "flex", [
                                 label(text: "Next Billing"),
-                                .div(classes: "flex-auto color-gray-30 stack-", [
+                                .div(class: "flex-auto color-gray-30 stack-", [
                                     .p([
                                         .text(dollarAmount(cents: total)),
                                         vat == 0 ? .none : .text(" (including \(dollarAmount(cents: vat)) VAT)"),
                                         .text(" on "),
                                         .text(sub.current_period_ends_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "n/a"),
                                     ]),
-                                    redemptions.isEmpty ? .none : .p(classes: " input-note mt-", [
-                                        .span(classes: "bold", [.text("Note:")])
+                                    redemptions.isEmpty ? .none : .p(class: " input-note mt-", [
+                                        .span(class: "bold", [.text("Note:")])
                                     ] + redemptions.map { x in
                                         let (redemption, coupon) = x
                                         let start = DateFormatter.fullPretty.string(from: redemption.created_at)
                                         return .text("Due to a technical limation, the displayed price does not take your active coupon (\(coupon.billingDescription), started at \(start)) into account.")
                                     }),
-                                    button(to: .subscription(.cancel), text: "Cancel Subscription", classes: "color-invalid")
+                                    button(to: .subscription(.cancel), text: "Cancel Subscription", class: "color-invalid")
                                 ])
                             ]) : .none,
                             sub.upgrade(vatExempt: billingInfo.vatExempt).map { upgrade in
-                                .li(classes: "flex", [
+                                .li(class: "flex", [
                                     label(text: "Upgrade"),
-                                    .div(classes: "flex-auto color-gray-30 stack--", upgrade.pretty())
+                                    .div(class: "flex-auto color-gray-30 stack--", upgrade.pretty())
                                 ])
                             } ?? .none,
-                            sub.state == .canceled ? Node.li(classes: "flex", [
+                            sub.state == .canceled ? Node.li(class: "flex", [
                                 label(text: "Expires on"),
-                                .div(classes: "flex-auto color-gray-30 stack-", [
+                                .div(class: "flex-auto color-gray-30 stack-", [
                                     .text(sub.expires_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "<unknown date>"),
-                                    button(to: .subscription(.reactivate), text: "Reactivate Subscription", classes: "color-invalid")
+                                    button(to: .subscription(.reactivate), text: "Reactivate Subscription", class: "color-invalid")
                                 ])
                             ]) : .none
                         ])
@@ -417,23 +417,23 @@ func accountForm() -> Form<ProfileFormData, STRequestEnvironment> {
 
 func teamMembersView(teamMembers: [Row<UserData>], signupLink: URL) -> Node {
     func row(avatarURL: String, name: String, email: String, githubLogin: String, deleteRoute: Route?) -> Node {
-        return .div(classes: "flex items-center pv- border-top border-1 border-color-gray-90", [
-            .div(classes: "block radius-full ms-2 width-2 mr", [
-                .img(classes: "block radius-full ms-2 width-2 mr", src: avatarURL)
+        return .div(class: "flex items-center pv- border-top border-1 border-color-gray-90", [
+            .div(class: "block radius-full ms-2 width-2 mr", [
+                .img(class: "block radius-full ms-2 width-2 mr", src: avatarURL)
             ]),
-            .div(classes: "cols flex-grow" + (deleteRoute == nil ? "bold" : ""), [
-                .div(classes: "col width-1/3", [.text(name)]),
-                .div(classes: "col width-1/3", [.text(email)]),
-                .div(classes: "col width-1/3", [.text(githubLogin)]),
+            .div(class: "cols flex-grow" + (deleteRoute == nil ? "bold" : ""), [
+                .div(class: "col width-1/3", [.text(name)]),
+                .div(class: "col width-1/3", [.text(email)]),
+                .div(class: "col width-1/3", [.text(githubLogin)]),
             ]),
-            .div(classes: "block width-2", [
-                deleteRoute.map { .button(to: $0, confirm: "Are you sure to delete this team member?", classes: "button-input ms-1", [.raw("&times;")]) } ?? ""
+            .div(class: "block width-2", [
+                deleteRoute.map { .button(to: $0, confirm: "Are you sure to delete this team member?", class: "button-input ms-1", [.raw("&times;")]) } ?? ""
             ]),
         ])
     }
     let currentTeamMembers: Node
     if teamMembers.isEmpty {
-        currentTeamMembers = .p(classes: "c-text", ["No team members added yet."])
+        currentTeamMembers = .p(class: "c-text", ["No team members added yet."])
     } else {
         let headerRow = row(avatarURL: "", name: "Name", email: "Email", githubLogin: "Github Handle", deleteRoute: nil)
         currentTeamMembers = .div([headerRow] + teamMembers.compactMap { tm in
@@ -443,14 +443,14 @@ func teamMembersView(teamMembers: [Row<UserData>], signupLink: URL) -> Node {
     }
     
     let content: [Node] = [
-        .div(classes: "stack++", [
+        .div(class: "stack++", [
             .div([
                 heading("Add Team Members"),
-                .div(classes: "color-gray-25 lh-110", [
+                .div(class: "color-gray-25 lh-110", [
                     .p(["To add team members, please send them the following link for signup:"]),
-                    .div(classes: "type-mono ms-1 mv", [.text(signupLink.absoluteString)]),
-                    .p(classes: "color-gray-50 ms-1", ["Team members cost $10/month or $100/year (excl. VAT), depending on your subscription."]),
-                    .button(to: .account(.invalidateTeamToken), confirm: "WARNING: This will invalidate the current signup link. Do you want to proceed?", classes: "button mt+", ["Generate New Signup Link"]),
+                    .div(class: "type-mono ms-1 mv", [.text(signupLink.absoluteString)]),
+                    .p(class: "color-gray-50 ms-1", ["Team members cost $10/month or $100/year (excl. VAT), depending on your subscription."]),
+                    .button(to: .account(.invalidateTeamToken), confirm: "WARNING: This will invalidate the current signup link. Do you want to proceed?", class: "button mt+", ["Generate New Signup Link"]),
                 ])
             ]),
             .div([
@@ -462,7 +462,7 @@ func teamMembersView(teamMembers: [Row<UserData>], signupLink: URL) -> Node {
 
     return LayoutConfig(contents: [
         accountHeader,
-        accountContainer(content: .div(classes: "stack++", [
+        accountContainer(content: .div(class: "stack++", [
             .div(content)
         ]), forRoute: .account(.teamMembers))
     ]).layout

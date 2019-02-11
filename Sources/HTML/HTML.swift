@@ -23,11 +23,11 @@ public struct Element<I> {
     var block: Bool
     public var children: [Node<I>]
     
-    public init(name: String, block: Bool = true, classes: Class? = nil, attributes: [String:String] = [:], children: [Node<I>] = []) {
+    public init(name: String, block: Bool = true, class: Class? = nil, attributes: [String:String] = [:], children: [Node<I>] = []) {
         self.name = name
         self.attributes = attributes
-        if let c = classes {
-            self.attributes["class", default: ""] += " " + c.classes
+        if let c = `class` {
+            self.attributes["class", default: ""] += " " + c.class
         }
         self.children = children
         self.block = block
@@ -35,13 +35,13 @@ public struct Element<I> {
 }
 
 public struct Class: ExpressibleByStringLiteral {
-    public var classes: String
+    public var `class`: String
     public init(stringLiteral string: String) {
-        self.classes = string
+        self.class = string
     }
     
     public static func +(lhs: Class, rhs: Class) -> Class {
-        return Class(stringLiteral: lhs.classes + " " + rhs.classes)
+        return Class(stringLiteral: lhs.class + " " + rhs.class)
     }
 }
 
@@ -94,28 +94,28 @@ extension Node {
 }
 
 extension Node {
-    public static func html(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "html", classes: classes, attributes: attributes, children: children))
+    public static func html(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "html", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func meta(classes: Class? = nil, attributes: [String:String] = [:]) -> Node {
+    public static func meta(attributes: [String:String] = [:]) -> Node {
         return .node(Element(name: "meta", block: false, attributes: attributes, children: []))
     }
     
-    public static func body(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "body", classes: classes, attributes: attributes, children: children))
+    public static func body(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "body", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func p(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
-        return .node(Element(name: "p", classes: classes, attributes: attributes, children: children))
+    public static func p(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
+        return .node(Element(name: "p", class: `class`, attributes: attributes, children: children))
     }
     
     public static func head(attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         return .node(Element(name: "head", attributes: attributes, children: children))
     }
     
-    public static func header(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "header", classes: classes, attributes: attributes, children: children))
+    public static func header(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "header", class: `class`, attributes: attributes, children: children))
     }
     
     public static func title(_ text: String) -> Node {
@@ -126,78 +126,78 @@ extension Node {
         return .node(Element(name: "br", block: false))
     }
     
-    public static func span(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
-        return .node(Element(name: "span", block: false, classes: classes, attributes: attributes, children: children))
+    public static func span(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
+        return .node(Element(name: "span", block: false, class: `class`, attributes: attributes, children: children))
     }
 
-    public static func strong(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
-        return .node(Element(name: "strong", block: false, classes: classes, attributes: attributes, children: children))
+    public static func strong(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
+        return .node(Element(name: "strong", block: false, class: `class`, attributes: attributes, children: children))
     }
 
-    public static func h1(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
-        return .node(Element(name: "h1", block: false, classes: classes, attributes: attributes, children: children))
+    public static func h1(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
+        return .node(Element(name: "h1", block: false, class: `class`, attributes: attributes, children: children))
     }
     
-    public static func h2(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
-        return .node(Element(name: "h2", block: false, classes: classes, attributes: attributes, children: children))
+    public static func h2(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
+        return .node(Element(name: "h2", block: false, class: `class`, attributes: attributes, children: children))
     }
     
-    public static func h3(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
-        return .node(Element(name: "h3", block: false, classes: classes, attributes: attributes, children: children))
+    public static func h3(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
+        return .node(Element(name: "h3", block: false, class: `class`, attributes: attributes, children: children))
     }
     
-    public static func h4(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
-        return .node(Element(name: "h4", block: false, classes: classes, attributes: attributes, children: children))
+    public static func h4(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
+        return .node(Element(name: "h4", block: false, class: `class`, attributes: attributes, children: children))
     }
     
-    public static func img(classes: Class? = nil, src: String, alt: String = "", attributes: [String:String] = [:]) -> Node {
+    public static func img(class: Class? = nil, src: String, alt: String = "", attributes: [String:String] = [:]) -> Node {
         var a = attributes
         a["src"] = src
         a["alt"] = alt
-        return .node(Element(name: "img", block: false, classes: classes, attributes: a, children: []))
+        return .node(Element(name: "img", block: false, class: `class`, attributes: a, children: []))
     }
     
-    public static func i(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "i", block: true, classes: classes, attributes: attributes, children: children))
+    public static func i(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "i", block: true, class: `class`, attributes: attributes, children: children))
     }
     
-    public static func div(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "div", classes: classes, attributes: attributes, children: children))
+    public static func div(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "div", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func fieldset(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "fieldset", classes: classes, attributes: attributes, children: children))
+    public static func fieldset(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "fieldset", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func label(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "label", classes: classes, attributes: attributes, children: children))
+    public static func label(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "label", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func table(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "table", classes: classes, attributes: attributes, children: children))
+    public static func table(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "table", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func thead(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "thead", classes: classes, attributes: attributes, children: children))
+    public static func thead(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "thead", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func tbody(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "tbody", classes: classes, attributes: attributes, children: children))
+    public static func tbody(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "tbody", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func tr(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "tr", classes: classes, attributes: attributes, children: children))
+    public static func tr(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "tr", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func td(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "td", classes: classes, attributes: attributes, children: children))
+    public static func td(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "td", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func th(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "th", classes: classes, attributes: attributes, children: children))
+    public static func th(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "th", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func input(classes: Class? = nil, name: String, id: String? = nil, type: String = "text",  attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+    public static func input(class: Class? = nil, name: String, id: String? = nil, type: String = "text",  attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         var a = attributes
         a["type"] = type
         a["name"] = name
@@ -207,29 +207,29 @@ extension Node {
             a["inputmode"] = "numeric"
             a["pattern"] = "[0-9]*"
         }
-        return .node(Element(name: "input", classes: classes, attributes: a, children: children))
+        return .node(Element(name: "input", class: `class`, attributes: a, children: children))
     }
     
-    public static func textArea(classes: Class? = nil, name: String, id: String? = nil, value: String? = nil, placeHolder: String? = nil, rows: Int? = nil, cols: Int? = nil, attributes: [String:String] = [:]) -> Node {
+    public static func textArea(class: Class? = nil, name: String, id: String? = nil, value: String? = nil, placeHolder: String? = nil, rows: Int? = nil, cols: Int? = nil, attributes: [String:String] = [:]) -> Node {
         var a = attributes
         a["name"] = name
         a["id"] = id ?? name
         if let r = rows { a["rows"] = "\(r)" }
         if let c = cols { a["cols"] = "\(c)" }
         if let p = placeHolder { a["placeholder"] = p }
-        return .node(Element(name: "textarea", classes: classes, attributes: a, children: [.text(value ?? "")]))
+        return .node(Element(name: "textarea", class: `class`, attributes: a, children: [.text(value ?? "")]))
     }
 
-    public static func form(classes: Class? = nil, action: String, acceptCharset: String = "UTF-8", method: HTTPMethod = .post, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+    public static func form(class: Class? = nil, action: String, acceptCharset: String = "UTF-8", method: HTTPMethod = .post, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         var a = attributes
         a["action"] = action
         a["accept-charset"] = acceptCharset
         a["method"] = method.rawValue
-        return .node(Element(name: "form", classes: classes, attributes: a, children: children))
+        return .node(Element(name: "form", class: `class`, attributes: a, children: children))
     }
     
-    public static func aside(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "div", classes: classes, attributes: attributes, children: children))
+    public static func aside(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "div", class: `class`, attributes: attributes, children: children))
     }
     
     public static func iframe(source: URL, attributes: [String:String] = [:]) -> Node {
@@ -238,8 +238,8 @@ extension Node {
         return .node(Element(name: "iframe", attributes: attrs))
     }
         
-    public static func video(classes: Class? = nil, source: URL, sourceType: String, attributes: [String:String] = [:]) -> Node {
-        return .node(Element(name: "video", classes: classes, attributes: attributes, children: [
+    public static func video(class: Class? = nil, source: URL, sourceType: String, attributes: [String:String] = [:]) -> Node {
+        return .node(Element(name: "video", class: `class`, attributes: attributes, children: [
             .node(Element(name: "source", attributes: [
                 "src": source.absoluteString,
                 "type": sourceType
@@ -247,56 +247,56 @@ extension Node {
         ]))
     }
     
-    public static func nav(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "nav", classes: classes, attributes: attributes, children: children))
+    public static func nav(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "nav", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func ul(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "ul", classes: classes, attributes: attributes, children: children))
+    public static func ul(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "ul", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func dl(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "dl", classes: classes, attributes: attributes, children: children))
+    public static func dl(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "dl", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func ol(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "ol", classes: classes, attributes: attributes, children: children))
+    public static func ol(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "ol", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func li(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "li", classes: classes, attributes: attributes, children: children))
+    public static func li(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "li", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func dt(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "dt", classes: classes, attributes: attributes, children: children))
+    public static func dt(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "dt", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func dd(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "dd", classes: classes, attributes: attributes, children: children))
+    public static func dd(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "dd", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func button(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "button", classes: classes, attributes: attributes, children: children))
+    public static func button(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "button", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func main(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "main", classes: classes, attributes: attributes, children: children))
+    public static func main(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "main", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func section(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "section", classes: classes, attributes: attributes, children: children))
+    public static func section(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "section", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func article(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "article", classes: classes, attributes: attributes, children: children))
+    public static func article(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "article", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func figure(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "figure", classes: classes, attributes: attributes, children: children))
+    public static func figure(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "figure", class: `class`, attributes: attributes, children: children))
     }
     
-    public static func footer(classes: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
-        return .node(Element(name: "footer", classes: classes, attributes: attributes, children: children))
+    public static func footer(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
+        return .node(Element(name: "footer", class: `class`, attributes: attributes, children: children))
     }
 
     public static func script(src: String) -> Node {
@@ -331,11 +331,11 @@ extension Node {
     }
 
         
-    public static func a(classes: Class? = nil, href: String, attributes: [String:String] = [:], _ children: [Node]) -> Node {
+    public static func a(class: Class? = nil, href: String, attributes: [String:String] = [:], _ children: [Node]) -> Node {
         assert(attributes["href"] == nil)
         var att = attributes
         att["href"] = href
-        return .node(Element(name: "a", block: false, classes: classes, attributes: att, children: children))
+        return .node(Element(name: "a", block: false, class: `class`, attributes: att, children: children))
     }
 }
 

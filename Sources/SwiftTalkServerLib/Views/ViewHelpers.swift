@@ -123,10 +123,10 @@ func dollarAmount(cents: Int) -> String {
 struct ReactComponent<A: Encodable> {
     var name: String
     func build(_ value: A) -> Node {
-        return .div(classes: "react-component", attributes: [
+        return .div(class: "react-component", attributes: [
             "data-params": json(value),
             "data-component": name
-            ], [])
+        ], [])
     }
 }
 

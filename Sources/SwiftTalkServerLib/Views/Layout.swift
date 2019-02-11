@@ -119,13 +119,13 @@ extension LayoutConfig {
             .hashedScript(src: "/assets/application.js"),
             googleAnalytics,
         ] + structured)
-        let logo = Node.link(to: URL(string: "https://www.objc.io")!, classes: "flex-none outline-none mr++ flex", [
-            .inlineSvg(classes: "block logo logo--themed height-auto", path: "logo.svg"),
-            .h1(classes: "visuallyhidden", [.text("objc.io")])
+        let logo = Node.link(to: URL(string: "https://www.objc.io")!, class: "flex-none outline-none mr++ flex", [
+            .inlineSvg(class: "block logo logo--themed height-auto", path: "logo.svg"),
+            .h1(class: "visuallyhidden", [.text("objc.io")])
         ] as [Node])
-        let navigation = Node.nav(classes: "flex flex-grow", [
-            .ul(classes: "flex flex-auto", navigationItems.map { l in
-                .li(classes: "flex mr+", [
+        let navigation = Node.nav(class: "flex flex-grow", [
+            .ul(class: "flex flex-auto", navigationItems.map { l in
+                .li(class: "flex mr+", [
                     .link(to: l.0, attributes: [
                         "class": "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration"
                     ], [.span([.text(l.1)])])
@@ -133,9 +133,9 @@ extension LayoutConfig {
             }) // todo: search
         ])
 
-        let header = Node.header(classes: "bgcolor-white", [
-            .div(classes: "height-3 flex scroller js-scroller js-scroller-container", [
-                .div(classes: "container-h flex-grow flex", [
+        let header = Node.header(class: "bgcolor-white", [
+            .div(class: "height-3 flex scroller js-scroller js-scroller-container", [
+                .div(class: "container-h flex-grow flex", [
                     logo,
                     navigation,
                     .withSession(userHeader)
@@ -182,12 +182,12 @@ extension LayoutConfig {
         ] + structured)
         let linkClasses: Class = "no-decoration color-inherit hover-color-black mr"
         let body = Node.body(attributes: ["class": "theme-" + theme], [
-            .header(classes: "site-header", [
-        		.div(classes: "site-header__nav flex", [
-                    .div(classes: "container-h flex-grow flex items-center height-3", [
-                        .link(to: .home, classes: "block flex-none outline-none mr++", [
-                            .inlineSvg(classes: "logo height-auto", path: "logo.svg"),
-                            .h1(classes: "visuallyhidden", [.text("objc.io")])
+            .header(class: "site-header", [
+        		.div(class: "site-header__nav flex", [
+                    .div(class: "container-h flex-grow flex items-center height-3", [
+                        .link(to: .home, class: "block flex-none outline-none mr++", [
+                            .inlineSvg(class: "logo height-auto", path: "logo.svg"),
+                            .h1(class: "visuallyhidden", [.text("objc.io")])
                         ] as [Node]),
                     ])
                 ])
@@ -195,10 +195,10 @@ extension LayoutConfig {
             .main(contents),
         ] + preFooter + [
             .footer([
-                .div(classes: "container-h pv", [
-                    .div(classes: "ms-1 color-gray-60", [
-                        .a(classes: linkClasses, href: "mailto:mail@objc.io", [.text("Email")]),
-                        .link(to: URL(string: "https://www.objc.io/imprint")!, classes: linkClasses, ["Imprint"])
+                .div(class: "container-h pv", [
+                    .div(class: "ms-1 color-gray-60", [
+                        .a(class: linkClasses, href: "mailto:mail@objc.io", [.text("Email")]),
+                        .link(to: URL(string: "https://www.objc.io/imprint")!, class: linkClasses, ["Imprint"])
                     ])
                 ])
             ])
@@ -213,27 +213,27 @@ public enum FlashType {
 }
 
 func flash(message: String, type: FlashType) -> Node {
-    let classes: Class
+    let `class`: Class
     switch type {
-    case .notice: classes = "bgcolor-blue-dark"
-    case .alert: classes = "bgcolor-invalid"
+    case .notice: `class` = "bgcolor-blue-dark"
+    case .alert: `class` = "bgcolor-invalid"
     }
-    return .div(classes: "p-edges pv" + classes + "color-white js-closeable pattern-shade", [
-        .div(classes: "wrapper flex items-center justify-between", [
-            .p(classes: "bold flex-auto", [.text(message)]),
-            .button(classes: "smallcaps reset-button color-inherit hover-color-black js-closeable-toggle", attributes: ["type": "button"], [.text("Close")])
+    return .div(class: "p-edges pv" + `class` + "color-white js-closeable pattern-shade", [
+        .div(class: "wrapper flex items-center justify-between", [
+            .p(class: "bold flex-auto", [.text(message)]),
+            .button(class: "smallcaps reset-button color-inherit hover-color-black js-closeable-toggle", attributes: ["type": "button"], [.text("Close")])
         ])
     ])
 }
 
 func userHeader(_ session: Session?) -> Node {
-    let subscribeButton = Node.li(classes: "flex items-center ml+", [
-        .link(to: .signup(.subscribe), classes: "button button--tight button--themed fz-nav", [.text("Subscribe")])
+    let subscribeButton = Node.li(class: "flex items-center ml+", [
+        .link(to: .signup(.subscribe), class: "button button--tight button--themed fz-nav", [.text("Subscribe")])
     ])
     
     func link(to route: Route, text: String) -> Node {
-        return .li(classes: "flex ml+", [
-            .link(to: route, classes: "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration", [.text(text)])
+        return .li(class: "flex ml+", [
+            .link(to: route, class: "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration", [.text(text)])
         ])
     }
     
@@ -248,8 +248,8 @@ func userHeader(_ session: Session?) -> Node {
             subscribeButton
         ]
     }
-    return .nav(classes: "flex-none self-center border-left border-1 border-color-gray-85 flex ml+", [
-        .ul(classes: "flex items-stretch", items)
+    return .nav(class: "flex-none self-center border-left border-1 border-color-gray-85 flex ml+", [
+        .ul(class: "flex items-stretch", items)
     ])
 }
 
