@@ -1,4 +1,5 @@
 import Foundation
+import Base
 
 indirect enum RouteDescription {
     case constant(String)
@@ -46,7 +47,7 @@ struct RelativePath {
 }
 
 public struct Router<A> {
-    fileprivate let parse: (inout Request) -> A?
+    let parse: (inout Request) -> A?
     let print: (A) -> Endpoint?
     let description: RouteDescription
 }
@@ -68,11 +69,19 @@ extension RouteDescription {
 }
 
 extension Router {
-    func route(forURI uri: String) -> A? {
+    public var prettyDescription: String {
+        return description.pretty
+    }
+    
+    public func prettyPrint(_ x: A) -> String? {
+        return print(x)?.prettyPath
+    }
+    
+    public func route(forURI uri: String) -> A? {
         return route(for: Request(uri))
     }
     
-    func route(for request: Request) -> A? {
+    public func route(for request: Request) -> A? {
         var copy = request
         let result = parse(&copy)
         guard copy.path.isEmpty else { return nil }
@@ -81,7 +90,7 @@ extension Router {
 }
 
 extension Router where A: Equatable {
-    init(_ value: A) {
+    public init(_ value: A) {
         self.init(parse: { _ in value }, print: { x in
             guard value == x else { return nil }
             return Endpoint(path: [])
@@ -89,21 +98,21 @@ extension Router where A: Equatable {
     }
     
     /// Constant string
-    static func c(_ string: String, _ value: A) -> Router {
+    public static func c(_ string: String, _ value: A) -> Router {
         return Router<()>.c(string) / Router(value)
     }
     
 }
 
 extension Router where A == URL {
-    static var external: Router {
+    public static var external: Router {
         return Router<URL>(parse: { _ in nil}, print: { Endpoint.external($0) }, description: .external)
     }
 }
 
 extension Router where A == () {
     /// Constant string
-    static func c(_ string: String) -> Router {
+    public static func c(_ string: String) -> Router {
         return Router(parse: { req in
             guard req.path.first == string else { return nil }
             req.path.removeFirst()
@@ -115,14 +124,20 @@ extension Router where A == () {
 }
 
 extension Router where A == Int {
-    static func int() -> Router<Int> {
+    public static func int() -> Router<Int> {
         return Router<String>.string().transform(Int.init, { "\($0)"}, { _ in .parameter("int") })
     }
 }
 
+extension Router where A == UUID {
+    public static let uuid: Router<UUID> = Router<String>.string().transform({ return UUID(uuidString: $0)}, { uuid in
+        return uuid.uuidString
+    })
+}
+
 extension Router where A == [String] {
     // eats up the entire path of a route
-    static func path() -> Router<[String]> {
+    public static func path() -> Router<[String]> {
         return Router<[String]>(parse: { req in
             let result = req.path
             req.path.removeAll()
@@ -134,7 +149,7 @@ extension Router where A == [String] {
 }
 
 extension Router where A == String {
-    static func string() -> Router<String> {
+    public static func string() -> Router<String> {
         return Router<String>(parse: { req in
             guard let f = req.path.first else { return nil }
             req.path.removeFirst()
@@ -145,7 +160,7 @@ extension Router where A == String {
         }, description: .parameter("string"))
     }
     
-    static func optionalString() -> Router<String?> {
+    public static func optionalString() -> Router<String?> {
         return Router<String?>(parse: { req in
             guard let f = req.path.first else { return .some(nil) }
             req.path.removeFirst()
@@ -157,7 +172,7 @@ extension Router where A == String {
         }, description: .parameter("string?"))
     }
     
-    static func queryParam(name: String) -> Router<String> {
+    public static func queryParam(name: String) -> Router<String> {
         return Router<String>(parse: { req in
             guard let x = req.query[name] else { return nil }
             req.query[name] = nil
@@ -167,7 +182,7 @@ extension Router where A == String {
         }, description: .queryParameter(name))
     }
     
-    static func optionalQueryParam(name: String) -> Router<String?> {
+    public static func optionalQueryParam(name: String) -> Router<String?> {
         return Router<String?>(parse: { req in
             guard let x = req.query[name] else { return .some(nil) }
             req.query[name] = nil
@@ -177,18 +192,8 @@ extension Router where A == String {
         }, description: .queryParameter(name))
     }
     
-    static func booleanQueryParam(name: String) -> Router<Bool> {
+    public static func booleanQueryParam(name: String) -> Router<Bool> {
         return queryParam(name: name).transform({ $0 == "1" }, { $0 ? "1" : "0" })
-    }
-}
-
-extension Optional {
-    func xor(_ value: Optional) -> Optional {
-        if let v = self {
-            assert(value == nil)
-            return v
-        }
-        return value
     }
 }
 
@@ -214,7 +219,11 @@ func +(lhs: Endpoint, rhs: Endpoint) -> Endpoint {
 }
 
 extension Router {
-    func transform<B>(_ to: @escaping (A) -> B?, _ from: @escaping (B) -> A?, _ f: ((RouteDescription) -> RouteDescription) = { $0 }) -> Router<B> {
+    public func transform<B>(_ to: @escaping (A) -> B?, _ from: @escaping (B) -> A?) -> Router<B> {
+        return transform(to, from, { $0 })
+    }
+    
+    func transform<B>(_ to: @escaping (A) -> B?, _ from: @escaping (B) -> A?, _ f: ((RouteDescription) -> RouteDescription)) -> Router<B> {
         return Router<B>(parse: { (req: inout Request) -> B? in
             let result = self.parse(&req)
             return result.flatMap(to)
@@ -223,8 +232,14 @@ extension Router {
         }, description: f(description))
     }
 }
+
+public func choice<A>(_ routes: [Router<A>]) -> Router<A> {
+    assert(!routes.isEmpty)
+    return routes.dropFirst().reduce(routes[0], { $0.or($1) })
+}
+
 // append two routes
-func /<A,B>(lhs: Router<A>, rhs: Router<B>) -> Router<(A,B)> {
+public func /<A,B>(lhs: Router<A>, rhs: Router<B>) -> Router<(A,B)> {
     return Router(parse: { req in
         guard let f = lhs.parse(&req), let x = rhs.parse(&req) else { return nil }
         return (f, x)
@@ -234,6 +249,6 @@ func /<A,B>(lhs: Router<A>, rhs: Router<B>) -> Router<(A,B)> {
     }, description: .joined(lhs.description, rhs.description))
 }
 
-func /<A>(lhs: Router<()>, rhs: Router<A>) -> Router<A> {
+public func /<A>(lhs: Router<()>, rhs: Router<A>) -> Router<A> {
     return (lhs / rhs).transform({ x, y in y }, { ((), $0) })
 }

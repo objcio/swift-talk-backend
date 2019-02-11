@@ -7,6 +7,7 @@
 
 import Foundation
 import XCTest
+import Base
 @testable import SwiftTalkServerLib
 
 final class RouteTests: XCTestCase {
@@ -18,11 +19,11 @@ final class RouteTests: XCTestCase {
         XCTAssertEqual(Route.init(Request("/episodes/S01E132-dijkstra-s-shortest-path-algorithm")), Route.episode(Id(rawValue: "S01E132-dijkstra-s-shortest-path-algorithm"), .view(playPosition: nil)))
         XCTAssertEqual(Route.init(Request("/episodes/S01E126-rendering-tracks?t=100")), Route.episode(Id(rawValue: "S01E126-rendering-tracks"), .view(playPosition: 100)))
         XCTAssertEqual(Route.init(Request("/collections/map-routing")), Route.collection(Id(rawValue: "map-routing")))
-        XCTAssertEqual(Route.init(Request("/promo/hello-world")), Route.promoCode("hello-world"))
+        XCTAssertEqual(Route.init(Request("/promo/hello-world")), Route.signup(.promoCode("hello-world")))
         XCTAssertEqual(Route.init(Request("/gift")), Route.gift(.home))
         XCTAssertEqual(Route.init(Request("/")), Route.home)
-        XCTAssertEqual(Route.init(Request("/hooks/recurly")), Route.recurlyWebhook)
-        XCTAssertEqual(Route.init(Request("/hooks/github")), Route.githubWebhook)
-        XCTAssertEqual(Route.init(Request("/users/auth/github/callback?code=abc&origin=/anotherRoute")), Route.githubCallback(code: "abc", origin: "/anotherRoute"))
+        XCTAssertEqual(Route.init(Request("/hooks/recurly")), Route.webhook(.recurlyWebhook))
+        XCTAssertEqual(Route.init(Request("/hooks/github")), Route.webhook(.githubWebhook))
+        XCTAssertEqual(Route.init(Request("/users/auth/github/callback?code=abc&origin=/anotherRoute")), Route.login(.githubCallback(code: "abc", origin: "/anotherRoute")))
     }
 }

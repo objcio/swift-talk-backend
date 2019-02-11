@@ -78,8 +78,8 @@
         "repositoryURL": "https://github.com/Quick/Nimble.git",
         "state": {
           "branch": null,
-          "revision": "9a281b1cfa1c53d1e8bd92e1798e4e473af8d263",
-          "version": "7.3.3"
+          "revision": "e9d769113660769a4d9dd3afb855562c0b7ae7b0",
+          "version": "7.3.4"
         }
       },
       {
@@ -150,8 +150,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio.git",
         "state": {
           "branch": null,
-          "revision": "03c541a24dd0558c942b15d8464eb75d70a921c4",
-          "version": "1.12.1"
+          "revision": "98434c1f1d687ff5a24d2cabfbd19b5c7d2d7a2f",
+          "version": "1.13.0"
         }
       },
       {

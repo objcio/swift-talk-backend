@@ -6,11 +6,13 @@
 //
 
 import Foundation
+import Base
+import Database
 
 
 func runMigrations() throws {
     do {
-        _ = try withConnection { conn in
+        _ = try postgres.withConnection { conn in
             for m in migrations {
                 do {
 			_ = try conn.execute(m)

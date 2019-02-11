@@ -9,8 +9,11 @@ import Foundation
 import CommonMark
 
 
-struct Id<A>: RawRepresentable, Codable, Equatable, Hashable {
-    var rawValue: String
+public struct Id<A>: RawRepresentable, Codable, Equatable, Hashable {
+    public var rawValue: String
+    public init(rawValue: String) {
+        self.rawValue = rawValue
+    }
 }
 
 struct Collaborator: Codable, Equatable {
@@ -53,7 +56,7 @@ struct Collaborator: Codable, Equatable {
     var role: Role
 }
 
-struct Episode: Codable, Equatable {
+public struct Episode: Codable, Equatable {
     var collections: [Id<Collection>]
     var collaborators: [Id<Collaborator>]
     var mediaDuration: TimeInterval
@@ -160,7 +163,7 @@ extension Swift.Collection where Element == Episode {
     }
 }
 
-struct Collection: Codable, Equatable {
+public struct Collection: Codable, Equatable {
     var id: Id<Collection>
     var title: String
     var `public`: Bool

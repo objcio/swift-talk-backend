@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import HTML
+
 
 fileprivate let formatter: DateFormatter = {
     let d = DateFormatter()
@@ -15,29 +17,29 @@ fileprivate let formatter: DateFormatter = {
 }()
 
 extension Swift.Collection where Element == Episode {
-    var rssView: ANode<()> {
-        typealias X = ANode<()>
-        return .xml("rss", attributes: ["version": "2.0", "xmlns:atom": "http://www.w3.org/2005/Atom"], [
-            .xml("channel",
+    var rssView: HTML.Node<()> {
+        typealias X = HTML.Node<()>
+        return .xml(name: "rss", attributes: ["version": "2.0", "xmlns:atom": "http://www.w3.org/2005/Atom"], [
+            .xml(name: "channel",
                  [
-                .xml("title", [.text("objc.io")]),
-                .xml("description", [.text("objc.io publishes books, videos, and articles on advanced techniques for iOS and macOS development.")]),
-                .xml("link", [.text(env.baseURL.absoluteString)]),
-                .xml("atom:link", attributes: [
+                .xml(name: "title", [.text("objc.io")]),
+                .xml(name: "description", [.text("objc.io publishes books, videos, and articles on advanced techniques for iOS and macOS development.")]),
+                .xml(name: "link", [.text(env.baseURL.absoluteString)]),
+                .xml(name: "atom:link", attributes: [
                     "href": rssURL,
                     "rel": "self",
                     "type": "application/rss+xml"
                 ]),
-                .xml("language", [.text("en")]),
+                .xml(name: "language", [.text("en")]),
                 ] +
-                map { (item: Episode) -> ANode<()> in
+                map { (item: Episode) -> HTML.Node<()> in
                     let link = Route.episode(item.id, .view(playPosition: nil)).url.absoluteString
-                return .xml("item", [
-                    .xml("guid", [.text(link)]),
-                    .xml("title", [.text(item.title)]),
-                    .xml("pubDate", [.text(formatter.string(from: item.releaseAt))]),
-                    .xml("link", [.text(link)]),
-                    .xml("description", [.text(item.synopsis)])
+                return .xml(name: "item", [
+                    .xml(name: "guid", [.text(link)]),
+                    .xml(name: "title", [.text(item.title)]),
+                    .xml(name: "pubDate", [.text(formatter.string(from: item.releaseAt))]),
+                    .xml(name: "link", [.text(link)]),
+                    .xml(name: "description", [.text(item.synopsis)])
                 ])
             })
         ])

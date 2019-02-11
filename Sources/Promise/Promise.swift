@@ -32,29 +32,36 @@ public struct Promise<A> {
     }
 }
 
-func zip<A,B>(_ p0: Promise<A>, _ p1: Promise<B>) -> Promise<(A,B)> {
+public func zip<A,B>(_ p0: Promise<A>, _ p1: Promise<B>) -> Promise<(A,B)> {
     return Promise<(A,B)> { cb in
-        let values = Atomic<(A?, B?)>((nil, nil), didSet: {
-            guard let x = $0.0, let y = $0.1 else { return }
-            cb((x,y))
-        })
-        p0.run { p0_val in
-           values.mutate({ $0.0 = p0_val})
+        let group = DispatchGroup()
+        group.enter()
+        group.enter()
+        var resultA: A?
+        var resultB: B?
+        p0.run { p0Val in
+            resultA = p0Val
+            group.leave()
         }
-        p1.run { p1_val in
-            values.mutate({ $0.1 = p1_val })
+        p1.run { p1Val in
+            resultB = p1Val
+            group.leave()
+        }
+        group.notify(queue: .global()) {
+            guard let a = resultA, let b = resultB else { return }
+            cb((a, b))
         }
     }
 }
 
-func zip<A,B,C>(
+public func zip<A,B,C>(
     _ p0: Promise<A>,
     _ p1: Promise<B>,
     _ p2: Promise<C>) -> Promise<(A,B,C)> {
     return zip(p0, zip(p1, p2)).map { ($0.0, $0.1.0, $0.1.1) }
 }
 
-func zip<A,B,C,D>(
+public func zip<A,B,C,D>(
     _ p0: Promise<A>,
     _ p1: Promise<B>,
     _ p2: Promise<C>,
@@ -63,7 +70,7 @@ func zip<A,B,C,D>(
     return zip(p0, zip(p1, zip(p2, p3))).map { ($0.0, $0.1.0, $0.1.1.0, $0.1.1.1) }
 }
 
-func zip<A,B,C,D,E>(
+public func zip<A,B,C,D,E>(
     _ p0: Promise<A>,
     _ p1: Promise<B>,
     _ p2: Promise<C>,
@@ -73,7 +80,7 @@ func zip<A,B,C,D,E>(
     return zip(p0, zip(p1, zip(p2, zip(p3, p4)))).map { ($0.0, $0.1.0, $0.1.1.0, $0.1.1.1.0, $0.1.1.1.1) }
 }
 
-func zip<A,B,C,D,E,F>(
+public func zip<A,B,C,D,E,F>(
     _ p0: Promise<A>,
     _ p1: Promise<B>,
     _ p2: Promise<C>,

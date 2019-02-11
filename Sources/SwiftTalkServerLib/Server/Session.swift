@@ -6,18 +6,11 @@
 //
 
 import Foundation
+import Database
+import WebServer
 
-struct Context {
-    var route: Route
-    var message: (String, FlashType)?
-    var session: Session?
-    
-    var csrf: CSRFToken {
-        return session?.user.data.csrf ?? sharedCSRF
-    }
-}
 
-struct Session {
+public struct Session {
     var sessionId: UUID
     var user: Row<UserData>
     private var teamMember: Row<TeamMemberData>?
@@ -52,6 +45,10 @@ struct Session {
     
     var selfPremiumAccess: Bool {
         return user.data.premiumAccess
+    }
+    
+    var isTeamManager: Bool {
+        return user.data.role == .teamManager
     }
     
     func isTeamMemberOf(_ user: Row<UserData>) -> Bool {

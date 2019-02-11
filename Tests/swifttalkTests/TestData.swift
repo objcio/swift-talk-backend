@@ -6,8 +6,10 @@
 //
 
 import Foundation
+import Database
+import Base
+import WebServer
 @testable import SwiftTalkServerLib
-import PostgreSQL
 
 let testCSRF = CSRFToken(UUID())
 

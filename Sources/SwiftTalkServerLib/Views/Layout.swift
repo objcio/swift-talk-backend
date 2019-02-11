@@ -6,40 +6,9 @@
 //
 
 import Foundation
+import HTML
+import WebServer
 
-extension ANode where I == RequestEnvironment {
-    static func hashedStylesheet(media: String = "all", href: String) -> Node {
-        return ANode.withInput { deps in
-            return Node.stylesheet(media: media, href: deps.hashedAssetName(href))
-        }
-    }
-    
-    static func hashedScript(src: String) -> ANode {
-        return ANode.withInput { deps in
-            return Node.script(src: deps.hashedAssetName(src))
-        }
-    }
-    
-    static func hashedImg(src: String, alt: String = "", classes: Class? = nil, attributes: [String:String] = [:]) -> ANode {
-        return ANode.withInput { deps in
-            return Node.img(src: deps.hashedAssetName(src), alt: alt, classes: classes, attributes: attributes)
-        }
-    }
-    
-    static func withContext(_ f: @escaping (Context) -> ANode) -> ANode {
-        return .withInput { f($0.context) }
-    }
-    
-    static func withCSRF(_ f: @escaping (CSRFToken) -> ANode) -> ANode {
-        return .withInput { f($0.context.csrf) }
-    }
-    
-    static func withResourcePaths(_ f: @escaping ([URL]) -> ANode) -> ANode {
-        return .withInput { f($0.resourcePaths) }
-    }
-}
-
-typealias Node = ANode<RequestEnvironment>
 
 struct LayoutConfig {
     var pageTitle: String
@@ -104,9 +73,9 @@ struct StructuredData {
             og["video:duration"] = "\(duration)"
         }
         return twitter.map { (k,v) in
-            Node.meta(attributes: ["name": "twitter:" + k, "content": v])
+            .meta(attributes: ["name": "twitter:" + k, "content": v])
             } + og.map { (k,v) in
-                Node.meta(attributes: ["property": k, "content": v])
+                .meta(attributes: ["property": k, "content": v])
         }
     }
 }
@@ -127,19 +96,19 @@ extension LayoutConfig {
     }
     
     var layout: Node {
-        let head: Node = Node.head([
+        let head = Node.head([
             .meta(attributes: ["charset": "utf-8"]),
             .meta(attributes: ["http-equiv": "X-UA-Compatible", "content": "IE=edge"]),
             .meta(attributes: ["name": "viewport", "content": "'width=device-width, initial-scale=1, user-scalable=no'"]),
         ] + [
             .title(pageTitle),
-            Node.xml("link", attributes: [
+            .xml(name: "link", attributes: [
                 "href": rssURL,
                 "rel": "alternate",
                 "title": "RSS",
                 "type": "application/rss+xml"
                 ]),
-            Node.xml("link", attributes: [
+            .xml(name: "link", attributes: [
                 "href": rssURL,
                 "rel": "alternate",
                 "title": "Atom",
@@ -150,13 +119,13 @@ extension LayoutConfig {
             .hashedScript(src: "/assets/application.js"),
             googleAnalytics,
         ] + structured)
-        let logo = Node.link(to: URL(string: "https://www.objc.io")!, attributes: ["class": "flex-none outline-none mr++ flex"], [
-            .inlineSvg(path: "logo.svg", attributes: ["class": "block logo logo--themed height-auto"]), // todo scaling parameter?
-            .h1(attributes: ["class":"visuallyhidden"], [.text("objc.io")])
+        let logo = Node.link(to: URL(string: "https://www.objc.io")!, class: "flex-none outline-none mr++ flex", [
+            .inlineSvg(class: "block logo logo--themed height-auto", path: "logo.svg"),
+            .h1(class: "visuallyhidden", [.text("objc.io")])
         ] as [Node])
-        let navigation = Node.nav(attributes: ["class": "flex flex-grow"], [
-            .ul(attributes: ["class": "flex flex-auto"], navigationItems.map { l in
-                .li(attributes: ["class": "flex mr+"], [
+        let navigation = Node.nav(class: "flex flex-grow", [
+            .ul(class: "flex flex-auto", navigationItems.map { l in
+                .li(class: "flex mr+", [
                     .link(to: l.0, attributes: [
                         "class": "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration"
                     ], [.span([.text(l.1)])])
@@ -164,42 +133,43 @@ extension LayoutConfig {
             }) // todo: search
         ])
 
-        let header = Node.header(attributes: ["class": "bgcolor-white"], [
-            .div(classes: "height-3 flex scroller js-scroller js-scroller-container", [
-                .div(classes: "container-h flex-grow flex", [
+        let header = Node.header(class: "bgcolor-white", [
+            .div(class: "height-3 flex scroller js-scroller js-scroller-container", [
+                .div(class: "container-h flex-grow flex", [
                     logo,
                     navigation,
-                    .withContext(userHeader)
+                    .withSession(userHeader)
                 ])
             ])
         ])
         var bodyChildren: [Node] = [
             header,
             .main(
-                [.withContext { $0.message.map(flash) ?? .none }] +
+                [.none] + // TODO flash messsage should go here (there's a flash helper below)
                 contents
-            )]
+            )
+        ]
         // these are appends because of compile time
         bodyChildren.append(contentsOf: preFooter)
         bodyChildren.append(.raw(footer))
         bodyChildren.append(contentsOf: footerContent)
-        let body: Node = Node.body(attributes: ["class": "theme-" + theme], bodyChildren)
-        return Node.html(attributes: ["lang": "en"], [head, body])
+        let body = Node.body(attributes: ["class": "theme-" + theme], bodyChildren)
+        return .html(attributes: ["lang": "en"], [head, body])
     }
     
     var layoutForCheckout: Node {
-        let head: Node = .head([
+        let head = Node.head([
             .meta(attributes: ["charset": "utf-8"]),
             .meta(attributes: ["http-equiv": "X-UA-Compatible", "content": "IE=edge"]),
             .meta(attributes: ["name": "viewport", "content": "'width=device-width, initial-scale=1, user-scalable=no'"]),
             .title(pageTitle),
-            Node.xml("link", attributes: [
+            .xml(name: "link", attributes: [
                 "href": rssURL,
                 "rel": "alternate",
                 "title": "RSS",
                 "type": "application/rss+xml"
             ]),
-            Node.xml("link", attributes: [
+            .xml(name: "link", attributes: [
                 "href": rssURL,
                 "rel": "alternate",
                 "title": "Atom",
@@ -211,72 +181,75 @@ extension LayoutConfig {
             googleAnalytics,
         ] + structured)
         let linkClasses: Class = "no-decoration color-inherit hover-color-black mr"
-        let body: Node = .body(attributes: ["class": "theme-" + theme], [
-            .header(attributes: ["class": "site-header"], [
-        		.div(classes: "site-header__nav flex", [
-                    .div(classes: "container-h flex-grow flex items-center height-3", [
-                        .link(to: .home, attributes: ["class": "block flex-none outline-none mr++"], [
-                            .inlineSvg(path: "logo.svg", classes: "logo height-auto"),
-                            .h1(classes: "visuallyhidden", [.text("objc.io")])
+        let body = Node.body(attributes: ["class": "theme-" + theme], [
+            .header(class: "site-header", [
+        		.div(class: "site-header__nav flex", [
+                    .div(class: "container-h flex-grow flex items-center height-3", [
+                        .link(to: .home, class: "block flex-none outline-none mr++", [
+                            .inlineSvg(class: "logo height-auto", path: "logo.svg"),
+                            .h1(class: "visuallyhidden", [.text("objc.io")])
                         ] as [Node]),
                     ])
                 ])
             ]),
             .main(contents),
         ] + preFooter + [
-            Node.footer([
-                Node.div(classes: "container-h pv", [
-                    Node.div(classes: "ms-1 color-gray-60", [
-                        Node.a(classes: linkClasses, [Node.text("Email")], href: "mailto:mail@objc.io"),
-                        Node.link(to: URL(string: "https://www.objc.io/imprint")!, classes: linkClasses, ["Imprint"])
+            .footer([
+                .div(class: "container-h pv", [
+                    .div(class: "ms-1 color-gray-60", [
+                        .a(class: linkClasses, href: "mailto:mail@objc.io", [.text("Email")]),
+                        .link(to: URL(string: "https://www.objc.io/imprint")!, class: linkClasses, ["Imprint"])
                     ])
                 ])
             ])
         ] + footerContent)
-        return Node.html(attributes: ["lang": "en"], [head, body])
+        return .html(attributes: ["lang": "en"], [head, body])
     }
 }
 
-enum FlashType {
+public enum FlashType {
     case notice
     case alert
 }
 
 func flash(message: String, type: FlashType) -> Node {
-    let classes: Class
+    let `class`: Class
     switch type {
-    case .notice: classes = "bgcolor-blue-dark"
-    case .alert: classes = "bgcolor-invalid"
+    case .notice: `class` = "bgcolor-blue-dark"
+    case .alert: `class` = "bgcolor-invalid"
     }
-    return .div(classes: "p-edges pv" + classes + "color-white js-closeable pattern-shade", [
-        .div(classes: "wrapper flex items-center justify-between", [
-            .p(classes: "bold flex-auto", [.text(message)]),
-            Node.button(classes: "smallcaps reset-button color-inherit hover-color-black js-closeable-toggle", attributes: ["type": "button"], [.text("Close")])
+    return .div(class: "p-edges pv" + `class` + "color-white js-closeable pattern-shade", [
+        .div(class: "wrapper flex items-center justify-between", [
+            .p(class: "bold flex-auto", [.text(message)]),
+            .button(class: "smallcaps reset-button color-inherit hover-color-black js-closeable-toggle", attributes: ["type": "button"], [.text("Close")])
         ])
     ])
 }
 
-func userHeader(_ context: Context) -> Node {
-    let subscribeButton = Node.li(classes: "flex items-center ml+", [
-        .link(to: .subscribe, classes: "button button--tight button--themed fz-nav", [.text("Subscribe")])
+func userHeader(_ session: Session?) -> Node {
+    let subscribeButton = Node.li(class: "flex items-center ml+", [
+        .link(to: .signup(.subscribe), class: "button button--tight button--themed fz-nav", [.text("Subscribe")])
     ])
     
     func link(to route: Route, text: String) -> Node {
-        return .li(classes: "flex ml+", [
-            .link(to: route, classes: "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration", [.text(text)])
+        return .li(class: "flex ml+", [
+            .link(to: route, class: "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration", [.text(text)])
         ])
     }
     
     let items: [Node]
-    if let s = context.session {
+    if let s = session {
         let account = link(to: .account(.profile), text: "Account")
         let logout = link(to: .account(.logout), text: "Log out")
         items = s.activeSubscription ? [account, logout] : [account, subscribeButton]
     } else {
-        items = [link(to: .login(continue: context.route), text: "Log in"), subscribeButton]
+        items = [
+            .withRoute { link(to: .login(.login(continue: $0)), text: "Log in") },
+            subscribeButton
+        ]
     }
-    return .nav(classes: "flex-none self-center border-left border-1 border-color-gray-85 flex ml+", [
-        .ul(classes: "flex items-stretch", items)
+    return .nav(class: "flex-none self-center border-left border-1 border-color-gray-85 flex ml+", [
+        .ul(class: "flex items-stretch", items)
     ])
 }
 

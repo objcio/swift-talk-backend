@@ -8,6 +8,9 @@
 import Foundation
 import XCTest
 @testable import SwiftTalkServerLib
+import Networking
+import Database
+
 
 final class TaskTests: XCTestCase {
     override static func setUp() {

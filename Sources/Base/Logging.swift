@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  Logging.swift
 //  swifttalk-server
 //
 //  Created by Florian Kugler on 26-11-2018.
@@ -7,6 +7,14 @@
 
 import Foundation
 
+public var standardError = FileHandle.standardError
+
+extension Foundation.FileHandle : TextOutputStream {
+    public func write(_ string: String) {
+        guard let data = string.data(using: .utf8) else { return }
+        self.write(data)
+    }
+}
 
 public func log(file: StaticString = #file, line: UInt = #line, _ e: Error) {
     print("ERROR \(file):\(line) " + e.localizedDescription, to: &standardError)
@@ -33,13 +41,4 @@ public func tryOrLog<A>(file: StaticString = #file, line: UInt = #line, _ messag
     }
 }
 
-func myAssert(_ cond: @autoclosure () -> Bool, _ message: @autoclosure () -> String = "Assertion failure \(#file):\(#line) \(#function)", file: StaticString = #file, line: UInt = #line, method: StaticString = #function) {
-    if env.production {
-        guard !cond() else { return }
-        print(message(), to: &standardError)
-    } else {
-        assert(cond(), message, file: file, line: line)
-    }
-    
-}
 

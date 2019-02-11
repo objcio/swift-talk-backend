@@ -6,6 +6,8 @@
 
 import Foundation
 import CommonMark
+import Base
+
 
 fileprivate let highlighter: String? = {
     let fm = FileManager.default

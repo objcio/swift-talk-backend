@@ -6,23 +6,33 @@
 //
 
 import Foundation
-
+import Promise
+import Base
 import XCTest
-import NIOHTTP1
 import PostgreSQL
+import NIOWrapper
+import HTML
+import Database
+import WebServer
+@testable import Networking
 @testable import SwiftTalkServerLib
 
-enum TestInterpreter: Interpreter, SwiftTalkInterpreter {
+enum TestInterpreter: NIOWrapper.Response, WebServer.Response, WebServer.ResponseRequiringEnvironment, FailableResponse {
+    typealias Env = STRequestEnvironment
+    
     case _write(String, status: HTTPResponseStatus, headers: [String:String])
     case _writeData(Data, status: HTTPResponseStatus, headers: [String:String])
     case _writeFile(path: String, maxAge: UInt64?)
+    case _redirect(path: String, headers: [String:String])
     case _onComplete(promise: Promise<Any>, do: (Any) -> TestInterpreter)
     case _withPostData(do: (Data) -> TestInterpreter)
-    case _redirect(path: String, headers: [String:String])
-    case _writeHTML(SwiftTalkServerLib.ANode<()>, status: HTTPResponseStatus)
-    case _execute(Query<Any>, cont: (Either<Any, Error>) -> TestInterpreter)
-    case _withSession((Session?) -> TestInterpreter)
     
+    case _writeHTML(HTML.Node<()>, status: HTTPResponseStatus)
+    
+    case _withCSRF(cont: (CSRFToken) -> TestInterpreter)
+    case _execute(Query<Any>, cont: (Either<Any, Error>) -> TestInterpreter)
+    case _withSession(cont: (Session?) -> TestInterpreter)
+
     static func write(_ string: String, status: HTTPResponseStatus, headers: [String : String]) -> TestInterpreter {
         return ._write(string, status: status, headers: headers)
     }
@@ -35,8 +45,8 @@ enum TestInterpreter: Interpreter, SwiftTalkInterpreter {
         return ._writeFile(path: path, maxAge: maxAge)
     }
     
-    static func write(html: ANode<()>, status: HTTPResponseStatus) -> TestInterpreter {
-        return ._writeHTML(html, status: status)
+    static func redirect(path: String, headers: [String : String]) -> TestInterpreter {
+        return ._redirect(path: path, headers: headers)
     }
     
     static func onComplete<A>(promise: Promise<A>, do cont: @escaping (A) -> TestInterpreter) -> TestInterpreter {
@@ -47,8 +57,24 @@ enum TestInterpreter: Interpreter, SwiftTalkInterpreter {
         return ._withPostData(do: cont)
     }
     
-    static func redirect(path: String, headers: [String : String]) -> TestInterpreter {
-        return ._redirect(path: path, headers: headers)
+    static func write(html: HTML.Node<()>, status: HTTPResponseStatus) -> TestInterpreter {
+        return ._writeHTML(html, status: status)
+    }
+
+    static func withCSRF(_ cont: @escaping (CSRFToken) -> TestInterpreter) -> TestInterpreter {
+        return ._withCSRF(cont: cont)
+    }
+    
+    static func execute<A>(_ query: Query<A>, _ cont: @escaping (Either<A, Error>) -> TestInterpreter) -> TestInterpreter {
+        return ._execute(query.map { $0 }, cont: { x in cont(x as! Either<A, Error>) })
+    }
+    
+    static func withSession(_ cont: @escaping (Session?) -> TestInterpreter) -> TestInterpreter {
+        return ._withSession(cont: cont)
+    }
+
+    static func renderError(_ error: Error) -> TestInterpreter {
+        fatalError()
     }
 }
 
@@ -91,7 +117,7 @@ class TestConnection: ConnectionProtocol {
     let _execute: (String, [PostgreSQL.Node]) -> PostgreSQL.Node = { _,_ in fatalError() }
     private var results: [QueryAndResult]
     
-    init(_ results: [QueryAndResult]) {
+    init(_ results: [QueryAndResult] = []) {
         self.results = results
     }
     
@@ -152,13 +178,13 @@ class TestURLSession: URLSessionProtocol {
         self.results = results
     }
     
-    func load<A>(_ endpoint: RemoteEndpoint<A>, callback: @escaping (A?) -> ()) {
+    func load<A>(_ endpoint: RemoteEndpoint<A>, failure: @escaping (Error?, URLResponse?) -> (), onComplete: @escaping (A?) -> ()) {
         guard let idx = results.firstIndex(where: { $0.endpoint.request.matches(endpoint.request) }) else {
             XCTFail("Unexpected endpoint: \(endpoint.request.httpMethod ?? "GET") \(endpoint.request.url!)"); return
         }
         let response = results[idx].response as! A?
         results.remove(at: idx)
-        callback(response)
+        onComplete(response)
     }
     
     func assertDone() {

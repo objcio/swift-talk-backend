@@ -1,9 +1,9 @@
 import Foundation
-import NIO
-import NIOHTTP1
-import PostgreSQL
+import NIOWrapper
+import Database
+import WebServer
+import Base
 
-extension NIOInterpreter: SwiftTalkInterpreter { }
 
 public func run() throws {
     try runMigrations()
@@ -25,7 +25,7 @@ public func run() throws {
         guard let route = Route(request) else { return nil }
         let sessionString = request.cookies.first { $0.0 == "sessionid" }?.1
         let sessionId = sessionString.flatMap { UUID(uuidString: $0) }
-        let conn = lazyConnection()
+        let conn = postgres.lazyConnection()
         func buildSession() -> Session? {
             guard let sId = sessionId else { return nil }
             do {
@@ -44,12 +44,10 @@ public func run() throws {
                 return nil
             }
         }
-        let deps = RequestEnvironment(route: route, hashedAssetName: hashedAssetName, buildSession: buildSession, connection: conn, resourcePaths: resourcePaths)
+        let env = STRequestEnvironment(route: route, hashedAssetName: hashedAssetName, buildSession: buildSession, connection: conn, resourcePaths: resourcePaths)
 
-        let reader: Reader<RequestEnvironment, NIOInterpreter> = catchAndDisplayError {
-            return try route.interpret()
-        }
-        return reader.run(deps)
+        let reader: Reader<STRequestEnvironment, NIOInterpreter> = try! route.interpret()
+        return reader.run(env)
     }, resourcePaths: resourcePaths)
     try server.listen(port: env.port ?? 8765)
 }

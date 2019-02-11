@@ -1,8 +1,10 @@
 
 import XCTest
-import NIOHTTP1
-import PostgreSQL
+import Base
 @testable import SwiftTalkServerLib
+import Database
+import WebServer
+
 
 struct QueryAndResult {
     let query: Query<Any>
@@ -24,45 +26,16 @@ extension QueryAndResult: Equatable {
     }
 }
 
-struct TestEnv {
-    let requestEnvironment: RequestEnvironment
-    let connection: TestConnection?
-    let file: StaticString
-    let line: UInt
-}
-
-extension TestEnv: ContainsRequestEnvironment {}
-extension TestEnv: ContainsSession {
-    var session: Session? { return requestEnvironment.session }
-}
-
-extension TestEnv: CanQuery {
-    func execute<A>(_ query: Query<A>) -> Either<A, Error> {
-        guard let c = connection else { XCTFail(); return .right(TestErr()) }
-        do {
-            return .left(try c.execute(query))
-        } catch {
-            return .right(error)
-        }
-    }
-    
-    func getConnection() -> Either<ConnectionProtocol, Error> {
-        fatalError("not implemented yet")
-    }
-    
-    
-}
-
 struct Flow {
     let session: Session?
     let currentPage: TestInterpreter
 
-    private static func run(_ session: Session?, _ route: Route, connection: TestConnection? = nil, assertQueriesDone: Bool = true, _ file: StaticString, _ line: UInt) throws -> TestInterpreter {
-        let env = RequestEnvironment(route: route, hashedAssetName: { $0 }, buildSession: { session }, connection: noConnection, resourcePaths: [])
-        let testEnv = TestEnv(requestEnvironment: env, connection: connection, file: file, line: line)
-        let t: Reader<TestEnv, TestInterpreter> = try route.interpret()
-        let result = t.run(testEnv)
-        if let c = connection, assertQueriesDone { c.assertDone() }
+    private static func run(_ session: Session?, _ route: Route, connection: TestConnection = TestConnection([]), assertQueriesDone: Bool = true, _ file: StaticString, _ line: UInt) throws -> TestInterpreter {
+        let lazyConn: Lazy<ConnectionProtocol> = Lazy({ connection }, cleanup: { _ in })
+        let env = STRequestEnvironment(route: route, hashedAssetName: { $0 }, buildSession: { session }, connection: lazyConn, resourcePaths: [])
+        let reader: Reader<STRequestEnvironment, TestInterpreter> = try route.interpret()
+        let result = reader.run(env)
+        if assertQueriesDone { connection.assertDone() }
         return result
     }
     
@@ -162,16 +135,16 @@ final class FlowTests: XCTestCase {
     // todo test coupon codes
 
     func testSubscription() throws {
-        let subscribeWithoutASession = try Flow.landingPage(session: nil, .subscribe)
+        let subscribeWithoutASession = try Flow.landingPage(session: nil, .signup(.subscribe))
         subscribeWithoutASession.verify { page in
-            testLinksTo(page, route: .login(continue: .subscription(.new(couponCode: nil, team: false))))
+            testLinksTo(page, route: .login(.login(continue: .subscription(.new(couponCode: nil, team: false)))))
         }
         
         setupURLSession([
             EndpointAndResult(endpoint: recurly.account(with: nonSubscribedUser.user.id), response: nil),
         ])
         
-        let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .subscribe)
+        let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .signup(.subscribe))
         try notSubscribed.click(.subscription(.new(couponCode: nil, team: false)), expectedQueries: []) {
             var confirmedSess = $0.session!
             confirmedSess.user.data.confirmedNameAndEmail = true
@@ -191,16 +164,16 @@ final class FlowTests: XCTestCase {
     }
 
     func testTeamSubscription() throws {
-        let subscribeWithoutASession = try Flow.landingPage(session: nil, .subscribeTeam)
+        let subscribeWithoutASession = try Flow.landingPage(session: nil, .signup(.subscribeTeam))
         subscribeWithoutASession.verify { page in
-            testLinksTo(page, route: .login(continue: .subscription(.new(couponCode: nil, team: true))))
+            testLinksTo(page, route: .login(.login(continue: .subscription(.new(couponCode: nil, team: true)))))
         }
 
         setupURLSession([
             EndpointAndResult(endpoint: recurly.account(with: nonSubscribedUser.user.id), response: nil),
         ])
 
-        let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .subscribeTeam)
+        let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .signup(.subscribeTeam))
         try notSubscribed.click(.subscription(.new(couponCode: nil, team: true)), expectedQueries: []) {
             var confirmedSess = $0.session!
             confirmedSess.user.data.confirmedNameAndEmail = true
@@ -227,15 +200,15 @@ final class FlowTests: XCTestCase {
             EndpointAndResult(endpoint: recurly.updateAccount(accountCode: nonSubscribedUser.user.id, email: nonSubscribedUser.user.data.email), response: subscribedUserAccount)
         ])
 
-        let subscribeWithoutASession = try Flow.landingPage(session: nil, .teamMemberSignup(token: teamToken), expectedQueries: [
+        let subscribeWithoutASession = try Flow.landingPage(session: nil, .signup(.teamMember(token: teamToken)), expectedQueries: [
             QueryAndResult(query: Row<UserData>.select(teamToken: teamToken), response: subscribedTeamManager.user)
         ])
         subscribeWithoutASession.verify {
-            testLinksTo($0, route: .login(continue: .teamMemberSignup(token: teamToken)))
+            testLinksTo($0, route: .login(.login(continue: .signup(.teamMember(token: teamToken)))))
         }
         
         let teamMember = Row(id: UUID(), data: TeamMemberData(userId: subscribedTeamManager.user.id, teamMemberId: nonSubscribedUser.user.id, createdAt: globals.currentDate(), expiredAt: nil))
-        try Flow.landingPage(session: nonSubscribedUser, .teamMemberSignup(token: teamToken), expectedQueries: [
+        try Flow.landingPage(session: nonSubscribedUser, .signup(.teamMember(token: teamToken)), expectedQueries: [
             QueryAndResult(query: Row<UserData>.select(teamToken: teamToken), response: subscribedTeamManager.user),
         ]).click(.subscription(.registerAsTeamMember(token: teamToken, terminate: false)), expectedQueries: [
             QueryAndResult(query: Row<UserData>.select(teamToken: teamToken), response: subscribedTeamManager.user),

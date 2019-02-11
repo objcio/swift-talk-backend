@@ -95,7 +95,6 @@ extension URLSession {
             guard let d = data else {
                 print(err!, to: &standardError)
                 callback(nil); return
-                
             }
             return callback(e.parse(d))
         }).resume()

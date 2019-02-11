@@ -5,8 +5,9 @@
 //  Created by Chris Eidhof on 13.08.18.
 //
 
-//import Foundation
 import PerfectXML
+import HTML
+
 
 struct DecodingError: Error {
     let message: String
@@ -392,12 +393,12 @@ func decodeXML<T: Decodable>(from data: Data) throws -> T {
     return try T(from: decoder)
 }
 
-extension El {
+extension Element {
     init(_ name: String, contents: String) {
-        self.init(name: name, block: false, classes: nil, attributes: [:], children: [.text(contents)])
+        self.init(name: name, block: false, class: nil, attributes: [:], children: [.text(contents)])
     }
     
-    mutating func add(child: El) {
+    mutating func add(child: Element) {
         children.append(.node(child))
     }
 }
@@ -405,12 +406,12 @@ extension El {
 final class RecurlyXMLEncoder: Encoder {
     var codingPath: [CodingKey] = []
     var userInfo: [CodingUserInfoKey : Any] = [:]
-    var rootElement: El<()>
-    func add(child el: El<()>) {
+    var rootElement: Element<()>
+    func add(child el: Element<()>) {
         rootElement.add(child: el)
     }
     init(_ name: String) {
-        rootElement = El(name: name, block: true, classes: nil, attributes: [:], children: [])
+        rootElement = Element(name: name, block: true, class: nil, attributes: [:], children: [])
     }
     
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
@@ -425,15 +426,15 @@ final class RecurlyXMLEncoder: Encoder {
         var codingPath: [CodingKey] = []
         
         mutating func encodeNil(forKey key: Key) throws {
-            encoder.add(child: El(name: key.stringValue, attributes: ["nil": "nil"], children: []))
+            encoder.add(child: Element(name: key.stringValue, attributes: ["nil": "nil"], children: []))
         }
         
         mutating func encode(_ value: Bool, forKey key: Key) throws {
-            encoder.add(child: El(key.stringValue, contents: "\(value)"))
+            encoder.add(child: Element(key.stringValue, contents: "\(value)"))
         }
         
         mutating func encode(_ value: String, forKey key: Key) throws {
-            encoder.add(child: El(key.stringValue, contents: value))
+            encoder.add(child: Element(key.stringValue, contents: value))
         }
         
         mutating func encode(_ value: Double, forKey key: Key) throws {
@@ -445,7 +446,7 @@ final class RecurlyXMLEncoder: Encoder {
         }
         
         mutating func encode(_ value: Int, forKey key: Key) throws {
-            encoder.add(child: El(key.stringValue, contents: String(value)))
+            encoder.add(child: Element(key.stringValue, contents: String(value)))
         }
         
         mutating func encode(_ value: Int8, forKey key: Key) throws {
@@ -486,9 +487,9 @@ final class RecurlyXMLEncoder: Encoder {
         
         mutating func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
             if let uuid = value as? UUID {
-                encoder.add(child: El(key.stringValue, contents: uuid.uuidString))
+                encoder.add(child: Element(key.stringValue, contents: uuid.uuidString))
             } else if let date = value as? Date {
-                encoder.add(child: El(key.stringValue, contents: DateFormatter.iso8601WithTimeZone.string(from: date)))
+                encoder.add(child: Element(key.stringValue, contents: DateFormatter.iso8601WithTimeZone.string(from: date)))
             } else {
                 let childEncoder = RecurlyXMLEncoder(key.stringValue)
                 try value.encode(to: childEncoder)
@@ -628,5 +629,5 @@ protocol RootElement {
 func encodeXML<T: Encodable>(_ value: T) throws -> String where T: RootElement {
     let encoder = RecurlyXMLEncoder(T.rootElementName)
     try value.encode(to: encoder)
-    return ANode<()>.node(encoder.rootElement).xmlDocument
+    return HTML.Node<()>.node(encoder.rootElement).xmlDocument
 }

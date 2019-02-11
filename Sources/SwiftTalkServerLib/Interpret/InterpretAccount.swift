@@ -6,7 +6,10 @@
 //
 
 import Foundation
-import PostgreSQL
+import Promise
+import Database
+import WebServer
+
 
 extension ProfileFormData {
     init(_ data: UserData) {
@@ -16,20 +19,20 @@ extension ProfileFormData {
 }
 
 extension Route.Account {
-    func interpret<I: Interp>() throws -> I {
-        return I.requireSession { try self.interpret2(session: $0)}
+    func interpret<I: STResponse>() throws -> I where I.Env == STRequestEnvironment {
+        return .requireSession { try self.interpret(session: $0)}
     }
     
-    private func interpret2<I: Interp>(session sess: Session) throws -> I {
+    private func interpret<I: STResponse>(session sess: Session) throws -> I where I.Env == STRequestEnvironment {
 
-        func editAccount(form: Form<ProfileFormData>, role: UserData.Role, cont: @escaping () -> Route) -> I {
+        func editAccount(form: Form<ProfileFormData, STRequestEnvironment>, role: UserData.Role, cont: @escaping () -> Route) -> I {
             func updateAndRedirect(_ user: Row<UserData>) -> I {
-                return I.query(user.update()) { _ in
-                    return I.redirect(to: cont())
+                return .query(user.update()) { _ in
+                    return .redirect(to: cont())
                 }
             }
             
-            return I.form(form, initial: ProfileFormData(sess.user.data), convert: { profile in
+            return .form(form, initial: ProfileFormData(sess.user.data), convert: { profile in
                 var u = sess.user
                 u.data.email = profile.email
                 u.data.name = profile.name
@@ -42,11 +45,11 @@ extension Route.Account {
                     return .right(errors)
                 }
             }, onPost: { user in
-                I.onSuccess(promise: recurly.account(with: sess.user.id).promise, do: { _ in
-                    I.onSuccess(promise: recurly.updateAccount(accountCode: sess.user.id, email: user.data.email).promise, do: { _ in
+                .onSuccess(promise: recurly.account(with: sess.user.id).promise, do: { _ in
+                    .onSuccess(promise: recurly.updateAccount(accountCode: sess.user.id, email: user.data.email).promise, do: { (a: Account?) -> I in
                         updateAndRedirect(user)
                     }, else: {
-                        I.write(form.render(ProfileFormData(user.data), [(field: "", message: "An error occurred while updating your account profile. Please try again later.")]))
+                        .write(html: form.render(ProfileFormData(user.data), [(field: "", message: "An error occurred while updating your account profile. Please try again later.")]))
                     })
                 }, else: {
                     updateAndRedirect(user)
@@ -55,9 +58,6 @@ extension Route.Account {
         }
         
         switch self {
-        case .thankYou:
-            // todo: flash: "Thank you for supporting us
-            return I.redirect(to: .home)
         case .logout:
             return I.query(sess.user.deleteSession(sess.sessionId)) {
                 return I.redirect(to: .home)
@@ -69,6 +69,7 @@ extension Route.Account {
             }
         case .profile:
             return editAccount(form: accountForm(), role: sess.user.data.role, cont: { .account(.profile) })
+
         case .billing:
             var user = sess.user
             func renderBilling(recurlyToken: String) -> I {
@@ -81,7 +82,7 @@ extension Route.Account {
                     r?.filter { $0.state == "active" }
                 }
                 let promise = zip(sess.user.currentSubscription.promise, invoicesAndPDFs, redemptions, sess.user.billingInfo.promise, recurly.coupons().promise).map(zip)
-                return I.onSuccess(promise: promise, do: { p in
+                return .onSuccess(promise: promise, do: { p in
                     let (sub, invoicesAndPDFs, redemptions, billingInfo, coupons) = p
                     func cont(subAndAddOn: (Subscription, Plan.AddOn)?) throws -> I {
                         let redemptionsWithCoupon = try redemptions.map { (r) -> (Redemption, Coupon) in
@@ -91,10 +92,10 @@ extension Route.Account {
                             return (r,c)
                         }
                         let result = billingView(subscription: subAndAddOn, invoices: invoicesAndPDFs, billingInfo: billingInfo, redemptions: redemptionsWithCoupon)
-                        return I.write(result)
+                        return .write(html: result)
                     }
                     if let s = sub, let p = Plan.all.first(where: { $0.plan_code == s.plan.plan_code }) {
-                        return I.onSuccess(promise: p.teamMemberAddOn.promise, do: { addOn in
+                        return .onSuccess(promise: p.teamMemberAddOn.promise, do: { addOn in
                             try cont(subAndAddOn: (s, addOn))
                         })
                     } else {
@@ -103,37 +104,38 @@ extension Route.Account {
                 })
             }
             guard let t = sess.user.data.recurlyHostedLoginToken else {
-                return I.onSuccess(promise: sess.user.account.promise, do: { acc in
+                return .onSuccess(promise: sess.user.account.promise, do: { acc in
                     user.data.recurlyHostedLoginToken = acc.hosted_login_token
-                    return I.query(user.update()) {
-                    	renderBilling(recurlyToken: acc.hosted_login_token)
+                    return .query(user.update()) {
+                        renderBilling(recurlyToken: acc.hosted_login_token)
                     }
                 }, else: {
                     if sess.teamMemberPremiumAccess {
-                        return I.write(billingLayout(teamMemberBillingContent()))
+                        return .write(html: billingLayout(teamMemberBillingContent()))
                     } else if sess.gifterPremiumAccess {
-                        return I.write(billingLayout(gifteeBillingContent()))
+                        return .write(html: billingLayout(gifteeBillingContent()))
                     } else {
-                        return I.write(billingLayout(unsubscribedBillingContent()))
+                        return .write(html: billingLayout(unsubscribedBillingContent()))
                     }
                 })
             }
             return renderBilling(recurlyToken: t)
+            
         case .updatePayment:
             // todo use the form helper
             func renderForm(errs: [RecurlyError]) -> I {
-                return I.onSuccess(promise: sess.user.billingInfo.promise, do: { billingInfo in
-                    let view = updatePaymentView(data: PaymentViewData(billingInfo, action: Route.account(.updatePayment).path, csrf: sess.user.data.csrf, publicKey: env.recurlyPublicKey, buttonText: "Update", paymentErrors: errs.map { $0.message }))
-                    return I.write(view)
+                return .onSuccess(promise: sess.user.billingInfo.promise, do: { billingInfo in
+                    let view = updatePaymentView(data: PaymentViewData(billingInfo, action: Route.account(.updatePayment).path, csrf: sess.user.data.csrfToken, publicKey: env.recurlyPublicKey, buttonText: "Update", paymentErrors: errs.map { $0.message }))
+                    return .write(html: view)
                 })
             }
-            return I.verifiedPost(do: { body in
+            return .verifiedPost(do: { body in
                 guard let token = body["billing_info[token]"] else {
                     throw ServerError(privateMessage: "No billing_info[token]", publicMessage: "Something went wrong, please try again.")
                 }
-                return I.onSuccess(promise: sess.user.updateBillingInfo(token: token).promise, do: { (response: RecurlyResult<BillingInfo>) -> I in
+                return .onSuccess(promise: sess.user.updateBillingInfo(token: token).promise, do: { (response: RecurlyResult<BillingInfo>) -> I in
                     switch response {
-                    case .success: return I.redirect(to: .account(.updatePayment)) // todo show message?
+                    case .success: return .redirect(to: .account(.updatePayment)) // todo show message?
                     case .errors(let errs): return renderForm(errs: errs)
                     }
                 })
@@ -142,20 +144,22 @@ extension Route.Account {
             })
             
         case .teamMembers:
-            let signupLink = Route.teamMemberSignup(token: sess.user.data.teamToken).url
-            return I.query(sess.user.teamMembers) { members in
-                I.write(teamMembersView(teamMembers: members, signupLink: signupLink))
+            let signupLink = Route.signup(.teamMember(token: sess.user.data.teamToken)).url
+            return .query(sess.user.teamMembers) { members in
+                .write(html: teamMembersView(teamMembers: members, signupLink: signupLink))
             }
+        
         case .invalidateTeamToken:
             var user = sess.user
             user.data.teamToken = UUID()
-            return I.query(user.update()) { I.redirect(to: .account(.teamMembers)) }
+            return .query(user.update()) { .redirect(to: .account(.teamMembers)) }
+        
         case .deleteTeamMember(let id):
-            return I.verifiedPost { _ in
-                I.query(sess.user.deleteTeamMember(teamMemberId: id, userId: sess.user.id)) {
+            return .verifiedPost { _ in
+                .query(sess.user.deleteTeamMember(teamMemberId: id, userId: sess.user.id)) {
                     let task = Task.syncTeamMembersWithRecurly(userId: sess.user.id).schedule(at: globals.currentDate().addingTimeInterval(5*60))
-                    return I.query(task) {
-                        I.redirect(to: .account(.teamMembers))
+                    return .query(task) {
+                        .redirect(to: .account(.teamMembers))
                     }
                 }
             }

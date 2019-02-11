@@ -1,11 +1,17 @@
 //
-//  DatabaseModel.swift
-//  swifttalk-server
+//  Database.swift
+//  Bits
 //
-//  Created by Florian Kugler on 26-11-2018.
+//  Created by Chris Eidhof on 08.08.18.
 //
 
 import Foundation
+import Database
+import PostgreSQL
+import WebServer
+
+
+let postgres = env.databaseURL.map { Postgres(url: $0) } ?? Postgres(host: env.databaseHost, name: env.databaseName, user: env.databaseUser, password: env.databasePassword)
 
 
 struct FileData: Codable, Insertable {
@@ -82,20 +88,9 @@ struct DownloadData: Codable, Insertable {
     static let tableName: String = "downloads"
 }
 
-struct CSRFToken: Codable, Equatable, Hashable {
-    var value: UUID
-    init(_ uuid: UUID) {
-        self.value = uuid
-    }
-    init(from decoder: Decoder) throws {
-        self.init(try UUID(from: decoder))
-    }
-    func encode(to encoder: Encoder) throws {
-        try value.encode(to: encoder)
-    }
-    
-    var stringValue: String {
-        return value.uuidString
+extension CSRFToken: NodeRepresentable {
+    public func makeNode(in context: PostgreSQL.Context?) throws -> PostgreSQL.Node {
+        return value.makeNode(in: context)
     }
 }
 
@@ -120,9 +115,12 @@ struct UserData: Codable, Insertable {
     var subscriber: Bool = false
     var canceled: Bool = false
     var confirmedNameAndEmail: Bool = false
-    var csrf: CSRFToken
+    private var csrf: UUID
     var teamToken: UUID
-
+    
+    var csrfToken: CSRFToken {
+        return CSRFToken(csrf)
+    }
     
     init(email: String, githubUID: Int? = nil, githubLogin: String? = nil, githubToken: String? = nil, avatarURL: String, name: String, createdAt: Date? = nil, role: Role = .user, downloadCredits: Int = 0, canceled: Bool = false, confirmedNameAndEmail: Bool = false, subscriber: Bool = false) {
         self.email = email
@@ -134,7 +132,7 @@ struct UserData: Codable, Insertable {
         let now = globals.currentDate()
         self.createdAt = createdAt ?? now
         self.downloadCredits = downloadCredits
-        csrf = CSRFToken(UUID())
+        csrf = UUID()
         self.canceled = canceled
         self.confirmedNameAndEmail = confirmedNameAndEmail
         self.subscriber = subscriber
@@ -143,6 +141,12 @@ struct UserData: Codable, Insertable {
     }
     
     static let tableName: String = "users"
+}
+
+extension UserData.Role: NodeRepresentable {
+    func makeNode(in context: PostgreSQL.Context?) throws -> PostgreSQL.Node {
+        return rawValue.makeNode(in: context)
+    }
 }
 
 struct TeamMemberData: Codable, Insertable {
@@ -170,7 +174,7 @@ extension TeamMemberData {
 fileprivate let emailRegex = try! NSRegularExpression(pattern: "^[^@]+@(?:[^@.]+?\\.)+.{2,}$", options: [.caseInsensitive])
 
 extension String {
-    var isValidEmail: Bool {
+    fileprivate var isValidEmail: Bool {
         return !emailRegex.matches(in: self, options: [], range: NSRange(startIndex..<endIndex, in: self)).isEmpty
     }
 }
@@ -201,7 +205,7 @@ extension UserData {
     }
 }
 
-struct PlayProgressData {
+struct PlayProgressData: Insertable {
     var userId: UUID
     var episodeNumber: Int
     var progress: Int
@@ -210,4 +214,3 @@ struct PlayProgressData {
     static let tableName = "play_progress"
 }
 
-extension PlayProgressData: Insertable { }

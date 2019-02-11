@@ -6,34 +6,16 @@
 //
 
 import Foundation
+import Base
 import NIO
 import NIOHTTP1
 import NIOFoundationCompat
+import Promise
 
 
-enum HTTPMethod: String, Codable {
-    case post = "POST"
-    case get = "GET"
-}
+public typealias HTTPResponseStatus = NIOHTTP1.HTTPResponseStatus
 
-struct Request {
-    var path: [String]
-    var query: [String:String]
-    var method: HTTPMethod
-    var cookies: [(String, String)]
-}
-
-extension Request {
-    init(_ uri: String, method: HTTPMethod = .get, cookies: [(String,String)] = []) {
-        let (p,q) = uri.parseQuery
-        path = p.split(separator: "/").map(String.init)
-        query = q
-        self.method = method
-        self.cookies = cookies
-    }
-}
-
-protocol Interpreter {
+public protocol Response {
     static func write(_ string: String, status: HTTPResponseStatus, headers: [String: String]) -> Self
     static func write(_ data: Data, status: HTTPResponseStatus, headers: [String: String]) -> Self
     static func writeFile(path: String, maxAge: UInt64?) -> Self
@@ -42,7 +24,7 @@ protocol Interpreter {
     static func withPostData(do cont: @escaping (Data) -> Self) -> Self
 }
 
-struct NIOInterpreter: Interpreter {
+public struct NIOInterpreter: Response {
     struct Deps {
         let header: HTTPRequestHead
         let ctx: ChannelHandlerContext
@@ -52,15 +34,15 @@ struct NIOInterpreter: Interpreter {
         let resourcePaths: [URL]
     }
     let run: (Deps) -> PostContinuation?
-    typealias PostContinuation = (Data) -> NIOInterpreter
+    public typealias PostContinuation = (Data) -> NIOInterpreter
     
-    static func withPostData(do cont: @escaping PostContinuation) -> NIOInterpreter {
+    public static func withPostData(do cont: @escaping PostContinuation) -> NIOInterpreter {
         return NIOInterpreter { env in
             return cont
         }
     }
 
-    static func redirect(path: String, headers: [String: String] = [:]) -> NIOInterpreter {
+    public static func redirect(path: String, headers: [String: String] = [:]) -> NIOInterpreter {
         return NIOInterpreter { env in
             // We're using seeOther (303) because it won't do a POST but always a GET (important for forms)
             var head = HTTPResponseHead(version: env.header.version, status: .seeOther)
@@ -77,7 +59,7 @@ struct NIOInterpreter: Interpreter {
         }
     }
     
-    static func writeFile(path: String, maxAge: UInt64? = 60) -> NIOInterpreter {
+    public static func writeFile(path: String, maxAge: UInt64? = 60) -> NIOInterpreter {
         return NIOInterpreter { deps in
             let fullPath = deps.resourcePaths.resolve(path) ?? URL(fileURLWithPath: "")
             let fileHandleAndRegion = deps.fileIO.openFile(path: fullPath.path, eventLoop: deps.ctx.eventLoop)
@@ -114,7 +96,7 @@ struct NIOInterpreter: Interpreter {
         }
     }
     
-    static func onComplete<A>(promise: Promise<A>, do cont: @escaping (A) -> NIOInterpreter) -> NIOInterpreter {
+    public static func onComplete<A>(promise: Promise<A>, do cont: @escaping (A) -> NIOInterpreter) -> NIOInterpreter {
         return NIOInterpreter { env in
             promise.run { str in
                 env.ctx.eventLoop.execute {
@@ -127,7 +109,7 @@ struct NIOInterpreter: Interpreter {
         }
     }
     
-    static func write(_ data: Data, status: HTTPResponseStatus = .ok, headers: [String: String] = [:]) -> NIOInterpreter {
+    public static func write(_ data: Data, status: HTTPResponseStatus = .ok, headers: [String: String] = [:]) -> NIOInterpreter {
         return NIOInterpreter { env in
             var head = HTTPResponseHead(version: env.header.version, status: status)
             for (key, value) in headers {
@@ -146,7 +128,7 @@ struct NIOInterpreter: Interpreter {
         }
     }
 
-    static func write(_ string: String, status: HTTPResponseStatus = .ok, headers: [String: String] = [:]) -> NIOInterpreter {
+    public static func write(_ string: String, status: HTTPResponseStatus = .ok, headers: [String: String] = [:]) -> NIOInterpreter {
         return NIOInterpreter { env in
             var head = HTTPResponseHead(version: env.header.version, status: status)
             for (key, value) in headers {
@@ -166,37 +148,7 @@ struct NIOInterpreter: Interpreter {
     }
 }
 
-extension StringProtocol {
-    var keyAndValue: (String, String)? {
-        guard let i = index(of: "=") else { return nil }
-        let n = index(after: i)
-        return (String(self[..<i]), String(self[n...]).trimmingCharacters(in: CharacterSet(charactersIn: "\"")))
-    }
-}
-
-extension String {
-    fileprivate var decoded: String {
-    	return (removingPercentEncoding ?? "").replacingOccurrences(of: "+", with: " ")
-    }
-}
-
-extension StringProtocol {
-    var parseAsQueryPart: [String:String] {
-        let items = split(separator: "&").compactMap { $0.keyAndValue }
-        return Dictionary(items.map { (k,v) in (k.decoded, v.decoded) }, uniquingKeysWith: { $1 })
-    }
-}
-
-extension String {
-    var parseQuery: (String, [String:String]) {
-        guard let i = self.index(of: "?") else { return (self, [:]) }
-        let path = self[..<i]
-        let remainder = self[index(after: i)...]
-        return (String(path), remainder.parseAsQueryPart)
-    }
-}
-
-extension HTTPMethod {
+extension Base.HTTPMethod {
     init?(_ value: NIOHTTP1.HTTPMethod) {
         switch value {
         case .GET: self = .get
@@ -267,7 +219,7 @@ final class RouteHandler: ChannelInboundHandler {
 
 
 
-struct Server {
+public struct Server {
     let threadPool: BlockingIOThreadPool = {
         let t = BlockingIOThreadPool(numberOfThreads: 1)
         t.start()
@@ -278,7 +230,7 @@ struct Server {
     private let handle: (Request) -> NIOInterpreter?
     private let paths: [URL]
 
-    init(handle: @escaping (Request) -> NIOInterpreter?, resourcePaths: [URL]) {
+    public init(handle: @escaping (Request) -> NIOInterpreter?, resourcePaths: [URL]) {
         fileIO = NonBlockingFileIO(threadPool: threadPool)
         self.handle = handle
         paths = resourcePaths
@@ -288,7 +240,7 @@ struct Server {
         group.next().execute(f)
     }
     
-    func listen(port: Int = 8765) throws {
+    public func listen(port: Int = 8765) throws {
         let reuseAddr = ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET),
                                               SO_REUSEADDR)
         let bootstrap = ServerBootstrap(group: group)

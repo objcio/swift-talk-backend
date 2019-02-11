@@ -6,7 +6,10 @@
 //
 
 import Foundation
-import PostgreSQL
+import Promise
+import Base
+import Database
+
 
 func scheduleTaskTimer() -> DispatchSourceTimer {
     let queue = DispatchQueue(label: "Scheduled Task Timer")
@@ -14,7 +17,7 @@ func scheduleTaskTimer() -> DispatchSourceTimer {
     timer.schedule(deadline: .now(), repeating: 10.0, leeway: .seconds(1))
     timer.setEventHandler {
         tryOrLog {
-            let conn = lazyConnection()
+            let conn = postgres.lazyConnection()
             func process(_ tasks: ArraySlice<Row<TaskData>>) {
                 guard let task = tasks.first else { return }
                 try? task.process(conn) { _ in
