@@ -8,7 +8,6 @@
 import Foundation
 import Base
 
-
 public enum Node<I> {
     case none
     case node(Element<I>)
