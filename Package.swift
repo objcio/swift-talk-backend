@@ -89,7 +89,8 @@ let package = Package(
                 "Base",
                 "HTML",
                 "NIOWrapper",
-                "Promise"
+                "Promise",
+                "Database",
             ],
             path: "Sources/WebServer"
         ),
