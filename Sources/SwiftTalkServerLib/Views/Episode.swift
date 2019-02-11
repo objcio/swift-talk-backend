@@ -369,7 +369,7 @@ extension Episode {
         }
 
         let transcriptAvailable: [Node] = [
-            session.premiumAccess ? .raw("") : .raw(subscriptionPitch),
+            session.premiumAccess || session?.isTeamManager == true ? .raw("") : subscriptionPitch,
             .div(classes: "l+|flex l-|stack+++ m-cols", [
                 .div(classes: "p-col l+|flex-auto l+|width-2/3 xl+|width-7/10 flex flex-column", [
                     .div(classes: "text-wrapper", [
@@ -390,19 +390,26 @@ extension Episode {
                 sidebar
             ])
         ]
-        let noTranscript: [Node] = [
-            .div(classes: "bgcolor-pale-blue border border-1 border-color-subtle-blue radius-5 ph pv++ flex flex-column justify-center items-center text-center min-height-6", [
-                .inlineSvg(path: "icon-blocked.svg"),
-                .div(classes: "mv", [
-                    .h3(classes: "ms1 bold color-blue-darkest", [.text("This episode is exclusive to Subscribers")]),
-                    .p(classes: "mt- lh-135 color-blue-darkest opacity-60 max-width-8", [
-                        .text("Become a subscriber to watch future and all \(Episode.subscriberOnly) current subscriber-only episodes, plus enjoy access to episode video downloads and \(teamDiscount)% discount for your team members.")
-                    ])
-                ]),
-                .link(to: .signup(.subscribe), classes: "button button--themed", [.text("Become a subscriber")])
-            ])
-        ]
         
+        func noTranscript(text: String, buttonTitle: String, target: Route) -> [Node] {
+            return [
+                .div(classes: "bgcolor-pale-blue border border-1 border-color-subtle-blue radius-5 ph pv++ flex flex-column justify-center items-center text-center min-height-6", [
+                    .inlineSvg(path: "icon-blocked.svg"),
+                    .div(classes: "mv", [
+                        .h3(classes: "ms1 bold color-blue-darkest", [.text("This episode is exclusive to Subscribers")]),
+                        .p(classes: "mt- lh-135 color-blue-darkest opacity-60 max-width-8", [
+                            .text(text)
+                        ])
+                    ]),
+                    .link(to: target, classes: "button button--themed", [.text(buttonTitle)])
+                ])
+            ]
+        }
+        
+        let noTranscriptAccess = session?.isTeamManager == true
+            ? noTranscript(text: "Team manager accounts don't have access to Swift Talk content by default. To enable content access on this account, please add yourself as a team member.", buttonTitle: "Manage Team Members", target: .account(.teamMembers))
+            : noTranscript(text: "Become a subscriber to watch future and all \(Episode.subscriberOnly) current subscriber-only episodes, plus enjoy access to episode video downloads and \(teamDiscount)% discount for your team members.", buttonTitle: "Become a subscriber", target: .signup(.subscribe))
+
         let scripts: [Node] = (session?.user.data.csrfToken).map { token in
             return [
                 .script(src: "https://player.vimeo.com/api/player.js"),
@@ -458,7 +465,7 @@ extension Episode {
         let main = Node.div(classes: "js-episode", [
             headerAndPlayer,
             .div(classes: "bgcolor-white l+|pt++", [
-                .div(classes: "container", canWatch ? transcriptAvailable : noTranscript)
+                .div(classes: "container", canWatch ? transcriptAvailable : noTranscriptAccess)
             ])
         ])
         
@@ -475,20 +482,19 @@ let expandTranscript = """
 </div>
 """
 
-let subscriptionPitch: String = """
-<div class="bgcolor-pale-blue border border-1 border-color-subtle-blue color-blue-darkest pa+ radius-5 mb++">
-<div class="max-width-8 center text-center">
-<h3 class="mb-- bold lh-125">This episode is freely available thanks to the support of our subscribers</h3>
-<p class="lh-135">
-<span class="opacity-60">Subscribers get exclusive access to new and all previous subscriber-only episodes, video downloads, and 30% discount for team members.</span>
-<a href="\(Route.signup(.subscribe).path)" class="color-blue no-decoration hover-cascade">
-<span class="hover-cascade__border-bottom">Become a Subscriber</span> <span class="bold">&rarr;</span>
-</a>
-</p>
-</div>
-</div>
+let subscriptionPitch = Node.div(classes: "bgcolor-pale-blue border border-1 border-color-subtle-blue color-blue-darkest pa+ radius-5 mb++", [
+    .div(classes: "max-width-8 center text-center", [
+        .h3(classes: "mb-- bold lh-125", ["This episode is freely available thanks to the support of our subscribers"]),
+        .p(classes: "lh-135", [
+            .span(classes: "opacity-60", ["Subscribers get exclusive access to new and all previous subscriber-only episodes, video downloads, and 30% discount for team members."]),
+            .link(to: Route.signup(.subscribe), classes: "color-blue no-decoration hover-cascade", [
+                .span(classes: "hover-cascade__border-bottom", ["Become a Subscriber"]),
+                .span(classes: "bold", [.raw(" &rarr;")])
+            ])
+        ])
+    ])
+])
 
-"""
 
 let previewBadge = """
 <div class="js-video-badge bgcolor-orange color-white bold absolute position-nw width-4">

@@ -47,6 +47,10 @@ public struct Session {
         return user.data.premiumAccess
     }
     
+    var isTeamManager: Bool {
+        return user.data.role == .teamManager
+    }
+    
     func isTeamMemberOf(_ user: Row<UserData>) -> Bool {
         return teamManager?.id == user.id
     }
