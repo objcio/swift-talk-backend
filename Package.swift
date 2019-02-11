@@ -64,8 +64,7 @@ let package = Package(
         ),
         .target(
             name: "HTML",
-            dependencies: [
-            ],
+            dependencies: [ "Base" ],
             path: "Sources/HTML"
         ),
         .target(
