@@ -45,9 +45,9 @@ extension Collection {
                 ])
             ]),
             .div(class: "wrapper pt++", [
-                .ul(class: "offset-content", episodes.map { e in
+                .ul(class: "offset-content", zip(episodes, 1...).map { e, num in
                     .li(class: "flex justify-center mb++ m+|mb+++", [
-                        .div(class: "width-1 ms1 mr- color-theme-highlight bold lh-110 m-|hide", [.raw("&rarr;")]),
+                        .div(class: "width-1 ms1 mr- color-theme-highlight bold lh-110 m-|hide", [displayChronologically ? .text("\(num).") : .raw("&rarr;")]),
                         .withSession { e.episode.render(.init(wide: true, synopsis: true, watched: e.watched, canWatch: e.episode.canWatch(session: $0), collection: false)) }
                     ])
                 })
