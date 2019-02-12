@@ -174,12 +174,18 @@ public struct Collection: Codable, Equatable {
 }
 
 extension Collection {
+    var displayChronologically: Bool {
+        return useAsTitlePrefix
+    }
+    
     var artwork: String {
         return "/assets/images/collections/\(title).svg"
     }
     
     func episodes(for user: UserData?) -> [Episode] {
-        return allEpisodes.scoped(for: user)
+        let result = allEpisodes.scoped(for: user)
+        print(displayChronologically, title)
+        return displayChronologically ? result : result.reversed()
     }
 }
 
