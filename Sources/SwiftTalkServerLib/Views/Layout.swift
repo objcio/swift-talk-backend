@@ -41,6 +41,7 @@ struct StructuredData {
     
     enum ItemType {
         case video(duration: Int, releaseDate: Date)
+        case website
         case other
     }
     
@@ -56,6 +57,7 @@ struct StructuredData {
         switch type {
         case .other: return ""
         case .video(duration: _, releaseDate: _): return "video.episode"
+        case .website: return "website"
         }
     }
     var nodes: [Node] {

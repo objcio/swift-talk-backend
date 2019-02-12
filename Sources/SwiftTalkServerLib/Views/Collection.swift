@@ -24,35 +24,40 @@ func index(_ items: [Collection]) -> Node {
 
 extension Collection {
     func show(episodes: [EpisodeWithProgress]) -> Node {
-        let bgImage = "background-image: url('/assets/images/collections/\(title)@4x.png');"
-        return LayoutConfig(contents: [
-            .div(attributes: ["class": "pattern-illustration overflow-hidden", "style": bgImage], [
-                .div(class: "wrapper", [
-                    .header(class: "offset-content offset-header pv++ bgcolor-white", [
-                        .p(class: "ms1 color-gray-70 links clearfix", [
-                            .link(to: .home, class: "bold", [.text("Swift Talk")]),
-                            .raw("&#8202;"),
-                            .link(to: .collections, class: "opacity: 90", [.text("Collection")])
-                        ]),
-                        .h2(class: "ms5 bold color-black mt--- lh-110 mb-", [.text(title)]),
-                        .p(class: "ms1 color-gray-40 text-wrapper lh-135", description.widont),
-                        .p(class: "color-gray-65 lh-125 mt", [
-                            .text("\(episodes.count) \("Episode".pluralize(episodes.count))"),
-                            .span(class: "ph---", [.raw("&middot;")]),
-                            .text(episodes.map { $0.episode }.totalDuration.hoursAndMinutes)
+        return .withRoute { currentRoute in
+            let imageURL = Route.staticFile(path: ["images", "collections", "\(self.title)@4x.png"]).url
+            let bgImage = "background-image: url('\(imageURL.path)');"
+            let numberOfEpisodes = "\(episodes.count) \("Episode".pluralize(episodes.count))"
+            let structuredData = StructuredData(title: "Swift Talk Collection: \(self.title)", description: self.description, url: currentRoute.url, image: imageURL, type: .website)
+            return LayoutConfig(contents: [
+                .div(attributes: ["class": "pattern-illustration overflow-hidden", "style": bgImage], [
+                    .div(class: "wrapper", [
+                        .header(class: "offset-content offset-header pv++ bgcolor-white", [
+                            .p(class: "ms1 color-gray-70 links clearfix", [
+                                .link(to: .home, class: "bold", [.text("Swift Talk")]),
+                                .raw("&#8202;"),
+                                .link(to: .collections, class: "opacity: 90", [.text("Collection")])
+                            ]),
+                            .h2(class: "ms5 bold color-black mt--- lh-110 mb-", [.text(self.title)]),
+                            .p(class: "ms1 color-gray-40 text-wrapper lh-135", self.description.widont),
+                            .p(class: "color-gray-65 lh-125 mt", [
+                                .text(numberOfEpisodes),
+                                .span(class: "ph---", [.raw("&middot;")]),
+                                .text(episodes.map { $0.episode }.totalDuration.hoursAndMinutes)
+                            ])
                         ])
                     ])
-                ])
-            ]),
-            .div(class: "wrapper pt++", [
-                .ul(class: "offset-content", zip(episodes, 1...).map { e, num in
-                    .li(class: "flex justify-center mb++ m+|mb+++", [
-                        .div(class: "width-1 ms1 mr- color-theme-highlight bold lh-110 m-|hide", [displayChronologically ? .text("\(num).") : .raw("&rarr;")]),
-                        .withSession { e.episode.render(.init(wide: true, synopsis: true, watched: e.watched, canWatch: e.episode.canWatch(session: $0), collection: false)) }
-                    ])
-                })
-            ]),
-        ], theme: "collection").layout
+                ]),
+                .div(class: "wrapper pt++", [
+                    .ul(class: "offset-content", zip(episodes, 1...).map { e, num in
+                        .li(class: "flex justify-center mb++ m+|mb+++", [
+                            .div(class: "width-1 ms1 mr- color-theme-highlight bold lh-110 m-|hide", [self.displayChronologically ? .text("\(num).") : .raw("&rarr;")]),
+                            .withSession { e.episode.render(.init(wide: true, synopsis: true, watched: e.watched, canWatch: e.episode.canWatch(session: $0), collection: false)) }
+                        ])
+                    })
+                ]),
+            ], theme: "collection", structuredData: structuredData).layout
+        }
     }
 }
 
