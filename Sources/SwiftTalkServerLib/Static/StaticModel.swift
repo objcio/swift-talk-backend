@@ -184,7 +184,6 @@ extension Collection {
     
     func episodes(for user: UserData?) -> [Episode] {
         let result = allEpisodes.scoped(for: user)
-        print(displayChronologically, title)
         return displayChronologically ? result : result.reversed()
     }
 }
