@@ -230,7 +230,7 @@ public struct Server {
     private let handle: (Request) -> NIOInterpreter?
     private let paths: [URL]
 
-    public init(handle: @escaping (Request) -> NIOInterpreter?, resourcePaths: [URL]) {
+    public init(resourcePaths: [URL], handle: @escaping (Request) -> NIOInterpreter?) {
         fileIO = NonBlockingFileIO(threadPool: threadPool)
         self.handle = handle
         paths = resourcePaths

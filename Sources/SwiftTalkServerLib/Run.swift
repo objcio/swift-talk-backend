@@ -10,24 +10,15 @@ public func run() throws {
     refreshStaticData()
     let timer = scheduleTaskTimer()
 
-
     let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-    let resourcePaths = [currentDir.appendingPathComponent("assets"), currentDir.appendingPathComponent("node_modules")]
+    let resourcePaths = [currentDir.appendingPathComponent(assetsPath), currentDir.appendingPathComponent("node_modules")]
 
-    func hashedAssetName(file: String) -> String {
-        guard let remainder = file.drop(prefix: "/assets/") else { return file }
-        let rep = assets.fileToHash[remainder]
-        return rep.map { "/assets/" + $0 } ?? file
-
-    }
-
-    let server = Server(handle: { request in
+    let server = Server(resourcePaths: resourcePaths) { request in
         guard let route = Route(request) else { return nil }
-        let sessionString = request.cookies.first { $0.0 == "sessionid" }?.1
-        let sessionId = sessionString.flatMap { UUID(uuidString: $0) }
         let conn = postgres.lazyConnection()
+        
         func buildSession() -> Session? {
-            guard let sId = sessionId else { return nil }
+            guard let sId = request.sessionId else { return nil }
             do {
                 let user = try conn.get().execute(Row<UserData>.select(sessionId: sId))
                 return try user.map { u in
@@ -44,10 +35,17 @@ public func run() throws {
                 return nil
             }
         }
-        let env = STRequestEnvironment(route: route, hashedAssetName: hashedAssetName, buildSession: buildSession, connection: conn, resourcePaths: resourcePaths)
-
+        
+        let env = STRequestEnvironment(route: route, hashedAssetName: assets.hashedName, buildSession: buildSession, connection: conn, resourcePaths: resourcePaths)
         let reader: Reader<STRequestEnvironment, NIOInterpreter> = try! route.interpret()
         return reader.run(env)
-    }, resourcePaths: resourcePaths)
+    }
     try server.listen(port: env.port ?? 8765)
+}
+
+extension Request {
+    fileprivate var sessionId: UUID? {
+        let sessionString = cookies.first { $0.0 == "sessionid" }?.1
+        return sessionString.flatMap { UUID(uuidString: $0) }
+    }
 }

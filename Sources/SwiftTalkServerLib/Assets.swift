@@ -12,8 +12,8 @@ let assets = Assets()
 
 
 struct Assets {
-    var hashToFile: [String: String]
-    var fileToHash: [String: String]
+    private var hashToFile: [String: String]
+    private var fileToHash: [String: String]
     
     init() {
         let fm = FileManager.default
@@ -29,5 +29,14 @@ struct Assets {
         self.hashToFile = hashToFile
         fileToHash = Dictionary(hashToFile.map { ($0.1, $0.0) }, uniquingKeysWith: { _, x in x })
     }
-}
 
+    func hashedName(file: String) -> String {
+        guard let remainder = file.drop(prefix: "/\(assetsPath)/") else { return file }
+        let rep = fileToHash[remainder]
+        return rep.map { "/\(assetsPath)/" + $0 } ?? file
+    }
+    
+    func fileName(hash: String) -> String? {
+        return hashToFile[hash]
+    }
+}
