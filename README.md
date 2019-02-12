@@ -16,7 +16,7 @@ This framework contains the application-specific code. There are a few main part
 
 ### Interpreting
 
-For testability (and because we wanted to experiment), we wrote our route interpreter using the [final-tagless](https://talk.objc.io/episodes/S01E89-extensible-libraries-2-protocol-composition) style. This allows us to write a normal interpreter that does the usual web-server things: execute database queries, perform network requests, etc. It also allows us to have a [test interpreter](https://github.com/objcio/video-swift-backend/blob/master/Tests/swifttalkTests/TestHelpers.swift), so that we can write high-level flow tests (with [easy network tests](https://talk.objc.io/episodes/S01E137-testing-networking-code)).
+For testability (and because we wanted to experiment), we wrote our route interpreter using the [final-tagless](https://talk.objc.io/episodes/S01E89-extensible-libraries-2-protocol-composition) style. This allows us to write a normal interpreter that does the usual web-server things: execute database queries, perform network requests, etc. It also allows us to have a [test interpreter](/objcio/swift-talk-backend/blob/master/Tests/swifttalkTests/TestHelpers.swift), so that we can write high-level flow tests (with [easy network tests](https://talk.objc.io/episodes/S01E137-testing-networking-code)).
 
 ### Database
 
@@ -30,11 +30,11 @@ Rather than depending on third-party frameworks, we decided to write our own wra
 
 The HTML framework defines an enum to represent HTML/XML nodes. There is one special feature: a `Node` is generic over some read-only state. This allows us to pass around "global" state like a CSRF token and session/user data without actually making that global, and without having to explicitly pass it around everywhere.
 
-For an example, see [HTMLExtensions.swift](https://github.com/objcio/video-swift-backend/blob/master/Sources/SwiftTalkServerLib/Views/HTMLExtensions.swift). We add multiple extension to our `Node` type when the read-only state is of type `STRequestEnvironment`.
+For an example, see [HTMLExtensions.swift](/objcio/swift-talk-backend/blob/master/Sources/SwiftTalkServerLib/Views/HTMLExtensions.swift). We add multiple extension to our `Node` type when the read-only state is of type `STRequestEnvironment`.
 
 ## Routing
 
-For routing, we use a [`Router` struct](https://github.com/objcio/video-swift-backend/blob/master/Sources/Routing/Routing.swift#L49) that captures both *parsing* and *generating* a route in one. [Our routes](https://github.com/objcio/video-swift-backend/blob/master/Sources/SwiftTalkServerLib/Routes.swift#L13) are defined as enums, and using the `Router` we can write one description that converts the case into a URL and parses a URL, without having too worry too much about keeping them in sync.
+For routing, we use a [`Router` struct](/objcio/swift-talk-backend/blob/master/Sources/Routing/Routing.swift#L49) that captures both *parsing* and *generating* a route in one. [Our routes](/objcio/swift-talk-backend/blob/master/Sources/SwiftTalkServerLib/Routes.swift#L13) are defined as enums, and using the `Router` we can write one description that converts the case into a URL and parses a URL, without having too worry too much about keeping them in sync.
 
 We also use the enum cases to generate links, making sure that every link is well-formed and has all the necessary parameters. 
 
