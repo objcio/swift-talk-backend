@@ -52,6 +52,19 @@ The WebServer framework builds on top of the NIOWrapper, providing some higher l
 
 # Installation Notes
 
+### Dependencies
+
+You need to install the following dependencies:
+
+- postgresql 
+- libpq-dev 
+- cmake
+- cmark
+- curl
+- nodejs
+- npm
+- libxml2
+
 ### PostgreSQL
 
 You need PostgreSQL and libpq. To set up a local postgres instance:
@@ -90,7 +103,7 @@ To build the stylesheets:
 
 We deploy to a heroku-based docker app (needs postgres as well).
 
-If you get a "basic auth" error: heroku container:login
+If you get a "basic auth" error: `heroku container:login`
 
 ```swift
 heroku container:push web
