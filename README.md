@@ -36,7 +36,7 @@ For an example, see [HTMLExtensions.swift](/Sources/SwiftTalkServerLib/Views/HTM
 
 For routing, we use a [`Router` struct](/Sources/Routing/Routing.swift#L49) that captures both *parsing* and *generating* a route in one. [Our routes](/Sources/SwiftTalkServerLib/Routes.swift#L13) are defined as enums, and using the `Router` we can write one description that converts the case into a URL and parses a URL, without having too worry too much about keeping them in sync.
 
-We also use the enum cases to generate links, making sure that every link is well-formed and has all the necessary parameters. 
+We also use the enum cases to generate links, making sure that every link is well-formed and has all the necessary parameters.
 
 ## Incremental
 
@@ -56,8 +56,8 @@ The WebServer framework builds on top of the NIOWrapper, providing some higher l
 
 You need to install the following dependencies:
 
-- postgresql 
-- libpq-dev 
+- postgresql
+- libpq-dev
 - cmake
 - cmark
 - curl
@@ -69,7 +69,7 @@ You need to install the following dependencies:
 
 You need PostgreSQL and libpq. To set up a local postgres instance:
 
-```
+```sh
 initdb -D .postgres
 chmod 700 .postgres
 pg_ctl -D .postgres start
@@ -80,13 +80,13 @@ createdb swifttalk_dev
 
 Make sure to have browserify installed, then run:
 
-```
+```sh
 npm install -g browserify
 ```
 
 Then generate the javascript:
 
-```
+```sh
 npm install
 browserify assets_source/javascripts/application.js > assets/application.js
 ```
@@ -95,7 +95,7 @@ You can also use `--debug` to include source maps (for better debugging).
 
 To build the stylesheets:
 
-```
+```sh
 ./build-css.sh
 ```
 
@@ -105,14 +105,14 @@ We deploy to a heroku-based docker app (needs postgres as well).
 
 If you get a "basic auth" error: `heroku container:login`
 
-```swift
+```sh
 heroku container:push web
 heroku container:release web
 ```
 
 ### Running in Docker
 
-```
+```sh
 docker run -a stdin -a stdout -i -t --env-file .env --env RDS_HOSTNAME=(ifconfig en1 | awk '/inet /{print $2}') -p 8765:8765 swifttalk-server
 ```
 
