@@ -1,0 +1,65 @@
+version: '3.7'
+
+# create services
+services:
+  postgres_db:
+    image: postgres:11-alpine
+    restart: always
+    ports:
+      - 8760:5432
+    volumes:
+      - ./docker-initdb/create-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: 'secret?wiftT4lk'
+
+  postgres_admin:
+    image: adminer
+    restart: always
+    ports:
+      - 8761:8080
+    volumes:
+      - ./adminer/index.php:/var/www/html/index.php
+
+  swift_backend:
+    image: swifttalk-dev
+    command: bash -c "npm install && swift package update && swift test && swift build --configuration release && .build/x86_64-unknown-linux/release/swifttalk-server"
+    working_dir: /app
+    # restart: on-failure
+    restart: "no"
+    ports:
+      - 8765:8765
+    volumes:
+      - ../package.json:/app/package.json
+      - ../package-lock.json:/app/package-lock.json
+      - ../Package.swift:/app/Package.swift
+      - ../LinuxMain.swift:/app/LinuxMain.swift
+      - ../assets:/app/assets
+      - ../Sources:/app/Sources
+      - ../Tests:/app/Tests
+      - node_modules:/app/node_modules
+      - npm:/root/.npm
+    environment:
+      # RDS_HOSTNAME: "$(ifconfig en0 | awk '/inet /{print $2}')"
+      BASE_URL: ""
+      GITHUB_CLIENT_ID: ""
+      GITHUB_CLIENT_SECRET: ""
+      GITHUB_ACCESS_TOKEN: ""
+      RECURLY_SUBDOMAIN: ""
+      RECURLY_PUBLIC_KEY: ""
+      RECURLY_API_KEY: ""
+      CIRCLE_API_KEY: ""
+      MAILCHIMP_API_KEY: ""
+      MAILCHIMP_LIST_ID: ""
+      VIMEO_ACCESS_TOKEN: ""
+      SENDGRID_API_KEY: ""
+
+# create named volumes for reuse over different services
+# and as a caching mechanism for node_modules and npm
+volumes:
+  # when postgres password is changed here
+  # remove of this volume has to be done
+  # see 'docker volume rm <db_postgres_data>'
+  postgres_data:
+  node_modules:
+  npm:
