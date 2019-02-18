@@ -134,5 +134,6 @@ let package = Package(
         	dependencies: ["SwiftTalkServerLib"],
 			path: "Tests"
         )
-    ]
+    ],
+    swiftLanguageVersions: [.v4_2]
 )
