@@ -6,6 +6,7 @@ let package = Package(
     name: "swifttalk-server",
     products: [
         .executable(name: "swifttalk-server", targets: ["swifttalk-server"]),
+        .executable(name: "test-server", targets: ["test-server"]),
         .library(name: "SwiftTalkServerLib", targets: ["SwiftTalkServerLib"]),
         .library(name: "Routing", targets: ["Routing"]),
         .library(name: "Base", targets: ["Base"]),
@@ -114,6 +115,14 @@ let package = Package(
 			],
 			path: "Sources/SwiftTalkServerLib"
 		),
+        .target(
+            name: "test-server",
+            dependencies: [
+                "NIOWrapper",
+				"WebServer"
+            ],
+            path: "Sources/test-server"
+        ),
         .target(
             name: "swifttalk-server",
         	dependencies: [
