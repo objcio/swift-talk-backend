@@ -334,13 +334,13 @@ extension Account {
 struct Webhook: Codable {
     var account: WebhookAccount
     var subscription: Subscription?
-    struct Subscription: Codable {
+    struct Subscription: Codable, Equatable, Hashable {
         var plan: Plan
         var uuid: String
         var state: String
         var activated_at: Date?
     }
-    struct Plan: Codable {
+    struct Plan: Codable, Equatable, Hashable {
         var plan_code: String
         var name: String
     }
