@@ -13,12 +13,6 @@ services:
     environment:
       POSTGRES_PASSWORD: 'secret?wiftT4lk'
 
-  postgres_admin:
-    image: adminer
-    restart: always
-    ports:
-      - 8761:8080
-
   swift_backend:
     image: swifttalk-dev
     command: bash -c "npm install && swift package update && swift test && swift build --configuration release && .build/x86_64-unknown-linux/release/swifttalk-server"
