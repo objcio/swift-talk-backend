@@ -10,18 +10,19 @@ struct User {
     var name: String
 }
 
-enum Node {
-    case node(Element)
+enum Node<Input> {
+    case node(Element<Input>)
     case raw(String)
+    case withInput((Input) -> Node)
     // ...
 }
 
-struct Element {
+struct Element<Input> {
     var name: String
-    var children: [Node]
+    var children: [Node<Input>]
 
-    func render() -> String {
-        return "<\(name)>\(children.map { $0.render() }.joined(separator: " "))</\(name)>"
+    func render(input: Input) -> String {
+        return "<\(name)>\(children.map { $0.render(input: input) }.joined(separator: " "))</\(name)>"
     }
 }
 
@@ -34,49 +35,65 @@ extension Node {
         return .node(Element(name: "div", children: children))
     }
 
-    func render() -> String {
+    func render(input: Input) -> String {
         switch self {
         case let .node(e):
-            return e.render()
+            return e.render(input: input)
         case let .raw(str):
             return str
+        case let .withInput(f):
+            return f(input).render(input: input)
         }
     }
 }
 
-func layout(session: Session, _ node: Node) -> Node {
+typealias SNode = Node<Session>
+
+func layout(_ node: SNode) -> SNode {
     return .div([
             .raw("<h1>Title</h1>"),
-            .raw("Link to login with \(session.currentPath)"),
+            Node.withInput { session in .raw("Link to login with \(session.currentPath)") },
             node
         ])
 }
 
-func accountView(session: Session) -> Node {
+func accountView() -> SNode {
     return
-        layout(session: session, .p([.raw("Your account: \(session.user.name)")]))
+        layout(.p([Node.withInput { session in .raw("Your account: \(session.user.name)") }]))
 }
 
-func homePage(session: Session) -> Node {
-    return layout(session: session, .p([.raw("The homepage")]))
+func homePage() -> SNode {
+    return layout(.p([.raw("The homepage")]))
 }
 
-typealias Response = NIOInterpreter
+typealias Response = Reader<Session, NIOInterpreter>
 
-func interpret(session: Session, path: [String]) -> Response {
+struct Reader<Value, Result> {
+    let run: (Value) -> Result
+}
+
+extension Reader where Result == NIOInterpreter {
+    static func write(_ node: Node<Value>) -> Reader {
+        return Reader { session in
+            return .write(node.render(input: session))
+        }
+    }
+}
+
+func interpret(path: [String]) -> Response {
     if path == ["account"] {
-        return .write(accountView(session: session).render())
+        return .write(accountView())
     } else if path == [] {
-        return .write(homePage(session: session).render())
+        return .write(homePage())
     } else {
-        return .write("Not found")
+        return .write(.raw("Not found"))
     }
 }
 
 let server = Server(resourcePaths: []) { request in
     let session  = Session(user: User(name: "Chris"), currentPath: "/" + request.path.joined(separator: "/"))
-    let result = interpret(session: session, path: request.path)
-    return result
+    let result = interpret(path: request.path)
+    return result.run(session)
 }
 
 try server.listen(port: 9999)
