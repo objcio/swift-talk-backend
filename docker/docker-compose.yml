@@ -18,8 +18,6 @@ services:
     restart: always
     ports:
       - 8761:8080
-    volumes:
-      - ./adminer/index.php:/var/www/html/index.php
 
   swift_backend:
     image: swifttalk-dev
