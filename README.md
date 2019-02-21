@@ -54,7 +54,7 @@ The WebServer framework builds on top of the NIOWrapper, providing some higher l
 
 ### Dependencies
 
-You need to install the following dependencies:
+If you want to run this locally (without Docker), you need to install the following dependencies:
 
 - postgresql
 - libpq-dev
@@ -115,6 +115,8 @@ heroku container:release web
 ```sh
 docker run -a stdin -a stdout -i -t --env-file .env --env RDS_HOSTNAME=(ifconfig en1 | awk '/inet /{print $2}') -p 8765:8765 swifttalk-server
 ```
+
+You could also set up a multi-container docker application. For example, like in [this pull request](https://github.com/objcio/swift-talk-backend/pull/99/files).
 
 
 ### Debugging Linux Bugs
