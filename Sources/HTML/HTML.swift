@@ -344,6 +344,10 @@ extension Node: ExpressibleByStringLiteral {
     }
 }
 
+extension Node: ExpressibleByStringInterpolation {
+    public typealias StringInterpolation = String.StringInterpolation
+}
+
 extension Node where I == () {
     public var xmlDocument: String {
         return ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>", render(input: (), encodeText: { $0.xmlString })].joined(separator: "\n")

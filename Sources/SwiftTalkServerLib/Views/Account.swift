@@ -119,7 +119,7 @@ func table(columns: [Column], cells: [[Cell]]) -> Node {
 func invoicesView(user: Row<UserData>, invoices: [(Invoice, pdfURL: URL)]) -> [Node] {
     guard !invoices.isEmpty else { return  [
         .div(class: "text-center", [
-        	.p(class: "color-gray-30 ms1 mb", [.text("No invoices yet.")])
+        	.p(class: "color-gray-30 ms1 mb", ["No invoices yet."])
     	])
     ] }
     
@@ -136,7 +136,7 @@ func invoicesView(user: Row<UserData>, invoices: [(Invoice, pdfURL: URL)]) -> [N
             Cell("# \(invoice.invoice_number)"),
             Cell(DateFormatter.fullPretty.string(from: invoice.created_at)),
             Cell(dollarAmount(cents: invoice.total_in_cents), class: "type-mono text-right"),
-            Cell([.link(to: pdfURL, class: "", [.text("\(invoice.invoice_number).pdf")])], class: "text-center"),
+            Cell([.link(to: pdfURL, class: "", ["\(invoice.invoice_number).pdf"])], class: "text-center"),
         ]
     }
     return [
@@ -177,7 +177,7 @@ extension Subscription.Upgrade {
             teamMemberText = ""
         }
         return [
-                .p([.text("Upgrade to the \(plan.name) plan.")]),
+                .p(["Upgrade to the \(plan.name) plan."]),
                 .p(class: "lh-110", [.text(
                     "Your new plan will cost \(dollarAmount(cents: total_in_cents)) \(plan.prettyInterval)" +
                         vat +
@@ -275,7 +275,7 @@ extension BillingInfo {
                     } ?? .none
                 ])
             ]),
-            .link(to: .account(.updatePayment), class: "color-blue no-decoration border-bottom border-1 hover-color-black bold", [.text("Update Billing Info")])
+            .link(to: .account(.updatePayment), class: "color-blue no-decoration border-bottom border-1 hover-color-black bold", ["Update Billing Info"])
         ]
     }
 }
@@ -305,7 +305,7 @@ func teamMemberBillingContent() -> [Node] {
     return [
         .div([
             heading("Subscription"),
-            .p(class: "lh-110", [.text("You have a team member account, which doesn't have its own billing info.")])
+            .p(class: "lh-110", ["You have a team member account, which doesn't have its own billing info."])
         ])
     ]
 }
@@ -314,7 +314,7 @@ func gifteeBillingContent() -> [Node] {
     return [
         .div([
             heading("Subscription"),
-            .p(class: "lh-110", [.text("You currently have an active gift subscription, which doesn't have its own billing info.")])
+            .p(class: "lh-110", ["You currently have an active gift subscription, which doesn't have its own billing info."])
         ])
     ]
 }
@@ -323,8 +323,8 @@ func unsubscribedBillingContent() -> [Node] {
     return [
         .div([
             heading("Subscription"),
-            .p(class: "mb", [.text("You don't have an active subscription.")]),
-            .link(to: .signup(.subscribe), class: "c-button", [.text("Become a Subscriber")])
+            .p(class: "mb", ["You don't have an active subscription."]),
+            .link(to: .signup(.subscribe), class: "c-button", ["Become a Subscriber"])
         ])
     ]
 }
@@ -360,16 +360,16 @@ func billingView(subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice,
                                 .div(class: "flex-auto color-gray-30 stack-", [
                                     .p([
                                         .text(dollarAmount(cents: total)),
-                                        vat == 0 ? .none : .text(" (including \(dollarAmount(cents: vat)) VAT)"),
-                                        .text(" on "),
+                                        vat == 0 ? .none : " (including \(dollarAmount(cents: vat)) VAT)",
+                                        " on ",
                                         .text(sub.current_period_ends_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "n/a"),
                                     ]),
                                     redemptions.isEmpty ? .none : .p(class: " input-note mt-", [
-                                        .span(class: "bold", [.text("Note:")])
+                                        .span(class: "bold", ["Note:"])
                                     ] + redemptions.map { x in
                                         let (redemption, coupon) = x
                                         let start = DateFormatter.fullPretty.string(from: redemption.created_at)
-                                        return .text("Due to a technical limation, the displayed price does not take your active coupon (\(coupon.billingDescription), started at \(start)) into account.")
+                                        return "Due to a technical limation, the displayed price does not take your active coupon (\(coupon.billingDescription), started at \(start)) into account."
                                     }),
                                     button(to: .subscription(.cancel), text: "Cancel Subscription", class: "color-invalid")
                                 ])

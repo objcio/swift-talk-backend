@@ -112,7 +112,7 @@ func renderSubscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node
                 .div(class: "bgcolor-white pa- radius-8 max-width-7 box-sizing-content center stack-", [
                     coupon.map { c in
                         .div(class: "bgcolor-orange-dark text-center color-white pa- lh-125 radius-3", [
-                            .span(class: "smallcaps inline-block", [.text("Special Deal")]),
+                            .span(class: "smallcaps inline-block", ["Special Deal"]),
                             .p(class: "ms-1", [.text(c.description)])
                         ])
                     } ?? .none,
@@ -158,7 +158,7 @@ func renderSubscribeTeam(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> 
                 .div(class: "bgcolor-white pa- radius-8 max-width-7 box-sizing-content center stack-", [
                     coupon.map { c in
                         .div(class: "bgcolor-orange-dark text-center color-white pa- lh-125 radius-3", [
-                            .span(class: "smallcaps inline-block", [.text("Special Deal")]),
+                            .span(class: "smallcaps inline-block", ["Special Deal"]),
                             .p(class: "ms-1", [.text(c.description)])
                         ])
                     } ?? .none,
@@ -189,7 +189,7 @@ func renderSubscribeTeam(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> 
                     ]),
                 .div(class: "ms-1 color-gray-65 lh-110 text-center center pt+ max-width-8", [
                     smallPrint([
-                        .span([.raw("<sup>*</sup>"), .text("Prices apply from the 2nd team member. The first team member is included in the subscription base price, $\(monthly.discountedPrice(coupon: coupon).pretty)/month or $\(yearly.discountedPrice(coupon: coupon).pretty)/year")]),
+                        .span([.raw("<sup>*</sup>"), "Prices apply from the 2nd team member. The first team member is included in the subscription base price, $\(monthly.discountedPrice(coupon: coupon).pretty)/month or $\(yearly.discountedPrice(coupon: coupon).pretty)/year"]),
                         "All prices shown excluding VAT (only applies to EU customers).",
                     ])
                 ])

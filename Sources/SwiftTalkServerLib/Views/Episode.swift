@@ -17,7 +17,7 @@ func index(_ episodes: [EpisodeWithProgress]) -> Node {
             .div([
                 .h2(class: "inline-block lh-100 mb+", [
                     .span(class: "bold", [
-                        .text("\(episodes.count) Episodes")
+                        "\(episodes.count) Episodes"
                     ])
                 ])
             ]),
@@ -98,7 +98,7 @@ extension Episode {
                     .div(class: "ratio__container bg-center bg-cover", attributes: ["style": "background-image: url('\(poster)')"]),
                     .div(class: "absolute position-stretch opacity-60 blend-darken gradient-episode-black"),
                     .div(class: "absolute position-stretch flex flex-column", [
-                        .div(class: "mt-auto width-full flex items-center lh-100 ms-1 pa- color-white", smallIcon + [.span(class: "ml-auto bold text-shadow-20", [.text("\(mediaDuration.minutes)")])]
+                        .div(class: "mt-auto width-full flex items-center lh-100 ms-1 pa- color-white", smallIcon + [.span(class: "ml-auto bold text-shadow-20", ["\(mediaDuration.minutes)"])]
                         )
                     ])
                 ] as [Node] + largeIcon)
@@ -109,7 +109,7 @@ extension Episode {
                 ])),
             ] + synopsisNode + [
                 .p(class: footerClasses, [
-                    .text("Episode \(number)"),
+                    "Episode \(number)",
                     .span(class: "ph---", [.raw("&middot;")]),
                     .text(releaseAt.pretty)
                 ])
@@ -208,8 +208,8 @@ extension Episode {
         let scroller = Node.aside(class: "bgcolor-pale-gray pt++ js-scroller", [
             .header(class: "container-h flex items-center justify-between", [
                 .div([
-                    .h3(class: "inline-block bold color-black", [.text("Recent Episodes")]),
-                    .link(to: .episodes, class: "inline-block ms-1 ml- color-blue no-decoration hover-underline", [.text("See All")])
+                    .h3(class: "inline-block bold color-black", ["Recent Episodes"]),
+                    .link(to: .episodes, class: "inline-block ms-1 ml- color-blue no-decoration hover-underline", ["See All"])
                 ]),
                 .div(class: "js-scroller-buttons flex items-center", [
                     .button(class: "scroller-button no-js-hide js-scroller-button-left ml-", attributes: ["label": "Scroll left"], [
@@ -264,7 +264,7 @@ extension Episode {
                         : .span(class: "block bgcolor-orange radius-5 cursor-not-allowed", [downloadImage])
                 ]),
                 .div(class: "ms-1 lh-125", [
-                    smallH4(.text("Episode Video"), link: downloadStatus.allowed ? Route.episode(id, .download) : nil),
+                    smallH4("Episode Video", link: downloadStatus.allowed ? Route.episode(id, .download) : nil),
                     .p(class: "color-gray-50", [.text(downloadStatus.text)])
                 ])
             ]
@@ -316,14 +316,14 @@ extension Episode {
         let sidebar = Node.aside(class: "p-col max-width-7 center stack l+|width-1/3 xl+|width-3/10 l+|flex-auto", resources + inCollection + details)
         let epTitle: [Node] = [
             .p(class: "color-orange ms1", [
-                .link(to: .home, class: "color-inherit no-decoration bold hover-border-bottom", [.text("Swift Talk")]),
-                .text("#" + number.padded)
+                .link(to: .home, class: "color-inherit no-decoration bold hover-border-bottom", ["Swift Talk"]),
+                "# \(number.padded)"
             ]),
             .h2(class: "ms5 color-white bold mt-- lh-110", [.text(fullTitle + (released ? "" : " (unreleased)"))]),
         ]
         let guests: [Node] = guestHosts.isEmpty ? [] : [
             .p(class: "color-white opacity-70 mt-", [
-                .text("with special \("guest".pluralize(guestHosts.count))")
+                "with special \("guest".pluralize(guestHosts.count))"
             ] + guestHosts.map { gh in
                 .link(to: gh.url, class: "color-inherit bold no-decoration hover-border-bottom", [
                     .text(gh.name)
@@ -351,11 +351,11 @@ extension Episode {
                 .div(class: "text-wrapper mv+", [
                     .aside(class: "js-expandable border border-1 border-color-subtle-blue bgcolor-pale-blue pa radius-5", [
                         .header(class: "flex justify-between items-baseline mb-", [
-                            .h3(class: "smallcaps color-blue-darker mb-", [.text("Updates")])
+                            .h3(class: "smallcaps color-blue-darker mb-", ["Updates"])
                         ]),
                         .ul(class: "stack", ups.map { u in
                             .li(class: "ms-1 media", [
-                                .div(class: "media__image grafs color-blue-darker mr-", [.text("•")]),
+                                .div(class: "media__image grafs color-blue-darker mr-", ["•"]),
                                 .div(class: "media__body links grafs inline-code", [
                                     .markdown(u.text)
                                 ])
@@ -396,7 +396,7 @@ extension Episode {
                 .div(class: "bgcolor-pale-blue border border-1 border-color-subtle-blue radius-5 ph pv++ flex flex-column justify-center items-center text-center min-height-6", [
                     .inlineSvg(path: "icon-blocked.svg"),
                     .div(class: "mv", [
-                        .h3(class: "ms1 bold color-blue-darkest", [.text("This episode is exclusive to Subscribers")]),
+                        .h3(class: "ms1 bold color-blue-darkest", ["This episode is exclusive to Subscribers"]),
                         .p(class: "mt- lh-135 color-blue-darkest opacity-60 max-width-8", [
                             .text(text)
                         ])

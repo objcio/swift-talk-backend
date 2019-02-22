@@ -16,7 +16,7 @@ func index(_ items: [Collection]) -> Node {
     return LayoutConfig(contents: [
         pageHeader(HeaderContent.link(header: "All Collections", backlink: .home, label: "Swift Talk")),
         .div(class: "container pb0", [
-            .h2(class: "bold lh-100 mb+", [.text("\(items.count) Collections")]),
+            .h2(class: "bold lh-100 mb+", ["\(items.count) Collections"]),
             .ul(class: "cols s+|cols--2n l+|cols--3n", lis)
         ])
     ]).layout
@@ -34,9 +34,9 @@ extension Collection {
                     .div(class: "wrapper", [
                         .header(class: "offset-content offset-header pv++ bgcolor-white", [
                             .p(class: "ms1 color-gray-70 links clearfix", [
-                                .link(to: .home, class: "bold", [.text("Swift Talk")]),
+                                .link(to: .home, class: "bold", ["Swift Talk"]),
                                 .raw("&#8202;"),
-                                .link(to: .collections, class: "opacity: 90", [.text("Collection")])
+                                .link(to: .collections, class: "opacity: 90", ["Collection"])
                             ]),
                             .h2(class: "ms5 bold color-black mt--- lh-110 mb-", [.text(self.title)]),
                             .p(class: "ms1 color-gray-40 text-wrapper lh-135", self.description.widont),
@@ -51,7 +51,7 @@ extension Collection {
                 .div(class: "wrapper pt++", [
                     .ul(class: "offset-content", zip(episodes, 1...).map { e, num in
                         .li(class: "flex justify-center mb++ m+|mb+++", [
-                            .div(class: "width-1 ms1 mr- color-theme-highlight bold lh-110 m-|hide", [self.displayChronologically ? .text("\(num).") : .raw("&rarr;")]),
+                            .div(class: "width-1 ms1 mr- color-theme-highlight bold lh-110 m-|hide", [self.displayChronologically ? "\(num)." : .raw("&rarr;")]),
                             .withSession { e.episode.render(.init(wide: true, synopsis: true, watched: e.watched, canWatch: e.episode.canWatch(session: $0), collection: false)) }
                         ])
                     })
@@ -98,12 +98,12 @@ extension Collection {
                 .div(class: "flex items-center pt--", [
                     .h3([.link(to: .collection(id), class: "inline-block lh-110 no-decoration bold color-black hover-under", [.text(title)])])
                 ] + (new ? [
-                    .span(class: "flex-none label smallcaps color-white bgcolor-blue nowrap ml-", [.text("New")])
+                    .span(class: "flex-none label smallcaps color-white bgcolor-blue nowrap ml-", ["New"])
                 ] : [])),
                 .withSession { session in
                     let e = eps(session)
                     return .p(class: "ms-1 color-gray-55 lh-125 mt--", [
-                        .text("\(e.count) \("Episode".pluralize(e.count))"),
+                        "\(e.count) \("Episode".pluralize(e.count))",
                         .span(class: "ph---", [.raw("&middot;")]),
                         .text(e.totalDuration.hoursAndMinutes)
                     ])

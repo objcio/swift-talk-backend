@@ -13,8 +13,8 @@ func renderHome(episodes: [EpisodeWithProgress]) -> Node {
     let header = pageHeader(HeaderContent.other(header: "Swift Talk", blurb: "A weekly video series on Swift programming.", extraClasses: "ms4"))
     var recentNodes: [Node] = [
         .header(class: "mb+", [
-            .h2(class: "inline-block bold color-black", [.text("Recent Episodes")]),
-            .link(to: .episodes, class: "inline-block ms-1 ml- color-blue no-decoration hover-under", [.text("See All")])
+            .h2(class: "inline-block bold color-black", ["Recent Episodes"]),
+            .link(to: .episodes, class: "inline-block ms-1 ml- color-blue no-decoration hover-under", ["See All"])
         ])
     ]
     if episodes.count >= 5 {
@@ -41,10 +41,10 @@ func renderHome(episodes: [EpisodeWithProgress]) -> Node {
     let collections = Node.section(class: "container", [
         .header(class: "mb+", [
             .h2(class: "inline-block bold lh-100 mb---", [.text("Collections")]),
-            .link(to: .collections, class: "inline-block ms-1 ml- color-blue no-decoration hover-underline", [.text("Show Contents")]),
+            .link(to: .collections, class: "inline-block ms-1 ml- color-blue no-decoration hover-underline", ["Show Contents"]),
             .p(class: "lh-125 color-gray-60", [
-                .text("Browse all Swift Talk episodes by topic.")
-                ])
+                "Browse all Swift Talk episodes by topic."
+            ])
             ]),
         .ul(class: "cols s+|cols--2n l+|cols--3n", Collection.all.map { coll in
             .li(class: "col width-full s+|width-1/2 l+|width-1/3 mb++", coll.render())

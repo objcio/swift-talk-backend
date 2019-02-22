@@ -123,7 +123,7 @@ extension LayoutConfig {
         ] + structured)
         let logo = Node.link(to: URL(string: "https://www.objc.io")!, class: "flex-none outline-none mr++ flex", [
             .inlineSvg(class: "block logo logo--themed height-auto", path: "logo.svg"),
-            .h1(class: "visuallyhidden", [.text("objc.io")])
+            .h1(class: "visuallyhidden", ["objc.io"])
         ] as [Node])
         let navigation = Node.nav(class: "flex flex-grow", [
             .ul(class: "flex flex-auto", navigationItems.map { l in
@@ -189,7 +189,7 @@ extension LayoutConfig {
                     .div(class: "container-h flex-grow flex items-center height-3", [
                         .link(to: .home, class: "block flex-none outline-none mr++", [
                             .inlineSvg(class: "logo height-auto", path: "logo.svg"),
-                            .h1(class: "visuallyhidden", [.text("objc.io")])
+                            .h1(class: "visuallyhidden", ["objc.io"])
                         ] as [Node]),
                     ])
                 ])
@@ -199,7 +199,7 @@ extension LayoutConfig {
             .footer([
                 .div(class: "container-h pv", [
                     .div(class: "ms-1 color-gray-60", [
-                        .a(class: linkClasses, href: "mailto:mail@objc.io", [.text("Email")]),
+                        .a(class: linkClasses, href: "mailto:mail@objc.io", ["Email"]),
                         .link(to: URL(string: "https://www.objc.io/imprint")!, class: linkClasses, ["Imprint"])
                     ])
                 ])
@@ -223,14 +223,14 @@ func flash(message: String, type: FlashType) -> Node {
     return .div(class: "p-edges pv" + `class` + "color-white js-closeable pattern-shade", [
         .div(class: "wrapper flex items-center justify-between", [
             .p(class: "bold flex-auto", [.text(message)]),
-            .button(class: "smallcaps reset-button color-inherit hover-color-black js-closeable-toggle", attributes: ["type": "button"], [.text("Close")])
+            .button(class: "smallcaps reset-button color-inherit hover-color-black js-closeable-toggle", attributes: ["type": "button"], ["Close"])
         ])
     ])
 }
 
 func userHeader(_ session: Session?) -> Node {
     let subscribeButton = Node.li(class: "flex items-center ml+", [
-        .link(to: .signup(.subscribe), class: "button button--tight button--themed fz-nav", [.text("Subscribe")])
+        .link(to: .signup(.subscribe), class: "button button--tight button--themed fz-nav", ["Subscribe"])
     ])
     
     func link(to route: Route, text: String) -> Node {
