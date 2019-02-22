@@ -66,13 +66,21 @@ func homePage() -> SNode {
     return layout(.p([.raw("The homepage")]))
 }
 
-typealias Response = Reader<Session, NIOInterpreter>
-
 struct Reader<Value, Result> {
     let run: (Value) -> Result
 }
 
-extension Reader where Result == NIOInterpreter {
+protocol ResponseProtocol {
+    static func write(_ s: String, status: HTTPResponseStatus, headers: [String: String]) -> Self
+}
+
+extension ResponseProtocol {
+    static func write(_ s: String) -> Self {
+        return .write(s, status: .ok, headers: [:])
+    }
+}
+
+extension Reader where Result: ResponseProtocol {
     static func write(_ node: Node<Value>) -> Reader {
         return Reader { session in
             return .write(node.render(input: session))
@@ -80,7 +88,11 @@ extension Reader where Result == NIOInterpreter {
     }
 }
 
-func interpret(path: [String]) -> Response {
+extension NIOInterpreter: ResponseProtocol { }
+
+typealias Response<I: ResponseProtocol> = Reader<Session, I>
+
+func interpret<I>(path: [String]) -> Response<I> {
     if path == ["account"] {
         return .write(accountView())
     } else if path == [] {
@@ -92,8 +104,27 @@ func interpret(path: [String]) -> Response {
 
 let server = Server(resourcePaths: []) { request in
     let session  = Session(user: User(name: "Chris"), currentPath: "/" + request.path.joined(separator: "/"))
-    let result = interpret(path: request.path)
+    let result: Reader<Session, NIOInterpreter> = interpret(path: request.path)
     return result.run(session)
 }
 
-try server.listen(port: 9999)
+//try server.listen(port: 9999)
+
+enum TestInterpreter: ResponseProtocol {
+    case _write(String, status: HTTPResponseStatus, headers: [String: String])
+
+    static func write(_ s: String, status: HTTPResponseStatus, headers: [String : String]) -> TestInterpreter {
+        return ._write(s, status: status, headers: headers)
+    }
+}
+
+func test() {
+    let session  = Session(user: User(name: "Florian"), currentPath: "/")
+    let result: TestInterpreter = interpret(path: ["account"]).run(session)
+    guard case let ._write(s, status, headers) = result else {
+        assert(false)
+    }
+    assert(s.contains("Chris"))
+}
+
+test()
