@@ -18,65 +18,78 @@ public struct Query<A> {
 }
 
 public struct QueryStringAndParams {
-    fileprivate var buildSQL: (inout Int) -> String
-    public var values: [NodeRepresentable]
-    fileprivate init(buildSQL: @escaping (inout Int) -> String, values: [NodeRepresentable] = []) {
-        self.buildSQL = buildSQL
-        self.values = values
+    enum Part {
+        case raw(String)
+        case value(NodeRepresentable)
     }
+    
+    var parts: [Part]
+}
 
+extension Collection {
+    func intersperse(_ sep: Element) -> [Element] {
+        guard let f = self.first else { return [] }
+        return dropFirst().reduce(into: [f], { x, el in
+            x.append(sep)
+            x.append(el)
+        })
+        
+    }
 }
 
 extension QueryStringAndParams: ExpressibleByStringLiteral {
     public init(stringLiteral value: String) {
         // todo: assert that the value doesn't contain any $0, $1, etc?
-        self.init(buildSQL: { _ in value })
+        parts = [.raw(value)]
     }
 }
 
 extension QueryStringAndParams: ExpressibleByStringInterpolation, StringInterpolationProtocol {
     public init(literalCapacity: Int, interpolationCount: Int) {
-        self.buildSQL = { _ in "" }
-        self.values = []
+        self.parts = []
     }
     
-    public var sql: String {
-        var start = 0
-        return buildSQL(&start)
+    public var rendered: (sql: String, values: [NodeRepresentable]) {
+        var start = 1
+        var result = ""
+        var values: [NodeRepresentable] = []
+        for part in parts {
+            switch part {
+            case let .raw(s): result.append(s)
+            case let .value(v):
+                result.append("$\(start)")
+                values.append(v)
+                start += 1
+            }
+            result.append(" ")
+        }
+        return (sql: result, values: values)
     }
     
     public typealias StringInterpolation = QueryStringAndParams
     
     public mutating func appendLiteral(_ x: String) {
-        let prev = buildSQL
-        self.buildSQL = {
-            prev(&$0) + x
-        }
+        parts.append(.raw(x))
     }
     
     // todo this could be a protocol "Safe Identifier" or similar
     public mutating func appendInterpolation(_ t: TableName) {
-        let prev = buildSQL
-        self.buildSQL = {
-            prev(&$0) + t.name
-        }
+        parts.append(.raw(t.name))
     }
     
     public mutating func appendInterpolation(raw x: String) {
-        let prev = buildSQL
-        self.buildSQL = {
-            prev(&$0) + x
-        }
+        parts.append(.raw(x))
     }
     
     public mutating func appendInterpolation(param n: NodeRepresentable) {
-        let prev = buildSQL
-        buildSQL = { fieldCount in
-            let start = prev(&fieldCount)
-            fieldCount += 1
-            return start + "$\(fieldCount)"
-        }
-        self.values.append(n)
+        parts.append(.value(n))
+    }
+    
+    public mutating func appendInterpolation(values: [(key: String, value: NodeRepresentable)]) {
+        let names = values.map { $0.key }.joined(separator: ",")
+        parts.append(.raw("(\(names)) VALUES ("))
+        parts.append(contentsOf: values.map { .value($0.value) }.intersperse(.raw(",")))
+        parts.append(.raw(")"))
     }
     
     public init(stringInterpolation: QueryStringAndParams) {
@@ -86,13 +99,7 @@ extension QueryStringAndParams: ExpressibleByStringInterpolation, StringInterpol
 
 extension QueryStringAndParams {
     public mutating func append(_ other: QueryStringAndParams) {
-        let prev = buildSQL
-        buildSQL = { fc in
-            let part1 = prev(&fc)
-            let part2 = other.buildSQL(&fc)
-            return "\(part1) \(part2)"
-        }
-        values.append(contentsOf: other.values)
+        parts.append(contentsOf: other.parts)
     }
     
     public func appending(_ other: QueryStringAndParams) -> QueryStringAndParams {
@@ -107,16 +114,6 @@ extension Query {
         return Query<B>(query) { node in
             return transform(self.parse(node))
         }
-    }
-    
-    @available(*, deprecated)
-    static func build(parameters: [NodeRepresentable] = [], parse: @escaping (PostgreSQL.Node) -> A, construct: ([String]) -> String) -> Query {
-        let placeholders = (0..<(parameters.count)).map { "$\($0 + 1)" }
-        let sql = construct(placeholders)
-        return Query(.init(buildSQL: { x in
-            x += placeholders.count
-            return sql
-        }, values: parameters), parse: parse)
     }
     
     public func appending(_ part: QueryStringAndParams) -> Query<A> {

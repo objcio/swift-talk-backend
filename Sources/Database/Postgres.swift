@@ -73,14 +73,14 @@ extension ConnectionProtocol {
 extension Connection: ConnectionProtocol { }
 
 public struct FieldValues {
-    private var _fields: [(name: String, value: NodeRepresentable)]
+    var fieldsAndValues: [(key: String, value: NodeRepresentable)]
     
-    init(_ fields: [(name: String, value: NodeRepresentable)]) {
-        self._fields = fields
+    init(_ fields: [(key: String, value: NodeRepresentable)]) {
+        self.fieldsAndValues = fields
     }
     
     var fields: [String] {
-        return _fields.map { $0.name }
+        return fieldsAndValues.map { $0.key }
     }
     
     public var fieldList: String {
@@ -88,7 +88,7 @@ public struct FieldValues {
     }
     
     var values: [NodeRepresentable] {
-        return _fields.map { $0.value }
+        return fieldsAndValues.map { $0.value }
     }
 }
 
@@ -122,10 +122,11 @@ extension Connection {
     func execute<A>(_ query: Query<A>, loggingTreshold: TimeInterval) throws -> A {
         //        print(query.query)
         let node = try measure(message: "query: \(query.query)", treshold: loggingTreshold) { () throws -> PostgreSQL.Node in
+            let (sql, values) = query.query.rendered
             do {
-                return try execute(query.query.sql, query.query.values)
+                return try execute(sql, values)
             } catch {
-                throw DatabaseError(err: error, query: query.query.sql)
+                throw DatabaseError(err: error, query: sql)
             }
         }
         return query.parse(node)

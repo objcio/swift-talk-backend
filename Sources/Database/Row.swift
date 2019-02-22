@@ -47,9 +47,12 @@ extension Row where Element: Insertable {
     }
 
     public func update() -> Query<()> {
-        let f = data.fieldValues
-        return Query.build(parameters: f.values, parse: Element.parseEmpty) {
-            "UPDATE \(Element.tableName.name) SET \(zip(f.fields, $0).map { "\($0.0)=\($0.1)" }.sqlJoined)"
-        }.appending("WHERE id=\(param: id)")
+        let f = data.fieldValues.fieldsAndValues
+        assert(!f.isEmpty)
+        var query = Query("UPDATE \(Element.tableName) SET", parse: Element.parseEmpty)
+        query = query.appending("\(raw: f[0].key)=\(param: f[1].key)")
+        return f.dropFirst().reduce(query, { (q, kv) in
+            q.appending(", \(raw: kv.0)=\(param: kv.1)")
+        }).appending("WHERE id=\(param: id)")
     }
 }

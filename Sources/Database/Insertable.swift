@@ -42,29 +42,18 @@ fileprivate func parseId(_ node: PostgreSQL.Node) -> UUID {
 
 extension Insertable {
     public var insert: Query<UUID> {
-        let f = fieldValues
-        return .build(parameters: f.values, parse: parseId) {
-            "INSERT INTO \(Self.tableName.name) (\(f.fieldList)) VALUES (\($0.sqlJoined)) RETURNING id"
-        }
+        return Query("INSERT INTO \(Self.tableName) \(values: fieldValues.fieldsAndValues) RETURNING id", parse: parseId)
     }
-    
-    public func insertFromImport(id: UUID) -> Query<()> {
-        let f = fieldValues
-        return .build(parameters: f.values + [id], parse: { _ in () }) {
-            "INSERT INTO \(Self.tableName.name) (\(f.fieldList), id) VALUES (\($0.sqlJoined))"
-        }
-    }
+
     
     public func findOrInsert(uniqueKey: String, value: NodeRepresentable) -> Query<UUID> {
-        let f = fieldValues
-        return Query.build(parameters: f.values, parse: parseId) { """
+        return Query("""
             WITH inserted AS (
-            INSERT INTO \(Self.tableName.name) (\(f.fieldList)) VALUES (\($0.sqlJoined))
+            INSERT INTO \(Self.tableName) \(values: fieldValues.fieldsAndValues)
             ON CONFLICT DO NOTHING
             RETURNING id
             )
-            """
-        }.appending(
+        """, parse: parseId).appending(
             "SELECT id FROM inserted UNION ALL (SELECT id FROM \(Self.tableName) WHERE \(raw: uniqueKey)=\(param: value) LIMIT 1);"
         )
     }
@@ -72,12 +61,11 @@ extension Insertable {
     public func insertOrUpdate(uniqueKey: String) -> Query<UUID> {
         let f = fieldValues
         let updates = f.fields.map { "\($0) = EXCLUDED.\($0)" }.sqlJoined
-        return .build(parameters: f.values, parse: parseId) { """
-            INSERT INTO \(Self.tableName.name) (\(f.fieldList)) VALUES (\($0.sqlJoined))
-            ON CONFLICT (\(uniqueKey)) DO UPDATE SET \(updates)
+        return Query("""
+            INSERT INTO \(Self.tableName) \(values: f.fieldsAndValues)
+            ON CONFLICT (\(raw: uniqueKey)) DO UPDATE SET \(raw: updates)
             RETURNING id
-            """
-        }
+            """, parse: parseId)
     }
 }
 
