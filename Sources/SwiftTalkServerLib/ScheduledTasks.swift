@@ -98,7 +98,7 @@ struct TaskData: Insertable {
         self.key = task.uniqueKey(for: date)
     }
 
-    static var tableName = "tasks"
+    static var tableName: TableName = "tasks"
 }
 
 extension Task {

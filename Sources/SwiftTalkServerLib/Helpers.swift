@@ -14,7 +14,7 @@ public func myAssert(_ cond: @autoclosure () -> Bool, _ message: @autoclosure ()
         guard !cond() else { return }
         print(message(), to: &standardError)
     } else {
-        assert(cond(), message, file: file, line: line)
+        assert(cond(), message(), file: file, line: line)
     }
 }
 

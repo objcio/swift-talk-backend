@@ -24,7 +24,7 @@ extension Route.Webhook {
                     guard let s = status else {
                         return log(error: "Received Recurly webhook for account id \(id), but couldn't load this account from Recurly")
                     }
-                    guard let r = try? c.get().execute(Row<UserData>.select(id)), var row = r else {
+                    guard var row = try? c.get().execute(Row<UserData>.select(id)) else {
                         return log(error: "Received Recurly webhook for account \(id), but didn't find user in database")
                     }
                     row.data.subscriber = s.subscriber

@@ -9,8 +9,18 @@ import Foundation
 import PostgreSQL
 
 
+public struct TableName {
+    let name: String
+}
+
+extension TableName: ExpressibleByStringLiteral {
+    public init(stringLiteral value: String) {
+        self.name = value
+    }
+}
+
 public protocol Insertable: Codable {
-    static var tableName: String { get }
+    static var tableName: TableName { get }
 }
 
 extension Insertable {
@@ -34,14 +44,14 @@ extension Insertable {
     public var insert: Query<UUID> {
         let f = fieldValues
         return .build(parameters: f.values, parse: parseId) {
-            "INSERT INTO \(Self.tableName) (\(f.fieldList)) VALUES (\($0.sqlJoined)) RETURNING id"
+            "INSERT INTO \(Self.tableName.name) (\(f.fieldList)) VALUES (\($0.sqlJoined)) RETURNING id"
         }
     }
     
     public func insertFromImport(id: UUID) -> Query<()> {
         let f = fieldValues
         return .build(parameters: f.values + [id], parse: { _ in () }) {
-            "INSERT INTO \(Self.tableName) (\(f.fieldList), id) VALUES (\($0.sqlJoined))"
+            "INSERT INTO \(Self.tableName.name) (\(f.fieldList), id) VALUES (\($0.sqlJoined))"
         }
     }
     
@@ -49,21 +59,21 @@ extension Insertable {
         let f = fieldValues
         return Query.build(parameters: f.values, parse: parseId) { """
             WITH inserted AS (
-            INSERT INTO \(Self.tableName) (\(f.fieldList)) VALUES (\($0.sqlJoined))
+            INSERT INTO \(Self.tableName.name) (\(f.fieldList)) VALUES (\($0.sqlJoined))
             ON CONFLICT DO NOTHING
             RETURNING id
             )
             """
-            }.appending(parameters: [value]) {
-                "SELECT id FROM inserted UNION ALL (SELECT id FROM \(Self.tableName) WHERE \(uniqueKey)=\($0[0]) LIMIT 1);"
-        }
+        }.appending(
+            "SELECT id FROM inserted UNION ALL (SELECT id FROM \(Self.tableName) WHERE \(raw: uniqueKey)=\(param: value) LIMIT 1);"
+        )
     }
     
     public func insertOrUpdate(uniqueKey: String) -> Query<UUID> {
         let f = fieldValues
         let updates = f.fields.map { "\($0) = EXCLUDED.\($0)" }.sqlJoined
         return .build(parameters: f.values, parse: parseId) { """
-            INSERT INTO \(Self.tableName) (\(f.fieldList)) VALUES (\($0.sqlJoined))
+            INSERT INTO \(Self.tableName.name) (\(f.fieldList)) VALUES (\($0.sqlJoined))
             ON CONFLICT (\(uniqueKey)) DO UPDATE SET \(updates)
             RETURNING id
             """

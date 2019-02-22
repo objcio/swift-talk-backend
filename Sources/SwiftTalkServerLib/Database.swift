@@ -18,7 +18,7 @@ struct FileData: Codable, Insertable {
     var key: String
     var value: String
     
-    static let tableName: String = "files"
+    static let tableName: TableName = "files"
 }
 
 struct GiftData: Codable, Insertable {
@@ -33,7 +33,7 @@ struct GiftData: Codable, Insertable {
     var subscriptionId: String?
     var activated: Bool
     var planCode: String
-    static let tableName: String = "gifts"
+    static let tableName: TableName = "gifts"
     
     func validate() -> [ValidationError] {
         var result: [(String,String)] = []
@@ -72,7 +72,7 @@ struct SessionData: Codable, Insertable {
         self.updatedAt = self.createdAt
     }
     
-    static let tableName: String = "sessions"
+    static let tableName: TableName = "sessions"
 }
 
 struct DownloadData: Codable, Insertable {
@@ -85,7 +85,7 @@ struct DownloadData: Codable, Insertable {
         self.createdAt = globals.currentDate()
     }
     
-    static let tableName: String = "downloads"
+    static let tableName: TableName = "downloads"
 }
 
 extension CSRFToken: NodeRepresentable {
@@ -140,7 +140,7 @@ struct UserData: Codable, Insertable {
         self.teamToken = UUID()
     }
     
-    static let tableName: String = "users"
+    static let tableName: TableName = "users"
 }
 
 extension UserData.Role: NodeRepresentable {
@@ -155,7 +155,7 @@ struct TeamMemberData: Codable, Insertable {
     var createdAt: Date
     var expiredAt: Date?
     
-    static let tableName: String = "team_members"
+    static let tableName: TableName = "team_members"
 }
 
 extension TeamMemberData {
@@ -211,6 +211,6 @@ struct PlayProgressData: Insertable {
     var progress: Int
     var furthestWatched: Int
     
-    static let tableName = "play_progress"
+    static let tableName: TableName = "play_progress"
 }
 

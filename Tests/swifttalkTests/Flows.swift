@@ -22,7 +22,7 @@ struct QueryAndResult {
 
 extension QueryAndResult: Equatable {
     static func ==(l: QueryAndResult, r: QueryAndResult) -> Bool {
-        return l.query.query == r.query.query
+        return l.query.query.sql == r.query.query.sql
     }
 }
 

@@ -26,14 +26,12 @@ public struct Row<Element: Codable>: Codable {
 
 extension Row where Element: Insertable {
     public static func select(_ id: UUID) -> Query<Row<Element>?> {
-        return selectOne.appending(parameters: [id]) { "WHERE id=\($0[0])" }
+        return selectOne.appending("WHERE id=\(param: id)")
     }
     
     public static var select: Query<[Row<Element>]> {
         let fields = Element.fieldList()
-        return .build(parse: Element.parse) { _ in
-            "SELECT id,\(fields) FROM \(Element.tableName)"
-        }
+        return Query("SELECT id,\(raw: fields) FROM \(Element.tableName)", parse: Element.parse)
     }
     
     public static var selectOne: Query<Row<Element>?> {
@@ -41,17 +39,17 @@ extension Row where Element: Insertable {
     }
     
     public static var delete: Query<()> {
-        return Query(query: "DELETE FROM \(Element.tableName)", values: [], parse: Element.parseEmpty)
+        return Query("DELETE FROM \(Element.tableName)", parse: Element.parseEmpty)
     }
     
     public var delete: Query<()> {
-        return Query.build(parameters: [id], parse: Element.parseEmpty) { "DELETE FROM \(Element.tableName) WHERE id=\($0[0])" }
+        return Query("DELETE FROM \(Element.tableName) WHERE id=\(param: id)", parse: Element.parseEmpty)
     }
 
     public func update() -> Query<()> {
         let f = data.fieldValues
         return Query.build(parameters: f.values, parse: Element.parseEmpty) {
-            "UPDATE \(Element.tableName) SET \(zip(f.fields, $0).map { "\($0.0)=\($0.1)" }.sqlJoined)"
-            }.appending(parameters: [id]) { "WHERE id=\($0[0])" }
+            "UPDATE \(Element.tableName.name) SET \(zip(f.fields, $0).map { "\($0.0)=\($0.1)" }.sqlJoined)"
+        }.appending("WHERE id=\(param: id)")
     }
 }

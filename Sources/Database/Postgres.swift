@@ -123,9 +123,9 @@ extension Connection {
         //        print(query.query)
         let node = try measure(message: "query: \(query.query)", treshold: loggingTreshold) { () throws -> PostgreSQL.Node in
             do {
-                return try execute(query.query, query.values)
+                return try execute(query.query.sql, query.query.values)
             } catch {
-                throw DatabaseError(err: error, query: query.query)
+                throw DatabaseError(err: error, query: query.query.sql)
             }
         }
         return query.parse(node)
