@@ -29,6 +29,7 @@ public struct QueryStringAndParams {
 
 extension QueryStringAndParams: ExpressibleByStringLiteral {
     public init(stringLiteral value: String) {
+        // todo: assert that the value doesn't contain any $0, $1, etc?
         self.init(buildSQL: { _ in value })
     }
 }
