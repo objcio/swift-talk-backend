@@ -7,6 +7,7 @@
 
 import Foundation
 import PostgreSQL
+import Base
 
 public struct Query<A> {
     public var query: QueryStringAndParams
@@ -24,17 +25,6 @@ public struct QueryStringAndParams {
     }
     
     var parts: [Part]
-}
-
-extension Collection {
-    func intersperse(_ sep: Element) -> [Element] {
-        guard let f = self.first else { return [] }
-        return dropFirst().reduce(into: [f], { x, el in
-            x.append(sep)
-            x.append(el)
-        })
-        
-    }
 }
 
 extension QueryStringAndParams: ExpressibleByStringLiteral {

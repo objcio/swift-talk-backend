@@ -129,3 +129,14 @@ public func ?!<A>(lhs: A?, rhs: Error) throws -> A {
     return value
 }
 
+
+extension Collection {
+    public func intersperse(_ sep: Element) -> [Element] {
+        guard let f = self.first else { return [] }
+        return dropFirst().reduce(into: [f], { x, el in
+            x.append(sep)
+            x.append(el)
+        })
+        
+    }
+}
