@@ -28,7 +28,7 @@ struct Collaborator: Codable, Equatable {
         static private let order: [Role] = [.host, .guestHost, .technicalReview, .transcript, .copyEditing, .shooting]
         
         static func <(lhs: Role, rhs: Role) -> Bool {
-            return Role.order.index(of: lhs)! < Role.order.index(of: rhs)!
+            return Role.order.firstIndex(of: lhs)! < Role.order.firstIndex(of: rhs)!
         }
         
         
