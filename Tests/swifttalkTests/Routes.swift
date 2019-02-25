@@ -22,7 +22,7 @@ final class RouteTests: XCTestCase {
         XCTAssertEqual(Route.init(Request("/promo/hello-world")), Route.signup(.promoCode("hello-world")))
         XCTAssertEqual(Route.init(Request("/gift")), Route.gift(.home))
         XCTAssertEqual(Route.init(Request("/")), Route.home)
-        XCTAssertEqual(Route.init(Request("/hooks/recurly")), Route.webhook(.recurlyWebhook))
+        XCTAssertEqual(Route.init(Request("/hooks/recurly/123")), Route.webhook(.recurlyWebhook("123")))
         XCTAssertEqual(Route.init(Request("/hooks/github")), Route.webhook(.githubWebhook))
         XCTAssertEqual(Route.init(Request("/users/auth/github/callback?code=abc&origin=/anotherRoute")), Route.login(.githubCallback(code: "abc", origin: "/anotherRoute")))
     }
