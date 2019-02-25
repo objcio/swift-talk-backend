@@ -50,7 +50,7 @@ extension Row where Element: Insertable {
         let f = data.fieldValues.fieldsAndValues
         assert(!f.isEmpty)
         var query = Query("UPDATE \(Element.tableName) SET", parse: Element.parseEmpty)
-        query = query.appending("\(raw: f[0].key)=\(param: f[1].key)")
+        query = query.appending("\(raw: f[0].key)=\(param: f[0].value)")
         return f.dropFirst().reduce(query, { (q, kv) in
             q.appending(", \(raw: kv.0)=\(param: kv.1)")
         }).appending("WHERE id=\(param: id)")
