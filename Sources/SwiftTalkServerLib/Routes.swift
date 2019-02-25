@@ -43,7 +43,7 @@ public indirect enum Route: Equatable {
     }
     
     public enum Webhook: Equatable {
-        case recurlyWebhook
+        case recurlyWebhook(String)
         case githubWebhook
     }
 
@@ -234,7 +234,10 @@ private let episodeRoute: Router<Route> = .c("episodes") / (.episodeId / choice(
 })
 
 private let webhookRoutes: [Router<Route.Webhook>] = [
-    .c("recurly", .recurlyWebhook),
+    .c("recurly") / Router.string().transform({.recurlyWebhook($0)}, {
+        guard case let .recurlyWebhook(x) = $0 else { return nil }
+        return x
+    }),
     .c("github", .githubWebhook)
 ]
 

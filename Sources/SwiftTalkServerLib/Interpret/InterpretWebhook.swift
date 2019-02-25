@@ -15,7 +15,11 @@ extension Route.Webhook {
     func interpret<I: STResponse>() throws -> I where I.Env == STRequestEnvironment {
         switch self {
         
-        case .recurlyWebhook:
+        case .recurlyWebhook(let token):
+            guard token == env.webhookSecret else {
+                return I.write("Not found", status: .notFound)
+            }
+            
             return .withPostData { data in
                 guard let webhook: Webhook = try? decodeXML(from: data) else { return .write("", status: .ok) }
                 let id = webhook.account.account_code

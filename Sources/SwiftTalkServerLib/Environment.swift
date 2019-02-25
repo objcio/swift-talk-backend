@@ -39,7 +39,8 @@ struct Env {
         "MAILCHIMP_API_KEY",
         "MAILCHIMP_LIST_ID",
         "VIMEO_ACCESS_TOKEN",
-        "SENDGRID_API_KEY"
+        "SENDGRID_API_KEY",
+        "WEBHOOK_SECRET",
     ]
     let env: [String:String]
     
@@ -85,6 +86,7 @@ struct Env {
     
     // The vimeo access token needs to have the "private" and "files" roles enabled to fetch the download urls for private videos
     var vimeoAccessToken: String { return env["VIMEO_ACCESS_TOKEN"]! }
+    var webhookSecret: String { return env["WEBHOOK_SECRET"]! }
 }
 
 struct Globals {
