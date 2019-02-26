@@ -35,7 +35,7 @@ extension Route.Subscription {
         case let .create(couponCode, team):
             return .verifiedPost { dict in
                 guard let planId = dict["plan_id"], let token = dict["billing_info[token]"] else {
-                    throw ServerError(privateMessage: "Incorrect post data", publicMessage: "Something went wrong")
+                    throw ServerError(privateMessage: "Incorrect post data")
                 }
                 let plan = try Plan.all.first(where: { $0.plan_code == planId }) ?! ServerError.init(privateMessage: "Illegal plan: \(planId)", publicMessage: "Couldn't find the plan you selected.")
                 let cr = CreateSubscription.init(plan_code: plan.plan_code, currency: "USD", coupon_code: couponCode, starts_at: nil, account: .init(account_code: user.id, email: user.data.email, billing_info: .init(token_id: token)))

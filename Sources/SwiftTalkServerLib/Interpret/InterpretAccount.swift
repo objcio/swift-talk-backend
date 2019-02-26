@@ -130,7 +130,7 @@ extension Route.Account {
             }
             return .verifiedPost(do: { body in
                 let token = try body["billing_info[token]"] ?!
-                    ServerError(privateMessage: "No billing_info[token]", publicMessage: "Something went wrong, please try again.")
+                    ServerError(privateMessage: "No billing_info[token]")
                 return .onSuccess(promise: sess.user.updateBillingInfo(token: token).promise, do: { (response: RecurlyResult<BillingInfo>) -> I in
                     switch response {
                     case .success: return .redirect(to: .account(.updatePayment)) // todo show message?

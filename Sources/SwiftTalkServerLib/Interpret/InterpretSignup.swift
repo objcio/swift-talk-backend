@@ -16,13 +16,13 @@ extension Route.Signup {
         
         case .subscribe:
             guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
-                throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
+                throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])")
             }
             return .write(html: renderSubscribe(monthly: monthly, yearly: yearly))
         
         case .subscribeTeam:
             guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
-                throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
+                throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])")
             }
             return .write(html: renderSubscribeTeam(monthly: monthly, yearly: yearly))
         

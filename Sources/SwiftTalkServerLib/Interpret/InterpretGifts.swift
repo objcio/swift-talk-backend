@@ -31,7 +31,7 @@ extension Route.Gifts {
         
         case .pay(let id):
             return .query(Row<GiftData>.select(id)) { g in
-                let gift = try g ?! ServerError(privateMessage: "No such gift", publicMessage: "Something went wrong, please try again.")
+                let gift = try g ?! ServerError(privateMessage: "No such gift")
                 let plan = try Plan.gifts.first(where: { $0.plan_code == gift.data.planCode }) ?! ServerError.init(privateMessage: "Illegal plan: \(gift.data.planCode)", publicMessage: "Couldn't find the plan you selected.")
                 guard gift.data.subscriptionId == nil else {
                     throw ServerError(privateMessage: "Already paid \(gift.id)", publicMessage: "You already paid this gift.")
