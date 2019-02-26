@@ -9,7 +9,7 @@ import Foundation
 import Promise
 import Database
 import WebServer
-
+import Base
 
 extension ProfileFormData {
     init(_ data: UserData) {
@@ -86,9 +86,8 @@ extension Route.Account {
                     let (sub, invoicesAndPDFs, redemptions, billingInfo, coupons) = p
                     func cont(subAndAddOn: (Subscription, Plan.AddOn)?) throws -> I {
                         let redemptionsWithCoupon = try redemptions.map { (r) -> (Redemption, Coupon) in
-                            guard let c = coupons.first(where: { $0.matches(r.coupon_code) }) else {
-                                throw ServerError(privateMessage: "No coupon for \(r)!", publicMessage: "Something went wrong while loading your account details. Please contact us at \(email) to resolve this issue.")
-                            }
+                            let c = try coupons.first(where: { $0.matches(r.coupon_code) }) ?!
+                                ServerError(privateMessage: "No coupon for \(r)!", publicMessage: "Something went wrong while loading your account details. Please contact us at \(email) to resolve this issue.")
                             return (r,c)
                         }
                         let result = billingView(subscription: subAndAddOn, invoices: invoicesAndPDFs, billingInfo: billingInfo, redemptions: redemptionsWithCoupon)
@@ -130,9 +129,8 @@ extension Route.Account {
                 })
             }
             return .verifiedPost(do: { body in
-                guard let token = body["billing_info[token]"] else {
-                    throw ServerError(privateMessage: "No billing_info[token]", publicMessage: "Something went wrong, please try again.")
-                }
+                let token = try body["billing_info[token]"] ?!
+                    ServerError(privateMessage: "No billing_info[token]", publicMessage: "Something went wrong, please try again.")
                 return .onSuccess(promise: sess.user.updateBillingInfo(token: token).promise, do: { (response: RecurlyResult<BillingInfo>) -> I in
                     switch response {
                     case .success: return .redirect(to: .account(.updatePayment)) // todo show message?

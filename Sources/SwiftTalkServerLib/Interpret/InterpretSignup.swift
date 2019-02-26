@@ -8,7 +8,7 @@
 import Foundation
 import Database
 import WebServer
-
+import Base
 
 extension Route.Signup {
     func interpret<I: STResponse>() throws -> I where I.Env == STRequestEnvironment {
@@ -28,9 +28,7 @@ extension Route.Signup {
         
         case .teamMember(let token):
             return .query(Row<UserData>.select(teamToken: token)) { row in
-                guard let teamManager = row else {
-                    throw ServerError(privateMessage: "signup token doesn't exist: \(token)", publicMessage: "This signup link is invalid. Please get in touch with your team manager for a new one.")
-                }
+                let teamManager = try row ?! ServerError(privateMessage: "signup token doesn't exist: \(token)", publicMessage: "This signup link is invalid. Please get in touch with your team manager for a new one.")
                 return .withSession { session in
                     if let s = session {
                         if s.user.id == teamManager.id && s.selfPremiumAccess {

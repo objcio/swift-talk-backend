@@ -73,10 +73,8 @@ extension Route.Subscription {
         
         case let .registerAsTeamMember(token, terminate):
             return .query(Row<UserData>.select(teamToken: token)) { row in
-                guard let teamManager = row else {
-                    throw ServerError(privateMessage: "signup token doesn't exist: \(token)", publicMessage: "This signup link is invalid. Please get in touch with your team manager for a new one.")
-                }
-                
+                let teamManager = try row ?!
+                    ServerError(privateMessage: "signup token doesn't exist: \(token)", publicMessage: "This signup link is invalid. Please get in touch with your team manager for a new one.")
                 func registerTeamMember() -> I {
                     let teamMemberData = TeamMemberData(userId: teamManager.id, teamMemberId: user.id)
                     return .query(teamMemberData.insert) { _ in
@@ -128,7 +126,7 @@ extension Route.Subscription {
         case .upgrade:
             return .verifiedPost { _ in
                 return .onSuccess(promise: sess.user.currentSubscription.promise.map(flatten), do: { sub throws -> I in
-                    guard let u = sub.upgrade(vatExempt: false) else { throw ServerError(privateMessage: "no upgrade available \(sub)", publicMessage: "There's no upgrade available.")}
+                    let u = try sub.upgrade(vatExempt: false) ?! ServerError(privateMessage: "no upgrade available \(sub)", publicMessage: "There's no upgrade available.")
                     return .query(sess.user.teamMembers) { teamMembers in
                         .onSuccess(promise: recurly.updateSubscription(sub, plan_code: u.plan.plan_code, numberOfTeamMembers: teamMembers.count).promise, do: { result throws -> I in
                             .redirect(to: .account(.billing))

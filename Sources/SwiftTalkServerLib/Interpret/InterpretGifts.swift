@@ -19,9 +19,8 @@ extension Route.Gifts {
             return try .write(html: giftHome(plans: Plan.gifts))
         
         case .new(let planCode):
-            guard let plan = Plan.gifts.first(where: { $0.plan_code == planCode }) else {
-                throw ServerError.init(privateMessage: "Illegal plan: \(planCode)", publicMessage: "Couldn't find the plan you selected.")
-            }
+            let plan = try Plan.gifts.first(where: { $0.plan_code == planCode }) ?!
+                ServerError(privateMessage: "Illegal plan: \(planCode)", publicMessage: "Couldn't find the plan you selected.")
             return .form(giftForm(plan: plan), initial: GiftStep1Data(planCode: planCode), convert: GiftData.fromData, onPost: { gift in
                 .catchAndDisplayError {
                     .query(gift.insert) { id in
@@ -32,9 +31,7 @@ extension Route.Gifts {
         
         case .pay(let id):
             return .query(Row<GiftData>.select(id)) { g in
-                guard let gift = g else {
-                    throw ServerError(privateMessage: "No such gift", publicMessage: "Something went wrong, please try again.")
-                }
+                let gift = try g ?! ServerError(privateMessage: "No such gift", publicMessage: "Something went wrong, please try again.")
                 let plan = try Plan.gifts.first(where: { $0.plan_code == gift.data.planCode }) ?! ServerError.init(privateMessage: "Illegal plan: \(gift.data.planCode)", publicMessage: "Couldn't find the plan you selected.")
                 guard gift.data.subscriptionId == nil else {
                     throw ServerError(privateMessage: "Already paid \(gift.id)", publicMessage: "You already paid this gift.")
@@ -74,22 +71,16 @@ extension Route.Gifts {
 
         case .thankYou(let id):
             return .query(Row<GiftData>.select(id)) {
-                guard let gift = $0 else {
-                    throw ServerError(privateMessage: "gift doesn't exist: \(id.uuidString)", publicMessage: "This gift subscription doesn't exist. Please get in touch to resolve this issue.")
-                }
-                
+                let gift = try $0 ?! ServerError(privateMessage: "gift doesn't exist: \(id.uuidString)", publicMessage: "This gift subscription doesn't exist. Please get in touch to resolve this issue.")
                 return .write(html: giftThankYou(gift: gift.data))
             }
         
         case .redeem(let id):
             return .withSession { session in
                 return .query(Row<GiftData>.select(id)) {
-                    guard let gift = $0 else {
-                        throw ServerError(privateMessage: "gift doesn't exist: \(id.uuidString)", publicMessage: "This gift subscription doesn't exist. Please get in touch to resolve this issue.")
-                    }
-                    guard let plan = Plan.gifts.first(where: { $0.plan_code == gift.data.planCode }) else {
-                        throw ServerError(privateMessage: "plan \(gift.data.planCode) for gift \(id.uuidString) does not exist", publicMessage: "This gift subscription doesn't exist. Please get in touch to resolve this issue.")
-                    }
+                    let gift = try $0 ?! ServerError(privateMessage: "gift doesn't exist: \(id.uuidString)", publicMessage: "This gift subscription doesn't exist. Please get in touch to resolve this issue.")
+                    let plan = try Plan.gifts.first(where: { $0.plan_code == gift.data.planCode }) ?!
+                        ServerError(privateMessage: "plan \(gift.data.planCode) for gift \(id.uuidString) does not exist", publicMessage: "This gift subscription doesn't exist. Please get in touch to resolve this issue.")
                     if session?.premiumAccess == true {
                         return try .write(html: redeemGiftAlreadySubscribed())
                     } else if let user = session?.user {
