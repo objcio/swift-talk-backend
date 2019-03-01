@@ -115,13 +115,13 @@ extension Decodable {
 extension Connection {
     @discardableResult
     public func execute<A>(_ query: Query<A>) throws -> A {
-        return try execute(query, loggingTreshold: 0.1)
+        return try execute(query, loggingThreshold: 0.1)
     }
     
     @discardableResult
-    func execute<A>(_ query: Query<A>, loggingTreshold: TimeInterval) throws -> A {
+    func execute<A>(_ query: Query<A>, loggingThreshold: TimeInterval) throws -> A {
         //        print(query.query)
-        let node = try measure(message: "query: \(query.query)", treshold: loggingTreshold) { () throws -> PostgreSQL.Node in
+        let node = try measure(message: "query: \(query.query)", threshold: loggingThreshold) { () throws -> PostgreSQL.Node in
             do {
                 return try execute(query.query, query.values)
             } catch {
