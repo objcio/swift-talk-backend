@@ -175,6 +175,11 @@ final class RouteHandler: ChannelInboundHandler {
         self.paths = resourcePaths
     }
     
+    func errorCaught(ctx: ChannelHandlerContext, error: Error) {
+        log(info: "Error caught: \(error)")
+        ctx.close(promise: nil)
+    }
+    
     func channelRead(ctx: ChannelHandlerContext, data: NIOAny) {
         let reqPart = unwrapInboundIn(data)
         switch reqPart {
