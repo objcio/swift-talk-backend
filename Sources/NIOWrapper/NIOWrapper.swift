@@ -26,7 +26,7 @@ public protocol Response {
 
 public struct NIOInterpreter: Response {
     struct Deps {
-        let request: HTTPRequestHead
+        let header: HTTPRequestHead
         let ctx: ChannelHandlerContext
         let fileIO: NonBlockingFileIO
         let handler: RouteHandler
@@ -45,27 +45,29 @@ public struct NIOInterpreter: Response {
     public static func redirect(path: String, headers: [String: String] = [:]) -> NIOInterpreter {
         return NIOInterpreter { env in
             // We're using seeOther (303) because it won't do a POST but always a GET (important for forms)
-            var head = HTTPResponseHead(version: env.request.version, status: .seeOther)
+            var head = HTTPResponseHead(version: env.header.version, status: .seeOther)
             head.headers.add(name: "Location", value: path)
             for (key, value) in headers {
                 head.headers.add(name: key, value: value)
             }
             let part = HTTPServerResponsePart.head(head)
             _ = env.ctx.channel.write(part)
-            completeResponse(env)
+            _ = env.ctx.channel.writeAndFlush(HTTPServerResponsePart.end(nil)).then {
+                env.ctx.channel.close()
+            }
             return nil
         }
     }
     
     public static func writeFile(path: String, maxAge: UInt64? = 60) -> NIOInterpreter {
-        return NIOInterpreter { env in
-            let fullPath = env.resourcePaths.resolve(path) ?? URL(fileURLWithPath: "")
-            let fileHandleAndRegion = env.fileIO.openFile(path: fullPath.path, eventLoop: env.ctx.eventLoop)
+        return NIOInterpreter { deps in
+            let fullPath = deps.resourcePaths.resolve(path) ?? URL(fileURLWithPath: "")
+            let fileHandleAndRegion = deps.fileIO.openFile(path: fullPath.path, eventLoop: deps.ctx.eventLoop)
             fileHandleAndRegion.whenFailure { _ in
-                _ = write("Error", status: .badRequest).run(env)
+                _ = write("Error", status: .badRequest).run(deps)
             }
             fileHandleAndRegion.whenSuccess { (file, region) in
-                var response = HTTPResponseHead(version: env.request.version, status: .ok)
+                var response = HTTPResponseHead(version: deps.header.version, status: .ok)
                 response.headers.add(name: "Content-Length", value: "\(region.endIndex)")
                 let contentType: String
                 // (path as NSString) doesn't work on Linux... so using the initializer below.
@@ -78,15 +80,16 @@ public struct NIOInterpreter: Response {
                 if let m = maxAge {
                 	response.headers.add(name: "Cache-Control", value: "max-age=\(m)")
                 }
-                env.ctx.write(env.handler.wrapOutboundOut(.head(response)), promise: nil)
-                env.ctx.writeAndFlush(env.handler.wrapOutboundOut(.body(.fileRegion(region)))).then {
-                    let p: EventLoopPromise<Void> = env.ctx.eventLoop.newPromise()
-                    completeResponse(env, promise: p)
+                deps.ctx.write(deps.handler.wrapOutboundOut(.head(response)), promise: nil)
+                deps.ctx.writeAndFlush(deps.handler.wrapOutboundOut(.body(.fileRegion(region)))).then {
+                    let p: EventLoopPromise<Void> = deps.ctx.eventLoop.newPromise()
+                    deps.ctx.writeAndFlush(deps.handler.wrapOutboundOut(.end(nil)), promise: p)
+                    
                     return p.futureResult
-                }.thenIfError { (_: Error) in
-                    env.ctx.close()
-                }.whenComplete {
-                    _ = try? file.close()
+                    }.thenIfError { (_: Error) in
+                        deps.ctx.close()
+                    }.whenComplete {
+                        _ = try? file.close()
                 }
             }
             return nil
@@ -108,7 +111,7 @@ public struct NIOInterpreter: Response {
     
     public static func write(_ data: Data, status: HTTPResponseStatus = .ok, headers: [String: String] = [:]) -> NIOInterpreter {
         return NIOInterpreter { env in
-            var head = HTTPResponseHead(version: env.request.version, status: status)
+            var head = HTTPResponseHead(version: env.header.version, status: status)
             for (key, value) in headers {
                 head.headers.add(name: key, value: value)
             }
@@ -118,54 +121,31 @@ public struct NIOInterpreter: Response {
             buffer.write(bytes: data)
             let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
             _ = env.ctx.channel.write(bodyPart)
-            completeResponse(env)
+            _ = env.ctx.channel.writeAndFlush(HTTPServerResponsePart.end(nil)).then {
+                env.ctx.channel.close()
+            }
             return nil
         }
     }
 
     public static func write(_ string: String, status: HTTPResponseStatus = .ok, headers: [String: String] = [:]) -> NIOInterpreter {
         return NIOInterpreter { env in
-            let head = httpResponseHead(request: env.request, status: status, headers: HTTPHeaders(headers.map { ($0, $1) }))
+            var head = HTTPResponseHead(version: env.header.version, status: status)
+            for (key, value) in headers {
+                head.headers.add(name: key, value: value)
+            }
             let part = HTTPServerResponsePart.head(head)
             _ = env.ctx.channel.write(part)
             var buffer = env.ctx.channel.allocator.buffer(capacity: string.utf8.count)
             buffer.write(string: string)
             let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
             _ = env.ctx.channel.write(bodyPart)
-            completeResponse(env)
+            _ = env.ctx.channel.writeAndFlush(HTTPServerResponsePart.end(nil)).then {
+                env.ctx.channel.close()
+            }
             return nil
         }
     }
-    
-    private static func completeResponse(_ env: Deps, promise: EventLoopPromise<Void>? = nil) {
-        let promise = env.request.isKeepAlive ? promise : (promise ?? env.ctx.eventLoop.newPromise())
-        if !env.request.isKeepAlive {
-            promise!.futureResult.whenComplete { env.ctx.close(promise: nil) }
-        }
-        _ = env.ctx.channel.writeAndFlush(env.handler.wrapOutboundOut(.end(nil)), promise: promise)
-    }
-}
-
-// This code is taken from the Swift NIO project: https://github.com/apple/swift-nio/blob/nio-1.13/Sources/NIOHTTP1Server/main.swift#L36
-private func httpResponseHead(request: HTTPRequestHead, status: HTTPResponseStatus, headers: HTTPHeaders = HTTPHeaders()) -> HTTPResponseHead {
-    var head = HTTPResponseHead(version: request.version, status: status, headers: headers)
-    let connectionHeaders: [String] = head.headers[canonicalForm: "connection"].map { $0.lowercased() }
-    
-    if !connectionHeaders.contains("keep-alive") && !connectionHeaders.contains("close") {
-        // the user hasn't pre-set either 'keep-alive' or 'close', so we might need to add headers
-        switch (request.isKeepAlive, request.version.major, request.version.minor) {
-        case (true, 1, 0):
-            // HTTP/1.0 and the request has 'Connection: keep-alive', we should mirror that
-            head.headers.add(name: "Connection", value: "keep-alive")
-        case (false, 1, let n) where n >= 1:
-            // HTTP/1.1 (or treated as such) and the request has 'Connection: close', we should mirror that
-            head.headers.add(name: "Connection", value: "close")
-        default:
-            // we should match the default or are dealing with some HTTP that we don't support, let's leave as is
-            ()
-        }
-    }
-    return head
 }
 
 extension Base.HTTPMethod {
@@ -209,7 +189,7 @@ final class RouteHandler: ChannelInboundHandler {
             let cookies = header.headers["Cookie"].first.map {
                 $0.split(separator: ";").compactMap { $0.trimmingCharacters(in: .whitespaces).keyAndValue }
             } ?? []
-            let env = NIOInterpreter.Deps(request: header, ctx: ctx, fileIO: fileIO, handler: self, manager: FileManager.default, resourcePaths: paths)
+            let env = NIOInterpreter.Deps(header: header, ctx: ctx, fileIO: fileIO, handler: self, manager: FileManager.default, resourcePaths: paths)
 
             func notFound() {
                 log(info: "Not found: \(header.uri), method: \(header.method)")
@@ -233,7 +213,7 @@ final class RouteHandler: ChannelInboundHandler {
             }
         case .end:
             if let (p, header) = postCont {
-                let env = NIOInterpreter.Deps(request: header, ctx: ctx, fileIO: fileIO, handler: self, manager: FileManager.default, resourcePaths: paths)
+                let env = NIOInterpreter.Deps(header: header, ctx: ctx, fileIO: fileIO, handler: self, manager: FileManager.default, resourcePaths: paths)
                 let result = p(accumData).run(env)
                 accumData = Data()
                 assert(result == nil, "Can't read post data twice")
