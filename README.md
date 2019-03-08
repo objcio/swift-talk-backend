@@ -112,6 +112,9 @@ heroku container:release web
 
 ### Running in Docker
 
+For the docker container to be able to access PostgreSQL on the host, you have to allow access via TCP/IP.
+Add `host all all 0.0.0.0/0 trust` to pg_hba.conf (this opens up the PostgreSQL instance to everybody in your network, use something more finegrained if that's a problem) and add `listen_addresses = '*'` to postgresql.conf.
+
 ```sh
 docker run -a stdin -a stdout -i -t --env-file .env --env RDS_HOSTNAME=(ifconfig en1 | awk '/inet /{print $2}') -p 8765:8765 swifttalk-server
 ```
