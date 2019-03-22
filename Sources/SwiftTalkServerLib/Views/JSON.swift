@@ -54,7 +54,11 @@ extension CollectionView {
     }
 }
 
-private let encoder = JSONEncoder()
+private let encoder: JSONEncoder = {
+    let r = JSONEncoder()
+    r.dateEncodingStrategy = .secondsSince1970
+    return r
+}()
 
 func episodesJSONView() -> Data {
     let eps = Episode.all.released.map(EpisodeView.init)
