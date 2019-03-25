@@ -120,11 +120,11 @@ extension Task {
     func interpret(_ c: Lazy<ConnectionProtocol>, onCompletion: @escaping (Bool) -> ()) throws {
         switch self {
         case .syncTeamMembersWithRecurly(let userId):
-            guard let user = try c.get().execute(Row<UserData>.select(userId)) else { onCompletion(true); return }
-            let teamMembers = try c.get().execute(user.teamMembers)
-            let memberCount = user.data.role == .teamManager ? teamMembers.count - 1 : teamMembers.count
+            guard let user = try c.get().execute(Row<UserData>.select(userId)) else { onCompletion(true); return }            
+            let memberCount = try c.get().execute(user.teamMemberCountForRecurly)
             globals.urlSession.load(user.updateCurrentSubscription(numberOfTeamMembers: memberCount)) { sub in
-                onCompletion((sub?.subscription_add_ons?.first?.quantity) ?? 0 == memberCount)
+                guard let s = sub else { onCompletion(false); return }
+                onCompletion((s.subscription_add_ons?.first?.quantity) == memberCount)
             }
         
         case .releaseEpisode(let number):

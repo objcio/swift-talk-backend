@@ -680,8 +680,9 @@ struct Recurly {
         return RemoteEndpoint(xml: .put, url: url, headers: headers)
     }
     
-    func updateSubscription(_ subscription: Subscription, plan_code: String? = nil, numberOfTeamMembers: Int? = nil) -> RemoteEndpoint<Subscription> {
-        let addons: [UpdateSubscription.AddOn]? = numberOfTeamMembers == 0 ? nil : numberOfTeamMembers.map { [UpdateSubscription.AddOn(add_on_code: teamMemberAddOnCode, quantity: $0)] }
+    func updateSubscription(_ subscription: Subscription, plan_code: String? = nil, numberOfTeamMembers: Int) -> RemoteEndpoint<Subscription> {
+        let addons: [UpdateSubscription.AddOn]
+        addons = numberOfTeamMembers == 0 ? [] : [UpdateSubscription.AddOn(add_on_code: teamMemberAddOnCode, quantity: numberOfTeamMembers)]
         let url = base.appendingPathComponent("subscriptions/\(subscription.uuid)")
         return RemoteEndpoint(xml: .put, url: url, value: UpdateSubscription(timeframe: "now", plan_code: plan_code, subscription_add_ons: addons), headers: headers, query: [:])
     }

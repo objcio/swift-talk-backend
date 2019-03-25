@@ -107,6 +107,12 @@ extension Row where Element == UserData {
             """
         }
     }
+    
+    var teamMemberCountForRecurly: Query<Int> {
+        return teamMembers.map { teamMembers in
+            return self.data.role == .teamManager ? teamMembers.count - 1 : teamMembers.count
+        }
+    }
 }
 
 extension Row where Element == TaskData {

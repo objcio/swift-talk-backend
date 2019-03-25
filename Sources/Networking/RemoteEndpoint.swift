@@ -69,7 +69,8 @@ public struct RemoteEndpoint<A> {
 
 extension RemoteEndpoint: CustomStringConvertible {
     public var description: String {
-        return request.description
+        let data = request.httpBody ?? Data()
+        return "\(request.httpMethod ?? "GET") \(request.url) \(String(data: data, encoding: .utf8) ?? "")"
     }
 }
 

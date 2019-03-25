@@ -19,7 +19,6 @@ extension RouteTests {
 extension TaskTests {
     static let __allTests = [
         ("testSyncTeamMembersBillsAllTeamMembersForStandardUser", testSyncTeamMembersBillsAllTeamMembersForStandardUser),
-        ("testSyncTeamMembersBillsMinusOneTeamMembersForTeamManager", testSyncTeamMembersBillsMinusOneTeamMembersForTeamManager),
     ]
 }
 

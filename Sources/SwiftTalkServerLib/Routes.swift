@@ -89,6 +89,7 @@ public indirect enum Route: Equatable {
             case home
             case view(UUID)
             case find(String)
+            case sync(UUID)
         }
     }
 }
@@ -295,6 +296,10 @@ private let adminUserRoutes: [Router<Route.Admin.Users>] = [
     }),
     .c("find") / Router.string().transform({ .find($0) }, {
         guard case let .find(x) = $0 else { return nil }
+        return x
+    }),
+    .c("sync") / Router.uuid.transform({ .sync($0) }, {
+        guard case let .sync(x) = $0 else { return nil }
         return x
     }),
 ]
