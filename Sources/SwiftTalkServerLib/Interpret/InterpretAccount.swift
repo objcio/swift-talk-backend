@@ -62,10 +62,10 @@ extension Route.Account {
             return I.query(sess.user.deleteSession(sess.sessionId)) {
                 return I.redirect(to: .home)
             }
-        case let .register(couponCode, team):
+        case let .register(couponCode, planCode, team):
             let role: UserData.Role = team ? .teamManager : .user
-            return editAccount(form: registerForm(couponCode: couponCode, team: team), role: role) {
-                return sess.premiumAccess ? .home : .subscription(.new(couponCode: couponCode, team: team))
+            return editAccount(form: registerForm(couponCode: couponCode, planCode: planCode, team: team), role: role) {
+                return sess.premiumAccess ? .home : .subscription(.new(couponCode: couponCode, planCode: planCode, team: team))
             }
         case .profile:
             return editAccount(form: accountForm(), role: sess.user.data.role, cont: { .account(.profile) })
@@ -143,8 +143,22 @@ extension Route.Account {
             
         case .teamMembers:
             let signupLink = Route.signup(.teamMember(token: sess.user.data.teamToken)).url
-            return .query(sess.user.teamMembers) { members in
-                .write(html: teamMembersView(teamMembers: members, signupLink: signupLink))
+            return I.query(sess.user.teamMembers) { members in
+                return I.onSuccess(promise: sess.user.currentSubscription.promise, do: { sub in
+                    guard let s = sub, let p = Plan.all.first(where: { $0.plan_code == s.plan.plan_code }) else {
+                        throw ServerError(privateMessage: "Can't get sub or plan: \(sub)")
+                    }
+                    return I.onSuccess(promise: p.teamMemberAddOn.promise, do: { addOn in
+                        print(addOn.unit_amount_in_cents)
+                        let prettyAmount: String?
+                        if addOn.unit_amount_in_cents.usdCents > 0 {
+                            prettyAmount = "\(addOn.unit_amount_in_cents.plainText) \(p.prettyInterval)"
+                        } else {
+                            prettyAmount = nil
+                        }
+                        return I.write(html: teamMembersView(teamMembers: members, price: prettyAmount, signupLink: signupLink))
+                    })
+                })
             }
         
         case .invalidateTeamToken:

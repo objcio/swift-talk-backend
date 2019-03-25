@@ -19,13 +19,20 @@ extension Route.Subscription {
     }
 
     private func interpret<I: STResponse>(sesssion sess: Session) throws -> I where I.Env == STRequestEnvironment {
-        func newSubscription(couponCode: String?, team: Bool, errs: [String]) throws -> I {
+        func newSubscription(couponCode: String?, planCode: String?, team: Bool, errs: [String]) throws -> I {
+            if let p = planCode, let plan = Plan.find(code: p), plan.isEnterprisePlan {
+                return try I.write(html: newSub(coupon: nil, team: team, plans: [plan], errs: errs))
+            }
+            guard let m = Plan.monthly, let y = Plan.yearly else {
+                throw ServerError(privateMessage: "No monthly or yearly plan: \(Plan.all)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
+            }
+            let plans = [m,y]
             if let c = couponCode {
                 return .onSuccess(promise: recurly.coupon(code: c).promise, do: { coupon in
-                    return try .write(html: newSub(coupon: coupon, team: team, errs: errs))
+                    return try .write(html: newSub(coupon: coupon, team: team, plans: plans, errs: errs))
                 })
             } else {
-                return try .write(html: newSub(coupon: nil, team: team, errs: errs))
+                return try I.write(html: newSub(coupon: nil, team: team, plans: plans, errs: errs))
             }
         }
 
@@ -44,10 +51,10 @@ extension Route.Subscription {
                     case .errors(let messages):
                         log(RecurlyErrors(messages))
                         if messages.contains(where: { $0.field == "subscription.account.email" && $0.symbol == "invalid_email" }) {
-                            let response = registerForm(couponCode: couponCode, team: team).render(.init(user.data), [ValidationError("email", "Please provide a valid email address and try again.")])
+                            let response = registerForm(couponCode: couponCode, planCode: planId, team: team).render(.init(user.data), [ValidationError("email", "Please provide a valid email address and try again.")])
                             return .write(html: response)
                         }
-                        return try newSubscription(couponCode: couponCode, team: team, errs: messages.map { $0.message })
+                        return try newSubscription(couponCode: couponCode, planCode: planId, team: team, errs: messages.map { $0.message })
                     case .success(let sub):
                         return .query(user.changeSubscriptionStatus(sub.state == .active)) {
                             // todo: flash: "Thank you for supporting us
@@ -57,16 +64,16 @@ extension Route.Subscription {
                 })
             }
         
-        case let .new(couponCode, team):
+        case let .new(couponCode, planCode, team):
             if !user.data.confirmedNameAndEmail {
-                let resp = registerForm(couponCode: couponCode, team: team).render(.init(user.data), [])
+                let resp = registerForm(couponCode: couponCode, planCode: planCode, team: team).render(.init(user.data), [])
                 return .write(html: resp)
             } else {
                 return .query(Task.unfinishedSubscriptionReminder(userId: user.id).schedule(weeks: 1)) {
                     var u = user
                     u.data.role = team ? .teamManager : .user
                     return .query(u.update()) {
-                        try newSubscription(couponCode: couponCode, team: team, errs: [])
+                        try newSubscription(couponCode: couponCode, planCode: planCode, team: team, errs: [])
                     }
                 }
             }
@@ -80,7 +87,7 @@ extension Route.Subscription {
                     return .query(teamMemberData.insert) { _ in
                         return .execute(Task.syncTeamMembersWithRecurly(userId: teamManager.id).schedule(minutes: 5)) { _ in
                             if !user.data.confirmedNameAndEmail {
-                                let resp = registerForm(couponCode: nil, team: false).render(.init(user.data), [])
+                                let resp = registerForm(couponCode: nil, planCode: nil, team: false).render(.init(user.data), [])
                                 return .write(html: resp)
                             } else {
                                 return .redirect(to: .home)

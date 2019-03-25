@@ -25,5 +25,9 @@ final class RouteTests: XCTestCase {
         XCTAssertEqual(Route.init(Request("/hooks/recurly/123")), Route.webhook(.recurlyWebhook("123")))
         XCTAssertEqual(Route.init(Request("/hooks/github")), Route.webhook(.githubWebhook))
         XCTAssertEqual(Route.init(Request("/users/auth/github/callback?code=abc&origin=/anotherRoute")), Route.login(.githubCallback(code: "abc", origin: "/anotherRoute")))
+        
+        XCTAssertEqual(Route.init(Request("/subscribe")), Route.signup(.subscribe(planName: nil)))
+        XCTAssertEqual(Route.init(Request("/subscribe/test")), Route.signup(.subscribe(planName: "test")))
+        XCTAssertEqual(Route.init(Request("/subscribe/test")), Route.signup(.subscribe(planName: "test")))
     }
 }

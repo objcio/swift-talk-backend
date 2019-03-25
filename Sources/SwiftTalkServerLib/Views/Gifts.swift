@@ -11,20 +11,31 @@ import HTML
 import Database
 import WebServer
 
+extension Amount {
+    var plainText: String {
+        let amount = Double(usdCents) / 100
+        let amountStr =  amount.isInt ? "\(Int(amount))" : String(format: "%.2f", amount)
+        return "$\(amountStr)"
+    }
+    
+    var pretty: Node {
+        let amount = Double(usdCents) / 100
+        let amountStr =  amount.isInt ? "\(Int(amount))" : String(format: "%.2f", amount)
+        return .span(class: "ms7", [
+            .span(class: "opacity-50", ["$"]),
+            .span(class: "bold", [.text(amountStr)])
+        ])
+    }
+}
 
 func giftHome(plans: [Plan]) throws -> Node {
     func node(plan: Plan) -> Node {
         let target = Route.gift(.new(planCode: plan.plan_code))
-        let amount = Double(plan.unit_amount_in_cents.usdCents) / 100
-        let amountStr =  amount.isInt ? "\(Int(amount))" : String(format: "%.2f", amount) // don't use a decimal point for integer numbers
         return .li(class: "m+|col m+|width-1/3 ph--", [
             .link(to: target, attributes: ["style": "text-decoration: none;"], [
                 .div(class: "pt++ pb ph+ pattern-gradient pattern-gradient--swifttalk radius-5 text-center", [
                     .div(class: "text-center color-white", [
-                        .span(class: "ms7", [
-                            .span(class: "opacity-50", ["$"]),
-                            .span(class: "bold", [.text(amountStr)])
-                        ]),
+                        plan.unit_amount_in_cents.pretty,
                     ]),
                     .link(to: target, class: "mt+ c-button c-button--small c-button--wide", [.text(plan.prettyDuration)])
                 ])

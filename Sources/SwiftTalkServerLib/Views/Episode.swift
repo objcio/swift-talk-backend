@@ -408,7 +408,7 @@ extension Episode {
         
         let noTranscriptAccess = session?.isTeamManager == true
             ? noTranscript(text: "Team manager accounts don't have access to Swift Talk content by default. To enable content access on this account, please add yourself as a team member.", buttonTitle: "Manage Team Members", target: .account(.teamMembers))
-            : noTranscript(text: "Become a subscriber to watch future and all \(Episode.subscriberOnly) current subscriber-only episodes, plus enjoy access to episode video downloads and \(teamDiscount)% discount for your team members.", buttonTitle: "Become a subscriber", target: .signup(.subscribe))
+            : noTranscript(text: "Become a subscriber to watch future and all \(Episode.subscriberOnly) current subscriber-only episodes, plus enjoy access to episode video downloads and \(teamDiscount)% discount for your team members.", buttonTitle: "Become a subscriber", target: .signup(.subscribe(planName: nil)))
 
         let scripts: [Node] = (session?.user.data.csrfToken).map { token in
             return [
@@ -487,7 +487,7 @@ let subscriptionPitch = Node.div(class: "bgcolor-pale-blue border border-1 borde
         .h3(class: "mb-- bold lh-125", ["This episode is freely available thanks to the support of our subscribers"]),
         .p(class: "lh-135", [
             .span(class: "opacity-60", ["Subscribers get exclusive access to new and all previous subscriber-only episodes, video downloads, and 30% discount for team members."]),
-            .link(to: Route.signup(.subscribe), class: "color-blue no-decoration hover-cascade", [
+            .link(to: Route.signup(.subscribe(planName: nil)), class: "color-blue no-decoration hover-cascade", [
                 .span(class: "hover-cascade__border-bottom", ["Become a Subscriber"]),
                 .span(class: "bold", [.raw(" &rarr;")])
             ])
@@ -539,7 +539,7 @@ func subscribeBanner() -> Node {
                     })
                 ]),
                 .div(class: "s+|absolute s+|position-sw col s+|width-1/2", [
-                    .link(to: .signup(.subscribe), class: "c-button", [.raw("Pricing &amp; Sign Up")])
+                    .link(to: .signup(.subscribe(planName: nil)), class: "c-button", [.raw("Pricing &amp; Sign Up")])
                 ])
             ])
         ])

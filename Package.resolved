@@ -150,8 +150,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio.git",
         "state": {
           "branch": null,
-          "revision": "98434c1f1d687ff5a24d2cabfbd19b5c7d2d7a2f",
-          "version": "1.13.0"
+          "revision": "29a9f2aca71c8afb07e291336f1789337ce235dd",
+          "version": "1.13.2"
         }
       },
       {
@@ -168,8 +168,8 @@
         "repositoryURL": "https://github.com/drmohundro/SWXMLHash.git",
         "state": {
           "branch": null,
-          "revision": "9ba116841126f6c63435beef21a4cd247c32d2e7",
-          "version": "4.7.6"
+          "revision": "0d6bb315528888edde0dafe93564f074669c44e9",
+          "version": "4.8.0"
         }
       },
       {

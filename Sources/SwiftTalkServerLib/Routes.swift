@@ -29,10 +29,11 @@ public indirect enum Route: Equatable {
     case login(Login)
     case signup(Signup)
     case subscription(Subscription)
+    case admin(Admin)
 
     public enum Signup: Equatable {
         case promoCode(String)
-        case subscribe
+        case subscribe(planName: String?)
         case subscribeTeam
         case teamMember(token: UUID)
     }
@@ -58,12 +59,12 @@ public indirect enum Route: Equatable {
         case reactivate
         case upgrade
         case create(couponCode: String?, team: Bool)
-        case new(couponCode: String?, team: Bool)
+        case new(couponCode: String?, planCode: String?, team: Bool)
         case registerAsTeamMember(token: UUID, terminate: Bool)
     }
    
     public enum Account: Equatable {
-        case register(couponCode: String?, team: Bool)
+        case register(couponCode: String?, planCode: String?, team: Bool)
         case profile
         case billing
         case teamMembers
@@ -79,6 +80,16 @@ public indirect enum Route: Equatable {
         case pay(UUID)
         case redeem(UUID)
         case thankYou(UUID)
+    }
+    
+    public enum Admin: Equatable {
+        case home
+        case users(Users)
+        public enum Users: Equatable {
+            case home
+            case view(UUID)
+            case find(String)
+        }
     }
 }
 
@@ -145,11 +156,11 @@ private let accountRoutes: [Router<Route.Account>] = [
         guard case let .deleteTeamMember(id) = $0 else { return nil };
         return id
     }),
-    .c("register") / (Router.optionalString() / Router.booleanQueryParam(name: "team")).transform({
-        .register(couponCode: $0.0, team: $0.1)
+    .c("register") / (Router.optionalString() / Router.optionalQueryParam(name: "plan_code") / Router.booleanQueryParam(name: "team")).transform({
+        .register(couponCode: $0.0.0, planCode: $0.0.1, team: $0.1)
     }, {
-        guard case let .register(couponCode, team) = $0 else { return nil }
-        return (couponCode, team)
+        guard case let .register(couponCode, planCode, team) = $0 else { return nil }
+        return ((couponCode, planCode), team)
     }),
     .c("invalidate_team_token", .invalidateTeamToken)
 ]
@@ -160,11 +171,11 @@ private let accountRoute: Router<Route> = .c("account") / choice(accountRoutes).
 })
 
 private let subscriptionRoutes: [Router<Route.Subscription>] = [
-    (.c("new") / Router.optionalString() / Router.booleanQueryParam(name: "team")).transform({
-        Route.Subscription.new(couponCode: $0.0, team: $0.1)
+    (.c("new") / Router.optionalString() / Router.optionalQueryParam(name: "plan_code") / Router.booleanQueryParam(name: "team")).transform({
+        Route.Subscription.new(couponCode: $0.0.0, planCode: $0.0.1, team: $0.1)
     }, {
-        guard case let .new(couponCode, team) = $0 else { return nil }
-        return (couponCode, team)
+        guard case let .new(couponCode, planCode, team) = $0 else { return nil }
+        return ((couponCode, planCode), team)
     }),
     .c("register_team_member") / (Router.uuid / Router.booleanQueryParam(name: "terminate")).transform({
         Route.Subscription.registerAsTeamMember(token: $0.0, terminate: $0.1)
@@ -189,7 +200,10 @@ private let subscriptionRoute: Router<Route> = .c("subscription") / choice(subsc
 })
 
 private let signupRoutes: [Router<Route.Signup>] = [
-    .c("subscribe", .subscribe),
+    .c("subscribe") / Router.optionalString().transform(Route.Signup.subscribe, {
+        guard case let .subscribe(s) = $0 else { return nil }
+        return s
+    }),
     .c("subscribe_team", .subscribeTeam),
     .c("team_member_signup") / Router.uuid.transform({ .teamMember(token: $0) }, {
         guard case let .teamMember(token) = $0 else { return nil }
@@ -266,8 +280,36 @@ private let giftRoutes: [Router<Route.Gifts>] = [
     })
 ]
 
+
+
 private let giftRoute: Router<Route> = .c("gift") / choice(giftRoutes).transform(Route.gift, {
     guard case let .gift(x) = $0 else { return nil }
+    return x
+})
+
+private let adminUserRoutes: [Router<Route.Admin.Users>] = [
+    Router(.home),
+    Router.uuid.transform({ .view($0) }, {
+        guard case let .view(x) = $0 else { return nil }
+        return x
+    }),
+    .c("find") / Router.string().transform({ .find($0) }, {
+        guard case let .find(x) = $0 else { return nil }
+        return x
+    }),
+]
+
+
+private let adminRoutes: [Router<Route.Admin>] = [
+    Router(.home),
+    .c("users") / choice(adminUserRoutes).transform(Route.Admin.users, {
+        guard case let .users(x) = $0 else { return nil }
+        return x
+    })
+]
+
+private let adminRoute: Router<Route> = .c("admin") / choice(adminRoutes).transform(Route.admin, {
+    guard case let .admin(x) = $0 else { return nil }
     return x
 })
 
@@ -298,6 +340,7 @@ private let subRoutes: [Router<Route>] = [
     subscriptionRoute,
     signupRoute,
     webhookRoute,
+    adminRoute,
 ]
 
 let router = choice(generalRoutes + subRoutes)
