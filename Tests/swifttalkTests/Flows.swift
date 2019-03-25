@@ -135,25 +135,25 @@ final class FlowTests: XCTestCase {
     // todo test coupon codes
 
     func testSubscription() throws {
-        let subscribeWithoutASession = try Flow.landingPage(session: nil, .signup(.subscribe))
+        let subscribeWithoutASession = try Flow.landingPage(session: nil, .signup(.subscribe(planName: nil)))
         subscribeWithoutASession.verify { page in
-            testLinksTo(page, route: .login(.login(continue: .subscription(.new(couponCode: nil, team: false)))))
+            testLinksTo(page, route: .login(.login(continue: .subscription(.new(couponCode: nil, planCode: nil, team: false)))))
         }
         
         setupURLSession([
             EndpointAndResult(endpoint: recurly.account(with: nonSubscribedUser.user.id), response: nil),
         ])
         
-        let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .signup(.subscribe))
-        try notSubscribed.click(.subscription(.new(couponCode: nil, team: false)), expectedQueries: []) {
+        let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .signup(.subscribe(planName: nil)))
+        try notSubscribed.click(.subscription(.new(couponCode: nil, planCode: nil, team: false)), expectedQueries: []) {
             var confirmedSess = $0.session!
             confirmedSess.user.data.confirmedNameAndEmail = true
-            try $0.fillForm(to: .account(.register(couponCode: nil, team: false)), expectedQueries: [
+            try $0.fillForm(to: .account(.register(couponCode: nil, planCode: nil, team: false)), expectedQueries: [
                 QueryAndResult(query: confirmedSess.user.update(), response: ()),
             ]) {
                 try $0.withSession(confirmedSess) {
                     try $0.followRequests {
-                        try $0.followRedirect(to: .subscription(.new(couponCode: nil, team: false)), expectedQueries: [
+                        try $0.followRedirect(to: .subscription(.new(couponCode: nil, planCode: nil, team: false)), expectedQueries: [
                             QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1)),
                             QueryAndResult(query: confirmedSess.user.update(), response: ()),
                         ]) { _ in XCTAssert(true) }
@@ -166,7 +166,7 @@ final class FlowTests: XCTestCase {
     func testTeamSubscription() throws {
         let subscribeWithoutASession = try Flow.landingPage(session: nil, .signup(.subscribeTeam))
         subscribeWithoutASession.verify { page in
-            testLinksTo(page, route: .login(.login(continue: .subscription(.new(couponCode: nil, team: true)))))
+            testLinksTo(page, route: .login(.login(continue: .subscription(.new(couponCode: nil, planCode: nil, team: true)))))
         }
 
         setupURLSession([
@@ -174,16 +174,16 @@ final class FlowTests: XCTestCase {
         ])
 
         let notSubscribed = try Flow.landingPage(session: nonSubscribedUser, .signup(.subscribeTeam))
-        try notSubscribed.click(.subscription(.new(couponCode: nil, team: true)), expectedQueries: []) {
+        try notSubscribed.click(.subscription(.new(couponCode: nil, planCode: nil, team: true)), expectedQueries: []) {
             var confirmedSess = $0.session!
             confirmedSess.user.data.confirmedNameAndEmail = true
             confirmedSess.user.data.role = .teamManager
-            try $0.fillForm(to: .account(.register(couponCode: nil, team: true)), expectedQueries: [
+            try $0.fillForm(to: .account(.register(couponCode: nil, planCode: nil, team: true)), expectedQueries: [
                 QueryAndResult(query: confirmedSess.user.update(), response: ())
             ]) {
                 try $0.withSession(confirmedSess) {
                     try $0.followRequests {
-                        try $0.followRedirect(to: .subscription(.new(couponCode: nil, team: true)), expectedQueries: [
+                        try $0.followRedirect(to: .subscription(.new(couponCode: nil, planCode: nil, team: true)), expectedQueries: [
                             QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1)),
                             QueryAndResult(confirmedSess.user.update())
                         ]) { _ in XCTAssert(true) }
@@ -218,7 +218,7 @@ final class FlowTests: XCTestCase {
             var subscribed = Session(sessionId: nonSubscribedUser.sessionId, user: nonSubscribedUser.user, teamMember: teamMember, teamManager: subscribedTeamManager.user, gifter: nil)
             subscribed.user.data.confirmedNameAndEmail = true
             try $0.withSession(subscribed) {
-                try $0.fillForm(to: .account(.register(couponCode: nil, team: false)), data: ["name": subscribed.user.data.name, "email": subscribed.user.data.email], expectedQueries: [
+                try $0.fillForm(to: .account(.register(couponCode: nil, planCode: nil, team: false)), data: ["name": subscribed.user.data.name, "email": subscribed.user.data.email], expectedQueries: [
                     QueryAndResult(query: subscribed.user.update(), response: ())
                 ]) {
                     try $0.followRequests {

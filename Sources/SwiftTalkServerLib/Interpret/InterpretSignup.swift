@@ -14,11 +14,18 @@ extension Route.Signup {
     func interpret<I: STResponse>() throws -> I where I.Env == STRequestEnvironment {
         switch self {
         
-        case .subscribe:
-            guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
-                throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])")
+        case .subscribe(let planName):
+            if let p = planName {
+                return I.withSession { _ in
+                    guard let plan = Plan.find(code: p) else { throw ServerError(privateMessage: "No such plan \(p)")}
+                    return I.redirect(to: .subscription(.new(couponCode: nil, planCode: p, team: false)))
+                }
+            } else {
+                guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
+                    throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])")
+                }
+                return .write(html: renderSubscribe(monthly: monthly, yearly: yearly))
             }
-            return .write(html: renderSubscribe(monthly: monthly, yearly: yearly))
         
         case .subscribeTeam:
             guard let monthly = Plan.monthly, let yearly = Plan.yearly else {

@@ -230,7 +230,7 @@ func flash(message: String, type: FlashType) -> Node {
 
 func userHeader(_ session: Session?) -> Node {
     let subscribeButton = Node.li(class: "flex items-center ml+", [
-        .link(to: .signup(.subscribe), class: "button button--tight button--themed fz-nav", [.text("Subscribe")])
+        .link(to: .signup(.subscribe(planName: nil)), class: "button button--tight button--themed fz-nav", [.text("Subscribe")])
     ])
     
     func link(to route: Route, text: String) -> Node {

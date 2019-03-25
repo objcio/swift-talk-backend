@@ -68,6 +68,9 @@ fileprivate extension Plan {
 }
 
 extension Plan {
+    static func find(code: String) -> Plan? {
+        return all.first { $0.plan_code == code }
+    }
     static var monthly: Plan? {
         return all.first { $0.isMonthly && $0.isStandardPlan }
     }

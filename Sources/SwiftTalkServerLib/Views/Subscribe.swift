@@ -50,8 +50,8 @@ func profile(submitTitle: String, action: Route) -> Form<ProfileFormData, STRequ
     })
 }
 
-func registerForm(couponCode: String?, team: Bool) -> Form<ProfileFormData, STRequestEnvironment> {
-    return profile(submitTitle: "Create Account", action: .account(.register(couponCode: couponCode, team: team))).wrap { node in
+func registerForm(couponCode: String?, planCode: String?, team: Bool) -> Form<ProfileFormData, STRequestEnvironment> {
+    return profile(submitTitle: "Create Account", action: .account(.register(couponCode: couponCode, planCode: planCode, team: team))).wrap { node in
         LayoutConfig(contents: [
             .header([
                 .div(class: "container-h pb+ pt-", [
@@ -63,23 +63,13 @@ func registerForm(couponCode: String?, team: Bool) -> Form<ProfileFormData, STRe
     }
 }
 
-fileprivate extension Amount {
-    var pretty: String {
-        let amount = Double(usdCents) / 100
-        return amount.isInt ? "\(Int(amount))" : String(format: "%.2f", amount) // don't use a decimal point for integer numbers
-    }
-}
-
 fileprivate extension Plan {
     func priceBox(coupon: Coupon?, team: Bool = false) -> Node {
         let basePriceKey: KeyPath<Plan, Amount> = team ? \.teamMemberPrice : \.unit_amount_in_cents
         let price = discountedPrice(basePrice: basePriceKey, coupon: coupon)
         return .div([
             .div(class: "smallcaps-large mb-", [.text(prettyInterval)]),
-            .span(class: "ms7", [
-                .span(class: "opacity-50", ["$"]),
-                .span(class: "bold", [.text(price.pretty)])
-            ]),
+            price.pretty,
             team ? .div(class: "smallcaps-large mt-", [.raw("Per Person<sup>*</sup>")]) : .none
         ])
     }
@@ -98,9 +88,9 @@ fileprivate func continueLink(session: Session?, coupon: Coupon?, team: Bool) ->
             return continueLink(to: .account(.billing), title: "You're already subscribed", extraClasses: "c-button--ghost")
         }
     } else if session?.user != nil {
-        return continueLink(to: .subscription(.new(couponCode: coupon?.coupon_code, team: team)), title: "Proceed to payment")
+        return continueLink(to: .subscription(.new(couponCode: coupon?.coupon_code, planCode: nil, team: team)), title: "Proceed to payment")
     } else {
-        return continueLink(to: .login(.login(continue: Route.subscription(.new(couponCode: coupon?.coupon_code, team: team)))), title: "Sign in with Github")
+        return continueLink(to: .login(.login(continue: Route.subscription(.new(couponCode: coupon?.coupon_code, planCode: nil, team: team)))), title: "Sign in with Github")
     }
 }
 
@@ -203,14 +193,9 @@ fileprivate func smallPrint(_ lines: [Node]) -> Node {
     return .ul(class: "stack pl", lines.map { .li([$0])})
 }
 
-func newSub(coupon: Coupon?, team: Bool, errs: [String]) throws -> Node {
-    guard let m = Plan.monthly, let y = Plan.yearly else {
-        throw ServerError(privateMessage: "No monthly or yearly plan: \(Plan.all)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
-    }
+func newSub(coupon: Coupon?, team: Bool, plans: [Plan], errs: [String]) throws -> Node {
     return .withCSRF { csrf in
-        let data = NewSubscriptionData(action: Route.subscription(.create(couponCode: coupon?.coupon_code, team: team)).path, public_key: env.recurlyPublicKey, plans: [
-            .init(m), .init(y)
-            ], payment_errors: errs, method: .post, coupon: coupon.map(NewSubscriptionData.Coupon.init), csrf: csrf)
+        let data = NewSubscriptionData(action: Route.subscription(.create(couponCode: coupon?.coupon_code, team: team)).path, public_key: env.recurlyPublicKey, plans: plans.map { .init($0) }, payment_errors: errs, method: .post, coupon: coupon.map(NewSubscriptionData.Coupon.init), csrf: csrf)
         return LayoutConfig(contents: [
             .header([
                 .div(class: "container-h pb+ pt+", [
