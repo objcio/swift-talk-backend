@@ -81,7 +81,11 @@ extension Plan {
     }
 
     var isStandardPlan: Bool {
-        return !isGiftPlan
+        return !isGiftPlan && !isEnterprisePlan
+    }
+    
+    var isEnterprisePlan: Bool {
+        return plan_code.hasPrefix("enterprise")
     }
     
     var isGiftPlan: Bool {

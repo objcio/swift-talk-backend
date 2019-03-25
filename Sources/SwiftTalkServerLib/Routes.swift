@@ -29,6 +29,7 @@ public indirect enum Route: Equatable {
     case login(Login)
     case signup(Signup)
     case subscription(Subscription)
+    case admin(Admin)
 
     public enum Signup: Equatable {
         case promoCode(String)
@@ -79,6 +80,16 @@ public indirect enum Route: Equatable {
         case pay(UUID)
         case redeem(UUID)
         case thankYou(UUID)
+    }
+    
+    public enum Admin: Equatable {
+        case home
+        case users(User)
+        public enum User: Equatable {
+            case home
+            case view(UUID)
+            case find(String)
+        }
     }
 }
 
@@ -266,8 +277,36 @@ private let giftRoutes: [Router<Route.Gifts>] = [
     })
 ]
 
+
+
 private let giftRoute: Router<Route> = .c("gift") / choice(giftRoutes).transform(Route.gift, {
     guard case let .gift(x) = $0 else { return nil }
+    return x
+})
+
+private let adminUserRoutes: [Router<Route.Admin.User>] = [
+    Router(.home),
+    Router.uuid.transform({ .view($0) }, {
+        guard case let .view(x) = $0 else { return nil }
+        return x
+    }),
+    .c("find") / Router.string().transform({ .find($0) }, {
+        guard case let .find(x) = $0 else { return nil }
+        return x
+    }),
+]
+
+
+private let adminRoutes: [Router<Route.Admin>] = [
+    Router(.home),
+    .c("users") / choice(adminUserRoutes).transform(Route.Admin.users, {
+        guard case let .users(x) = $0 else { return nil }
+        return x
+    })
+]
+
+private let adminRoute: Router<Route> = .c("admin") / choice(adminRoutes).transform(Route.admin, {
+    guard case let .admin(x) = $0 else { return nil }
     return x
 })
 
@@ -298,6 +337,7 @@ private let subRoutes: [Router<Route>] = [
     subscriptionRoute,
     signupRoute,
     webhookRoute,
+    adminRoute,
 ]
 
 let router = choice(generalRoutes + subRoutes)

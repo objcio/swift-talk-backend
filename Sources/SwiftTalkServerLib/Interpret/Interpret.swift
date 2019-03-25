@@ -49,6 +49,8 @@ extension Route {
 
         case let .webhook(hook):
           return try hook.interpret()
+        case let .admin(admin):
+            return try admin.interpret()
 
         case .home:
             return .withSession { session in
