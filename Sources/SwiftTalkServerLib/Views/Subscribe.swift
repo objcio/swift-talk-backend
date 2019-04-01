@@ -179,7 +179,7 @@ func renderSubscribeTeam(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> 
                     ]),
                 .div(class: "ms-1 color-gray-65 lh-110 text-center center pt+ max-width-8", [
                     smallPrint([
-                        .span([.raw("<sup>*</sup>"), .text("Prices apply from the 2nd team member. The first team member is included in the subscription base price, $\(monthly.discountedPrice(coupon: coupon).pretty)/month or $\(yearly.discountedPrice(coupon: coupon).pretty)/year")]),
+                        .span([.raw("<sup>*</sup>"), .text("Prices apply from the 2nd team member. The first team member is included in the subscription base price, \(monthly.discountedPrice(coupon: coupon).plainText)/month or \(yearly.discountedPrice(coupon: coupon).plainText)/year")]),
                         "All prices shown excluding VAT (only applies to EU customers).",
                     ])
                 ])
