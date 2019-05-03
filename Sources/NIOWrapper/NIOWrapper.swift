@@ -153,6 +153,7 @@ extension Base.HTTPMethod {
         switch value {
         case .GET: self = .get
         case .POST: self = .post
+        case .HEAD: self = .head
         default: return nil
         }
     }

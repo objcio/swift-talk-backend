@@ -11,6 +11,7 @@ import Foundation
 public enum HTTPMethod: String, Codable {
     case post = "POST"
     case get = "GET"
+    case head = "HEAD"
 }
 
 public struct Request {
