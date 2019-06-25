@@ -14,6 +14,7 @@ final class Static<A> {
     typealias Compute = (_ callback: @escaping (A?) -> ()) -> ()
     private var compute: Compute
     fileprivate let observable: Observable<A?>
+    private var isRefreshing: Bool = false
     
     init(sync: @escaping () -> A?) {
         observable = Observable(sync())
@@ -29,8 +30,13 @@ final class Static<A> {
     }
     
     func refresh() {
+        if isRefreshing {
+            return
+        }
+        isRefreshing = true
         compute { [weak self] x in
             self?.observable.send(x)
+            self?.isRefreshing = false
         }
     }
 }
