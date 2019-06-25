@@ -14,6 +14,8 @@ struct CollectionView: Codable {
     var artwork: URL
     var episodes_count: Int
     var total_duration: Int
+    var description: String
+    var new: Bool
 }
 
 struct EpisodeView: Codable {
@@ -26,6 +28,8 @@ struct EpisodeView: Codable {
     var released_at: Date
     var collection: String // todo: slug<collection>
     var subscription_only: Bool
+    var hls_url: URL?
+    var preview_url: URL?
 }
 
 extension EpisodeView {
@@ -39,6 +43,8 @@ extension EpisodeView {
         self.released_at = e.releaseAt
         self.collection = e.primaryCollection?.id.rawValue ?? ""
         self.subscription_only = e.subscriptionOnly
+        self.hls_url = e.video?.hlsURL
+        self.preview_url = e.previewVideo?.hlsURL
     }
 }
 
@@ -48,9 +54,11 @@ extension CollectionView {
         title = c.title
         url = Route.collection(c.id).url
         artwork = env.baseURL.appendingPathComponent(c.artwork)
+        description = c.description
         let eps = c.allEpisodes.released
         episodes_count = eps.count
         total_duration = Int(eps.totalDuration)
+        new = c.new
     }
 }
 

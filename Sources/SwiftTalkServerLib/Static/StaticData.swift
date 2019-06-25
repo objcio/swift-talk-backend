@@ -67,8 +67,13 @@ fileprivate let plansSource: Static<[Plan]> = Static(async: { cb in
     }
 })
 
+var episodesObserver: Any? = nil
+
 func refreshStaticData() {
     episodesSource.refresh()
+    episodesObserver = episodesSource.observable.observe { _ in
+        episodesVimeoInfo.refresh()
+    }
     collectionsSource.refresh()
     plansSource.refresh()
     collaboratorsSource.refresh()
@@ -76,10 +81,12 @@ func refreshStaticData() {
     verifyStaticData()
 }
 
+
 func verifyStaticData() {
     //    myAssert(Plan.all.count >= 2)
     let episodes = Episode.all
     let colls = Collection.all
+    let _ = episodes.map { $0.video } // triggers loading of the videos
     for e in episodes {
         for c in e.collections {
             assert(colls.contains(where: { $0.id == c }), "\(c) \(e)")
@@ -123,6 +130,52 @@ fileprivate var transcriptsO: Observable<[Transcript]> = transcriptsSource.obser
 
 fileprivate var plansO: Observable<[Plan]> = plansSource.observable.map { $0 ?? [] }
 
+fileprivate let episodesVimeoInfo = Static<(full: [Id<Episode>:Video], previews: [Id<Episode>:Video])>(async: { cb in
+    let e = episodesSource.observable.value ?? []
+    let g = DispatchGroup()
+    let q = DispatchQueue(label: "Episodes Data")
+    var full: [Id<Episode>: Video] = [:]
+    var previews: [Id<Episode>: Video] = [:]
+    let rateLimit = 100 // requests per second
+    var rateLimiter = (0...).lazy.map { Double($0) / (Double(rateLimit)) }.makeIterator()
+    
+    for i in 0..<e.count {
+        let ep = e[i]
+        g.enter() // for the full video
+        q.asyncAfter(deadline: .now() + rateLimiter.next()!) {
+            globals.urlSession.load(vimeo.videoInfo(for: ep.vimeoId)) { res in
+                q.async {
+                    full[ep.id] = res
+                    g.leave()
+                }
+            }
+        }
+        q.asyncAfter(deadline: .now() + rateLimiter.next()!) {
+            if let p = ep.previewVimeoId {
+                g.enter()
+                globals.urlSession.load(vimeo.videoInfo(for: p)) { res in
+                    q.async {
+                        previews[ep.id] = res
+                        g.leave()
+                    }
+                }
+            }
+            
+        }
+    }
+    let q2 = DispatchQueue(label: "Waiting")
+    q2.async {
+    	g.wait()
+    	print("Done loading video data", full.count, previews.count)
+    	cb((full, previews))
+    }
+})
+
+
+//fileprivate var episodesVimeoInfo: Observable<(full: [Id<Episode>:Video], previews: [Id<Episode>:Video])> = episodesSource.observable.map { newEpisodes in
+//
+//}
+
 extension Collection {
     fileprivate var expensive_allEpisodes: [Episode] {
         return (episodesSource.observable.value ?? []).filter { $0.collections.contains(id) }
@@ -150,8 +203,7 @@ fileprivate var collectionEpisodes = collectionEpisodesO.atomic
 fileprivate var collaborators = collaboratorsO.atomic
 fileprivate var transcripts = transcriptsO.atomic
 fileprivate var plans = plansO.atomic
-
-
+fileprivate var vimeoInfo = episodesVimeoInfo.observable.atomic
 
 // Public properties
 
@@ -163,6 +215,12 @@ extension Plan {
 
 extension Episode {
     static var all: [Episode] { return sortedEpisodes.value }
+    var video: Video? {
+        return vimeoInfo.value?.full[id]
+    }
+    var previewVideo: Video? {
+        return vimeoInfo.value?.previews[id]
+    }
 }
 
 extension Collection {
