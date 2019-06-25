@@ -101,6 +101,10 @@ extension Episode {
         return releaseAt < globals.currentDate()
     }
     
+    func posterURL() -> URL {
+        return URL(string: "https://i.vimeocdn.com/video/\(thumbnailId).jpg")!
+    }
+    
     func posterURL(width: Int, height: Int) -> URL {
         return URL(string: "https://i.vimeocdn.com/video/\(thumbnailId)_\(width)x\(height).jpg")!
     }
@@ -180,6 +184,10 @@ extension Collection {
     
     var artwork: String {
         return "/assets/images/collections/\(title).svg"
+    }
+    
+    var artworkPNG: String {
+        return "/assets/images/collections/\(title)@2x.png"
     }
     
     func episodes(for user: UserData?) -> [Episode] {
