@@ -43,7 +43,7 @@ extension EpisodeView {
         self.released_at = e.releaseAt
         self.collection = e.primaryCollection?.id.rawValue ?? ""
         self.subscription_only = e.subscriptionOnly
-        self.hls_url = e.video?.hlsURL
+        self.hls_url = e.canWatch(session: nil) ? e.video?.hlsURL : nil // todo: use session?
         self.preview_url = e.previewVideo?.hlsURL
     }
 }

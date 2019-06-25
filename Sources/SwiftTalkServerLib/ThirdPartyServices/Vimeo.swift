@@ -44,7 +44,8 @@ struct Vimeo {
     }
     
     func videoInfo(for videoId: Int) -> RemoteEndpoint<Video> {
-        return RemoteEndpoint<Video>(json: .get, url: base.appendingPathComponent("videos/\(videoId)"), headers: headers)
+        // An explicit fields parameter increases the rate limit by 2!
+        return RemoteEndpoint<Video>(json: .get, url: base.appendingPathComponent("videos/\(videoId)"), headers: headers, query: ["fields":"download,files"])
     }
     
     func downloadURL(for videoId: Int) -> RemoteEndpoint<URL?> {
