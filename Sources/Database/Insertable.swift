@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import PostgreSQL
+import LibPQ
 
 
 public protocol Insertable: Codable {
@@ -14,20 +14,21 @@ public protocol Insertable: Codable {
 }
 
 extension Insertable {
-    public static func parse(_ node: PostgreSQL.Node) -> [Row<Self>] {
-        return PostgresNodeDecoder.decode([Row<Self>].self, transformKey: { $0.snakeCased }, node: node)
+    public static func parse(_ result: QueryResult) -> [Row<Self>] {
+        return PostgresNodeDecoder.decode([Row<Self>].self, transformKey: { $0.snakeCased }, result)
     }
     
-    public static func parseFirst(_ node: PostgreSQL.Node) -> Row<Self>? {
+    public static func parseFirst(_ node: QueryResult) -> Row<Self>? {
         return self.parse(node).first
     }
 
-    public static func parseEmpty(_ node: PostgreSQL.Node) -> () {
+    public static func parseEmpty(_ node: QueryResult) -> () {
     }
 }
 
-fileprivate func parseId(_ node: PostgreSQL.Node) -> UUID {
-    return UUID(uuidString: node[0, "id"]!.string!)!
+fileprivate func parseId(_ result: QueryResult) -> UUID {
+    guard case let .tuples(t) = result else { fatalError("Expected a node") }
+    return t[0]["id"]
 }
 
 extension Insertable {
@@ -45,7 +46,7 @@ extension Insertable {
         }
     }
     
-    public func findOrInsert(uniqueKey: String, value: NodeRepresentable) -> Query<UUID> {
+    public func findOrInsert(uniqueKey: String, value: Param) -> Query<UUID> {
         let f = fieldValues
         return Query.build(parameters: f.values, parse: parseId) { """
             WITH inserted AS (

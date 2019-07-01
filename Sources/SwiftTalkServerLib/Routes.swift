@@ -22,7 +22,7 @@ public indirect enum Route: Equatable {
     case collectionsJSON
     case staticFile(path: [String])
     case error
-
+ 
     case gift(Gifts)
     case account(Account)
     case webhook(Webhook)

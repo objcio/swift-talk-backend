@@ -6,12 +6,17 @@
 //
 
 import Foundation
-import PostgreSQL
+import LibPQ
 
+//public struct PostgresNode { }
+//
+//public protocol NodeInitializable {
+//}
+//
 public struct Query<A> {
     public var query: String
-    public var values: [NodeRepresentable]
-    var parse: (PostgreSQL.Node) -> A
+    public var values: [Param]
+    var parse: (QueryResult) -> A
 }
 
 extension Query {
@@ -21,13 +26,13 @@ extension Query {
         }
     }
     
-    public static func build(parameters: [NodeRepresentable] = [], parse: @escaping (PostgreSQL.Node) -> A, construct: ([String]) -> String) -> Query {
+    public static func build(parameters: [Param] = [], parse: @escaping (QueryResult) -> A, construct: ([String]) -> String) -> Query {
         let placeholders = (0..<(parameters.count)).map { "$\($0 + 1)" }
         let sql = construct(placeholders)
         return Query(query: sql, values: parameters, parse: parse)
     }
     
-    public func appending(parameters: [NodeRepresentable] = [], construct: ([String]) -> String) -> Query<A> {
+    public func appending(parameters: [Param] = [], construct: ([String]) -> String) -> Query<A> {
         let placeholders = (values.count..<(values.count + parameters.count)).map { "$\($0 + 1)" }
         let sql = construct(placeholders)
         return Query(query: "\(query) \(sql)", values: values + parameters, parse: parse)
