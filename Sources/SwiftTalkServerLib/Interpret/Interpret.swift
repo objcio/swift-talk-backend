@@ -103,6 +103,10 @@ extension Route {
         case .error:
             return .write(html: errorView("Not found"), status: .notFound)
             
+        case .authorizeApp:
+            return I.withSession { sess in
+                I.redirect(path: "swifttalk://authorize/\(sess?.sessionId.uuidString ?? "")", headers: [:])
+            }
         }
     }
 }

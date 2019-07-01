@@ -22,6 +22,7 @@ public indirect enum Route: Equatable {
     case collectionsJSON
     case staticFile(path: [String])
     case error
+    case authorizeApp
 
     case gift(Gifts)
     case account(Account)
@@ -335,6 +336,7 @@ private let generalRoutes: [Router<Route>] = [
     .c("episodes.json", .episodesJSON),
     .c("collections.json", .collectionsJSON),
     .c("sitemap", .sitemap),
+    .c("authorize_app", .authorizeApp),
 ]
 
 private let subRoutes: [Router<Route>] = [
