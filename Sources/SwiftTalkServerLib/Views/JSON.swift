@@ -23,6 +23,7 @@ struct CollectionView: Codable {
 }
 
 struct EpisodeView: Codable {
+    var id: String
     var number: Int
     var title: String
     var synopsis: String
@@ -39,6 +40,7 @@ struct EpisodeView: Codable {
 
 extension EpisodeView {
     init(_ e: Episode) {
+        self.id = e.id.rawValue
         self.number = e.number
         self.title = e.title
         self.synopsis = e.synopsis

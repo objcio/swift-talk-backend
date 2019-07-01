@@ -105,7 +105,10 @@ extension Route {
             
         case .authorizeApp:
             return I.withSession { sess in
-                I.redirect(path: "swifttalk://authorize/\(sess?.sessionId.uuidString ?? "")", headers: [:])
+                guard let s = sess else {
+                    return I.redirect(path: "swifttalk://authorize/?success=false", headers: [:])
+                }
+                return I.redirect(path: "swifttalk://authorize/?session_id=\(s.sessionId.uuidString)&csrf=\(s.user.data.csrfToken.stringValue)", headers: [:])
             }
         }
     }
