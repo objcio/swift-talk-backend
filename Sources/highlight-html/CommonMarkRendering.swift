@@ -97,6 +97,6 @@ extension CommonMark.Node {
             guard case let .codeBlock(text, "swift") = block, let highlighted = highlights[text] else { return [block] }
             return [Block.html(text: "<pre class=\"highlight\"><code class=\"swift\">\(highlighted)</code></pre>")]
         }
-        return CommonMark.Node(blocks: els).html
+        return CommonMark.Node(blocks: els).html(options: [.unsafe])
     }
 }

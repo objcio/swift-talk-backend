@@ -6,7 +6,7 @@ RUN apt-get install -y postgresql libpq-dev cmake
 WORKDIR /app
 
 # cmark
-RUN git clone https://github.com/commonmark/cmark
+RUN git clone -b '0.29.0' https://github.com/commonmark/cmark
 RUN make -C cmark INSTALL_PREFIX=/usr/local
 RUN make -C cmark install
 
