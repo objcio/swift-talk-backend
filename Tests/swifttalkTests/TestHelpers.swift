@@ -9,7 +9,7 @@ import Foundation
 import Promise
 import Base
 import XCTest
-import PostgreSQL
+import LibPQ
 import NIOWrapper
 import HTML
 import Database
@@ -114,14 +114,14 @@ func TestUnwrap<A>(_ value: A?, file: StaticString = #file, line: UInt = #line) 
 
 
 class TestConnection: ConnectionProtocol {
-    let _execute: (String, [PostgreSQL.Node]) -> PostgreSQL.Node = { _,_ in fatalError() }
+    let _execute: (String, [Param]) -> QueryResult = { _,_ in fatalError() }
     private var results: [QueryAndResult]
     
     init(_ results: [QueryAndResult] = []) {
         self.results = results
     }
     
-    func execute(_ query: String, _ values: [PostgreSQL.Node]) throws -> PostgreSQL.Node {
+    func execute(_ query: String, _ values: [Param]) throws -> QueryResult {
         return _execute(query, values)
     }
     
@@ -133,7 +133,7 @@ class TestConnection: ConnectionProtocol {
         return response
     }
     
-    func close() throws {
+    func close() {
     }
     
     func assertDone() {
@@ -150,12 +150,12 @@ struct TestErr: Error { }
 extension Query {
     func matches<B>(_ other: Query<B>) -> Bool {
         if query == other.query {
-            let v1 = values.map { try! $0.makeNode(in: nil) }
-            let v2 = other.values.map { try! $0.makeNode(in: nil) }
-            guard v1.count == v2.count else { return false }
-            for (x, y) in zip(v1, v2) {
-                guard x.wrapped == y.wrapped else { return false }
-            }
+            let v1 = values.map { $0.stringValue }
+            let v2 = other.values.map { $0.stringValue }
+            guard v1 == v2 else { return false }
+//            for (x, y) in zip(values, other.values) {
+//                guard x. == y.oid else { return false }
+//            }
             return true
         }
         return false
