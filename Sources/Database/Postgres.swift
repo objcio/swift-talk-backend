@@ -6,40 +6,49 @@
 //
 
 import Foundation
-//import PostgreSQL
+import LibPQ
 import Base
 
 public struct Postgres {
-    private let postgreSQL: PostgreSQL.Database
+    // private let connection: Connection
+    private let connectionInfo: URL
     
-    public init(url: String) {
-        let connInfo = ConnInfo.raw(url)
-        postgreSQL = try! PostgreSQL.Database(connInfo: connInfo)
+    public init(url: URL) {
+//        let connInfo = ConnInfo.raw(url)
+//        postgreSQL = try! PostgreSQL.Database(connInfo: connInfo)
+        connectionInfo = url
+    }
+
+    public init(host: String, port: Int = 5432, name: String, user: String, password: String) {
+        let url = URL(string: "postgresql://\(user):\(password)@\(host):\(port)/\(name)")!
+        self.init(url: url)
+//        let connInfo = ConnInfo.params([
+//            "host": host,
+//            "dbname": name,
+//            "user": user,
+//            "password": password,
+//            "connect_timeout": "1",
+//            ])
+//        postgreSQL = try! PostgreSQL.Database(connInfo: connInfo)
     }
     
-    public init(host: String, name: String, user: String, password: String) {
-        let connInfo = ConnInfo.params([
-            "host": host,
-            "dbname": name,
-            "user": user,
-            "password": password,
-            "connect_timeout": "1",
-            ])
-        postgreSQL = try! PostgreSQL.Database(connInfo: connInfo)
-    }
+//    public init(connectionInfo: String) {
+////        connection = try Connection(connectionInfo: connectionInfo)
+//        self.connectionInfo = connectionInfo
+//    }
     
     public func withConnection<A>(_ x: (ConnectionProtocol) throws -> A) throws -> A {
-        let conn = try postgreSQL.makeConnection()
+        let conn = try Connection(connectionInfo: connectionInfo)
         let result = try x(conn)
-        try conn.close()
+        conn.close()
         return result
     }
     
     public func lazyConnection() -> Lazy<ConnectionProtocol> {
         return Lazy<ConnectionProtocol>({ () throws -> ConnectionProtocol in
-            return try self.postgreSQL.makeConnection()
+            return try Connection(connectionInfo: self.connectionInfo)
         }, cleanup: { conn in
-            try? conn.close()
+            conn.close()
         })
     }
 }
@@ -59,13 +68,13 @@ public struct DatabaseError: Error, LocalizedError {
 }
 
 public protocol ConnectionProtocol {
-    func execute(_ query: String, _ values: [PostgreSQL.Node]) throws -> PostgreSQL.Node
+    func execute(_ query: String, _ values: [Param]) throws -> QueryResult
     func execute<A>(_ query: Query<A>) throws -> A
-    func close() throws
+    func close()
 }
 
 extension ConnectionProtocol {
-    public func execute(_ query: String) throws -> PostgreSQL.Node {
+    public func execute(_ query: String) throws -> QueryResult {
         return try execute(query, [])
     }
 }
@@ -73,9 +82,9 @@ extension ConnectionProtocol {
 extension Connection: ConnectionProtocol { }
 
 public struct FieldValues {
-    private var _fields: [(name: String, value: NodeRepresentable)]
+    private var _fields: [(name: String, value: String)]
     
-    init(_ fields: [(name: String, value: NodeRepresentable)]) {
+    init(_ fields: [(name: String, value: String)]) {
         self._fields = fields
     }
     
@@ -87,7 +96,7 @@ public struct FieldValues {
         return fields.sqlJoined
     }
     
-    var values: [NodeRepresentable] {
+    var values: [String] {
         return _fields.map { $0.value }
     }
 }
@@ -97,7 +106,7 @@ extension Encodable {
         let m = Mirror(reflecting: self)
         let children = Array(m.children)
         let names = children.map { $0.label!.snakeCased }
-        let values = children.map { $0.value as! NodeRepresentable }
+        let values = children.map { ($0.value as! Param).stringValue }
         return FieldValues(Array(zip(names, values)))
     }
 }
@@ -121,7 +130,7 @@ extension Connection {
     @discardableResult
     func execute<A>(_ query: Query<A>, loggingThreshold: TimeInterval) throws -> A {
         //        print(query.query)
-        let node = try measure(message: "query: \(query.query)", threshold: loggingThreshold) { () throws -> PostgreSQL.Node in
+        let node = try measure(message: "query: \(query.query)", threshold: loggingThreshold) { () throws -> QueryResult in
             do {
                 return try execute(query.query, query.values)
             } catch {

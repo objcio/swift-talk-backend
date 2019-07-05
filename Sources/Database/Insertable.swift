@@ -15,7 +15,8 @@ public protocol Insertable: Codable {
 
 extension Insertable {
     public static func parse(_ result: QueryResult) -> [Row<Self>] {
-        return PostgresNodeDecoder.decode([Row<Self>].self, transformKey: { $0.snakeCased }, result)
+        guard case let .tuples(t) = result else { return [] }
+        return PostgresNodeDecoder.decode([Row<Self>].self, transformKey: { $0.snakeCased }, result: t)
     }
     
     public static func parseFirst(_ node: QueryResult) -> Row<Self>? {
@@ -28,7 +29,7 @@ extension Insertable {
 
 fileprivate func parseId(_ result: QueryResult) -> UUID {
     guard case let .tuples(t) = result else { fatalError("Expected a node") }
-    return t[0]["id"]
+    return t[0][name: "id"]!
 }
 
 extension Insertable {
