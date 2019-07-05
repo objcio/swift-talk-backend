@@ -85,7 +85,6 @@ let package = Package(
         .target(
             name: "WebServer",
             dependencies: [
-                //"PostgreSQL",
                 "Base",
                 "HTML",
                 "NIOWrapper",
@@ -105,7 +104,6 @@ let package = Package(
                 "HTML",
                 "NIOWrapper",
                 "Database",
-				//"PostgreSQL",
                 "WebServer",
                 "CommonMark",
                 "PerfectXML",
