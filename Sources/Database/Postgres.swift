@@ -22,20 +22,7 @@ public struct Postgres {
     public init(host: String, port: Int = 5432, name: String, user: String, password: String) {
         let url = URL(string: "postgresql://\(user):\(password)@\(host):\(port)/\(name)")!
         self.init(url: url)
-//        let connInfo = ConnInfo.params([
-//            "host": host,
-//            "dbname": name,
-//            "user": user,
-//            "password": password,
-//            "connect_timeout": "1",
-//            ])
-//        postgreSQL = try! PostgreSQL.Database(connInfo: connInfo)
     }
-    
-//    public init(connectionInfo: String) {
-////        connection = try Connection(connectionInfo: connectionInfo)
-//        self.connectionInfo = connectionInfo
-//    }
     
     public func withConnection<A>(_ x: (ConnectionProtocol) throws -> A) throws -> A {
         let conn = try Connection(connectionInfo: connectionInfo)

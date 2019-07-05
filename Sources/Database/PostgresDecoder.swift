@@ -47,11 +47,9 @@ public final class PostgresNodeDecoder: Decoder {
     }
     
     private struct KDC<Key: CodingKey>: KeyedDecodingContainerProtocol {
-//        private let decoder: Decoder
         private let result: LibPQ.Row
         private let transformKey: (String) -> String
         init(result: LibPQ.Row, transformKey: @escaping (String) -> String) {
-//            self.decoder = decoder
             self.result = result
             self.transformKey = transformKey
         }
@@ -231,16 +229,11 @@ public final class PostgresNodeDecoder: Decoder {
             fatalError("\(#function), \(#line)")
         }
         
-        mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
-            
+        mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {            
             let row = result[Int32(currentIndex)]
             currentIndex += 1
             let decoder = PostgresNodeDecoder(.row(row), transformKey: transformKey)
             return try! T(from: decoder)
-//            let kdc = KDC<T.CodingKeys>(result: row, transformKey: transformKey)
-//            let decoder = PostgresNodeDecoder2(result[Int32(currentIndex)], transformKey: transformKey)
-//            currentIndex += 1
-//            return kdc.
         }
         
         mutating func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {

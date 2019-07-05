@@ -8,11 +8,6 @@
 import Foundation
 import LibPQ
 
-//public struct PostgresNode { }
-//
-//public protocol NodeInitializable {
-//}
-//
 public struct Query<A> {
     public var query: String
     public var values: [Param]
