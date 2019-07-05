@@ -82,9 +82,9 @@ extension ConnectionProtocol {
 extension Connection: ConnectionProtocol { }
 
 public struct FieldValues {
-    private var _fields: [(name: String, value: String)]
+    private var _fields: [(name: String, value: Param)]
     
-    init(_ fields: [(name: String, value: String)]) {
+    init(_ fields: [(name: String, value: Param)]) {
         self._fields = fields
     }
     
@@ -96,7 +96,7 @@ public struct FieldValues {
         return fields.sqlJoined
     }
     
-    var values: [String] {
+    var values: [Param] {
         return _fields.map { $0.value }
     }
 }
@@ -106,7 +106,7 @@ extension Encodable {
         let m = Mirror(reflecting: self)
         let children = Array(m.children)
         let names = children.map { $0.label!.snakeCased }
-        let values = children.map { ($0.value as! Param).stringValue }
+        let values = children.map { ($0.value as! Param) }
         return FieldValues(Array(zip(names, values)))
     }
 }

@@ -146,7 +146,7 @@ extension Route.Account {
             return I.query(sess.user.teamMembers) { members in
                 return I.onSuccess(promise: sess.user.currentSubscription.promise, do: { sub in
                     guard let s = sub, let p = Plan.all.first(where: { $0.plan_code == s.plan.plan_code }) else {
-                        throw ServerError(privateMessage: "Can't get sub or plan: \(sub)")
+                        throw ServerError(privateMessage: "Can't get sub or plan: \(String(describing: sub))")
                     }
                     return I.onSuccess(promise: p.teamMemberAddOn.promise, do: { addOn in
                         print(addOn.unit_amount_in_cents)

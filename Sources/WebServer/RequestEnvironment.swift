@@ -31,7 +31,7 @@ public struct CSRFToken: Codable, Equatable, Hashable {
         try value.encode(to: encoder)
     }
     
-    public var stringValue: String {
+    public var string: String {
         return value.uuidString
     }
 }

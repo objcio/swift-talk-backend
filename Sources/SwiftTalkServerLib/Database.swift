@@ -89,11 +89,11 @@ struct DownloadData: Codable, Insertable {
 }
 
 extension CSRFToken: Param {
-    public init(stringValue string: String) {
-        self.value = .init(stringValue: string)
+    public init(stringValue string: String?) {
+        self.init(.init(stringValue: string!))
     }
     public static var oid = OID.uuid
-    public var stringValue: String { return value.stringValue }
+    public var stringValue: String? { return value.stringValue }
 }
 
 struct UserData: Codable, Insertable {
@@ -147,9 +147,9 @@ struct UserData: Codable, Insertable {
 
 extension UserData.Role: Param {
     static let oid: OID = Int.oid
-    var stringValue: String { return rawValue.stringValue }
-    init(stringValue string: String) {
-        self.init(rawValue: .init(stringValue: string))!
+    var stringValue: String? { return rawValue.stringValue }
+    init(stringValue string: String?) {
+        self.init(rawValue: .init(stringValue: string!))!
     }
 }
 
