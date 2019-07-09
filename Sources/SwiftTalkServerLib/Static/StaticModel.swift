@@ -239,7 +239,7 @@ struct Transcript {
                 return [inl]
             }
         }))
-        highlighted = highlight ? contents.commonMark(options: .unsafe).markdownToHighlightedHTML : contents.html(options: .unsafe)
+        highlighted = highlight ? contents.commonMark(options: [.unsafe]).markdownToHighlightedHTML : contents.html(options: [.unsafe])
         
         // Extract table of contents
         var result: [(TimeInterval, title: String)] = []
