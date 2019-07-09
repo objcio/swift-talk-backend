@@ -420,7 +420,7 @@ extension Episode {
                     
                         function postProgress(time) {
                             $.post(\"\(Route.episode(id, .playProgress).absoluteString)\", {
-                                \"csrf\": \"\(token.stringValue)\",
+                                \"csrf\": \"\(token.stringValue ?? "")\",
                                 \"progress": Math.floor(time)
                             }, function(data, status) {
                             });
