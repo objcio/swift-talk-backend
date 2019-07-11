@@ -5,7 +5,7 @@
 //  Created by Chris Eidhof on 13.08.18.
 //
 
-import PerfectXML
+import Foundation
 import HTML
 
 
@@ -23,6 +23,10 @@ extension XMLNode {
         }
         return result
     }
+    
+    var childNodes: [XMLNode] {
+        return children ?? []
+    }
 }
 
 extension DateFormatter {
@@ -37,10 +41,10 @@ extension DateFormatter {
 
 
 fileprivate final class RecurlyXMLDecoder: Decoder {
-    var node: XElement
+    var node: XMLNode
     var codingPath: [CodingKey] = []
     var userInfo: [CodingUserInfoKey : Any] = [:]
-    init(_ element: XElement) {
+    init(_ element: XMLNode) {
         self.node = element
     }
     
@@ -49,8 +53,8 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
     }
     
     struct KDC<Key: CodingKey>: KeyedDecodingContainerProtocol {
-        let node: XElement
-        init(_ node: XElement) {
+        let node: XMLNode
+        init(_ node: XMLNode) {
             self.node = node
         }
         
@@ -61,19 +65,19 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
         }
         
         func contains(_ key: Key) -> Bool {
-            return node.childNodes.contains { $0.nodeName == key.stringValue }
+            return node.childNodes.contains { $0.name == key.stringValue }
         }
         
-        func child(key: Key) -> XElement? {
-            return node.childNodes.first { $0.nodeName == key.stringValue }.flatMap { $0 as? XElement }
+        func child(key: Key) -> XMLElement? {
+            return node.children?.first { $0.name == key.stringValue }.flatMap { $0 as? XMLElement }
         }
         
-        func requireChild(key: Key) throws -> XElement {
-            let result = node.childNodes.first { $0.nodeName == key.stringValue }.flatMap { $0 as? XElement }
+        func requireChild(key: Key) throws -> XMLElement {
+            let result = node.children?.first { $0.name == key.stringValue }.flatMap { $0 as? XMLElement }
             if let x = result {
                 return x
             } else {
-                throw DecodingError(message: "Expected node \"\(key.stringValue)\" but got none (context: \(node.string()))")
+                throw DecodingError(message: "Expected node \"\(key.stringValue)\" but got none (context: \(node.xmlString))")
             }
         }
         
@@ -81,11 +85,11 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
             guard let c = child(key: key) else {
                 return true
             }
-            return c.getAttribute(name: "nil") != nil
+            return c.attribute(forName: "nil") != nil
         }
         
         func decode(_ type: Bool.Type, forKey key: Key) throws -> Bool {
-            guard let c = try requireChild(key: key).nodeValue else {
+            guard let c = try requireChild(key: key).contents() else {
                 throw DecodingError(message: "Expected a string for key: \(key)")
             }
             switch c {
@@ -96,14 +100,14 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
         }
         
         func decode(_ type: String.Type, forKey key: Key) throws -> String {
-            guard let c = try requireChild(key: key).nodeValue else {
+            guard let c = try requireChild(key: key).contents() else {
                 throw DecodingError(message: "Expected a string for key: \(key) context: \(node)")
             }
             return c
         }
         
         func decode(_ type: Double.Type, forKey key: Key) throws -> Double {
-            guard let c = child(key: key)?.nodeValue, let d = Double(c) else {
+            guard let c = try child(key: key)?.contents(), let d = Double(c) else {
                 throw DecodingError(message: "Expected a string for key: \(key)")
             }
             return d
@@ -111,14 +115,14 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
         }
         
         func decode(_ type: Float.Type, forKey key: Key) throws -> Float {
-            guard let c = child(key: key)?.nodeValue, let d = Float(c) else {
+            guard let c = try child(key: key)?.contents(), let d = Float(c) else {
                 throw DecodingError(message: "Expected a string for key: \(key)")
             }
             return d
         }
         
         func decode(_ type: Int.Type, forKey key: Key) throws -> Int {
-            guard let c = child(key: key)?.nodeValue, let i = Int(c) else {
+            guard let c = try child(key: key)?.contents(), let i = Int(c) else {
                 throw DecodingError(message: "Expected an int for key: \(key)")
             }
             return i
@@ -163,21 +167,21 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
         func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T : Decodable {
             let node = try requireChild(key: key)
             if type == URL.self {
-                guard let value = node.getAttribute(name:  "href") else {
+                guard let value = node.attribute(forName: "href")?.stringValue else {
                     throw DecodingError(message: "Expected a \"href\" attribute")
                 }
                 guard let u = URL(string: value) else {
-                    throw DecodingError(message: "Malformed URL in node: \(node.string())")
+                    throw DecodingError(message: "Malformed URL in node: \(node.xmlString)")
                 }
                 return u as! T
             } else if type == Date.self {
-                guard let c = node.nodeValue else { throw DecodingError(message: "Expected a date, got nothing") }
+                guard let c = try node.contents() else { throw DecodingError(message: "Expected a date, got nothing") }
                 guard let d = DateFormatter.iso8601WithTimeZone.date(from: c) else { throw DecodingError(message: "Malformatted date: \(c)") }
                 return d as! T
             } else if type == RecurlyError.self {
-                let field = node.getAttribute(name: "field")
-                let symbol = node.getAttribute(name: "symbol")
-                return RecurlyError(field: field, symbol: symbol, message: node.nodeValue ?? "") as! T
+                let field = node.attribute(forName: "field")?.stringValue
+                let symbol = node.attribute(forName: "symbol")?.stringValue
+                return RecurlyError(field: field, symbol: symbol, message: try node.contents() ?? "") as! T
             }
             let decoder = RecurlyXMLDecoder(node)
             return try T(from: decoder)
@@ -201,7 +205,7 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
     }
     
     struct UDC: UnkeyedDecodingContainer {
-        let nodes: [XElement]
+        let nodes: [XMLNode]
         var codingPath: [CodingKey]
         var count: Int? { return nodes.count }
         var isAtEnd: Bool { return currentIndex >= nodes.count }
@@ -271,14 +275,16 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
         }
         
         mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
-          	let node = nodes[currentIndex]
+            guard let el = nodes[currentIndex] as? XMLElement else {
+                throw DecodingError(message: "Expected XML Element: \(nodes[currentIndex].xmlString)")
+            }
             currentIndex += 1
             if type == RecurlyError.self {
-                let field = node.getAttribute(name: "field")
-                let symbol = node.getAttribute(name: "symbol")
-                return RecurlyError(field: field, symbol: symbol, message: node.nodeValue ?? "") as! T
+                let field = el.attribute(forName: "field")?.stringValue
+                let symbol = el.attribute(forName: "symbol")?.stringValue
+                return RecurlyError(field: field, symbol: symbol, message: try el.contents() ?? "") as! T
             } else {
-                let decoder = RecurlyXMLDecoder(node)
+                let decoder = RecurlyXMLDecoder(el)
                 return try T(from: decoder)
             }
         }
@@ -298,7 +304,7 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
     }
     
     func unkeyedContainer() throws -> UnkeyedDecodingContainer {
-        return UDC(nodes: node.childNodes.compactMap { $0 as? XElement }, codingPath: [], currentIndex: 0)
+        return UDC(nodes: node.childNodes, codingPath: [], currentIndex: 0)
     }
     
     func singleValueContainer() throws -> SingleValueDecodingContainer {
@@ -306,7 +312,7 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
     }
     
     struct SVDC: SingleValueDecodingContainer {
-        let node: XNode
+        let node: XMLNode
         var codingPath: [CodingKey] = []
         
         func decodeNil() -> Bool {
@@ -318,7 +324,7 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
         }
         
         func decode(_ type: String.Type) throws -> String {
-            guard let c = node.nodeValue else {
+            guard let c = try node.contents() else {
                 throw DecodingError(message: "Expected a string in \(node)")
             }
             return c
@@ -373,20 +379,18 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
         }
         
         func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
-            return try T.init(from: RecurlyXMLDecoder(node as! XElement))
+            return try T.init(from: RecurlyXMLDecoder(node))
         }
         
-        init(_ node: XNode) {
+        init(_ node: XMLNode) {
             self.node = node
         }
     }
 }
 
-import Foundation
 // Decodes the children of the document's root element
 func decodeXML<T: Decodable>(from data: Data) throws -> T {
-    let doc = XDocument(fromSource: String(data: data, encoding: .utf8)!)
-    guard let x = doc?.documentElement else {
+    guard let x: XMLElement = try XMLDocument(data: data, options: []).rootElement() else {
         throw DecodingError(message: "Couldn't parse XML")
     }
     let decoder = RecurlyXMLDecoder(x)
@@ -413,78 +417,78 @@ final class RecurlyXMLEncoder: Encoder {
     init(_ name: String) {
         rootElement = Element(name: name, block: true, class: nil, attributes: [:], children: [])
     }
-    
+
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
         return KeyedEncodingContainer(KEC(self))
     }
-    
+
     struct KEC<Key: CodingKey>: KeyedEncodingContainerProtocol {
         let encoder: RecurlyXMLEncoder
         init(_ encoder: RecurlyXMLEncoder) {
             self.encoder = encoder
         }
         var codingPath: [CodingKey] = []
-        
+
         mutating func encodeNil(forKey key: Key) throws {
             encoder.add(child: Element(name: key.stringValue, attributes: ["nil": "nil"], children: []))
         }
-        
+
         mutating func encode(_ value: Bool, forKey key: Key) throws {
             encoder.add(child: Element(key.stringValue, contents: "\(value)"))
         }
-        
+
         mutating func encode(_ value: String, forKey key: Key) throws {
             encoder.add(child: Element(key.stringValue, contents: value))
         }
-        
+
         mutating func encode(_ value: Double, forKey key: Key) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: Float, forKey key: Key) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: Int, forKey key: Key) throws {
             encoder.add(child: Element(key.stringValue, contents: String(value)))
         }
-        
+
         mutating func encode(_ value: Int8, forKey key: Key) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: Int16, forKey key: Key) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: Int32, forKey key: Key) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: Int64, forKey key: Key) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: UInt, forKey key: Key) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: UInt8, forKey key: Key) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: UInt16, forKey key: Key) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: UInt32, forKey key: Key) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: UInt64, forKey key: Key) throws {
             fatalError()
         }
-        
+
         mutating func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
             if let uuid = value as? UUID {
                 encoder.add(child: Element(key.stringValue, contents: uuid.uuidString))
@@ -496,27 +500,27 @@ final class RecurlyXMLEncoder: Encoder {
                 encoder.add(child: childEncoder.rootElement)
             }
         }
-        
+
         mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
             fatalError()
         }
-        
+
         mutating func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
             fatalError()
         }
-        
+
         mutating func superEncoder() -> Encoder {
             fatalError()
         }
-        
+
         mutating func superEncoder(forKey key: Key) -> Encoder {
             fatalError()
         }
-        
-        
+
+
     }
-    
-    
+
+
     struct UEC: UnkeyedEncodingContainer {
         var codingPath: [CodingKey] = []
         var count: Int = 0
@@ -529,55 +533,55 @@ final class RecurlyXMLEncoder: Encoder {
         mutating func encode(_ value: String) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: Double) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: Float) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: Int) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: Int8) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: Int16) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: Int32) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: Int64) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: UInt) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: UInt8) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: UInt16) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: UInt32) throws {
             fatalError()
         }
-        
+
         mutating func encode(_ value: UInt64) throws {
             fatalError()
         }
-        
+
         mutating func encode<T>(_ value: T) throws where T : Encodable {
             if let v = value as? RootElement {
                 let childEncoder = RecurlyXMLEncoder(type(of: v).rootElementName)
@@ -587,7 +591,7 @@ final class RecurlyXMLEncoder: Encoder {
                 fatalError("Encode: \(value)")
             }
         }
-        
+
         mutating func encode(_ value: Bool) throws {
             fatalError()
         }
@@ -595,31 +599,31 @@ final class RecurlyXMLEncoder: Encoder {
         mutating func encodeNil() throws {
             fatalError()
         }
-        
+
         mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
             fatalError()
         }
-        
+
         mutating func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
             fatalError()
         }
-        
+
         mutating func superEncoder() -> Encoder {
             fatalError()
         }
-        
-        
+
+
     }
-    
+
     func unkeyedContainer() -> UnkeyedEncodingContainer {
         return UEC(self)
     }
-    
+
     func singleValueContainer() -> SingleValueEncodingContainer {
         fatalError()
     }
-    
-    
+
+
 }
 
 protocol RootElement {
