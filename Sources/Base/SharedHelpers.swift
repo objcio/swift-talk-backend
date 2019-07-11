@@ -68,7 +68,7 @@ extension String {
 
 extension StringProtocol {
     public var keyAndValue: (String, String)? {
-        guard let i = index(of: "=") else { return nil }
+        guard let i = firstIndex(of: "=") else { return nil }
         let n = index(after: i)
         return (String(self[..<i]), String(self[n...]).trimmingCharacters(in: CharacterSet(charactersIn: "\"")))
     }
@@ -79,7 +79,7 @@ extension StringProtocol {
     }
 
     fileprivate var parseQuery: (String, [String:String]) {
-        guard let i = self.index(of: "?") else { return (String(self), [:]) }
+        guard let i = self.firstIndex(of: "?") else { return (String(self), [:]) }
         let path = self[..<i]
         let remainder = self[index(after: i)...]
         return (String(path), remainder.parseAsQueryPart)
