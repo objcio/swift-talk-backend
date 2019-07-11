@@ -10,7 +10,6 @@ import Base
 import NIO
 import NIOHTTP1
 import NIOFoundationCompat
-import _NIO1APIShims
 import Promise
 
 

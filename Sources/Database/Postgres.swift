@@ -10,12 +10,9 @@ import LibPQ
 import Base
 
 public struct Postgres {
-    // private let connection: Connection
     private let connectionInfo: URL
     
     public init(url: URL) {
-//        let connInfo = ConnInfo.raw(url)
-//        postgreSQL = try! PostgreSQL.Database(connInfo: connInfo)
         connectionInfo = url
     }
 
@@ -69,7 +66,7 @@ extension ConnectionProtocol {
 extension Connection: ConnectionProtocol { }
 
 public struct FieldValues {
-    public var fieldsAndValues: [(key: String, value: Param)]
+    var fieldsAndValues: [(key: String, value: Param)]
     
     init(_ fieldsAndValues: [(key: String, value: Param)]) {
         self.fieldsAndValues = fieldsAndValues
@@ -79,7 +76,7 @@ public struct FieldValues {
         return fieldsAndValues.map { $0.key }
     }
     
-    public var fieldList: String {
+    var fieldList: String {
         return fields.sqlJoined
     }
     

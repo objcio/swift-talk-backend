@@ -58,7 +58,6 @@ let package = Package(
                 "NIO",
                 "NIOHTTP1",
                 "NIOFoundationCompat",
-                "_NIO1APIShims"
             ],
             path: "Sources/NIOWrapper"
         ),
