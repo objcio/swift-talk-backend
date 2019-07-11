@@ -25,7 +25,7 @@ public struct Row<Element: Codable>: Codable {
 }
 
 extension Row where Element: Insertable {
-    public static func select(_ id: UUID) -> Query<Row<Element>?> {
+    public static func select(_ id: UUID) -> Query<Database.Row<Element>?> {
         return selectOne.appending("WHERE id=\(param: id)")
     }
     
@@ -50,7 +50,7 @@ extension Row where Element: Insertable {
         let f = data.fieldValues.fieldsAndValues
         assert(!f.isEmpty)
         var query = Query("UPDATE \(Element.tableName) SET", parse: Element.parseEmpty)
-        query = query.appending("\(raw: f[0].key)=\(param: f[0].value)")
+        query.append("\(raw: f[0].key)=\(param: f[0].value)")
         return f.dropFirst().reduce(query, { (q, kv) in
             q.appending(", \(raw: kv.0)=\(param: kv.1)")
         }).appending("WHERE id=\(param: id)")

@@ -6,46 +6,51 @@
 //
 
 import Foundation
-import PostgreSQL
+import LibPQ
 
-
+enum DecodableValue {
+    case tuples(Tuples)
+    case row(LibPQ.Row)
+    case field(String?)
+}
 
 public final class PostgresNodeDecoder: Decoder {
-    private let node: PostgreSQL.Node
+    private let result: DecodableValue
     private let transformKey: (String) -> String
     
     public var codingPath: [CodingKey] { return [] }
     public var userInfo: [CodingUserInfoKey : Any] { return [:] }
     
-    static func decode<T: Decodable>(_ type: T.Type, transformKey: @escaping (String) -> String = { $0.snakeCased }, node: PostgreSQL.Node) -> T {
-        let d = PostgresNodeDecoder(node, transformKey: transformKey)
+    static func decode<T: Decodable>(_ type: T.Type, transformKey: @escaping (String) -> String = { $0.snakeCased }, result: Tuples) -> T {
+        let d = PostgresNodeDecoder(.tuples(result), transformKey: transformKey)
         return try! T(from: d)
     }
     
-    fileprivate init(_ node: PostgreSQL.Node, transformKey: @escaping (String) -> String) {
-        self.node = node
+    fileprivate init(_ result: DecodableValue, transformKey: @escaping (String) -> String) {
+        self.result = result
         self.transformKey = transformKey
     }
     
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
-        return KeyedDecodingContainer(KDC(decoder: self, node: node, transformKey: transformKey))
+        guard case let .row(r) = result else { fatalError("Expected a row") }
+        return KeyedDecodingContainer(KDC(result: r, transformKey: transformKey))
     }
     
     public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
-        return UDC(node.array!, transformKey: transformKey)
+        guard case let .tuples(t) = result else { fatalError("Expected tuples") }
+        return UDC(t, transformKey: transformKey)
     }
     
     public func singleValueContainer() throws -> SingleValueDecodingContainer {
-        return SVC(decoder: self, node: node)
+        guard case let .field(f) = result else { fatalError("Expected a field") }
+        return SVC(decoder: self, value: f)
     }
     
     private struct KDC<Key: CodingKey>: KeyedDecodingContainerProtocol {
-        private let decoder: Decoder
-        private let node: PostgreSQL.Node
+        private let result: LibPQ.Row
         private let transformKey: (String) -> String
-        init(decoder: Decoder, node: PostgreSQL.Node, transformKey: @escaping (String) -> String) {
-            self.decoder = decoder
-            self.node = node
+        init(result: LibPQ.Row, transformKey: @escaping (String) -> String) {
+            self.result = result
             self.transformKey = transformKey
         }
         
@@ -54,17 +59,16 @@ public final class PostgresNodeDecoder: Decoder {
         var allKeys: [Key] { return [] }
         
         func contains(_ key: Key) -> Bool {
-            return node[transformKey(key.stringValue)] != nil
+            return result.result.columnIndex(of: transformKey(key.stringValue)) != nil
         }
         
         func decodeNil(forKey key: Key) throws -> Bool {
-            guard let value = node[transformKey(key.stringValue)] else { fatalError("\(#function), \(#line)") }
-            return value.isNull
+            return result.isNull(index: result.result.columnIndex(of: transformKey(key.stringValue))!)
         }
         
-        func decode<T: NodeInitializable>(_ key: Key) throws -> T {
-            guard let value = node[transformKey(key.stringValue)] else { fatalError("key: \(key), container: \(node)") }
-            return try value.converted(to: T.self)
+        func decode<T: Param>(_ key: Key) throws -> T {
+            guard let value: T = result[name: transformKey(key.stringValue)] else { fatalError("key: \(key), container: \(result)") }
+            return value
         }
         
         func decode(_ type: Bool.Type, forKey key: Key) throws -> Bool {
@@ -124,15 +128,13 @@ public final class PostgresNodeDecoder: Decoder {
         }
         
         func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T : Decodable {
-            guard let newNode = node[transformKey(key.stringValue)] else { fatalError("\(#function), \(#line)") }
+            let name = transformKey(key.stringValue)
             if type == UUID.self {
-                let str: String = try! newNode.converted(to: String.self)
-                return UUID(uuidString: str)! as! T
+                return (result[name: name]! as UUID) as! T
             } else if type == Date.self { // todo: could we check that type is NodeConvertible?
-                let d: Date = try decode(key)
-                return d as! T
+                return (result[name: name]! as Date) as! T
             }
-            let decoder = PostgresNodeDecoder(newNode, transformKey: transformKey)
+            let decoder = PostgresNodeDecoder(.field(result[name]), transformKey: transformKey)
             return try T(from: decoder)
         }
         
@@ -154,15 +156,16 @@ public final class PostgresNodeDecoder: Decoder {
     }
     
     private struct UDC: UnkeyedDecodingContainer {
-        let nodes: [PostgreSQL.Node]
+        
+        let result: Tuples
         let transformKey: (String) -> String
         var codingPath: [CodingKey] = []
-        var count: Int? { return nodes.count }
-        var isAtEnd: Bool { return currentIndex >= nodes.count }
+        var count: Int? { return Int(result.count) }
+        var isAtEnd: Bool { return currentIndex >= result.count }
         var currentIndex: Int = 0
         
-        init(_ nodes: [PostgreSQL.Node], transformKey: @escaping (String) -> String) {
-            self.nodes = nodes
+        init(_ result: Tuples, transformKey: @escaping (String) -> String) {
+            self.result = result
             self.transformKey = transformKey
         }
         
@@ -226,10 +229,11 @@ public final class PostgresNodeDecoder: Decoder {
             fatalError("\(#function), \(#line)")
         }
         
-        mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
-            let decoder = PostgresNodeDecoder(nodes[currentIndex], transformKey: transformKey)
+        mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {            
+            let row = result[Int32(currentIndex)]
             currentIndex += 1
-            return try T(from: decoder)
+            let decoder = PostgresNodeDecoder(.row(row), transformKey: transformKey)
+            return try! T(from: decoder)
         }
         
         mutating func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
@@ -247,20 +251,20 @@ public final class PostgresNodeDecoder: Decoder {
     
     private struct SVC: SingleValueDecodingContainer {
         let decoder: Decoder
-        let node: PostgreSQL.Node
+        let value: String?
         var codingPath: [CodingKey] = []
         
-        init(decoder: Decoder, node: PostgreSQL.Node) {
+        init(decoder: Decoder, value: String?) {
             self.decoder = decoder
-            self.node = node
+            self.value = value
         }
         
-        func decode<T: NodeInitializable>() throws -> T {
-            return try node.converted(to: T.self)
+        func decode<T: Param>() throws -> T {
+            return T(stringValue: value!)
         }
         
         func decodeNil() -> Bool {
-            return node.isNull
+            return value == nil
         }
         
         func decode(_ type: Bool.Type) throws -> Bool {

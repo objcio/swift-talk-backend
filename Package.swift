@@ -19,8 +19,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0"),
-		.package(url: "https://github.com/vapor-community/postgresql.git", .exact("2.1.2")),
         .package(url: "https://github.com/objcio/commonmark-swift", .branch("memory")),
+        .package(url: "https://github.com/objcio/LibPQ", .branch("master")),
 		.package(url: "https://github.com/IBM-Swift/BlueCryptor", .exact("1.0.20")),
         .package(url: "https://github.com/jpsim/SourceKitten", from: "0.22.0"),
     ],
@@ -77,7 +77,7 @@ let package = Package(
         .target(
             name: "Database",
             dependencies: [
-                "PostgreSQL",
+                "LibPQ",
                 "Base",
             ],
             path: "Sources/Database"
@@ -85,7 +85,6 @@ let package = Package(
         .target(
             name: "WebServer",
             dependencies: [
-                "PostgreSQL",
                 "Base",
                 "HTML",
                 "NIOWrapper",
@@ -105,7 +104,6 @@ let package = Package(
                 "HTML",
                 "NIOWrapper",
                 "Database",
-				"PostgreSQL",
                 "WebServer",
                 "CommonMark",
 				"Cryptor",

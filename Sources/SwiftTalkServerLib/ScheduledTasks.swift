@@ -128,6 +128,7 @@ extension Task {
             }
         
         case .releaseEpisode(let number):
+            if mailchimp.apiKey == "test" { onCompletion(true); return } // don't release episodes in test environments
             guard let ep = Episode.all.first(where: { $0.number == number }) else { onCompletion(true); return }
             let sendCampaign: Promise<Bool> = globals.urlSession.load(mailchimp.createCampaign(for: ep)).flatMap { campaignId in
                 guard let id = campaignId else { return Promise { $0(false) } }

@@ -6,13 +6,13 @@
 //
 
 import Foundation
-import PostgreSQL
+import LibPQ
 import Base
 
 public struct Query<A> {
     public var query: QueryStringAndParams
-    var parse: (PostgreSQL.Node) -> A
-    public init(_ query: QueryStringAndParams, parse: @escaping (PostgreSQL.Node) -> A) {
+    var parse: (QueryResult) -> A
+    public init(_ query: QueryStringAndParams, parse: @escaping (QueryResult) -> A) {
         self.query = query
         self.parse = parse
     }
@@ -21,7 +21,7 @@ public struct Query<A> {
 public struct QueryStringAndParams {
     enum Part {
         case raw(String)
-        case value(NodeRepresentable)
+        case value(Param)
     }
     
     var parts: [Part]
@@ -39,10 +39,10 @@ extension QueryStringAndParams: ExpressibleByStringInterpolation, StringInterpol
         self.parts = []
     }
     
-    public var rendered: (sql: String, values: [NodeRepresentable]) {
+    public var rendered: (sql: String, values: [Param]) {
         var start = 1
         var result = ""
-        var values: [NodeRepresentable] = []
+        var values: [Param] = []
         for part in parts {
             switch part {
             case let .raw(s): result.append(s)
@@ -73,14 +73,13 @@ extension QueryStringAndParams: ExpressibleByStringInterpolation, StringInterpol
         parts.append(.raw(x))
     }
     
-    public mutating func appendInterpolation(param n: NodeRepresentable) {
+    public mutating func appendInterpolation(param n: Param) {
         parts.append(.value(n))
     }
     
-    public mutating func appendInterpolation(values: [(key: String, value: NodeRepresentable)]) {
-        let names = values.map { $0.key }.joined(separator: ",")
-        parts.append(.raw("(\(names)) VALUES ("))
-        parts.append(contentsOf: values.map { .value($0.value) }.intersperse(.raw(",")))
+    public mutating func appendInterpolation(values: FieldValues) {
+        parts.append(.raw("(\(values.fieldList)) VALUES ("))
+        parts.append(contentsOf: values.values.map { .value($0) }.intersperse(.raw(",")))
         parts.append(.raw(")"))
     }
     
@@ -100,6 +99,7 @@ extension QueryStringAndParams {
         return copy
     }
 }
+    
 
 extension Query {
     public func map<B>(_ transform: @escaping (A) -> B) -> Query<B> {
@@ -108,8 +108,14 @@ extension Query {
         }
     }
     
-    public func appending(_ part: QueryStringAndParams) -> Query<A> {
-        return Query(query.appending(part), parse: parse)
+    public mutating func append(_ other: QueryStringAndParams) {
+        query.append(other)
+    }
+    
+    public func appending(_ other: QueryStringAndParams) -> Query {
+        var copy = self
+        copy.append(other)
+        return copy
     }
 }
 

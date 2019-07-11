@@ -123,7 +123,7 @@ extension ResponseRequiringEnvironment where Self: FailableResponse {
             if !data.isEmpty, let body = String(data: data, encoding: .utf8)?.parseAsQueryPart {
                 return withCSRF { csrf in
                     catchAndDisplayError {
-                        guard body["csrf"] == csrf.stringValue else {
+                        guard body["csrf"] == csrf.string else {
                             throw ServerError(privateMessage: "CSRF failure", publicMessage: "Something went wrong.")
                         }
                         return try cont(body)

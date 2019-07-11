@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import PostgreSQL
+import LibPQ
 
 
 public struct TableName {
@@ -24,32 +24,34 @@ public protocol Insertable: Codable {
 }
 
 extension Insertable {
-    public static func parse(_ node: PostgreSQL.Node) -> [Row<Self>] {
-        return PostgresNodeDecoder.decode([Row<Self>].self, transformKey: { $0.snakeCased }, node: node)
+    public static func parse(_ result: QueryResult) -> [Row<Self>] {
+        guard case let .tuples(t) = result else { return [] }
+        return PostgresNodeDecoder.decode([Row<Self>].self, transformKey: { $0.snakeCased }, result: t)
     }
     
-    public static func parseFirst(_ node: PostgreSQL.Node) -> Row<Self>? {
+    public static func parseFirst(_ node: QueryResult) -> Row<Self>? {
         return self.parse(node).first
     }
 
-    public static func parseEmpty(_ node: PostgreSQL.Node) -> () {
+    public static func parseEmpty(_ node: QueryResult) -> () {
     }
 }
 
-fileprivate func parseId(_ node: PostgreSQL.Node) -> UUID {
-    return UUID(uuidString: node[0, "id"]!.string!)!
+fileprivate func parseId(_ result: QueryResult) -> UUID {
+    guard case let .tuples(t) = result else { fatalError("Expected a node") }
+    return t[0][name: "id"]!
 }
 
 extension Insertable {
     public var insert: Query<UUID> {
-        return Query("INSERT INTO \(Self.tableName) \(values: fieldValues.fieldsAndValues) RETURNING id", parse: parseId)
+        return Query("INSERT INTO \(Self.tableName) \(values: fieldValues) RETURNING id", parse: parseId)
     }
 
     
-    public func findOrInsert(uniqueKey: String, value: NodeRepresentable) -> Query<UUID> {
+    public func findOrInsert(uniqueKey: String, value: Param) -> Query<UUID> {
         return Query("""
             WITH inserted AS (
-            INSERT INTO \(Self.tableName) \(values: fieldValues.fieldsAndValues)
+            INSERT INTO \(Self.tableName) \(values: fieldValues)
             ON CONFLICT DO NOTHING
             RETURNING id
             )
@@ -62,7 +64,7 @@ extension Insertable {
         let f = fieldValues
         let updates = f.fields.map { "\($0) = EXCLUDED.\($0)" }.sqlJoined
         return Query("""
-            INSERT INTO \(Self.tableName) \(values: f.fieldsAndValues)
+            INSERT INTO \(Self.tableName) \(values: f)
             ON CONFLICT (\(raw: uniqueKey)) DO UPDATE SET \(raw: updates)
             RETURNING id
             """, parse: parseId)

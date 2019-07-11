@@ -7,11 +7,11 @@
 
 import Foundation
 import Database
-import PostgreSQL
+import LibPQ
 import WebServer
 
 
-let postgres = env.databaseURL.map { Postgres(url: $0) } ?? Postgres(host: env.databaseHost, name: env.databaseName, user: env.databaseUser, password: env.databasePassword)
+let postgres = env.databaseURL.flatMap { URL(string: $0).map { Postgres(url: $0) } } ?? Postgres(host: env.databaseHost, name: env.databaseName, user: env.databaseUser, password: env.databasePassword)
 
 
 struct FileData: Codable, Insertable {
@@ -88,10 +88,12 @@ struct DownloadData: Codable, Insertable {
     static let tableName: TableName = "downloads"
 }
 
-extension CSRFToken: NodeRepresentable {
-    public func makeNode(in context: PostgreSQL.Context?) throws -> PostgreSQL.Node {
-        return value.makeNode(in: context)
+extension CSRFToken: Param {
+    public init(stringValue string: String?) {
+        self.init(.init(stringValue: string!))
     }
+    public static var oid = OID.uuid
+    public var stringValue: String? { return value.stringValue }
 }
 
 struct UserData: Codable, Insertable {
@@ -143,9 +145,11 @@ struct UserData: Codable, Insertable {
     static let tableName: TableName = "users"
 }
 
-extension UserData.Role: NodeRepresentable {
-    func makeNode(in context: PostgreSQL.Context?) throws -> PostgreSQL.Node {
-        return rawValue.makeNode(in: context)
+extension UserData.Role: Param {
+    static let oid: OID = Int.oid
+    var stringValue: String? { return rawValue.stringValue }
+    init(stringValue string: String?) {
+        self.init(rawValue: .init(stringValue: string!))!
     }
 }
 

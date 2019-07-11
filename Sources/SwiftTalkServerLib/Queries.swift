@@ -7,55 +7,55 @@
 
 import Foundation
 import Database
-import PostgreSQL
+import LibPQ
 
 
-extension Row where Element == FileData {
-    static func select(key: String) -> Query<Row<FileData>?> {
+extension Database.Row where Element == FileData {
+    static func select(key: String) -> Query<Database.Row<FileData>?> {
         return selectOne.appending("WHERE key=\(param: key)")
     }
     
-    static func select(repository: String, path: String) -> Query<Row<FileData>?> {
+    static func select(repository: String, path: String) -> Query<Database.Row<FileData>?> {
         return select(key: FileData.key(forRepository: repository, path: path))
     }
     
-    static func transcripts() -> Query<[Row<FileData>]> {
+    static func transcripts() -> Query<[Database.Row<FileData>]> {
         return select.appending(
             "WHERE key LIKE \(param: FileData.keyPrefix(forRepository: github.transcriptsRepo)) || '%'"
         )
     }
     
-    static func staticData(jsonName: String) -> Query<Row<FileData>?> {
+    static func staticData(jsonName: String) -> Query<Database.Row<FileData>?> {
         let key = FileData.key(forRepository: github.staticDataRepo, path: jsonName)
         return selectOne.appending("WHERE key=\(param: key)")
     }
 }
 
-extension Row where Element == GiftData {
-    static func select(subscriptionId id: String) -> Query<Row<Element>?> {
-        return Row<GiftData>.selectOne.appending("WHERE subscription_id=\(param: id)")
+extension Database.Row where Element == GiftData {
+    static func select(subscriptionId id: String) -> Query<Database.Row<Element>?> {
+        return Database.Row<GiftData>.selectOne.appending("WHERE subscription_id=\(param: id)")
     }
 }
 
-extension Row where Element == UserData {
-    static func select(githubId id: Int) -> Query<Row<Element>?> {
-        return Row<UserData>.selectOne.appending("WHERE github_uid=\(param: id)")
+extension Database.Row where Element == UserData {
+    static func select(githubId id: Int) -> Query<Database.Row<Element>?> {
+        return Database.Row<UserData>.selectOne.appending("WHERE github_uid=\(param: id)")
     }
     
-    static func select(githubLogin login: String) -> Query<Row<Element>?> {
-        return Row<UserData>.selectOne.appending("WHERE github_login=\(param: login)")
+    static func select(githubLogin login: String) -> Query<Database.Row<Element>?> {
+        return Database.Row<UserData>.selectOne.appending("WHERE github_login=\(param: login)")
     }
 
-    static func select(teamToken: UUID) -> Query<Row<Element>?> {
-        return Row<UserData>.selectOne.appending("WHERE team_token=\(param: teamToken)")
+    static func select(teamToken: UUID) -> Query<Database.Row<Element>?> {
+        return Database.Row<UserData>.selectOne.appending("WHERE team_token=\(param: teamToken)")
     }
 
-    static func select(sessionId id: UUID) -> Query<Row<Element>?> {
+    static func select(sessionId id: UUID) -> Query<Database.Row<Element>?> {
         let fields = UserData.fieldList { "u.\($0)" }
         return Query("SELECT u.id,\(raw: fields) FROM \(UserData.tableName) AS u INNER JOIN \(SessionData.tableName) AS s ON s.user_id = u.id WHERE s.id=\(param: id)", parse: Element.parseFirst)
     }
     
-    var teamMember: Query<Row<TeamMemberData>?> {
+    var teamMember: Query<Database.Row<TeamMemberData>?> {
         let fields = TeamMemberData.fieldList { "tm.\($0)" }
         return Query("""
             SELECT tm.id,\(raw: fields) FROM \(TeamMemberData.tableName) AS tm
@@ -65,7 +65,7 @@ extension Row where Element == UserData {
             """, parse: TeamMemberData.parseFirst)
     }
 
-    var gifter: Query<Row<UserData>?> {
+    var gifter: Query<Database.Row<UserData>?> {
         let fields = UserData.fieldList { "u.\($0)" }
         return Query("""
             SELECT u.id,\(raw: fields) FROM \(UserData.tableName) AS u
@@ -74,11 +74,11 @@ extension Row where Element == UserData {
             """, parse: Element.parseFirst)
     }
     
-    var downloads: Query<[Row<DownloadData>]> {
-        return Row<DownloadData>.select.appending("WHERE user_id=\(param: id)")
+    var downloads: Query<[Database.Row<DownloadData>]> {
+        return Database.Row<DownloadData>.select.appending("WHERE user_id=\(param: id)")
     }
     
-    var teamMembers: Query<[Row<UserData>]> {
+    var teamMembers: Query<[Database.Row<UserData>]> {
         let fields = UserData.fieldList { "u.\($0)" }
         return Query("""
             SELECT u.id,\(raw: fields) FROM \(UserData.tableName) AS u
@@ -88,7 +88,7 @@ extension Row where Element == UserData {
     }
     
     func deleteSession(_ sessionId: UUID) -> Query<()> {
-        return Row<SessionData>.delete.appending("WHERE user_id=\(param: id) AND id=\(param: sessionId)")
+        return Database.Row<SessionData>.delete.appending("WHERE user_id=\(param: id) AND id=\(param: sessionId)")
     }
     
     func changeSubscriptionStatus(_ subscribed: Bool) -> Query<()> {
@@ -108,14 +108,14 @@ extension Row where Element == UserData {
     }
 }
 
-extension Row where Element == TaskData {
-    static var dueTasks: Query<[Row<TaskData>]> {
-        return Row<TaskData>.select.appending("WHERE date < LOCALTIMESTAMP ORDER BY date ASC")
+extension Database.Row where Element == TaskData {
+    static var dueTasks: Query<[Database.Row<TaskData>]> {
+        return Database.Row<TaskData>.select.appending("WHERE date < LOCALTIMESTAMP ORDER BY date ASC")
     }
 }
 
-extension Row where Element == PlayProgressData {
-    static func sortedDesc(for userId: UUID) -> Query<[Row<PlayProgressData>]> {
-        return Row<PlayProgressData>.select.appending("WHERE user_id=\(param: userId) ORDER BY episode_number DESC")
+extension Database.Row where Element == PlayProgressData {
+    static func sortedDesc(for userId: UUID) -> Query<[Database.Row<PlayProgressData>]> {
+        return Database.Row<PlayProgressData>.select.appending("WHERE user_id=\(param: userId) ORDER BY episode_number DESC")
     }
 }

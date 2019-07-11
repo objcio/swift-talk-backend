@@ -2,15 +2,6 @@
   "object": {
     "pins": [
       {
-        "package": "Bits",
-        "repositoryURL": "https://github.com/vapor/bits.git",
-        "state": {
-          "branch": null,
-          "revision": "03079476b04139a8b744ad96f975176df5ae12bc",
-          "version": "1.1.1"
-        }
-      },
-      {
         "package": "Cryptor",
         "repositoryURL": "https://github.com/IBM-Swift/BlueCryptor",
         "state": {
@@ -47,30 +38,12 @@
         }
       },
       {
-        "package": "Core",
-        "repositoryURL": "https://github.com/vapor/core.git",
+        "package": "LibPQ",
+        "repositoryURL": "https://github.com/objcio/LibPQ",
         "state": {
-          "branch": null,
-          "revision": "aa15871311b497a24a7f0e96b1ae6865dd600818",
-          "version": "2.2.1"
-        }
-      },
-      {
-        "package": "CPostgreSQL",
-        "repositoryURL": "https://github.com/vapor-community/cpostgresql.git",
-        "state": {
-          "branch": null,
-          "revision": "33f0f94f023ab61ccd0ba2f076dd6a448be853e3",
-          "version": "2.1.0"
-        }
-      },
-      {
-        "package": "Debugging",
-        "repositoryURL": "https://github.com/vapor/debugging.git",
-        "state": {
-          "branch": null,
-          "revision": "fc5a27d6eb236141dc24e5f14eedaa2e035ae7b3",
-          "version": "1.1.1"
+          "branch": "master",
+          "revision": "aeafeea4b0a114d3e7197167de07b2186970a283",
+          "version": null
         }
       },
       {
@@ -80,24 +53,6 @@
           "branch": null,
           "revision": "f8657642dfdec9973efc79cc68bcef43a653a2bc",
           "version": "8.0.2"
-        }
-      },
-      {
-        "package": "Node",
-        "repositoryURL": "https://github.com/vapor/node.git",
-        "state": {
-          "branch": null,
-          "revision": "607aa595081da496f0f04a5c0cffd976e81d2e4e",
-          "version": "2.1.5"
-        }
-      },
-      {
-        "package": "PostgreSQL",
-        "repositoryURL": "https://github.com/vapor-community/postgresql.git",
-        "state": {
-          "branch": null,
-          "revision": "1d23662a0b1b6b4689319607bb8d22daa57e5fca",
-          "version": "2.1.2"
         }
       },
       {

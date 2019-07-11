@@ -9,7 +9,7 @@ import Foundation
 import Promise
 import Base
 import XCTest
-import PostgreSQL
+import LibPQ
 import NIOWrapper
 import HTML
 import Database
@@ -114,14 +114,14 @@ func TestUnwrap<A>(_ value: A?, file: StaticString = #file, line: UInt = #line) 
 
 
 class TestConnection: ConnectionProtocol {
-    let _execute: (String, [PostgreSQL.Node]) -> PostgreSQL.Node = { _,_ in fatalError() }
+    let _execute: (String, [Param]) -> QueryResult = { _,_ in fatalError() }
     private var results: [QueryAndResult]
     
     init(_ results: [QueryAndResult] = []) {
         self.results = results
     }
     
-    func execute(_ query: String, _ values: [PostgreSQL.Node]) throws -> PostgreSQL.Node {
+    func execute(_ query: String, _ values: [Param]) throws -> QueryResult {
         return _execute(query, values)
     }
     
@@ -133,7 +133,7 @@ class TestConnection: ConnectionProtocol {
         return response
     }
     
-    func close() throws {
+    func close() {
     }
     
     func assertDone() {

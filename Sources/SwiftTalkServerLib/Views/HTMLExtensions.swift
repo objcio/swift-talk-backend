@@ -72,7 +72,7 @@ extension HTML.Node where I == STRequestEnvironment {
         }
         return Node.withCSRF { csrf in
             Node.form(class: "button_to", action: route.path, method: .post, [
-                Node.input(name: "csrf", id: "csrf", type: "hidden", attributes: ["value": csrf.stringValue], []),
+                Node.input(name: "csrf", id: "csrf", type: "hidden", attributes: ["value": csrf.string], []),
                 Node.button(class: `class`, attributes: attrs, children)
                 ])
         }

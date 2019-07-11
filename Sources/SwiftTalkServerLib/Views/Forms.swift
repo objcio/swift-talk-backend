@@ -103,7 +103,7 @@ extension FormView {
             errors.isEmpty ? .none : .ul(class: "mb++ bgcolor-invalid color-white ms-1 pa radius-3 bold", errors.map { .li([.text($0.message)]) }),
             .div(class: "", [
                 .form(class: `class`, action: action.path, attributes: ["id": id], [
-                    .withCSRF { csrf in .input(name: "csrf", id: "csrf", type: "hidden", attributes: ["value": csrf.stringValue], []) },
+                    .withCSRF { csrf in .input(name: "csrf", id: "csrf", type: "hidden", attributes: ["value": csrf.string], []) },
                     .div(class: "stack+", fields.map(renderField) + [
                             .div([
                                 .input(class: "c-button c-button--blue", name: "commit", type: "submit", attributes: ["value": submitTitle, "data-disable-with": submitTitle], []),

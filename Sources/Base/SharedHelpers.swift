@@ -130,7 +130,6 @@ public func ?!<A>(lhs: A?, rhs: Error) throws -> A {
     return value
 }
 
-
 extension Collection {
     public func intersperse(_ sep: Element) -> [Element] {
         guard let f = self.first else { return [] }
@@ -139,5 +138,15 @@ extension Collection {
             x.append(el)
         })
         
+    }
+}
+
+extension Collection where Index: Strideable {
+    public func chunked(size: Index.Stride) -> [[Element]] {
+        return stride(from: startIndex, to: endIndex, by: size).map { startIndex in
+            let next = startIndex.advanced(by: size)
+            let end = next <= endIndex ? next : endIndex
+            return Array(self[startIndex ..< end])
+        }
     }
 }
