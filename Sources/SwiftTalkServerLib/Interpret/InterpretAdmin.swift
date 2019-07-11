@@ -27,7 +27,7 @@ extension Route.Admin {
                 return I.query(u.teamMembers) { members in
                     return I.onSuccess(promise: u.currentSubscription.promise, do: { sub in
                         return I.query(u.teamMemberCountForRecurly) { memberCount in
-                        	return I.write("\(u.data)\n\n\(members)\n\n\(memberCount)\n\n\(sub)")
+                            return I.write("\(u.data)\n\n\(members)\n\n\(memberCount)\n\n\(String(describing: sub))")
                         }
                     })
                 }

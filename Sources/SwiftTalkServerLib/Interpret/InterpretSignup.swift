@@ -17,7 +17,7 @@ extension Route.Signup {
         case .subscribe(let planName):
             if let p = planName {
                 return I.withSession { _ in
-                    guard let plan = Plan.find(code: p) else { throw ServerError(privateMessage: "No such plan \(p)")}
+                    guard let _ = Plan.find(code: p) else { throw ServerError(privateMessage: "No such plan \(p)")}
                     return I.redirect(to: .subscription(.new(couponCode: nil, planCode: p, team: false)))
                 }
             } else {
