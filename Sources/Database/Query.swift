@@ -59,6 +59,7 @@ extension QueryStringAndParams: ExpressibleByStringInterpolation, StringInterpol
     public typealias StringInterpolation = QueryStringAndParams
     
     public mutating func appendLiteral(_ x: String) {
+        guard x.count > 0 else { return }
         parts.append(.raw(x))
     }
     
@@ -68,6 +69,7 @@ extension QueryStringAndParams: ExpressibleByStringInterpolation, StringInterpol
     }
     
     public mutating func appendInterpolation(raw x: String) {
+        guard x.count > 0 else { return }
         parts.append(.raw(x))
     }
     
