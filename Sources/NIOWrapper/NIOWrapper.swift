@@ -10,6 +10,7 @@ import Base
 import NIO
 import NIOHTTP1
 import NIOFoundationCompat
+import _NIO1APIShims
 import Promise
 
 
@@ -27,7 +28,7 @@ public protocol Response {
 public struct NIOInterpreter: Response {
     struct Deps {
         let header: HTTPRequestHead
-        let ctx: ChannelHandlerContext
+        let context: ChannelHandlerContext
         let fileIO: NonBlockingFileIO
         let handler: RouteHandler
         let manager: FileManager
@@ -51,9 +52,9 @@ public struct NIOInterpreter: Response {
                 head.headers.add(name: key, value: value)
             }
             let part = HTTPServerResponsePart.head(head)
-            _ = env.ctx.channel.write(part)
-            _ = env.ctx.channel.writeAndFlush(HTTPServerResponsePart.end(nil)).then {
-                env.ctx.channel.close()
+            _ = env.context.channel.write(part)
+            _ = env.context.channel.writeAndFlush(HTTPServerResponsePart.end(nil)).flatMap {
+                env.context.channel.close()
             }
             return nil
         }
@@ -62,7 +63,7 @@ public struct NIOInterpreter: Response {
     public static func writeFile(path: String, maxAge: UInt64? = 60) -> NIOInterpreter {
         return NIOInterpreter { deps in
             let fullPath = deps.resourcePaths.resolve(path) ?? URL(fileURLWithPath: "")
-            let fileHandleAndRegion = deps.fileIO.openFile(path: fullPath.path, eventLoop: deps.ctx.eventLoop)
+            let fileHandleAndRegion = deps.fileIO.openFile(path: fullPath.path, eventLoop: deps.context.eventLoop)
             fileHandleAndRegion.whenFailure { _ in
                 _ = write("Error", status: .badRequest).run(deps)
             }
@@ -80,15 +81,15 @@ public struct NIOInterpreter: Response {
                 if let m = maxAge {
                 	response.headers.add(name: "Cache-Control", value: "max-age=\(m)")
                 }
-                deps.ctx.write(deps.handler.wrapOutboundOut(.head(response)), promise: nil)
-                deps.ctx.writeAndFlush(deps.handler.wrapOutboundOut(.body(.fileRegion(region)))).then {
-                    let p: EventLoopPromise<Void> = deps.ctx.eventLoop.newPromise()
-                    deps.ctx.writeAndFlush(deps.handler.wrapOutboundOut(.end(nil)), promise: p)
+                deps.context.write(deps.handler.wrapOutboundOut(.head(response)), promise: nil)
+                deps.context.writeAndFlush(deps.handler.wrapOutboundOut(.body(.fileRegion(region)))).flatMap {
+                    let p: EventLoopPromise<Void> = deps.context.eventLoop.makePromise()
+                    deps.context.writeAndFlush(deps.handler.wrapOutboundOut(.end(nil)), promise: p)
                     
                     return p.futureResult
-                    }.thenIfError { (_: Error) in
-                        deps.ctx.close()
-                    }.whenComplete {
+                    }.flatMapError { (_: Error) in
+                        deps.context.close()
+                    }.whenComplete { _ in
                         _ = try? file.close()
                 }
             }
@@ -99,7 +100,7 @@ public struct NIOInterpreter: Response {
     public static func onComplete<A>(promise: Promise<A>, do cont: @escaping (A) -> NIOInterpreter) -> NIOInterpreter {
         return NIOInterpreter { env in
             promise.run { str in
-                env.ctx.eventLoop.execute {
+                env.context.eventLoop.execute {
                     let result = cont(str).run(env)
                     assert(result == nil, "You have to read POST data as the first step")
                 }
@@ -116,13 +117,13 @@ public struct NIOInterpreter: Response {
                 head.headers.add(name: key, value: value)
             }
             let part = HTTPServerResponsePart.head(head)
-            _ = env.ctx.channel.write(part)
-            var buffer = env.ctx.channel.allocator.buffer(capacity: data.count)
-            buffer.write(bytes: data)
+            _ = env.context.channel.write(part)
+            var buffer = env.context.channel.allocator.buffer(capacity: data.count)
+            buffer.writeBytes(data)
             let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
-            _ = env.ctx.channel.write(bodyPart)
-            _ = env.ctx.channel.writeAndFlush(HTTPServerResponsePart.end(nil)).then {
-                env.ctx.channel.close()
+            _ = env.context.channel.write(bodyPart)
+            _ = env.context.channel.writeAndFlush(HTTPServerResponsePart.end(nil)).flatMap {
+                env.context.channel.close()
             }
             return nil
         }
@@ -135,13 +136,13 @@ public struct NIOInterpreter: Response {
                 head.headers.add(name: key, value: value)
             }
             let part = HTTPServerResponsePart.head(head)
-            _ = env.ctx.channel.write(part)
-            var buffer = env.ctx.channel.allocator.buffer(capacity: string.utf8.count)
-            buffer.write(string: string)
+            _ = env.context.channel.write(part)
+            var buffer = env.context.channel.allocator.buffer(capacity: string.utf8.count)
+            buffer.writeString(string)
             let bodyPart = HTTPServerResponsePart.body(.byteBuffer(buffer))
-            _ = env.ctx.channel.write(bodyPart)
-            _ = env.ctx.channel.writeAndFlush(HTTPServerResponsePart.end(nil)).then {
-                env.ctx.channel.close()
+            _ = env.context.channel.write(bodyPart)
+            _ = env.context.channel.writeAndFlush(HTTPServerResponsePart.end(nil)).flatMap {
+                env.context.channel.close()
             }
             return nil
         }
@@ -176,12 +177,12 @@ final class RouteHandler: ChannelInboundHandler {
         self.paths = resourcePaths
     }
     
-    func errorCaught(ctx: ChannelHandlerContext, error: Error) {
+    func errorCaught(context: ChannelHandlerContext, error: Error) {
         log(info: "Error caught: \(error)")
-        ctx.close(promise: nil)
+        context.close(promise: nil)
     }
     
-    func channelRead(ctx: ChannelHandlerContext, data: NIOAny) {
+    func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let reqPart = unwrapInboundIn(data)
         switch reqPart {
         case .head(let header):
@@ -190,7 +191,7 @@ final class RouteHandler: ChannelInboundHandler {
             let cookies = header.headers["Cookie"].first.map {
                 $0.split(separator: ";").compactMap { $0.trimmingCharacters(in: .whitespaces).keyAndValue }
             } ?? []
-            let env = NIOInterpreter.Deps(header: header, ctx: ctx, fileIO: fileIO, handler: self, manager: FileManager.default, resourcePaths: paths)
+            let env = NIOInterpreter.Deps(header: header, context: context, fileIO: fileIO, handler: self, manager: FileManager.default, resourcePaths: paths)
 
             func notFound() {
                 log(info: "Not found: \(header.uri), method: \(header.method)")
@@ -214,7 +215,7 @@ final class RouteHandler: ChannelInboundHandler {
             }
         case .end:
             if let (p, header) = postCont {
-                let env = NIOInterpreter.Deps(header: header, ctx: ctx, fileIO: fileIO, handler: self, manager: FileManager.default, resourcePaths: paths)
+                let env = NIOInterpreter.Deps(header: header, context: context, fileIO: fileIO, handler: self, manager: FileManager.default, resourcePaths: paths)
                 let result = p(accumData).run(env)
                 accumData = Data()
                 assert(result == nil, "Can't read post data twice")
@@ -226,8 +227,8 @@ final class RouteHandler: ChannelInboundHandler {
 
 
 public struct Server {
-    let threadPool: BlockingIOThreadPool = {
-        let t = BlockingIOThreadPool(numberOfThreads: 1)
+    let threadPool: NIOThreadPool = {
+        let t = NIOThreadPool(numberOfThreads: 1)
         t.start()
         return t
     }()
@@ -253,8 +254,8 @@ public struct Server {
             .serverChannelOption(ChannelOptions.backlog, value: 256)
             .serverChannelOption(reuseAddr, value: 1)
             .childChannelInitializer { channel in
-                channel.pipeline.configureHTTPServerPipeline(withErrorHandling: true).then { _ in
-                    channel.pipeline.add(handler: RouteHandler(self.fileIO, resourcePaths: self.paths, handle: self.handle))
+                channel.pipeline.configureHTTPServerPipeline(withErrorHandling: true).flatMap { _ in
+                    channel.pipeline.addHandler(RouteHandler(self.fileIO, resourcePaths: self.paths, handle: self.handle))
                 }
             }
             .childChannelOption(ChannelOptions.socket(
