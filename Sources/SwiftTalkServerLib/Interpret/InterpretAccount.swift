@@ -149,7 +149,6 @@ extension Route.Account {
                         throw ServerError(privateMessage: "Can't get sub or plan: \(String(describing: sub))")
                     }
                     return I.onSuccess(promise: p.teamMemberAddOn.promise, do: { addOn in
-                        print(addOn.unit_amount_in_cents)
                         let prettyAmount: String?
                         if addOn.unit_amount_in_cents.usdCents > 0 {
                             prettyAmount = "\(addOn.unit_amount_in_cents.plainText) \(p.prettyInterval)"
