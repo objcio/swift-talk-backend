@@ -14,7 +14,7 @@ public struct ServerError: LocalizedError {
     /// Message shown to the user
     public let publicMessage: String
     
-    public init(privateMessage: String, publicMessage: String) {
+    public init(privateMessage: String, publicMessage: String = "Something went wrong, please try again.") {
         self.privateMessage = privateMessage
         self.publicMessage = publicMessage
     }

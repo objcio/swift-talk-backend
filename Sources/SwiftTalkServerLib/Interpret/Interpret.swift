@@ -49,6 +49,8 @@ extension Route {
 
         case let .webhook(hook):
           return try hook.interpret()
+        case let .admin(admin):
+            return try admin.interpret()
 
         case .home:
             return .withSession { session in
@@ -101,6 +103,13 @@ extension Route {
         case .error:
             return .write(html: errorView("Not found"), status: .notFound)
             
+        case .authorizeApp:
+            return I.withSession { sess in
+                guard let s = sess else {
+                    return I.redirect(path: "swifttalk://authorize/?success=false", headers: [:])
+                }
+                return I.redirect(path: "swifttalk://authorize/?session_id=\(s.sessionId.uuidString)&csrf=\(s.user.data.csrfToken.stringValue)", headers: [:])
+            }
         }
     }
 }

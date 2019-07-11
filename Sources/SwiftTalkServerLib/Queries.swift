@@ -100,6 +100,12 @@ extension Row where Element == UserData {
         return Query(q
         , parse: Element.parseEmpty)
     }
+    
+    var teamMemberCountForRecurly: Query<Int> {
+        return teamMembers.map { teamMembers in
+            return self.data.role == .teamManager ? teamMembers.count - 1 : teamMembers.count
+        }
+    }
 }
 
 extension Row where Element == TaskData {

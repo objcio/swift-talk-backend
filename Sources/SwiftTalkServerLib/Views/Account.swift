@@ -324,7 +324,7 @@ func unsubscribedBillingContent() -> [Node] {
         .div([
             heading("Subscription"),
             .p(class: "mb", ["You don't have an active subscription."]),
-            .link(to: .signup(.subscribe), class: "c-button", ["Become a Subscriber"])
+            .link(to: .signup(.subscribe(planName: nil)), class: "c-button", ["Become a Subscriber"])
         ])
     ]
 }
@@ -415,7 +415,7 @@ func accountForm() -> Form<ProfileFormData, STRequestEnvironment> {
 }
 
 
-func teamMembersView(teamMembers: [Row<UserData>], signupLink: URL) -> Node {
+func teamMembersView(teamMembers: [Row<UserData>], price: String?, signupLink: URL) -> Node {
     func row(avatarURL: String, name: String, email: String, githubLogin: String, deleteRoute: Route?) -> Node {
         return .div(class: "flex items-center pv- border-top border-1 border-color-gray-90", [
             .div(class: "block radius-full ms-2 width-2 mr", [
@@ -449,7 +449,7 @@ func teamMembersView(teamMembers: [Row<UserData>], signupLink: URL) -> Node {
                 .div(class: "color-gray-25 lh-110", [
                     .p(["To add team members, please send them the following link for signup:"]),
                     .div(class: "type-mono ms-1 mv", [.text(signupLink.absoluteString)]),
-                    .p(class: "color-gray-50 ms-1", ["Team members cost $10/month or $100/year (excl. VAT), depending on your subscription."]),
+                    price.map { .p(class: "color-gray-50 ms-1", [.text("Team members cost \($0) (excl. VAT).")]) } ?? .none,
                     .button(to: .account(.invalidateTeamToken), confirm: "WARNING: This will invalidate the current signup link. Do you want to proceed?", class: "button mt+", ["Generate New Signup Link"]),
                 ])
             ]),

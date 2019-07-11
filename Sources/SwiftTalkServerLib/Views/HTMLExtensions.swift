@@ -99,7 +99,7 @@ extension HTML.Node where I == STRequestEnvironment {
     }
     
     static func markdown(_ string: String) -> Node {
-        return Node.raw(CommonMark.Node(markdown: string)!.html)
+        return Node.raw(CommonMark.Node(markdown: string)!.html(options: [.unsafe]))
     }
 }
 

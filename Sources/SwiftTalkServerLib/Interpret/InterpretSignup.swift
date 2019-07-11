@@ -8,29 +8,34 @@
 import Foundation
 import Database
 import WebServer
-
+import Base
 
 extension Route.Signup {
     func interpret<I: STResponse>() throws -> I where I.Env == STRequestEnvironment {
         switch self {
         
-        case .subscribe:
-            guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
-                throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
+        case .subscribe(let planName):
+            if let p = planName {
+                return I.withSession { _ in
+                    guard let plan = Plan.find(code: p) else { throw ServerError(privateMessage: "No such plan \(p)")}
+                    return I.redirect(to: .subscription(.new(couponCode: nil, planCode: p, team: false)))
+                }
+            } else {
+                guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
+                    throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])")
+                }
+                return .write(html: renderSubscribe(monthly: monthly, yearly: yearly))
             }
-            return .write(html: renderSubscribe(monthly: monthly, yearly: yearly))
         
         case .subscribeTeam:
             guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
-                throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])", publicMessage: "Something went wrong, please try again later")
+                throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])")
             }
             return .write(html: renderSubscribeTeam(monthly: monthly, yearly: yearly))
         
         case .teamMember(let token):
             return .query(Row<UserData>.select(teamToken: token)) { row in
-                guard let teamManager = row else {
-                    throw ServerError(privateMessage: "signup token doesn't exist: \(token)", publicMessage: "This signup link is invalid. Please get in touch with your team manager for a new one.")
-                }
+                let teamManager = try row ?! ServerError(privateMessage: "signup token doesn't exist: \(token)", publicMessage: "This signup link is invalid. Please get in touch with your team manager for a new one.")
                 return .withSession { session in
                     if let s = session {
                         if s.user.id == teamManager.id && s.selfPremiumAccess {

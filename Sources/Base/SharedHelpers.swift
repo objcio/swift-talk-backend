@@ -11,6 +11,7 @@ import Foundation
 public enum HTTPMethod: String, Codable {
     case post = "POST"
     case get = "GET"
+    case head = "HEAD"
 }
 
 public struct Request {
@@ -85,11 +86,11 @@ extension StringProtocol {
     }
 }
 
-public func measure<A>(message: String, file: StaticString = #file, line: UInt = #line, treshold: TimeInterval = 0.01, _ code: () throws -> A) rethrows -> A {
+public func measure<A>(message: String, file: StaticString = #file, line: UInt = #line, threshold: TimeInterval = 0.01, _ code: () throws -> A) rethrows -> A {
     let start = Date()
     let result = try code()
     let time = Date().timeIntervalSince(start)
-    if time > treshold {
+    if time > threshold {
         log(file: file, line: line, info: "measure: \(time*1000)ms \(message)")
     }
     return result

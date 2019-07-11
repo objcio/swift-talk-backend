@@ -24,9 +24,7 @@ extension Route.Login {
             return .redirect(path: path, headers: [:])
         
         case .githubCallback(let optionalCode, let origin):
-            guard let code = optionalCode else {
-                throw ServerError(privateMessage: "No auth code", publicMessage: "Something went wrong, please try again.")
-            }
+            let code = try optionalCode ?! ServerError(privateMessage: "No auth code")
             let loadToken = github.getAccessToken(code).promise.map({ $0?.access_token })
             return .onCompleteOrCatch(promise: loadToken, do: { token in
                 let t = try token ?! ServerError(privateMessage: "No github access token", publicMessage: "Couldn't access your Github profile.")

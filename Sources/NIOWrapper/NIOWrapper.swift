@@ -153,6 +153,7 @@ extension Base.HTTPMethod {
         switch value {
         case .GET: self = .get
         case .POST: self = .post
+        case .HEAD: self = .head
         default: return nil
         }
     }
@@ -173,6 +174,11 @@ final class RouteHandler: ChannelInboundHandler {
         self.fileIO = fileIO
         self.handle = handle
         self.paths = resourcePaths
+    }
+    
+    func errorCaught(ctx: ChannelHandlerContext, error: Error) {
+        log(info: "Error caught: \(error)")
+        ctx.close(promise: nil)
     }
     
     func channelRead(ctx: ChannelHandlerContext, data: NIOAny) {

@@ -16,6 +16,8 @@ public func expected200to300(_ code: Int) -> Bool {
     return code >= 200 && code < 300
 }
 
+public let defaultTimeOutInterval: TimeInterval = 30
+
 public struct RemoteEndpoint<A> {
     public enum Method {
         case get, post, put, patch
@@ -37,7 +39,7 @@ public struct RemoteEndpoint<A> {
         })
     }
 
-    public init(_ method: Method, url: URL, accept: ContentType? = nil, contentType: ContentType? = nil, body: Data? = nil, headers: [String:String] = [:], expectedStatusCode: @escaping (Int) -> Bool, timeOutInterval: TimeInterval = 10, query: [String:String] = [:], parse: @escaping (Data?) -> A?) {
+    public init(_ method: Method, url: URL, accept: ContentType? = nil, contentType: ContentType? = nil, body: Data? = nil, headers: [String:String] = [:], expectedStatusCode: @escaping (Int) -> Bool, timeOutInterval: TimeInterval = defaultTimeOutInterval, query: [String:String] = [:], parse: @escaping (Data?) -> A?) {
         var comps = URLComponents(string: url.absoluteString)!
         comps.queryItems = query.map { URLQueryItem(name: $0.0, value: $0.1) }
         request = URLRequest(url: comps.url!)
@@ -69,7 +71,8 @@ public struct RemoteEndpoint<A> {
 
 extension RemoteEndpoint: CustomStringConvertible {
     public var description: String {
-        return request.description
+        let data = request.httpBody ?? Data()
+        return "\(request.httpMethod ?? "GET") \(request.url) \(String(data: data, encoding: .utf8) ?? "")"
     }
 }
 
@@ -89,24 +92,24 @@ extension RemoteEndpoint where A == () {
         self.init(method, url: url, accept: accept, headers: headers, expectedStatusCode: expectedStatusCode, query: query, parse: { _ in () })
     }
 
-    public init<B: Codable>(json method: Method, url: URL, accept: ContentType? = .json, body: B, headers: [String:String] = [:], expectedStatusCode: @escaping (Int) -> Bool = expected200to300, query: [String:String] = [:]) {
+    public init<B: Codable>(json method: Method, url: URL, accept: ContentType? = .json, body: B, headers: [String:String] = [:], expectedStatusCode: @escaping (Int) -> Bool = expected200to300, timeOutInterval: TimeInterval = defaultTimeOutInterval, query: [String:String] = [:]) {
         let b = try! JSONEncoder().encode(body)
-        self.init(method, url: url, accept: accept, contentType: .json, body: b, headers: headers, expectedStatusCode: expectedStatusCode, query: query, parse: { _ in () })
+        self.init(method, url: url, accept: accept, contentType: .json, body: b, headers: headers, expectedStatusCode: expectedStatusCode, timeOutInterval: timeOutInterval, query: query, parse: { _ in () })
     }
 }
 
 extension RemoteEndpoint where A: Decodable {
-    public init(json method: Method, url: URL, accept: ContentType = .json, headers: [String: String] = [:], expectedStatusCode: @escaping (Int) -> Bool = expected200to300, query: [String: String] = [:], decoder: JSONDecoder? = nil) {
+    public init(json method: Method, url: URL, accept: ContentType = .json, headers: [String: String] = [:], expectedStatusCode: @escaping (Int) -> Bool = expected200to300, timeOutInterval: TimeInterval = defaultTimeOutInterval, query: [String: String] = [:], decoder: JSONDecoder? = nil) {
         let d = decoder ?? JSONDecoder()
-        self.init(method, url: url, accept: accept, body: nil, headers: headers, expectedStatusCode: expectedStatusCode, query: query) { data in
+        self.init(method, url: url, accept: accept, body: nil, headers: headers, expectedStatusCode: expectedStatusCode, timeOutInterval: timeOutInterval, query: query) { data in
             guard let dat = data else { return nil }
             return try? d.decode(A.self, from: dat)
         }
     }
 
-    public init<B: Codable>(json method: Method, url: URL, accept: ContentType = .json, body: B? = nil, headers: [String: String] = [:], expectedStatusCode: @escaping (Int) -> Bool = expected200to300, query: [String: String] = [:]) {
+    public init<B: Codable>(json method: Method, url: URL, accept: ContentType = .json, body: B? = nil, headers: [String: String] = [:], expectedStatusCode: @escaping (Int) -> Bool = expected200to300, timeOutInterval: TimeInterval = defaultTimeOutInterval, query: [String: String] = [:]) {
         let b = body.map { try! JSONEncoder().encode($0) }
-        self.init(method, url: url, accept: accept, contentType: .json, body: b, headers: headers, expectedStatusCode: expectedStatusCode, query: query) { data in
+        self.init(method, url: url, accept: accept, contentType: .json, body: b, headers: headers, expectedStatusCode: expectedStatusCode, timeOutInterval: timeOutInterval, query: query) { data in
             guard let dat = data else { return nil }
             return try? JSONDecoder().decode(A.self, from: dat)
         }

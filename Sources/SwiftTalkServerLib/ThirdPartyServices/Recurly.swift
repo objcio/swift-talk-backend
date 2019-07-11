@@ -68,6 +68,9 @@ fileprivate extension Plan {
 }
 
 extension Plan {
+    static func find(code: String) -> Plan? {
+        return all.first { $0.plan_code == code }
+    }
     static var monthly: Plan? {
         return all.first { $0.isMonthly && $0.isStandardPlan }
     }
@@ -81,7 +84,11 @@ extension Plan {
     }
 
     var isStandardPlan: Bool {
-        return !isGiftPlan
+        return !isGiftPlan && !isEnterprisePlan
+    }
+    
+    var isEnterprisePlan: Bool {
+        return plan_code.hasPrefix("enterprise")
     }
     
     var isGiftPlan: Bool {
@@ -673,8 +680,9 @@ struct Recurly {
         return RemoteEndpoint(xml: .put, url: url, headers: headers)
     }
     
-    func updateSubscription(_ subscription: Subscription, plan_code: String? = nil, numberOfTeamMembers: Int? = nil) -> RemoteEndpoint<Subscription> {
-        let addons: [UpdateSubscription.AddOn]? = numberOfTeamMembers == 0 ? nil : numberOfTeamMembers.map { [UpdateSubscription.AddOn(add_on_code: teamMemberAddOnCode, quantity: $0)] }
+    func updateSubscription(_ subscription: Subscription, plan_code: String? = nil, numberOfTeamMembers: Int) -> RemoteEndpoint<Subscription> {
+        let addons: [UpdateSubscription.AddOn]
+        addons = numberOfTeamMembers == 0 ? [] : [UpdateSubscription.AddOn(add_on_code: teamMemberAddOnCode, quantity: numberOfTeamMembers)]
         let url = base.appendingPathComponent("subscriptions/\(subscription.uuid)")
         return RemoteEndpoint(xml: .put, url: url, value: UpdateSubscription(timeframe: "now", plan_code: plan_code, subscription_add_ons: addons), headers: headers, query: [:])
     }

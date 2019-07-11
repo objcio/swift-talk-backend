@@ -9,7 +9,7 @@ import Foundation
 import Promise
 import Database
 import WebServer
-
+import Base
 
 extension ProfileFormData {
     init(_ data: UserData) {
@@ -62,10 +62,10 @@ extension Route.Account {
             return I.query(sess.user.deleteSession(sess.sessionId)) {
                 return I.redirect(to: .home)
             }
-        case let .register(couponCode, team):
+        case let .register(couponCode, planCode, team):
             let role: UserData.Role = team ? .teamManager : .user
-            return editAccount(form: registerForm(couponCode: couponCode, team: team), role: role) {
-                return sess.premiumAccess ? .home : .subscription(.new(couponCode: couponCode, team: team))
+            return editAccount(form: registerForm(couponCode: couponCode, planCode: planCode, team: team), role: role) {
+                return sess.premiumAccess ? .home : .subscription(.new(couponCode: couponCode, planCode: planCode, team: team))
             }
         case .profile:
             return editAccount(form: accountForm(), role: sess.user.data.role, cont: { .account(.profile) })
@@ -86,9 +86,8 @@ extension Route.Account {
                     let (sub, invoicesAndPDFs, redemptions, billingInfo, coupons) = p
                     func cont(subAndAddOn: (Subscription, Plan.AddOn)?) throws -> I {
                         let redemptionsWithCoupon = try redemptions.map { (r) -> (Redemption, Coupon) in
-                            guard let c = coupons.first(where: { $0.matches(r.coupon_code) }) else {
-                                throw ServerError(privateMessage: "No coupon for \(r)!", publicMessage: "Something went wrong while loading your account details. Please contact us at \(email) to resolve this issue.")
-                            }
+                            let c = try coupons.first(where: { $0.matches(r.coupon_code) }) ?!
+                                ServerError(privateMessage: "No coupon for \(r)!", publicMessage: "Something went wrong while loading your account details. Please contact us at \(email) to resolve this issue.")
                             return (r,c)
                         }
                         let result = billingView(subscription: subAndAddOn, invoices: invoicesAndPDFs, billingInfo: billingInfo, redemptions: redemptionsWithCoupon)
@@ -130,9 +129,8 @@ extension Route.Account {
                 })
             }
             return .verifiedPost(do: { body in
-                guard let token = body["billing_info[token]"] else {
-                    throw ServerError(privateMessage: "No billing_info[token]", publicMessage: "Something went wrong, please try again.")
-                }
+                let token = try body["billing_info[token]"] ?!
+                    ServerError(privateMessage: "No billing_info[token]")
                 return .onSuccess(promise: sess.user.updateBillingInfo(token: token).promise, do: { (response: RecurlyResult<BillingInfo>) -> I in
                     switch response {
                     case .success: return .redirect(to: .account(.updatePayment)) // todo show message?
@@ -145,8 +143,22 @@ extension Route.Account {
             
         case .teamMembers:
             let signupLink = Route.signup(.teamMember(token: sess.user.data.teamToken)).url
-            return .query(sess.user.teamMembers) { members in
-                .write(html: teamMembersView(teamMembers: members, signupLink: signupLink))
+            return I.query(sess.user.teamMembers) { members in
+                return I.onSuccess(promise: sess.user.currentSubscription.promise, do: { sub in
+                    guard let s = sub, let p = Plan.all.first(where: { $0.plan_code == s.plan.plan_code }) else {
+                        throw ServerError(privateMessage: "Can't get sub or plan: \(sub)")
+                    }
+                    return I.onSuccess(promise: p.teamMemberAddOn.promise, do: { addOn in
+                        print(addOn.unit_amount_in_cents)
+                        let prettyAmount: String?
+                        if addOn.unit_amount_in_cents.usdCents > 0 {
+                            prettyAmount = "\(addOn.unit_amount_in_cents.plainText) \(p.prettyInterval)"
+                        } else {
+                            prettyAmount = nil
+                        }
+                        return I.write(html: teamMembersView(teamMembers: members, price: prettyAmount, signupLink: signupLink))
+                    })
+                })
             }
         
         case .invalidateTeamToken:

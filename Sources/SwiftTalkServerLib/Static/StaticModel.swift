@@ -101,6 +101,10 @@ extension Episode {
         return releaseAt < globals.currentDate()
     }
     
+    func posterURL() -> URL {
+        return URL(string: "https://i.vimeocdn.com/video/\(thumbnailId).jpg")!
+    }
+    
     func posterURL(width: Int, height: Int) -> URL {
         return URL(string: "https://i.vimeocdn.com/video/\(thumbnailId)_\(width)x\(height).jpg")!
     }
@@ -182,6 +186,10 @@ extension Collection {
         return "/assets/images/collections/\(title).svg"
     }
     
+    var artworkPNG: String {
+        return "/assets/images/collections/\(title)@2x.png"
+    }
+    
     func episodes(for user: UserData?) -> [Episode] {
         let result = allEpisodes.scoped(for: user)
         return displayChronologically ? result : result.reversed()
@@ -231,7 +239,7 @@ struct Transcript {
                 return [inl]
             }
         }))
-        highlighted = highlight ? contents.commonMark.markdownToHighlightedHTML : contents.html
+        highlighted = highlight ? contents.commonMark(options: [.unsafe]).markdownToHighlightedHTML : contents.html(options: [.unsafe])
         
         // Extract table of contents
         var result: [(TimeInterval, title: String)] = []
