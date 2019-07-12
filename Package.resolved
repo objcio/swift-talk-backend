@@ -6,17 +6,8 @@
         "repositoryURL": "https://github.com/IBM-Swift/BlueCryptor",
         "state": {
           "branch": null,
-          "revision": "3e0179a2f46ad0652a74459dc451d64c128fcbd0",
-          "version": "1.0.20"
-        }
-      },
-      {
-        "package": "Ccmark",
-        "repositoryURL": "https://github.com/objcio/Ccmark.git",
-        "state": {
-          "branch": "master",
-          "revision": "4b584734d3200b39a6e8ae2776cd1b7d3c294888",
-          "version": null
+          "revision": "942460f9087977401879e18bbe216fe61cd049fc",
+          "version": "1.0.30"
         }
       },
       {
@@ -32,8 +23,8 @@
         "package": "CommonMark",
         "repositoryURL": "https://github.com/objcio/commonmark-swift",
         "state": {
-          "branch": "memory",
-          "revision": "bc32cc6635d65fc38670e715338a7bf8d174426d",
+          "branch": "master",
+          "revision": "04f9cd3d89d86c05d2cd6db070dedaeed984ba2c",
           "version": null
         }
       },
@@ -87,8 +78,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio.git",
         "state": {
           "branch": null,
-          "revision": "7f20464df31e85f86bedf4a8afdd1785e0cb5059",
-          "version": "2.3.0"
+          "revision": "334815f6580b5256409d48431751938c4e966e72",
+          "version": "2.4.0"
         }
       },
       {

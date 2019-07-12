@@ -19,9 +19,9 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0"),
-        .package(url: "https://github.com/objcio/commonmark-swift", .branch("memory")),
+        .package(url: "https://github.com/objcio/commonmark-swift", .branch("master")),
         .package(url: "https://github.com/objcio/LibPQ", .branch("master")),
-		.package(url: "https://github.com/IBM-Swift/BlueCryptor", .exact("1.0.20")),
+		.package(url: "https://github.com/IBM-Swift/BlueCryptor", .exact("1.0.30")),
         .package(url: "https://github.com/jpsim/SourceKitten", from: "0.22.0"),
     ],
     targets: [
