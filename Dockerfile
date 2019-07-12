@@ -30,6 +30,8 @@ RUN swift package update
 COPY Sources ./Sources
 COPY Tests ./Tests
 
+# workaround for -libcmark linker flag instead of -lcmark
+RUN ln -s /usr/local/lib/libcmark.so /usr/local/lib/liblibcmark.so
 RUN swift test && swift build --configuration release
 
 EXPOSE 8765
