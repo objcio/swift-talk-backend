@@ -127,3 +127,17 @@ You could also set up a multi-container docker application. For example, like in
 You can run a docker container from one of the intermediate steps. Then install screen and vim, and you have a small linux dev environment.
 
 https://medium.com/ihme-tech/troubleshooting-the-docker-build-process-454583c80665
+
+Here are some steps, if you have a local postgres running (on `en1`):
+
+```sh
+docker build -t "swifttalk-server-debug" -f Dockerfile.debug .
+docker run  --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --security-opt apparmor=unconfined -a stdin -a stdout -i -t --env-file .env --env RDS_HOSTNAME=(ifconfig en1 | awk '/inet /{print $2}') -p 8765:8765 swifttalk-server-debug bash
+screen # this helps with having separate "windows"
+swift build --configuration debug -Xswiftc -g
+./build/debug/swifttalk-server &> output.log
+# Wait for a crash to happen
+ ./symbolicate-linux-fatal .build/debug/swifttalk-server output.log
+```
+
+Unfortunately, it doesn't seem like lldb is expected to work under Linux: https://bugs.swift.org/browse/SR-755
