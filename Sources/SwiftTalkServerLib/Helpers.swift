@@ -107,9 +107,14 @@ extension Data {
 
 extension Date {
     var isToday: Bool {
-        let components = Calendar.current.dateComponents([.month,.year,.day], from: self)
-        let components2 = Calendar.current.dateComponents([.month,.year,.day], from: Date())
-        return components.year == components2.year && components.month == components2.month && components.day == components2.day
+        #if os(Linux)
+            let interval = Calendar.current.dateInterval(of: .day, for: Date())
+            return interval?.contains(self) == true
+        #else
+            let components = Calendar.current.dateComponents([.month,.year,.day], from: self)
+            let components2 = Calendar.current.dateComponents([.month,.year,.day], from: Date())
+            return components.year == components2.year && components.month == components2.month && components.day == components2.day
+        #endif
     }
 }
 

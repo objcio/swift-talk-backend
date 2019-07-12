@@ -168,18 +168,8 @@ struct Subscription: Codable, Equatable {
 
 extension Date {
     func numberOfMonths(since: Date) -> UInt {
-        // todo this should be the implementation, but has a bug (2018-11-28, should be solved in the next release?)
-        // https://bugs.swift.org/browse/SR-7011
-        // let components = Calendar.current.dateComponents([.month], from: since, to: self)
-        // return UInt(components.month!) + 1
-
-        let fc = Calendar.current.dateComponents([.month, .year], from: since)
-        let tc = Calendar.current.dateComponents([.month, .year], from: self)
-        
-        let years = tc.year! - fc.year!
-        let months = tc.month! - fc.month!
-        
-        return UInt((years * 12) + months)
+        let components = Calendar.current.dateComponents([.month], from: since, to: self)
+        return UInt(components.month!) + 1
     }
 }
 
