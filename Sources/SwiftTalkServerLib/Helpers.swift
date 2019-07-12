@@ -111,6 +111,9 @@ extension Date {
             let interval = Calendar.current.dateInterval(of: .day, for: Date())
             return interval?.contains(self) == true
         #else
+            // This crashes under linux (ideally, we'd remove it, but then we need to target a newer macOS version)
+            //
+            // Filed: https://bugs.swift.org/browse/SR-11118
             let components = Calendar.current.dateComponents([.month,.year,.day], from: self)
             let components2 = Calendar.current.dateComponents([.month,.year,.day], from: Date())
             return components.year == components2.year && components.month == components2.month && components.day == components2.day
