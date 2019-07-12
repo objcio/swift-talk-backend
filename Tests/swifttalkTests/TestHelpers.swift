@@ -150,11 +150,11 @@ struct TestErr: Error { }
 extension Query {
     func matches<B>(_ other: Query<B>) -> Bool {
         if query.rendered.sql == other.query.rendered.sql {
-            let v1 = query.rendered.values.map { try! $0.makeNode(in: nil) }
-            let v2 = other.query.rendered.values.map { try! $0.makeNode(in: nil) }
+            let v1 = query.rendered.values.map { $0.stringValue }
+            let v2 = other.query.rendered.values.map { $0.stringValue }
             guard v1.count == v2.count else { return false }
             for (x, y) in zip(v1, v2) {
-                guard x.wrapped == y.wrapped else { return false }
+                guard x == y else { return false }
             }
             return true
         }

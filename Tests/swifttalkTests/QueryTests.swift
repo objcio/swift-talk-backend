@@ -8,10 +8,10 @@
 import Foundation
 import XCTest
 import Database
-import PostgreSQL
+import LibPQ
 
-func TAssertEqual(_ lhs: [NodeRepresentable], _ rhs: [NodeRepresentable], file: StaticString = #file, line: UInt = #line) throws {
-    try XCTAssertEqual(lhs.map { try $0.makeNode(in: nil) }, rhs.map { try $0.makeNode(in: nil) }, file: file, line: line)
+func TAssertEqual(_ lhs: [Param], _ rhs: [Param], file: StaticString = #file, line: UInt = #line) throws {
+    XCTAssertEqual(lhs.map { $0.stringValue }, rhs.map { $0.stringValue }, file: file, line: line)
 }
 
 class QueryTests: XCTestCase {
