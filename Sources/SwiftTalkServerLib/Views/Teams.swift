@@ -12,7 +12,7 @@ import HTML
 fileprivate let signupHeader = pageHeader(.other(header: "Team Member Signup", blurb: nil, extraClasses: "ms4"), extraClasses: "text-center")
 
 fileprivate func template(content: [Node], buttons: [Node]) -> Node {
-    return LayoutConfig(pageTitle: "Redeem Your Gift", contents: [
+    return LayoutConfig(pageTitle: "Join Team", contents: [
         signupHeader,
         .section(class: "container", [
             .div(class: "text-center center max-width-8", [
