@@ -18,7 +18,8 @@ extension XMLNode {
         guard let c = children else { return "" }
         var result: String = ""
         for child in c {
-            guard child.kind == .text else { throw DecodingError(message: "Expected text, but got \(child)") }
+            // On Linux, the child.kind is sometimes invalid (even when the node itself is valid text). 🤷‍♂️
+            guard child.kind == .text || child.kind == .invalid else { throw DecodingError(message: "Expected text, but got \"\(child)\" (kind: \(child.kind))") }
             result += child.stringValue ?? ""
         }
         return result
