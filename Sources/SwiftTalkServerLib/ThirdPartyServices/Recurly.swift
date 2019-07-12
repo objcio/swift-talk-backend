@@ -137,17 +137,17 @@ extension Plan {
     }
 }
 
-struct Subscription: Codable {
+struct Subscription: Codable, Equatable {
     enum State: String, Codable {
         case active, canceled, future, expired
     }
     
-    struct PlanInfo: Codable {
+    struct PlanInfo: Codable, Equatable {
         var plan_code: String
         var name: String
     }
     
-    struct AddOn: Codable {
+    struct AddOn: Codable, Equatable {
         var add_on_code: String
         var unit_amount_in_cents: Int
         var quantity: Int
@@ -741,7 +741,7 @@ private func parseRecurlyResponse<T: Decodable>(_ url: URL) -> (Data) -> T? {
         do {
             return try decodeXML(from: data)
         } catch {
-            log(error: "Decoding error \(url): \(error), \(error.localizedDescription)")
+            log(error: "Decoding error \(url): \(error), \(error.localizedDescription), \(String(data: data, encoding: .utf8)!)")
             return nil
         }
     }

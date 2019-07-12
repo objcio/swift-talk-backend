@@ -31,6 +31,7 @@ extension RecurlyTests {
     static let __allTests__RecurlyTests = [
         ("testNewSubscriptionNotification", testNewSubscriptionNotification),
         ("testPlan", testPlan),
+        ("testSubscriptions", testSubscriptions),
     ]
 }
 

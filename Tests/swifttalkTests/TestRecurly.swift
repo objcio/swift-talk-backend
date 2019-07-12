@@ -304,6 +304,58 @@ fileprivate let planSample = """
 </plans>
 """
 
+fileprivate let subscriptionsXML = """
+<subscriptions type="array">
+<subscription href="https://objcio-staging.recurly.com/v2/subscriptions/4d545421eac3baf943e1844addb27bad">
+<account href="https://objcio-staging.recurly.com/v2/accounts/1CB0B0B5-8D65-46CC-9EF9-D0F015C1B5CF"/>
+<invoice href="https://objcio-staging.recurly.com/v2/invoices/3414"/>
+<plan href="https://objcio-staging.recurly.com/v2/plans/monthly-test">
+<plan_code>monthly-test</plan_code>
+<name>Test Monthly</name>
+</plan>
+<revenue_schedule_type>evenly</revenue_schedule_type>
+<uuid>4d545421eac3baf943e1844addb27bad</uuid>
+<state>active</state>
+<unit_amount_in_cents type="integer">1900</unit_amount_in_cents>
+<currency>USD</currency>
+<quantity type="integer">1</quantity>
+<activated_at type="datetime">2019-07-12T09:34:41Z</activated_at>
+<canceled_at nil="nil"></canceled_at>
+<expires_at nil="nil"></expires_at>
+<updated_at type="datetime">2019-07-12T09:34:42Z</updated_at>
+<total_billing_cycles nil="nil"></total_billing_cycles>
+<remaining_billing_cycles nil="nil"></remaining_billing_cycles>
+<current_period_started_at type="datetime">2019-07-12T09:34:41Z</current_period_started_at>
+<current_period_ends_at type="datetime">2019-08-12T09:34:41Z</current_period_ends_at>
+<trial_started_at nil="nil"></trial_started_at>
+<trial_ends_at nil="nil"></trial_ends_at>
+<terms_and_conditions nil="nil"></terms_and_conditions>
+<customer_notes nil="nil"></customer_notes>
+<started_with_gift type="boolean">false</started_with_gift>
+<converted_at nil="nil"></converted_at>
+<imported_trial type="boolean">false</imported_trial>
+<paused_at nil="nil"></paused_at>
+<remaining_pause_cycles nil="nil"></remaining_pause_cycles>
+<no_billing_info_reason></no_billing_info_reason>
+<tax_in_cents type="integer">361</tax_in_cents>
+<tax_type>vat</tax_type>
+<tax_region>DE</tax_region>
+<tax_rate type="float">0.19</tax_rate>
+<po_number nil="nil"></po_number>
+<net_terms type="integer">0</net_terms>
+<collection_method>automatic</collection_method>
+<subscription_add_ons type="array">
+</subscription_add_ons>
+<custom_fields type="array">
+</custom_fields>
+<a name="cancel" href="https://objcio-staging.recurly.com/v2/subscriptions/4d545421eac3baf943e1844addb27bad/cancel" method="put"/>
+<a name="terminate" href="https://objcio-staging.recurly.com/v2/subscriptions/4d545421eac3baf943e1844addb27bad/terminate" method="put"/>
+<a name="postpone" href="https://objcio-staging.recurly.com/v2/subscriptions/4d545421eac3baf943e1844addb27bad/postpone" method="put"/>
+<a name="notes" href="https://objcio-staging.recurly.com/v2/subscriptions/4d545421eac3baf943e1844addb27bad/notes" method="put"/>
+</subscription>
+</subscriptions>
+"""
+
 class RecurlyTests: XCTestCase {
     func testNewSubscriptionNotification() throws {
         let webhook: Webhook = try decodeXML(from: activateSubscription.data(using: .utf8)!)
@@ -319,5 +371,10 @@ class RecurlyTests: XCTestCase {
     func testPlan() throws {
         let _: [Plan] = try decodeXML(from: planSample.data(using: .utf8)!)
         XCTAssertTrue(true)
+    }
+    
+    func testSubscriptions() throws {
+        let sub = Subscription(state: .active, uuid: "4d545421eac3baf943e1844addb27bad", activated_at: DateFormatter.iso8601WithTimeZone.date(from: "2019-07-12T09:34:41Z"), expires_at: nil, current_period_ends_at: DateFormatter.iso8601WithTimeZone.date(from: "2019-08-12T09:34:41Z"), trial_ends_at: nil, plan: Subscription.PlanInfo(plan_code: "monthly-test", name: "Test Monthly"), quantity: 1, unit_amount_in_cents: 1900, tax_rate: 0.19, subscription_add_ons: [])
+        XCTAssertEqual([sub], try decodeXML(from: subscriptionsXML.data(using: .utf8)!))
     }
 }

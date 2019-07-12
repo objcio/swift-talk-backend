@@ -276,16 +276,19 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
         }
         
         mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
-            guard let el = nodes[currentIndex] as? XMLElement else {
-                throw DecodingError(message: "Expected XML Element: \(nodes[currentIndex].xmlString)")
-            }
+//            print(nodes[currentIndex].xmlString)
+//            guard let el = nodes[currentIndex] as? XMLElement else {
+//                throw DecodingError(message: "Expected XML Element: \(nodes[currentIndex].xmlString)")
+//            }
+            let n = nodes[currentIndex]
             currentIndex += 1
             if type == RecurlyError.self {
-                let field = el.attribute(forName: "field")?.stringValue
-                let symbol = el.attribute(forName: "symbol")?.stringValue
-                return RecurlyError(field: field, symbol: symbol, message: try el.contents() ?? "") as! T
+                let el = n as? XMLElement
+                let field = el?.attribute(forName: "field")?.stringValue
+                let symbol = el?.attribute(forName: "symbol")?.stringValue
+                return RecurlyError(field: field, symbol: symbol, message: try el?.contents() ?? "") as! T
             } else {
-                let decoder = RecurlyXMLDecoder(el)
+                let decoder = RecurlyXMLDecoder(n)
                 return try T(from: decoder)
             }
         }
@@ -305,7 +308,7 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
     }
     
     func unkeyedContainer() throws -> UnkeyedDecodingContainer {
-        return UDC(nodes: node.childNodes, codingPath: [], currentIndex: 0)
+        return UDC(nodes: node.childNodes.filter { $0.kind != .invalid }, codingPath: [], currentIndex: 0)
     }
     
     func singleValueContainer() throws -> SingleValueDecodingContainer {
