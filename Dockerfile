@@ -32,7 +32,8 @@ COPY Tests ./Tests
 
 # workaround for -libcmark linker flag instead of -lcmark
 RUN ln -s /usr/local/lib/libcmark.so /usr/local/lib/liblibcmark.so
-RUN swift test && swift build --configuration release
+RUN swift test
+RUN swift build --configuration release -Xswiftc -g
 
 EXPOSE 8765
 CMD [".build/release/swifttalk-server"]

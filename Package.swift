@@ -23,6 +23,7 @@ let package = Package(
         .package(url: "https://github.com/objcio/LibPQ", .branch("master")),
 		.package(url: "https://github.com/IBM-Swift/BlueCryptor", .exact("1.0.30")),
         .package(url: "https://github.com/jpsim/SourceKitten", from: "0.22.0"),
+		.package(url: "https://github.com/ianpartridge/swift-backtrace.git", from: "1.0.2"),
     ],
     targets: [
         .target(
@@ -113,7 +114,8 @@ let package = Package(
         .target(
             name: "swifttalk-server",
         	dependencies: [
-                "SwiftTalkServerLib"
+                "SwiftTalkServerLib",
+				"Backtrace",
         	],
 			path: "Sources/swifttalk-server"
         ),
