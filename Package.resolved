@@ -101,6 +101,15 @@
         }
       },
       {
+        "package": "TinyNetworking",
+        "repositoryURL": "https://github.com/objcio/tiny-networking",
+        "state": {
+          "branch": null,
+          "revision": "70fcf4345b1c105f5dcb1b0c3e9b84e2453d5dd4",
+          "version": "0.1.3"
+        }
+      },
+      {
         "package": "Yams",
         "repositoryURL": "https://github.com/jpsim/Yams.git",
         "state": {

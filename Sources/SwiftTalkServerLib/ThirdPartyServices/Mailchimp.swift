@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Networking
+import TinyNetworking
 
 let mailchimp = Mailchimp()
 
@@ -23,7 +23,7 @@ struct Mailchimp {
         var reply_to: String
     }
 
-    func createCampaign(for episode: Episode) -> RemoteEndpoint<String> {
+    func createCampaign(for episode: Episode) -> Endpoint<String> {
         struct Response: Codable {
             var id: String
         }
@@ -46,39 +46,39 @@ struct Mailchimp {
                 reply_to: "mail@objc.io"
             )
         )
-        return RemoteEndpoint<Response>(json: .post, url: url, body: body, headers: authHeader).map { $0.id }
+        return Endpoint<Response>(json: .post, url: url, body: body, headers: authHeader).map { $0.id }
     }
     
     private func campaignTitle(for episode: Episode) -> String {
         return "Swift Talk #\(episode.number)"
     }
     
-    func addContent(for episode: Episode, toCampaign campaignId: String) -> RemoteEndpoint<()> {
+    func addContent(for episode: Episode, toCampaign campaignId: String) -> Endpoint<()> {
         struct Edit: Codable {
             var plain_text: String
             var html: String
         }
         let body = Edit(plain_text: plainText(episode), html: html(episode))
         let url = base.appendingPathComponent("campaigns/\(campaignId)/content")
-        return RemoteEndpoint<()>(json: .put, url: url, body: body, headers: authHeader)
+        return Endpoint<()>(json: .put, url: url, body: body, headers: authHeader)
     }
     
-    func testCampaign(campaignId: String) -> RemoteEndpoint<()> {
+    func testCampaign(campaignId: String) -> Endpoint<()> {
         struct Test: Codable {
             var test_emails: [String]
             var send_type: String
         }
         let url = base.appendingPathComponent("campaigns/\(campaignId)/actions/test")
         let body = Test(test_emails: ["mail@floriankugler.com"], send_type: "html")
-        return RemoteEndpoint<()>(json: .post, url: url, body: body, headers: authHeader)
+        return Endpoint<()>(json: .post, url: url, body: body, headers: authHeader)
     }
     
-    func sendCampaign(campaignId: String) -> RemoteEndpoint<()> {
+    func sendCampaign(campaignId: String) -> Endpoint<()> {
         let url = base.appendingPathComponent("campaigns/\(campaignId)/actions/send")
-        return RemoteEndpoint<()>(.post, url: url, headers: authHeader)
+        return Endpoint<()>(.post, url: url, headers: authHeader)
     }
     
-    func existsCampaign(for episode: Episode) -> RemoteEndpoint<Bool> {
+    func existsCampaign(for episode: Episode) -> Endpoint<Bool> {
         struct Response: Codable {
             var campaigns: [Campaign]
         }
@@ -92,7 +92,7 @@ struct Mailchimp {
             "count": "10000",
             "since_create_time": DateFormatter.iso8601.string(from: episode.releaseAt)
         ]
-        return RemoteEndpoint<Response>(json: .get, url: url, headers: authHeader, query: query).map { resp in
+        return Endpoint<Response>(json: .get, url: url, headers: authHeader, query: query).map { resp in
             return resp.campaigns.contains { $0.settings.title == self.campaignTitle(for: episode) }
         }
     }

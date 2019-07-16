@@ -21,6 +21,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0"),
         .package(url: "https://github.com/objcio/commonmark-swift", .branch("master")),
         .package(url: "https://github.com/objcio/LibPQ", .branch("master")),
+        .package(url: "https://github.com/objcio/tiny-networking", from: "0.1.3"),
 		.package(url: "https://github.com/IBM-Swift/BlueCryptor", .exact("1.0.30")),
         .package(url: "https://github.com/jpsim/SourceKitten", from: "0.22.0"),
 		.package(url: "https://github.com/ianpartridge/swift-backtrace.git", from: "1.0.2"),
@@ -48,6 +49,7 @@ let package = Package(
         .target(
             name: "Networking",
             dependencies: [
+			  "TinyNetworking"
             ],
             path: "Sources/Networking"
         ),
@@ -97,6 +99,7 @@ let package = Package(
             name: "SwiftTalkServerLib",
             dependencies: [
                 "Incremental",
+                "TinyNetworking",
                 "Networking",
                 "Promise",
                 "Base",

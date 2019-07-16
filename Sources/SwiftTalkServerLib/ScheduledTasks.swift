@@ -9,7 +9,7 @@ import Foundation
 import Promise
 import Base
 import Database
-
+import Networking
 
 func scheduleTaskTimer() -> DispatchSourceTimer {
     let queue = DispatchQueue(label: "Scheduled Task Timer")
@@ -122,10 +122,10 @@ extension Task {
         case .syncTeamMembersWithRecurly(let userId):
             guard let user = try c.get().execute(Row<UserData>.select(userId)) else { onCompletion(true); return }            
             let memberCount = try c.get().execute(user.teamMemberCountForRecurly)
-            globals.urlSession.load(user.updateCurrentSubscription(numberOfTeamMembers: memberCount)) { sub in
-                guard let s = sub else { onCompletion(false); return }
+            globals.urlSession.load(user.updateCurrentSubscription(numberOfTeamMembers: memberCount), onComplete: { sub in
+                guard let s = try? sub.get() else { onCompletion(false); return }
                 onCompletion((s.subscription_add_ons?.first?.quantity) == memberCount)
-            }
+            })
         
         case .releaseEpisode(let number):
             if mailchimp.apiKey == "test" { onCompletion(true); return } // don't release episodes in test environments

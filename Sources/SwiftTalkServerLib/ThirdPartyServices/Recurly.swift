@@ -10,6 +10,7 @@ import Promise
 import Networking
 import Base
 import Database
+import TinyNetworking
 
 let recurly = Recurly()
 
@@ -108,7 +109,7 @@ extension Plan {
         return isMonthly ? 1000 : 10000
     }
 
-    var teamMemberAddOn: RemoteEndpoint<AddOn> {
+    var teamMemberAddOn: Endpoint<AddOn> {
         return recurly.teamMemberAddOn(plan_code: plan_code)
     }
     
@@ -547,31 +548,31 @@ extension RecurlyResult: Decodable where A: Decodable {
 }
 
 extension Row where Element == UserData {
-    var account: RemoteEndpoint<Account> {
+    var account: Endpoint<Account> {
         return recurly.account(with: id)
     }
     
-    var invoices: RemoteEndpoint<[Invoice]> {
+    var invoices: Endpoint<[Invoice]> {
         return recurly.listInvoices(accountId: self.id.uuidString)
     }
     
-    var subscriptions: RemoteEndpoint<[Subscription]> {
+    var subscriptions: Endpoint<[Subscription]> {
         return recurly.listSubscriptions(accountId: self.id.uuidString)
     }
     
-    var redemptions: RemoteEndpoint<[Redemption]> {
+    var redemptions: Endpoint<[Redemption]> {
         return recurly.redemptions(accountId: id.uuidString)
     }
     
-    var currentSubscription: RemoteEndpoint<Subscription?> {
+    var currentSubscription: Endpoint<Subscription?> {
         return subscriptions.map { $0.first { $0.state == .active || $0.state == .canceled } }
     }
     
-    var billingInfo: RemoteEndpoint<BillingInfo> {
+    var billingInfo: Endpoint<BillingInfo> {
         return recurly.billingInfo(accountId: id)
     }
     
-    func updateBillingInfo(token: String) -> RemoteEndpoint<RecurlyResult<BillingInfo>> {
+    func updateBillingInfo(token: String) -> Endpoint<RecurlyResult<BillingInfo>> {
         return recurly.updatePaymentMethod(for: id, token: token)
     }
     
@@ -604,54 +605,54 @@ struct Recurly {
         self.base = URL(string: "https://\(host)/v2")!
     }
     
-    var plans: RemoteEndpoint<[Plan]> {
-        return RemoteEndpoint(xml: .get, url: base.appendingPathComponent("plans"), headers: headers)
+    var plans: Endpoint<[Plan]> {
+        return Endpoint(xml: .get, url: base.appendingPathComponent("plans"), headers: headers)
     }
     
-    var listAccounts: RemoteEndpoint<[Account]> {
-        return RemoteEndpoint(xml: .get, url: base.appendingPathComponent("accounts"), headers: headers)
+    var listAccounts: Endpoint<[Account]> {
+        return Endpoint(xml: .get, url: base.appendingPathComponent("accounts"), headers: headers)
     }
     
-    func billingInfo(accountId id: UUID) -> RemoteEndpoint<BillingInfo> {
-        return RemoteEndpoint(xml: .get, url: base.appendingPathComponent("accounts/\(id.uuidString)/billing_info"), headers: headers)
+    func billingInfo(accountId id: UUID) -> Endpoint<BillingInfo> {
+        return Endpoint(xml: .get, url: base.appendingPathComponent("accounts/\(id.uuidString)/billing_info"), headers: headers)
     }
     
-    func teamMemberAddOn(plan_code: String) -> RemoteEndpoint<Plan.AddOn> {
-        return RemoteEndpoint(xml: .get, url: base.appendingPathComponent("plans/\(plan_code)/add_ons/\(teamMemberAddOnCode)"), headers: headers)
+    func teamMemberAddOn(plan_code: String) -> Endpoint<Plan.AddOn> {
+        return Endpoint(xml: .get, url: base.appendingPathComponent("plans/\(plan_code)/add_ons/\(teamMemberAddOnCode)"), headers: headers)
     }
     
-    func updatePaymentMethod(for accountId: UUID, token: String) -> RemoteEndpoint<RecurlyResult<BillingInfo>> {
+    func updatePaymentMethod(for accountId: UUID, token: String) -> Endpoint<RecurlyResult<BillingInfo>> {
         struct UpdateData: Codable, RootElement {
             var token_id: String
             static let rootElementName = "billing_info"
         }
-        return RemoteEndpoint(xml: .put, url: base.appendingPathComponent("accounts/\(accountId.uuidString)/billing_info"), value: UpdateData(token_id: token), headers: headers)
+        return Endpoint(xml: .put, url: base.appendingPathComponent("accounts/\(accountId.uuidString)/billing_info"), value: UpdateData(token_id: token), headers: headers)
     }
 
-    func account(with id: UUID) -> RemoteEndpoint<Account> {
-        return RemoteEndpoint(xml: .get, url: base.appendingPathComponent("accounts/\(id.uuidString)"), headers: headers)
+    func account(with id: UUID) -> Endpoint<Account> {
+        return Endpoint(xml: .get, url: base.appendingPathComponent("accounts/\(id.uuidString)"), headers: headers)
     }
 
-    func listSubscriptions(accountId: String) -> RemoteEndpoint<[Subscription]> {
-        return RemoteEndpoint(xml: .get, url: base.appendingPathComponent("accounts/\(accountId)/subscriptions"), headers: headers, query: ["per_page": "200"])
+    func listSubscriptions(accountId: String) -> Endpoint<[Subscription]> {
+        return Endpoint(xml: .get, url: base.appendingPathComponent("accounts/\(accountId)/subscriptions"), headers: headers, query: ["per_page": "200"])
     }
     
-    func listInvoices(accountId: String) -> RemoteEndpoint<[Invoice]> {
-        return RemoteEndpoint(xml: .get, url: base.appendingPathComponent("accounts/\(accountId)/invoices"), headers: headers, query: ["per_page": "200"])
+    func listInvoices(accountId: String) -> Endpoint<[Invoice]> {
+        return Endpoint(xml: .get, url: base.appendingPathComponent("accounts/\(accountId)/invoices"), headers: headers, query: ["per_page": "200"])
     }
     
-    func redemptions(accountId: String) -> RemoteEndpoint<[Redemption]> {
-        return RemoteEndpoint(xml: .get, url: base.appendingPathComponent("accounts/\(accountId)/redemptions"), headers: headers, query: ["per_page": "200"])
+    func redemptions(accountId: String) -> Endpoint<[Redemption]> {
+        return Endpoint(xml: .get, url: base.appendingPathComponent("accounts/\(accountId)/redemptions"), headers: headers, query: ["per_page": "200"])
     }
 
-    func createSubscription(_ x: CreateSubscription) -> RemoteEndpoint<RecurlyResult<Subscription>> {
+    func createSubscription(_ x: CreateSubscription) -> Endpoint<RecurlyResult<Subscription>> {
         let url = base.appendingPathComponent("subscriptions")
-        return RemoteEndpoint(xml: .post, url: url, value: x, headers: headers)
+        return Endpoint(xml: .post, url: url, value: x, headers: headers)
     }
     
-    func cancel(_ subscription: Subscription) -> RemoteEndpoint<RecurlyResult<RecurlyVoid>> {
+    func cancel(_ subscription: Subscription) -> Endpoint<RecurlyResult<RecurlyVoid>> {
         let url = base.appendingPathComponent("subscriptions/\(subscription.uuid)/cancel")
-        return RemoteEndpoint(xml: .put, url: url, headers: headers)
+        return Endpoint(xml: .put, url: url, headers: headers)
     }
     
     enum Refund: String {
@@ -660,47 +661,48 @@ struct Recurly {
         case none
     }
     
-    func terminate(_ subscription: Subscription, refund: Refund) -> RemoteEndpoint<RecurlyResult<RecurlyVoid>> {
+    func terminate(_ subscription: Subscription, refund: Refund) -> Endpoint<RecurlyResult<RecurlyVoid>> {
         let url = base.appendingPathComponent("subscriptions/\(subscription.uuid)/terminate")
-        return RemoteEndpoint(xml: .put, url: url, headers: headers, query: ["refund": refund.rawValue])
+        return Endpoint(xml: .put, url: url, headers: headers, query: ["refund": refund.rawValue])
     }
     
-    func reactivate(_ subscription: Subscription) -> RemoteEndpoint<RecurlyResult<RecurlyVoid>> {
+    func reactivate(_ subscription: Subscription) -> Endpoint<RecurlyResult<RecurlyVoid>> {
         let url = base.appendingPathComponent("subscriptions/\(subscription.uuid)/reactivate")
-        return RemoteEndpoint(xml: .put, url: url, headers: headers)
+        return Endpoint(xml: .put, url: url, headers: headers)
     }
     
-    func updateSubscription(_ subscription: Subscription, plan_code: String? = nil, numberOfTeamMembers: Int) -> RemoteEndpoint<Subscription> {
+    func updateSubscription(_ subscription: Subscription, plan_code: String? = nil, numberOfTeamMembers: Int) -> Endpoint<Subscription> {
         let addons: [UpdateSubscription.AddOn]
         addons = numberOfTeamMembers == 0 ? [] : [UpdateSubscription.AddOn(add_on_code: teamMemberAddOnCode, quantity: numberOfTeamMembers)]
         let url = base.appendingPathComponent("subscriptions/\(subscription.uuid)")
-        return RemoteEndpoint(xml: .put, url: url, value: UpdateSubscription(timeframe: "now", plan_code: plan_code, subscription_add_ons: addons), headers: headers, query: [:])
+        return Endpoint(xml: .put, url: url, value: UpdateSubscription(timeframe: "now", plan_code: plan_code, subscription_add_ons: addons), headers: headers, query: [:])
     }
     
-    func updateAccount(accountCode: UUID, email: String) -> RemoteEndpoint<Account> {
+    func updateAccount(accountCode: UUID, email: String) -> Endpoint<Account> {
         struct UpdateAccount: Codable, RootElement {
             static let rootElementName = "account"
             var email: String
         }
         let url = base.appendingPathComponent("accounts/\(accountCode.uuidString)")
-        return RemoteEndpoint(xml: .put, url: url, value: UpdateAccount(email: email), headers: headers)
+        return Endpoint(xml: .put, url: url, value: UpdateAccount(email: email), headers: headers)
     }
 
-    func coupon(code: String) -> RemoteEndpoint<Coupon> {
+    func coupon(code: String) -> Endpoint<Coupon> {
         let url = base.appendingPathComponent("coupons/\(code)")
-        return RemoteEndpoint(xml: .get, url: url, headers: headers)
+        return Endpoint(xml: .get, url: url, headers: headers)
     }
 
-    func coupons() -> RemoteEndpoint<[Coupon]> {
+    func coupons() -> Endpoint<[Coupon]> {
         let url = base.appendingPathComponent("coupons")
-        return RemoteEndpoint(xml: .get, url: url, headers: headers)
+        return Endpoint(xml: .get, url: url, headers: headers)
     }
 
     func subscriptionStatus(for accountId: UUID) -> Promise<(subscriber: Bool, canceled: Bool, downloadCredits: UInt)?> {
         return Promise { cb in
             globals.urlSession.load(self.account(with: accountId)) { result in
                 guard let acc = result else { cb(nil); return }
-                globals.urlSession.load(recurly.listSubscriptions(accountId: acc.account_code)) { subs in
+                globals.urlSession.load(recurly.listSubscriptions(accountId: acc.account_code)) { result in
+                    let subs = try? result.get()
                     let hasActiveSubscription = subs?.contains(where: { $0.state == .active }) ?? false
                     cb((acc.subscriber, canceled: !hasActiveSubscription, (subs?.activeMonths ?? 0) * 4))
                 }
@@ -714,25 +716,25 @@ struct Recurly {
 
 }
 
-fileprivate extension RemoteEndpoint where A: Decodable {
+fileprivate extension Endpoint where A: Decodable {
     init(xml method: Method, url: URL, headers: [String:String], query: [String:String] = [:]) {
-        self.init(method, url: url, accept: .xml, headers: headers, expectedStatusCode: { $0 >= 200 && $0 < 500 }, query: query, parse: { $0.flatMap(parseRecurlyResponse(url)) })
+        self.init(method, url: url, accept: .xml, headers: headers, expectedStatusCode: { $0 >= 200 && $0 < 500 }, query: query, parse: { parseRecurlyResponse(url, $0) })
     }
 
     init<B: Encodable & RootElement>(xml method: Method, url: URL, value: B, headers: [String:String], query: [String:String] = [:]) {
         let data = try! encodeXML(value).data(using: .utf8)!
-        self.init(method, url: url, accept: .xml, body: data, headers: headers, expectedStatusCode: { $0 >= 200 && $0 < 500 }, query: query, parse: { $0.flatMap(parseRecurlyResponse(url)) })
+        self.init(method, url: url, accept: .xml, body: data, headers: headers, expectedStatusCode: { $0 >= 200 && $0 < 500 }, query: query, parse: { parseRecurlyResponse(url, $0) })
     }
 }
 
-private func parseRecurlyResponse<T: Decodable>(_ url: URL) -> (Data) -> T? {
-    return { data in
-//        print(String(data: data, encoding: .utf8)!)
+private func parseRecurlyResponse<T: Decodable>(_ url: URL, _ d: Data?) -> Result<T, Error> {
+    return Result {
+        guard let data = d else { throw NoDataError() }
         do {
             return try decodeXML(from: data)
         } catch {
             log(error: "Decoding error \(url): \(error), \(error.localizedDescription), \(String(data: data, encoding: .utf8)!)")
-            return nil
+            throw error
         }
     }
 }

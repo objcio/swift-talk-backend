@@ -55,8 +55,8 @@ extension Route.Webhook {
                                         let email = sendgrid.send(to: gift.data.gifteeEmail, name: gift.data.gifteeName, subject: "We have a gift for you...", text: gift.gifteeEmailText(duration: duration))
                                         log(info: "Sending gift email to \(gift.data.gifteeEmail)")
                                         globals.urlSession.load(email) { result in
-                                            if result == nil {
-                                                log(error: "Can't send email for gift \(gift)")
+                                            if case .failure(let err) = result {
+                                                log(error: "Can't send email for gift \(gift) \(err)")
                                             }
                                         }
                                         gift.data.activated = true

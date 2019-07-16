@@ -6,9 +6,10 @@
 //
 
 import Foundation
+import TinyNetworking
 
 public indirect enum CombinedEndpoint<A> {
-    case single(RemoteEndpoint<A>)
+    case single(Endpoint<A>)
     case _sequence(CombinedEndpoint<Any>, (Any) -> CombinedEndpoint<A>?)
     case _zipped(CombinedEndpoint<Any>, CombinedEndpoint<Any>, (Any, Any) -> A)
 }
@@ -73,43 +74,60 @@ public func sequentially<A>(_ endpoints: [CombinedEndpoint<A>]) -> CombinedEndpo
     }
 }
 
+extension Result {
+    func getError() -> Failure? {
+        switch self {
+        case .failure(let f): return f
+        default: return nil
+        }
+    }
+}
 
 extension URLSessionProtocol {
-    public func load<A>(_ endpoint: CombinedEndpoint<A>, failure: @escaping (Error?, URLResponse?) -> (), onComplete: @escaping (A?) -> ()) {
+    public func load<A>(_ endpoint: CombinedEndpoint<A>, onComplete: @escaping (Result<A, Error>) -> ()) {
         switch endpoint {
         case let .single(r):
-            load(r, failure: failure, onComplete: onComplete)
+            load(r, onComplete: onComplete)
         case let ._sequence(l, transform):
-            load(l, failure: failure) { result in
-                guard let x = result, let next = transform(x) else { onComplete(nil); return }
-                self.load(next, failure: failure, onComplete: onComplete)
+            load(l) { result in
+                switch result {
+                case .failure(let f): onComplete(.failure(f))
+                case .success(let s):
+                    guard let next = transform(s) else {
+                        onComplete(Result<A, Error>.failure(UnknownError()))
+                        return
+                    }
+                	self.load(next, onComplete: onComplete)
+                }                
             }
         case let ._zipped(l, r, transform):
             let group = DispatchGroup()
-            var resultA: Any?
-            var resultB: Any?
-            var errorA: Error?
-            var errorB: Error?
-            var responseA: URLResponse?
-            var responseB: URLResponse?
+            var resultA: Result<Any, Error>?
+            var resultB: Result<Any, Error>?
             group.enter()
             group.enter()
-            load(l, failure: { errorA = $0; responseA = $1; group.leave() }, onComplete: { resultA = $0; group.leave() })
-            load(r, failure: { errorB = $0; responseB = $1; group.leave() }, onComplete: { resultB = $0; group.leave() })
+            load(l) {
+                resultA = $0
+                group.leave()
+            }
+            load(r) {
+                resultB = $0
+                group.leave()
+            }
             group.notify(queue: .global()) {
                 self.onDelegateQueue {
-                    guard let x = resultA, let y = resultB else {
-                        failure(errorA ?? errorB, responseA ?? responseB)
+                    guard let x = try? resultA?.get(), let y = try? resultB?.get() else {
+                        onComplete(.failure(resultA?.getError() ?? resultB?.getError() ?? UnknownError()))
                         return
                     }
-                    onComplete(transform(x, y))
+                    onComplete(.success(transform(x, y)))
                 }
             }
         }
     }
 }
 
-extension RemoteEndpoint {
+extension Endpoint {
     public var c: CombinedEndpoint<A> {
         return .single(self)
     }

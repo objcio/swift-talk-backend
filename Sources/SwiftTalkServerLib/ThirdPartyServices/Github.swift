@@ -7,7 +7,7 @@
 
 import Foundation
 import Networking
-
+import TinyNetworking
 
 let github = Github(accessToken: env.githubAccessToken)
 
@@ -40,7 +40,7 @@ struct Github {
         self.accessToken = accessToken
     }
     
-    func getAccessToken(_ code: String) -> RemoteEndpoint<AccessTokenResponse> {
+    func getAccessToken(_ code: String) -> Endpoint<AccessTokenResponse> {
         let url = URL(string: "https://github.com/login/oauth/access_token")!
         let query = [
             "client_id": clientId,
@@ -48,22 +48,22 @@ struct Github {
             "code": code,
             "accept": "json"
         ]
-        return RemoteEndpoint(json: .post, url: url, query: query)
+        return Endpoint(json: .post, url: url, query: query)
     }
     
-    var profile: RemoteEndpoint<Profile> {
+    var profile: Endpoint<Profile> {
         let url = URL(string: "https://api.github.com/user")!
         let query = ["access_token": accessToken]
-        return RemoteEndpoint<Profile>(json: .get, url: url, query: query)
+        return Endpoint<Profile>(json: .get, url: url, query: query)
     }
     
-    func profile(username: String) -> RemoteEndpoint<Profile> {
+    func profile(username: String) -> Endpoint<Profile> {
         let url = URL(string: "https://api.github.com/users/\(username)")!
         let query = ["access_token": accessToken]
-        return RemoteEndpoint(json: .get, url: url, query: query)
+        return Endpoint(json: .get, url: url, query: query)
     }
     
-    func changeVisibility(`private`: Bool, of repository: String) -> RemoteEndpoint<Bool> {
+    func changeVisibility(`private`: Bool, of repository: String) -> Endpoint<Bool> {
         struct Repository: Codable {
             var name: String
             var `private`: Bool
@@ -72,22 +72,22 @@ struct Github {
         let url = URL(string: "https://api.github.com/repos/objcio/\(repository)")!
         let headers = ["Authorization": "token \(accessToken)"]
         let data = Repository(name: repository, private: `private`)
-        return RemoteEndpoint<Repository>(json: .patch, url: url, body: data, headers: headers).map { $0.`private` == `private` }
+        return Endpoint<Repository>(json: .patch, url: url, body: data, headers: headers).map { $0.`private` == `private` }
     }
     
-    private var transcriptFiles: RemoteEndpoint<[Github.File]> {
+    private var transcriptFiles: Endpoint<[Github.File]> {
         let url = URL(string: "https://api.github.com/repos/objcio/\(transcriptsRepo)/contents/")!
         let query = ["access_token": accessToken, "ref": "master"]
-        return RemoteEndpoint<[Github.File]>(json: .get, url: url, query: query).map { files in
+        return Endpoint<[Github.File]>(json: .get, url: url, query: query).map { files in
             return files.filter { $0.name.hasPrefix("episode") }
         }
     }
 
-    private func contents(_ file: File) -> RemoteEndpoint<(file: File, content: String)> {
+    private func contents(_ file: File) -> Endpoint<(file: File, content: String)> {
         let headers = ["Authorization": "token \(accessToken)", "Accept": "application/vnd.github.v3.raw"]
-        return RemoteEndpoint(.get, url: file.url, headers: headers, expectedStatusCode: expected200to300) { data in
-            guard let d = data, let str = String(data: d, encoding: .utf8) else { return nil }
-            return (file: file, content: str)
+        return Endpoint(.get, url: file.url, headers: headers) { data in
+            guard let d = data, let str = String(data: d, encoding: .utf8) else { return .failure(DecodingError(message: "Expected UTF8")) }
+            return .success((file: file, content: str))
         }
     }
 
@@ -101,10 +101,10 @@ struct Github {
         }
     }
     
-    func staticData<A: StaticLoadable>() -> RemoteEndpoint<[A]> {
+    func staticData<A: StaticLoadable>() -> Endpoint<[A]> {
         let url = URL(string: "https://api.github.com/repos/objcio/\(staticDataRepo)/contents/\(A.jsonName)")!
         let headers = ["Authorization": "token \(accessToken)", "Accept": "application/vnd.github.v3.raw"]
-        return RemoteEndpoint(json: .get, url: url, headers: headers, decoder: Github.staticDataDecoder)
+        return Endpoint(json: .get, url: url, headers: headers, decoder: Github.staticDataDecoder)
     }
     
     static let staticDataDecoder: JSONDecoder = {
