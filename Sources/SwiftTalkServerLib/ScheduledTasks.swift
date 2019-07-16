@@ -124,7 +124,7 @@ extension Task {
             let memberCount = try c.get().execute(user.teamMemberCountForRecurly)
             globals.urlSession.load(user.updateCurrentSubscription(numberOfTeamMembers: memberCount), onComplete: { sub in
                 guard let s = try? sub.get() else { onCompletion(false); return }
-                onCompletion((s.subscription_add_ons?.first?.quantity) == memberCount)
+                onCompletion((s.subscription_add_ons?.first?.quantity ?? 0) == memberCount)
             })
         
         case .releaseEpisode(let number):
