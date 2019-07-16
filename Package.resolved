@@ -92,6 +92,15 @@
         }
       },
       {
+        "package": "swift-talk-shared",
+        "repositoryURL": "https://github.com/objcio/swift-talk-shared",
+        "state": {
+          "branch": "master",
+          "revision": "5eed0513bc81135c699c0af8782f3bbdca9f69f1",
+          "version": null
+        }
+      },
+      {
         "package": "SWXMLHash",
         "repositoryURL": "https://github.com/drmohundro/SWXMLHash.git",
         "state": {
