@@ -14,6 +14,7 @@ import NIOWrapper
 import HTML
 import Database
 import WebServer
+import TinyNetworking
 @testable import Networking
 @testable import SwiftTalkServerLib
 
@@ -162,9 +163,9 @@ extension Query {
 }
 
 struct EndpointAndResult {
-    let endpoint: RemoteEndpoint<Any>
+    let endpoint: Endpoint<Any>
     let response: Any?
-    init<A>(endpoint: RemoteEndpoint<A>, response: A?) {
+    init<A>(endpoint: Endpoint<A>, response: A?) {
         self.endpoint = endpoint.map { $0 }
         self.response = response
     }
@@ -177,13 +178,18 @@ class TestURLSession: URLSessionProtocol {
         self.results = results
     }
     
-    func load<A>(_ endpoint: RemoteEndpoint<A>, failure: @escaping (Error?, URLResponse?) -> (), onComplete: @escaping (A?) -> ()) {
+    func load<A>(_ endpoint: Endpoint<A>, onComplete: @escaping (Result<A, Error>) -> ()) -> URLSessionDataTask {
         guard let idx = results.firstIndex(where: { $0.endpoint.request.matches(endpoint.request) }) else {
-            XCTFail("Unexpected endpoint: \(endpoint.request.httpMethod ?? "GET") \(endpoint.request.url!)"); return
+            XCTFail("Unexpected endpoint: \(endpoint.request.httpMethod ?? "GET") \(endpoint.request.url!)")
+            return URLSessionDataTask()
         }
-        let response = results[idx].response as! A?
+        if let response = results[idx].response as! A? {
+            onComplete(.success(response))
+        } else {
+            onComplete(.failure(UnknownError()))
+        }
         results.remove(at: idx)
-        onComplete(response)
+        return URLSessionDataTask()
     }
     
     func assertDone() {
