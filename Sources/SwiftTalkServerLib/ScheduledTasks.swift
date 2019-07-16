@@ -14,7 +14,7 @@ import Networking
 func scheduleTaskTimer() -> DispatchSourceTimer {
     let queue = DispatchQueue(label: "Scheduled Task Timer")
     let timer = DispatchSource.makeTimerSource(queue: queue)
-    timer.schedule(deadline: .now(), repeating: 10.0, leeway: .seconds(1))
+    timer.schedule(deadline: .now(), repeating: 120.0, leeway: .seconds(1))
     timer.setEventHandler {
         tryOrLog {
             let conn = postgres.lazyConnection()
