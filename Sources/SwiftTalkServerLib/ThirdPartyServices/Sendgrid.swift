@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Networking
+import TinyNetworking
 
 let sendgrid = Sendgrid()
 
@@ -19,7 +19,7 @@ struct Sendgrid {
         ]
     }
 
-    func send(to email: String, name: String, subject: String, text: String) -> RemoteEndpoint<()> {
+    func send(to email: String, name: String, subject: String, text: String) -> Endpoint<()> {
         struct Payload: Codable {
             struct Person: Codable {
                 var email: String
@@ -43,6 +43,6 @@ struct Sendgrid {
         if apiKey == "test" {
 //            dump(body)
         }
-        return RemoteEndpoint(json: .post, url: url, body: body, headers: headers)
+        return Endpoint(json: .post, url: url, body: body, headers: headers)
     }
 }

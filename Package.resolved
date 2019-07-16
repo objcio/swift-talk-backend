@@ -92,12 +92,30 @@
         }
       },
       {
+        "package": "swift-talk-shared",
+        "repositoryURL": "https://github.com/objcio/swift-talk-shared",
+        "state": {
+          "branch": "master",
+          "revision": "5eed0513bc81135c699c0af8782f3bbdca9f69f1",
+          "version": null
+        }
+      },
+      {
         "package": "SWXMLHash",
         "repositoryURL": "https://github.com/drmohundro/SWXMLHash.git",
         "state": {
           "branch": null,
           "revision": "f43166a8e18fdd0857f29e303b1bb79a5428bca0",
           "version": "4.9.0"
+        }
+      },
+      {
+        "package": "TinyNetworking",
+        "repositoryURL": "https://github.com/objcio/tiny-networking",
+        "state": {
+          "branch": null,
+          "revision": "70fcf4345b1c105f5dcb1b0c3e9b84e2453d5dd4",
+          "version": "0.1.3"
         }
       },
       {

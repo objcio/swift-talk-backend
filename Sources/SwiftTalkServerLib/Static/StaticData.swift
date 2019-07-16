@@ -67,8 +67,8 @@ fileprivate let plansSource: Static<[Plan]> = Static(async: { cb in
     let initial: [Plan] = loadStaticData(name: jsonName)
     cb(initial)
     globals.urlSession.load(recurly.plans) { value in
-        cb(value)
-        guard let v = value else { log(error: "Could not load plans from Recurly"); return }
+        cb(try? value.get())
+        guard let v = try? value.get() else { log(error: "Could not load plans from Recurly \(value)"); return }
         cacheStaticData(v, name: jsonName)
     }
 })
@@ -161,7 +161,7 @@ fileprivate let episodesVimeoInfo = Static<(full: [Id<Episode>:Video], previews:
                 g.enter()
                 globals.urlSession.load(vimeo.videoInfo(for: p)) { res in
                     q.async {
-                        previews[ep.id] = res
+                        previews[ep.id] = try? res.get()
                         g.leave()
                     }
                 }

@@ -9,36 +9,42 @@ import Foundation
 import Networking
 import Promise
 import Base
+import TinyNetworking
 
-
-extension RemoteEndpoint {
+extension Endpoint {
     var promise: Promise<A?> {
         return globals.urlSession.load(self)
     }
 }
 
 extension URLSessionProtocol {
-    func load<A>(_ e: RemoteEndpoint<A>) -> Promise<A?> {
+    func load<A>(_ e: Endpoint<A>) -> Promise<A?> {
         return Promise { cb in
             self.load(e, callback: cb)
         }
     }
 
-    func load<A>(_ e: RemoteEndpoint<A>, callback: @escaping (A?) -> ()) {
-        load(e, failure: { err, resp in
-            log(error: "request failed: \(String(describing: e))\nerror:\(String(describing: err))\nresponse: \(String(describing: resp))")
-            callback(nil)
-        }, onComplete: { result in
-            callback(result)
+    func load<A>(_ e: Endpoint<A>, callback: @escaping (A?) -> ()) {
+        load(e, onComplete: { result in
+            switch result {
+            case .failure(let err):
+                log(error: "request failed: \(String(describing: e))\nerror:\(String(describing: err))")
+                callback(nil)
+            case .success(let r):
+                callback(r)
+            }
         })
     }
 
     func load<A>(_ e: CombinedEndpoint<A>, callback: @escaping (A?) -> ()) {
-        load(e, failure: { err, resp in
-            log(error: "request failed: \(String(describing: e))\nerror:\(String(describing: err))\nresponse: \(String(describing: resp))")
-            callback(nil)
-        }, onComplete: { result in
-            callback(result)
+        load(e, onComplete: { result in
+            switch result {
+            case .failure(let err):
+                log(error: "request failed: \(String(describing: e))\nerror:\(String(describing: err))")
+                callback(nil)
+            case .success(let r):
+                callback(r)
+            }
         })
     }
 }

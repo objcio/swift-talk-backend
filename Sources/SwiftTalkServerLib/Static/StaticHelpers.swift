@@ -9,7 +9,7 @@ import Foundation
 import Networking
 import Base
 import Database
-
+import TinyNetworking
 
 protocol StaticLoadable: Codable {
     static var jsonName: String { get }
@@ -48,10 +48,10 @@ func cacheStaticData<A: Codable>(_ data: A, name: String) {
     }}
 }
 
-fileprivate func refreshStaticData<A: StaticLoadable>(_ endpoint: RemoteEndpoint<[A]>, onCompletion: @escaping () -> ()) {
+fileprivate func refreshStaticData<A: StaticLoadable>(_ endpoint: Endpoint<[A]>, onCompletion: @escaping () -> ()) {
     globals.urlSession.load(endpoint) { result in
         tryOrLog { try postgres.withConnection { connection in
-            guard let r = result else { log(error: "Failed loading static data \(A.jsonName)"); return }
+            guard let r = try? result.get() else { log(error: "Failed loading static data \(A.jsonName) \(result)"); return }
             cacheStaticData(r, name: A.jsonName)
             onCompletion()
         }}
@@ -63,7 +63,7 @@ extension Static {
         return Static<[A]>(async: { cb in
             let initial: [A] = loadStaticData(name: A.jsonName)
             cb(initial)
-            let ep: RemoteEndpoint<[A]> = github.staticData()
+            let ep: Endpoint<[A]> = github.staticData()
             refreshStaticData(ep) {
                 let data: [A] = loadStaticData(name: A.jsonName)
                 onRefresh(data)
@@ -94,8 +94,8 @@ func queryTranscriptsHelper(fast: Bool = false) -> [Transcript] {
 }
 
 func refreshTranscripts(onCompletion: @escaping () -> ()) {
-    globals.urlSession.load(github.transcripts) { results in
-        guard let transcripts = results else { log(error: "Failed to load transcripts"); return }
+    globals.urlSession.load(github.transcripts, onComplete: { results in
+        guard let transcripts = try? results.get() else { log(error: "Failed to load transcripts \(results)"); return }
         tryOrLog { try postgres.withConnection { connection in
             for t in transcripts {
                 let fd = FileData(repository: t.file.repository, path: t.file.path, value: t.content)
@@ -103,6 +103,6 @@ func refreshTranscripts(onCompletion: @escaping () -> ()) {
             }
             onCompletion()
         }}
-    }
+    })
 }
 
