@@ -10,7 +10,7 @@ import TinyNetworking
 
 public indirect enum CombinedEndpoint<A> {
     case single(Endpoint<A>)
-    case _sequence(CombinedEndpoint<Any>, (Any) -> CombinedEndpoint<A>?)
+    case _sequence(CombinedEndpoint<Any>, delay: TimeInterval, (Any) -> CombinedEndpoint<A>?)
     case _zipped(CombinedEndpoint<Any>, CombinedEndpoint<Any>, (Any, Any) -> A)
 }
 
@@ -18,7 +18,7 @@ extension CombinedEndpoint {
     var asAny: CombinedEndpoint<Any> {
         switch self {
         case let .single(r): return .single(r.map { $0 })
-        case let ._sequence(l, transform): return ._sequence(l, { x in
+        case let ._sequence(l, delay, transform): return ._sequence(l, delay: delay, { x in
             transform(x)?.asAny
         })
         case let ._zipped(l, r, f): return ._zipped(l, r, { x, y in
@@ -27,8 +27,8 @@ extension CombinedEndpoint {
         }
     }
     
-    public func flatMap<B>(_ transform: @escaping (A) -> CombinedEndpoint<B>?) -> CombinedEndpoint<B> {
-        return CombinedEndpoint<B>._sequence(self.asAny, { x in
+    public func flatMap<B>(delay: TimeInterval = 0, _ transform: @escaping (A) -> CombinedEndpoint<B>?) -> CombinedEndpoint<B> {
+        return CombinedEndpoint<B>._sequence(self.asAny, delay: delay, { x in
             transform(x as! A)
         })
     }
@@ -36,8 +36,8 @@ extension CombinedEndpoint {
     public func map<B>(_ transform: @escaping (A) -> B) -> CombinedEndpoint<B> {
         switch self {
         case let .single(r): return .single(r.map(transform))
-        case let ._sequence(l, f):
-            return ._sequence(l, { x in
+        case let ._sequence(l, delay, f):
+            return ._sequence(l, delay: delay, { x in
                 f(x)?.map(transform)
             })
         case let ._zipped(l, r, f):
@@ -65,10 +65,10 @@ public func zip<A>(_ endpoints: [CombinedEndpoint<A>]) -> CombinedEndpoint<[A]>?
     }
 }
 
-public func sequentially<A>(_ endpoints: [CombinedEndpoint<A>]) -> CombinedEndpoint<[A]>? {
+public func sequentially<A>(delay: TimeInterval = 0, _ endpoints: [CombinedEndpoint<A>]) -> CombinedEndpoint<[A]>? {
     guard let initial = endpoints.first?.map({ [$0] }) else { return nil }
     return endpoints.dropFirst().reduce(initial) { result, endpoint in
-        result.flatMap { acc in
+        result.flatMap(delay: delay) { acc in
             endpoint.map { acc + [$0] }
         }
     }
@@ -88,7 +88,7 @@ extension URLSessionProtocol {
         switch endpoint {
         case let .single(r):
             load(r, onComplete: onComplete)
-        case let ._sequence(l, transform):
+        case let ._sequence(l, delay, transform):
             load(l) { result in
                 switch result {
                 case .failure(let f): onComplete(.failure(f))
@@ -97,7 +97,14 @@ extension URLSessionProtocol {
                         onComplete(Result<A, Error>.failure(UnknownError()))
                         return
                     }
-                	self.load(next, onComplete: onComplete)
+                    if delay == 0 {
+                		self.load(next, onComplete: onComplete)
+                    } else {
+                        let deadline = DispatchTime.now() + .milliseconds(Int(delay/1000))
+                        DispatchQueue.global().asyncAfter(deadline: deadline, execute: {
+                            self.load(next, onComplete: onComplete)
+                        })
+                    }
                 }                
             }
         case let ._zipped(l, r, transform):

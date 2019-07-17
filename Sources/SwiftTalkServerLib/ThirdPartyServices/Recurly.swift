@@ -718,12 +718,12 @@ struct Recurly {
 
 fileprivate extension Endpoint where A: Decodable {
     init(xml method: Method, url: URL, headers: [String:String], query: [String:String] = [:]) {
-        self.init(method, url: url, accept: .xml, headers: headers, expectedStatusCode: { $0 >= 200 && $0 < 500 }, query: query, parse: { parseRecurlyResponse(url, $0) })
+        self.init(method, url: url, accept: .xml, headers: headers, expectedStatusCode: { $0 >= 200 && $0 < 500 }, query: query, parse: { d, _ in parseRecurlyResponse(url, d) })
     }
 
     init<B: Encodable & RootElement>(xml method: Method, url: URL, value: B, headers: [String:String], query: [String:String] = [:]) {
         let data = try! encodeXML(value).data(using: .utf8)!
-        self.init(method, url: url, accept: .xml, body: data, headers: headers, expectedStatusCode: { $0 >= 200 && $0 < 500 }, query: query, parse: { parseRecurlyResponse(url, $0) })
+        self.init(method, url: url, accept: .xml, body: data, headers: headers, expectedStatusCode: { $0 >= 200 && $0 < 500 }, query: query, parse: { d, _ in parseRecurlyResponse(url, d) })
     }
 }
 

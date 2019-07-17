@@ -85,7 +85,7 @@ struct Github {
 
     private func contents(_ file: File) -> Endpoint<(file: File, content: String)> {
         let headers = ["Authorization": "token \(accessToken)", "Accept": "application/vnd.github.v3.raw"]
-        return Endpoint(.get, url: file.url, headers: headers) { data in
+        return Endpoint(.get, url: file.url, headers: headers) { data, _ in
             guard let d = data, let str = String(data: d, encoding: .utf8) else { return .failure(DecodingError(message: "Expected UTF8")) }
             return .success((file: file, content: str))
         }
@@ -97,7 +97,7 @@ struct Github {
             let batches = files.chunked(size: 5).map { batch in
                 zip(batch.map { self.contents($0).c })!
             }
-            return sequentially(batches)!.map { Array($0.joined()) }
+            return sequentially(delay: 0.1, batches)!.map { Array($0.joined()) }
         }
     }
     
