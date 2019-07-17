@@ -96,12 +96,11 @@ extension String {
     }
 }
 
-import Cryptor
+import md5
 
 extension Data {
     var md5: String {
-        let data = Data(Digest(using: .md5).update(data: self)?.final() ?? [])
-        return data.map { String(format: "%02hhx", $0) }.joined()
+        return md5().map { String(format: "%02hhx", $0) }.joined()
     }
 }
 

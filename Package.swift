@@ -23,7 +23,7 @@ let package = Package(
         .package(url: "https://github.com/objcio/LibPQ", .branch("master")),
         .package(url: "https://github.com/objcio/tiny-networking", from: "0.1.3"),
         .package(url: "https://github.com/objcio/swift-talk-shared", .branch("master")),
-		.package(url: "https://github.com/IBM-Swift/BlueCryptor", .exact("1.0.30")),
+        .package(url: "https://github.com/objcio/md5", .exact("0.1.0")),
         .package(url: "https://github.com/jpsim/SourceKitten", from: "0.22.0"),
 		.package(url: "https://github.com/ianpartridge/swift-backtrace.git", from: "1.0.2"),
     ],
@@ -37,7 +37,6 @@ let package = Package(
         .target(
             name: "Base",
             dependencies: [
-                "Cryptor",
             ],
             path: "Sources/Base"
         ),
@@ -112,7 +111,7 @@ let package = Package(
                 "CommonMark",
 				"Model",
 				"ViewHelpers",
-				"Cryptor",
+				"md5",
 				"SourceKittenFramework",
 			],
 			path: "Sources/SwiftTalkServerLib"
