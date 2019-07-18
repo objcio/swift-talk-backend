@@ -19,10 +19,6 @@
   "dependencies": {
     "browserify": "^13.1.1",
     "jquery": "^3.2.1",
-    "jquery-touch-events": "^1.0.7",
-    "jquery-ujs": "^1.2.2",
-    "reframe.js": "^0.3.7",
-    "jquery.kinetic": "^2.1.0",
     "babel-plugin-lodash": "^3.1.5",
     "babel-preset-es2015": "^6.6.0",
     "babel-preset-react": "^6.5.0",
@@ -31,9 +27,7 @@
     "react": "^15.1.0",
     "react-dom": "^15.1.0",
     "classnames": "^2.2.5",
-    "accounting-js": "^1.1.1",
-    "underscore": "^1.8.3",
-    "js-cookie": "^2.1.3"
+    "accounting-js": "^1.1.1"
   },
   "standard": {
     "parser": "babel-eslint"

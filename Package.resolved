@@ -78,8 +78,8 @@
         "repositoryURL": "https://github.com/ianpartridge/swift-backtrace.git",
         "state": {
           "branch": null,
-          "revision": "4ba1c190a1e7be53c743f55920c24bd9e000f8b2",
-          "version": "1.0.2"
+          "revision": "a28e8f99bbda495d414b9de9ab79a12916f47f44",
+          "version": "1.0.3"
         }
       },
       {

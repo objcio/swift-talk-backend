@@ -136,7 +136,7 @@ extension LayoutConfig {
         ])
 
         let header = Node.header(class: "bgcolor-white", [
-            .div(class: "height-3 flex scroller js-scroller js-scroller-container", [
+            .div(class: "height-3 flex scroller", [
                 .div(class: "container-h flex-grow flex", [
                     logo,
                     navigation,
