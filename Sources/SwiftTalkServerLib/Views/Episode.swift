@@ -401,7 +401,34 @@ extension Episode {
             ? noTranscript(text: "Team manager accounts don't have access to Swift Talk content by default. To enable content access on this account, please add yourself as a team member.", buttonTitle: "Manage Team Members", target: .account(.teamMembers))
             : noTranscript(text: "Become a subscriber to watch future and all \(Episode.subscriberOnly) current subscriber-only episodes, plus enjoy access to episode video downloads and \(teamDiscount)% discount for your team members.", buttonTitle: "Become a subscriber", target: .signup(.subscribe(planName: nil)))
 
-        var scripts: [Node] = [.script(src: "https://player.vimeo.com/api/player.js")]
+        var scripts: [Node] = [
+            .script(src: "https://player.vimeo.com/api/player.js"),
+            .script(code: """
+                $(function () {
+                    window.player = new Vimeo.Player(document.querySelector('iframe'));
+                
+                    $('.js-transcript').find("a[href^='#']").each(function () {
+                        if (/^\\d+$/.test(this.hash.slice(1)) && /^\\d{1,2}(:\\d{2}){1,2}$/.test(this.innerHTML)) {
+                            var time = parseInt(this.hash.slice(1));
+                            $(this)
+                                .data('time', time)
+                                .attr('href', '?t='+time)
+                                .addClass('js-episode-seek js-transcript-cue');
+                        }
+                    });
+
+                    // Catch clicks on timestamps and forward to player
+                    $(document).on('click singletap', '.js-episode .js-episode-seek', function (event) {
+                        if ($(this).data('time') !== undefined) {
+                            player.setCurrentTime($(this).data('time'));
+                            player.play();
+                            event.preventDefault();
+                        }
+                    });
+                });
+                """
+            )
+        ]
         if let token = session?.user.data.csrfToken {
             scripts.append(
                 .script(code: """
