@@ -56,9 +56,11 @@ fileprivate let collectionsSource: Static<[Collection]> = .fromStaticRepo()
 fileprivate let collaboratorsSource: Static<[Collaborator]> = Static<[Collaborator]>.fromStaticRepo()
 
 fileprivate let transcriptsSource: Static<[Transcript]> = Static(async: { cb in
-    queryTranscripts(fast: true, cb)
-    refreshTranscripts {
-        queryTranscripts(cb)
+    queryTranscripts(fast: true) { transcripts in
+        cb(transcripts)
+        refreshTranscripts(knownShas: transcripts.compactMap { $0.sha }) {
+            queryTranscripts(cb)
+        }
     }
 })
 

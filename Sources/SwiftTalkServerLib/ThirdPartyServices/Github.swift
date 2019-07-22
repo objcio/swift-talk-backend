@@ -20,6 +20,7 @@ struct Github {
     
     struct File: Codable {
         var url: URL
+        var sha: String
     }
 
     struct Profile: Codable {
@@ -91,8 +92,10 @@ struct Github {
         }
     }
 
-    var transcripts: CombinedEndpoint<[(file: File, content: String)]> {
-        return transcriptFiles.c.flatMap { files in
+    func transcripts(knownShas: [String]) -> CombinedEndpoint<[(file: File, content: String)]> {
+        return transcriptFiles.map { files in
+            files.filter { !knownShas.contains($0.sha) }
+        }.c.flatMap { files in
             guard !files.isEmpty else { return nil }
             let batches = files.chunked(size: 5).map { batch in
                 zip(batch.map { self.contents($0).c })!

@@ -43,7 +43,7 @@ func cacheStaticData<A: Codable>(_ data: A, name: String) {
             let encoded = try? Github.staticDataEncoder.encode(data),
             let json = String(data: encoded, encoding: .utf8)
             else { log(error: "Unable to encode static data \(name)"); return }
-        let fd = FileData(repository: github.staticDataRepo, path: name, value: json)
+        let fd = FileData(repository: github.staticDataRepo, path: name, value: json, sha: nil)
         tryOrLog("Error caching \(name) in database") { try connection.execute(fd.insertOrUpdate(uniqueKey: "key")) }
     }}
 }
@@ -89,16 +89,16 @@ func queryTranscripts(fast: Bool = false, _ cb: @escaping ([Transcript]) -> ()) 
 func queryTranscriptsHelper(fast: Bool = false) -> [Transcript] {
     return tryOrLog { try postgres.withConnection { connection in
         let rows = try connection.execute(Row<FileData>.transcripts())
-        return rows.compactMap { f in Transcript(fileName: f.data.key, raw: f.data.value, highlight: !fast) }
+        return rows.compactMap { f in Transcript(fileName: f.data.key, sha: f.data.sha, raw: f.data.value, highlight: !fast) }
     }} ?? []
 }
 
-func refreshTranscripts(onCompletion: @escaping () -> ()) {
-    globals.urlSession.load(github.transcripts, onComplete: { results in
+func refreshTranscripts(knownShas: [String], onCompletion: @escaping () -> ()) {
+    globals.urlSession.load(github.transcripts(knownShas: knownShas), onComplete: { results in
         guard let transcripts = try? results.get() else { log(error: "Failed to load transcripts \(results)"); return }
         tryOrLog { try postgres.withConnection { connection in
             for t in transcripts {
-                let fd = FileData(repository: t.file.repository, path: t.file.path, value: t.content)
+                let fd = FileData(repository: t.file.repository, path: t.file.path, value: t.content, sha: t.file.sha)
                 tryOrLog("Error caching \(t.file.url)") { try connection.execute(fd.insertOrUpdate(uniqueKey: "key")) }
             }
             onCompletion()
