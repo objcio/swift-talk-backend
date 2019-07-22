@@ -209,6 +209,14 @@ extension Node {
         return .node(Element(name: "input", class: `class`, attributes: a, children: children))
     }
     
+    public static func select(class: Class? = nil, name: String, attributes: [String: String] = [:], options: [(String, String)]) -> Node {
+        var a = attributes
+        a["name"] = name
+        return Node.node(Element(name: "select", class: `class`, attributes: a, children: options.map { option in
+            Node.node(Element(name: "option", attributes: ["value": option.0], children: [Node.text(option.1)]))
+        }))
+    }
+    
     public static func textArea(class: Class? = nil, name: String, id: String? = nil, value: String? = nil, placeHolder: String? = nil, rows: Int? = nil, cols: Int? = nil, attributes: [String:String] = [:]) -> Node {
         var a = attributes
         a["name"] = name
