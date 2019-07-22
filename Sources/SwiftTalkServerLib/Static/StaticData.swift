@@ -9,6 +9,7 @@ import Foundation
 import Base
 import Incremental
 
+fileprivate let staticQueue = DispatchQueue(label: "static data")
 
 final class Static<A> {
     typealias Compute = (_ callback: @escaping (A?) -> ()) -> ()
@@ -19,7 +20,10 @@ final class Static<A> {
     init(sync: @escaping () -> A?) {
         observable = Observable(sync())
         self.compute = { cb in
-            cb(sync())
+            let result = sync()
+            staticQueue.async {
+                cb(result)
+            }
         }
     }
     
@@ -35,8 +39,10 @@ final class Static<A> {
         }
         isRefreshing = true
         compute { [weak self] x in
-            self?.observable.send(x)
-            self?.isRefreshing = false
+            staticQueue.async {
+                self?.observable.send(x)
+                self?.isRefreshing = false
+            }
         }
     }
 }
