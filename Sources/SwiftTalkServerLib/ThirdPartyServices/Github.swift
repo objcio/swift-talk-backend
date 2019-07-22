@@ -96,7 +96,7 @@ struct Github {
         return transcriptFiles.map { files in
             files.filter { !knownShas.contains($0.sha) }
         }.c.flatMap { files in
-            guard !files.isEmpty else { return nil }
+            guard !files.isEmpty else { return .constant([]) }
             let batches = files.chunked(size: 5).map { batch in
                 zip(batch.map { self.contents($0).c })!
             }

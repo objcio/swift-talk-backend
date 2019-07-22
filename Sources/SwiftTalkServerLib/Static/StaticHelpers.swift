@@ -95,7 +95,11 @@ func queryTranscriptsHelper(fast: Bool = false) -> [Transcript] {
 
 func refreshTranscripts(knownShas: [String], onCompletion: @escaping () -> ()) {
     globals.urlSession.load(github.transcripts(knownShas: knownShas), onComplete: { results in
-        guard let transcripts = try? results.get() else { log(error: "Failed to load transcripts \(results)"); return }
+        guard let transcripts = try? results.get() else {
+            log(error: "Failed to load transcripts \(results)");
+            onCompletion()
+            return
+        }
         tryOrLog { try postgres.withConnection { connection in
             for t in transcripts {
                 let fd = FileData(repository: t.file.repository, path: t.file.path, value: t.content, sha: t.file.sha)
