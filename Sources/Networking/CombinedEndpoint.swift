@@ -10,6 +10,7 @@ import TinyNetworking
 
 public indirect enum CombinedEndpoint<A> {
     case single(Endpoint<A>)
+    case constant(A)
     case _sequence(CombinedEndpoint<Any>, delay: TimeInterval, (Any) -> CombinedEndpoint<A>?)
     case _zipped(CombinedEndpoint<Any>, CombinedEndpoint<Any>, (Any, Any) -> A)
 }
@@ -18,6 +19,7 @@ extension CombinedEndpoint {
     var asAny: CombinedEndpoint<Any> {
         switch self {
         case let .single(r): return .single(r.map { $0 })
+        case let .constant(x): return .constant(x)
         case let ._sequence(l, delay, transform): return ._sequence(l, delay: delay, { x in
             transform(x)?.asAny
         })
@@ -36,6 +38,7 @@ extension CombinedEndpoint {
     public func map<B>(_ transform: @escaping (A) -> B) -> CombinedEndpoint<B> {
         switch self {
         case let .single(r): return .single(r.map(transform))
+        case let .constant(x): return .constant(transform(x))
         case let ._sequence(l, delay, f):
             return ._sequence(l, delay: delay, { x in
                 f(x)?.map(transform)
@@ -88,6 +91,8 @@ extension URLSessionProtocol {
         switch endpoint {
         case let .single(r):
             load(r, onComplete: onComplete)
+        case let .constant(x):
+            onComplete(.success(x))
         case let ._sequence(l, delay, transform):
             load(l) { result in
                 switch result {
