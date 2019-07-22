@@ -37,8 +37,10 @@ public func run() throws {
         }
         
         let env = STRequestEnvironment(route: route, hashedAssetName: assets.hashedName, buildSession: buildSession, connection: conn, resourcePaths: resourcePaths)
-        let reader: Reader<STRequestEnvironment, NIOInterpreter> = try! route.interpret()
-        return reader.run(env)
+        return measure(message: "request \(route)") {
+            let reader: Reader<STRequestEnvironment, NIOInterpreter> = try! route.interpret()
+            return reader.run(env)
+        }
     }
     try server.listen(port: env.port ?? 8765)
 }

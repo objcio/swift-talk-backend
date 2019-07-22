@@ -12,7 +12,8 @@ import WebServer
 import CommonMark
 
 
-typealias Node = HTML.Node<STRequestEnvironment>
+//typealias Node = HTML.Node<STRequestEnvironment>
+typealias Node = Reader<STRequestEnvironment, RenderedHTML>
 
 protocol LinkTarget {
     var absoluteString: String { get }

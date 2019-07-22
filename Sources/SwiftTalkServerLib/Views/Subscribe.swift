@@ -37,7 +37,7 @@ struct ProfileFormData {
     var name: String
 }
 
-func profile(submitTitle: String, action: Route) -> Form<ProfileFormData, STRequestEnvironment> {
+func profile(submitTitle: String, action: Route) -> Form<ProfileFormData, Node> {
     return Form(parse: { dict in
         guard let e = dict["email"], let n = dict["name"] else { return nil }
         return ProfileFormData(email: e, name: n)
@@ -46,11 +46,12 @@ func profile(submitTitle: String, action: Route) -> Form<ProfileFormData, STRequ
             .text(id: "name", title: "Name", value: data.name, note: nil),
             .text(id: "email", title: "Email", value: data.email, note: nil)
         ], submitTitle: submitTitle, action: action, errors: errors)
-        return .div(form.renderStacked())
+        let rendered = form.renderStacked()
+        return Node.div(class: nil, rendered)
     })
 }
 
-func registerForm(couponCode: String?, planCode: String?, team: Bool) -> Form<ProfileFormData, STRequestEnvironment> {
+func registerForm(couponCode: String?, planCode: String?, team: Bool) -> Form<ProfileFormData, Node> {
     return profile(submitTitle: "Create Account", action: .account(.register(couponCode: couponCode, planCode: planCode, team: team))).wrap { node in
         LayoutConfig(contents: [
             .header([

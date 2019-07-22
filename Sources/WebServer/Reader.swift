@@ -12,19 +12,6 @@ import HTML
 import Database
 import Promise
 
-
-public struct Reader<Value, Result> {
-    public let run: (Value) -> Result
-    
-    public init(_ run: @escaping (Value) -> Result) {
-        self.run = run
-    }
-    
-    public static func const(_ value: Result) -> Reader {
-        return Reader { _ in value }
-    }
-}
-
 extension Reader: NIOWrapper.Response where Result: NIOWrapper.Response {
     public static func write(_ string: String, status: HTTPResponseStatus, headers: [String : String]) -> Reader<Value, Result> {
         return .const(.write(string, status: status, headers: headers))
@@ -64,9 +51,19 @@ extension Reader: ResponseRequiringEnvironment where Result: Response, Value: Re
         }
     }
     
+    /*
     public static func write(html: Node<Env>, status: HTTPResponseStatus = .ok) -> Reader<Value, Result> {
         return Reader { (value: Value) -> Result in
-            return Result.write(html: html.ast(input: value), status: status)
+            let rendered = measure(message: "render html") { html.htmlDocument(input: value) }
+            return Result.write(rendered, status: status, headers: ["Content-Type": "text/html; charset=utf-8"])
+        }
+    }
+ */
+    
+    public static func write(html: Reader<Value, RenderedHTML>, status: HTTPResponseStatus = .ok) -> Reader<Value, Result> {
+        return Reader { (value: Value) -> Result in
+            let rendered = measure(message: "render html") { html.run(value).string } // todo prepend doc start
+            return Result.write(rendered, status: status, headers: ["Content-Type": "text/html; charset=utf-8"])
         }
     }
     

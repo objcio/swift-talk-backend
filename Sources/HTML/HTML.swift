@@ -8,6 +8,71 @@
 import Foundation
 import Base
 
+extension Reader: ElementLike where Result: ElementLike {
+    public typealias N = Reader<Value, Result.N>
+    public init(_ name: String, block: Bool, class: Class?, attributes: [String : String], children: [Reader<Value, Result.N>]) {
+        self = Reader { input in
+            let x = children.map { $0.run(input) }
+            return Result.init(name: name, block: block, class: `class`, attributes: attributes, children: x)
+        }
+        
+    }
+}
+
+extension Reader: ExpressibleByUnicodeScalarLiteral where Result: ExpressibleByUnicodeScalarLiteral {
+    public init(unicodeScalarLiteral value: Result.UnicodeScalarLiteralType) {
+        self = .const(.init(unicodeScalarLiteral: value))
+    }
+    
+    public typealias UnicodeScalarLiteralType = Result.UnicodeScalarLiteralType
+    
+    
+}
+
+extension Reader: ExpressibleByExtendedGraphemeClusterLiteral where Result: ExpressibleByExtendedGraphemeClusterLiteral {
+    public init(extendedGraphemeClusterLiteral value: Result.ExtendedGraphemeClusterLiteralType) {
+        self = Reader<Value, Result>.const(.init(extendedGraphemeClusterLiteral: value))
+    }
+}
+
+extension Reader: ExpressibleByStringLiteral where Result: ExpressibleByStringLiteral {
+    public init(stringLiteral value: Result.StringLiteralType) {
+        self = Reader<Value, Result>.const(.init(stringLiteral: value))
+    }
+}
+
+extension Reader: ExpressibleByStringInterpolation where Result: ExpressibleByStringInterpolation, Result.StringLiteralType == String {
+//    typealias StringInterpolation = Result.StringInterpolation
+    public init(stringInterpolation: Result.StringInterpolation) {
+        self = Reader<Value, Result>.const(.init(stringInterpolation: stringInterpolation))
+    }
+}
+
+extension Reader: NodeLike where Result: NodeLike {
+    public typealias Element = Reader<Value, Result.Element>
+    public typealias Input = Value
+    
+    public static func none() -> Reader<Value, Result> {
+        return .const(.none())
+    }
+    public static func raw(_ r: String) -> Reader<Value, Result> {
+        return .const(.raw(r))
+    }
+    public static func text(_ t: String) -> Reader<Value, Result> {
+        return .const(.text(t))
+    }
+    public static func withInput(_ f: @escaping (Value) -> Reader<Value, Result>) -> Reader<Value, Result> {
+        return Reader { input in
+            f(input).run(input)
+        }
+    }
+    public static func node(_ el: Element) -> Reader<Value, Result> {
+        return Reader { value in
+            Result.node(el.run(value))
+        }
+    }
+}
+
 public protocol ElementLike {
     associatedtype N: NodeLike
     init(_ name: String, block: Bool, class: Class?, attributes: [String:String], children: [N])
@@ -19,7 +84,9 @@ extension ElementLike {
     }
 }
 
-public protocol NodeLike {
+public protocol NodeLike:  ExpressibleByStringInterpolation  {
+    typealias StringInterpolation = String.StringInterpolation
+
     associatedtype Input
     associatedtype Element: ElementLike where Element.N == Self
     static func none() -> Self
@@ -27,6 +94,83 @@ public protocol NodeLike {
     static func withInput(_ f: @escaping (Input) -> Self) -> Self
     static func text(_ t: String) -> Self
     static func raw(_ r: String) -> Self
+}
+
+//extension NodeLike {
+//    public typealias StringInterpolation = String.StringInterpolation
+//    init(
+//}
+//
+protocol XMLEncodable: ElementLike, NodeLike {
+    static func encodeText(_ string: String) -> String
+    init(strings: [String])
+    var strings: [String] { get }
+}
+
+public struct RenderedHTML: XMLEncodable {
+    static func encodeText(_ string: String) -> String {
+        return string.addingUnicodeEntities
+    }
+    
+    var strings: [String] = []
+    
+    public var string: String { return strings.joined(separator: "") }
+    init(strings: [String]) { self.strings = strings }
+}
+
+public struct RenderedXML: XMLEncodable {
+    static func encodeText(_ string: String) -> String {
+        return string.xmlString
+    }
+    
+    var strings: [String] = []
+    
+    public var string: String { return strings.joined(separator: "") }
+    init(strings: [String]) { self.strings = strings }
+}
+
+extension RenderedXML {
+    public var xmlDocument: String {
+        return ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>", string].joined(separator: "\n")
+    }    
+}
+
+
+extension XMLEncodable {
+    public init(_ name: String, block: Bool, class: Class?, attributes: [String : String], children: [Self]) {
+        let atts: String = attributes.asAttributes
+        if children.isEmpty && !block {
+            self = .init(strings: ["<\(name)\(atts) />"])
+        } else if block {
+//            self = .init(string: "<\(name)\(atts)>\n" + children.map { $0.string }.joined(separator: "\n") + "\n</\(name)>")
+            self = .init(strings: ["<\(name)\(atts)>\n"] + children.flatMap { $0.strings } + ["\n</\(name)>"]) // todo newlines
+
+        } else {
+            self = .init(strings: ["<\(name)\(atts)>"] + children.flatMap { $0.strings } + ["</\(name)>"])
+        }
+    }
+}
+
+extension XMLEncodable {
+    public static func none() -> Self {
+        return .init(strings: [])
+    }
+    
+    public static func node(_ el: Self) -> Self {
+        return el
+    }
+    
+    public static func withInput(_ f: @escaping (()) -> Self) -> Self {
+        return f(())
+    }
+    
+    public static func text(_ t: String) -> Self {
+        return .init(strings: [Self.encodeText(t)])
+    }
+    
+    public static func raw(_ r: String) -> Self {
+        return .init(strings: [r])
+    }
 }
 
 public enum Node<I> {
@@ -41,23 +185,23 @@ extension Node: NodeLike {
     public static func none() -> Node<I> {
         return ._none
     }
-    
+ 
     public static func node(_ el: Element<I>) -> Node<I> {
         return ._node(el)
     }
-    
+ 
     public static func withInput(_ f: @escaping (I) -> Node<I>) -> Node<I> {
         return ._withInput(f)
     }
-    
+ 
     public static func text(_ t: String) -> Node<I> {
         return ._text(t)
     }
-    
+ 
     public static func raw(_ r: String) -> Node<I> {
         return ._raw(r)
     }
-    
+ 
     public typealias Input = I
 }
 
@@ -66,7 +210,7 @@ public struct Element<I>: ElementLike {
     var attributes: [String:String]
     var block: Bool
     public var children: [Node<I>]
-    
+ 
     public init(_ name: String, block: Bool = true, class: Class? = nil, attributes: [String:String] = [:], children: [Node<I>] = []) {
         self.name = name
         self.attributes = attributes
@@ -77,7 +221,7 @@ public struct Element<I>: ElementLike {
         self.block = block
     }
 }
-
+ 
 public struct Class: ExpressibleByStringLiteral {
     public var `class`: String
     public init(stringLiteral string: String) {
@@ -101,8 +245,8 @@ extension Element {
         }
     }
     
-    public func ast(input: I) -> Element<()> {
-        return Element<()>(name: name, block: block, attributes: attributes, children: children.map { $0.ast(input: input) })
+    public func ast<E: ElementLike>(input: I) -> E where E.N.Input == () {
+        return E(name: name, block: block, attributes: attributes, children: children.map { $0.ast(input: input) })
     }
 }
 
@@ -117,10 +261,10 @@ extension Node {
         }
     }
     
-    public func ast(input: I) -> Node<()> {
+    public func ast<N: NodeLike>(input: I) -> N where N.Input == () {
         switch self {
         case ._none:
-            return ._none
+            return .none()
         case let ._node(n):
             return .node(n.ast(input: input))
         case let ._withInput(f):
@@ -132,10 +276,19 @@ extension Node {
         }
     }
     
+    
     public func htmlDocument(input: I) -> String {
-        return ["<!DOCTYPE html>", render(input: input)].joined(separator: "\n")
+        let x: RenderedHTML = ast(input: input)
+        return ["<!DOCTYPE html>", x.string].joined(separator: "\n")
     }
 }
+
+//extension NodeLike where  {
+//    public func htmlDocument(input: Input) -> String {
+//        let x: RenderedHTML = ast(input: input)
+//        return ["<!DOCTYPE html>", x.string].joined(separator: "\n")
+//    }
+//}
 
 extension NodeLike {
     public static func html(class: Class? = nil, attributes: [String:String] = [:], _ children: [Self] = []) -> Self {
@@ -385,14 +538,10 @@ extension NodeLike {
     }
 }
 
-extension Node: ExpressibleByStringLiteral {
+extension NodeLike {
     public init(stringLiteral: String) {
         self = .text(stringLiteral)
     }
-}
-
-extension Node: ExpressibleByStringInterpolation {
-    public typealias StringInterpolation = String.StringInterpolation
 }
 
 extension Node where I == () {

@@ -15,8 +15,8 @@ import Promise
 
 public protocol Response: NIOWrapper.Response {
     static func write(_ string: String, status: HTTPResponseStatus) -> Self
-    static func write(html: Node<()>, status: HTTPResponseStatus) -> Self
-    static func write(rss: Node<()>, status: HTTPResponseStatus) -> Self
+    static func write(html: RenderedHTML, status: HTTPResponseStatus) -> Self
+    static func write(rss: RenderedXML, status: HTTPResponseStatus) -> Self
     static func write(json: Data, status: HTTPResponseStatus) -> Self
 }
 
@@ -28,7 +28,7 @@ public protocol FailableResponse {
 
 public protocol ResponseRequiringEnvironment: Response {
     associatedtype Env: RequestEnvironment
-    static func write(html: Node<Env>, status: HTTPResponseStatus) -> Self
+    static func write(html: Reader<Env, RenderedHTML>, status: HTTPResponseStatus) -> Self
     static func withCSRF(_ cont: @escaping (CSRFToken) -> Self) -> Self
     static func withSession(_ cont: @escaping (Env.S?) -> Self) -> Self
     static func execute<A>(_ query: Query<A>, _ cont: @escaping (Either<A, Error>) -> Self) -> Self
@@ -44,11 +44,12 @@ extension Response {
         return .write(string, status: status, headers: ["Content-Type": "text/plain; charset=utf-8"])
     }
     
-    public static func write(html: Node<()>, status: HTTPResponseStatus = .ok) -> Self {
-        return .write(html.htmlDocument(input: ()), status: status, headers: ["Content-Type": "text/html; charset=utf-8"])
+    public static func write(html: RenderedHTML, status: HTTPResponseStatus = .ok) -> Self {
+        let rendered = measure(message: "render html") { html.string } // todo prepend doctype
+        return .write(rendered, status: status, headers: ["Content-Type": "text/html; charset=utf-8"])
     }
     
-    public static func write(rss: Node<()>, status: HTTPResponseStatus = .ok) -> Self {
+    public static func write(rss: RenderedXML, status: HTTPResponseStatus = .ok) -> Self {
         return .write(rss.xmlDocument, status: status, headers: ["Content-Type": "application/rss+xml; charset=utf-8"])
     }
     
@@ -136,7 +137,7 @@ extension ResponseRequiringEnvironment where Self: FailableResponse {
     }
     
     // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
-    public static func form<A, B>(_ f: Form<A, Env>, initial: A, convert: @escaping (A) -> Either<B, [ValidationError]>, onPost: @escaping (B) throws -> Self) -> Self {
+    public static func form<A, B>(_ f: Form<A, Reader<Env, RenderedHTML>>, initial: A, convert: @escaping (A) -> Either<B, [ValidationError]>, onPost: @escaping (B) throws -> Self) -> Self {
         return verifiedPost(do: { (body: [String:String]) -> Self in
             withCSRF { csrf in
                 catchAndDisplayError {
@@ -155,14 +156,15 @@ extension ResponseRequiringEnvironment where Self: FailableResponse {
         
     }
 
-    public static func form<A>(_ f: Form<A, Env>, initial: A, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> Self) -> Self {
-        return form(f, initial: initial, convert: { (a: A) -> Either<A, [ValidationError]> in
-            let errs = validate(a)
-            return errs.isEmpty ? .left(a) : .right(errs)
-        }, onPost: onPost)
+    public static func form<A>(_ f: Form<A, Reader<Env, RenderedHTML>>, initial: A, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> Self) -> Self {
+        fatalError()
+//        return form(f, initial: initial, convert: { (a: A) -> Either<A, [ValidationError]> in
+//            let errs = validate(a)
+//            return errs.isEmpty ? .left(a) : .right(errs)
+//        }, onPost: onPost)
     }
 
-    public static func write(html: Node<Env>, status: HTTPResponseStatus = .ok) -> Self {
+    public static func write(html: Reader<Env, RenderedHTML>, status: HTTPResponseStatus = .ok) -> Self {
         return .write(html: html, status: status)
     }
 

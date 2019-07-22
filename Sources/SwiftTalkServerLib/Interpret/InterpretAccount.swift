@@ -25,7 +25,7 @@ extension Route.Account {
     
     private func interpret<I: STResponse>(session sess: Session) throws -> I where I.Env == STRequestEnvironment {
 
-        func editAccount(form: Form<ProfileFormData, STRequestEnvironment>, role: UserData.Role, cont: @escaping () -> Route) -> I {
+        func editAccount(form: Form<ProfileFormData, Node>, role: UserData.Role, cont: @escaping () -> Route) -> I {
             func updateAndRedirect(_ user: Row<UserData>) -> I {
                 return .query(user.update()) { _ in
                     return .redirect(to: cont())

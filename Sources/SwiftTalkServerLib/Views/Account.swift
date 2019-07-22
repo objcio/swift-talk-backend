@@ -403,7 +403,7 @@ func billingView(subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice,
     }
 }
 
-func accountForm() -> Form<ProfileFormData, STRequestEnvironment> {
+func accountForm() -> Form<ProfileFormData, Node> {
     // todo button color required fields.
     let form = profile(submitTitle: "Update Profile", action: .account(.profile))
     return form.wrap { node in

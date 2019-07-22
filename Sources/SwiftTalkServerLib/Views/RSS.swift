@@ -17,8 +17,8 @@ fileprivate let formatter: DateFormatter = {
 }()
 
 extension Swift.Collection where Element == Episode {
-    var rssView: HTML.Node<()> {
-        typealias X = HTML.Node<()>
+    var rssView: RenderedXML {
+        typealias X = RenderedXML
         return .xml(name: "rss", attributes: ["version": "2.0", "xmlns:atom": "http://www.w3.org/2005/Atom"], [
             .xml(name: "channel",
                  [
@@ -32,7 +32,7 @@ extension Swift.Collection where Element == Episode {
                 ]),
                 .xml(name: "language", ["en"]),
                 ] +
-                map { (item: Episode) -> HTML.Node<()> in
+                map { (item: Episode) -> RenderedXML in
                     let link = Route.episode(item.id, .view(playPosition: nil)).url.absoluteString
                 return .xml(name: "item", [
                     .xml(name: "guid", [.text(link)]),
