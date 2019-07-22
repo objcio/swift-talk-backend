@@ -28,15 +28,15 @@ extension Node where I == () {
     // Searches for a's and forms
     public func linkTargets() -> [String] {
         switch self {
-        case .none:
+        case ._none:
             return []
-        case let .node(n):
+        case let ._node(n):
             return n.linkTargets()
-        case let .withInput(f):
+        case let ._withInput(f):
             return f(()).linkTargets()
-        case .text:
+        case ._text:
             return []
-        case .raw(_):
+        case ._raw(_):
             return []
         }
     }

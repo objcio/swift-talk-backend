@@ -22,71 +22,71 @@ extension Route: LinkTarget {
     var absoluteString: String { return path }
 }
 
-extension HTML.Node where I == STRequestEnvironment {
-    static func hashedStylesheet(media: String = "all", href: String) -> Node {
-        return Node.withInput { deps in
-            return Node.stylesheet(media: media, href: deps.hashedAssetName(href))
+extension NodeLike where Input == STRequestEnvironment {
+    static func hashedStylesheet(media: String = "all", href: String) -> Self {
+        return .withInput { deps in
+            return .stylesheet(media: media, href: deps.hashedAssetName(href))
         }
     }
     
-    static func hashedScript(src: String) -> Node {
-        return Node.withInput { deps in
-            return Node.script(src: deps.hashedAssetName(src))
+    static func hashedScript(src: String) -> Self {
+        return .withInput { deps in
+            return .script(src: deps.hashedAssetName(src))
         }
     }
     
-    static func hashedImg(class: Class? = nil, src: String, alt: String = "", attributes: [String:String] = [:]) -> Node {
-        return Node.withInput { deps in
-            return Node.img(class: `class`, src: deps.hashedAssetName(src), alt: alt, attributes: attributes)
+    static func hashedImg(class: Class? = nil, src: String, alt: String = "", attributes: [String:String] = [:]) -> Self {
+        return .withInput { deps in
+            return .img(class: `class`, src: deps.hashedAssetName(src), alt: alt, attributes: attributes)
         }
     }
     
-    static func withCSRF(_ f: @escaping (CSRFToken) -> Node) -> Node {
+    static func withCSRF(_ f: @escaping (CSRFToken) -> Self) -> Self {
         return .withInput { f($0.csrf) }
     }
     
-    static func withSession(_ f: @escaping (Session?) -> Node) -> Node {
+    static func withSession(_ f: @escaping (Session?) -> Self) -> Self {
         return .withInput { f($0.session) }
     }
     
-    static func withResourcePaths(_ f: @escaping ([URL]) -> Node) -> Node {
+    static func withResourcePaths(_ f: @escaping ([URL]) -> Self) -> Self {
         return .withInput { f($0.resourcePaths) }
     }
     
-    static func withRoute(_ f: @escaping (Route) -> Node) -> Node {
+    static func withRoute(_ f: @escaping (Route) -> Self) -> Self {
         return .withInput { f($0.route) }
     }
 
-    static func link(to: Route, class: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
-        return Node.a(class: `class`, href: to.path, attributes: attributes, children)
+    static func link(to: Route, class: Class? = nil, attributes: [String:String] = [:], _ children: [Self]) -> Self {
+        return .a(class: `class`, href: to.path, attributes: attributes, children)
     }
     
-    static func link(to: LinkTarget, class: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
-        return Node.a(class: `class`, href: to.absoluteString, attributes: attributes, children)
+    static func link(to: LinkTarget, class: Class? = nil, attributes: [String:String] = [:], _ children: [Self]) -> Self {
+        return .a(class: `class`, href: to.absoluteString, attributes: attributes, children)
     }
     
-    static func button(to route: Route, confirm: String? = "Are you sure?", class: Class? = nil, attributes: [String:String] = [:], _ children: [Node]) -> Node {
+    static func button(to route: Route, confirm: String? = "Are you sure?", class: Class? = nil, attributes: [String:String] = [:], _ children: [Self]) -> Self {
         var attrs = ["type": "submit"]
         if let c = confirm {
             attrs["data-confirm"] = c
         }
-        return Node.withCSRF { csrf in
-            Node.form(class: "button_to", action: route.path, method: .post, [
-                Node.input(name: "csrf", id: "csrf", type: "hidden", attributes: ["value": csrf.string], []),
-                Node.button(class: `class`, attributes: attrs, children)
+        return .withCSRF { csrf in
+            .form(class: "button_to", action: route.path, method: .post, [
+                .input(name: "csrf", id: "csrf", type: "hidden", attributes: ["value": csrf.string], []),
+                .button(class: `class`, attributes: attrs, children)
                 ])
         }
     }
     
-    static func inlineSvg(class: Class? = nil, path: String, preserveAspectRatio: String? = nil, attributes: [String:String] = [:]) -> Node {
+    static func inlineSvg(class: Class? = nil, path: String, preserveAspectRatio: String? = nil, attributes: [String:String] = [:]) -> Self {
         // don't render inline svg's in tests
         if ProcessInfo.processInfo.environment.keys.contains("IDEiPhoneInternalTestBundleName") {
-            return Node.none
+            return .none()
         }
-        return Node.withResourcePaths { resourcePaths in
+        return .withResourcePaths { resourcePaths in
             guard let name = resourcePaths.resolve("images/" + path) else {
                 log(info: "Couldn't find svg")
-                return .none
+                return .none()
             }
             var a = attributes
             if let c = `class` {
@@ -98,8 +98,8 @@ extension HTML.Node where I == STRequestEnvironment {
         }
     }
     
-    static func markdown(_ string: String) -> Node {
-        return Node.raw(CommonMark.Node(markdown: string)!.html(options: [.unsafe]))
+    static func markdown(_ string: String) -> Self {
+        return .raw(CommonMark.Node(markdown: string)!.html(options: [.unsafe]))
     }
 }
 

@@ -272,7 +272,7 @@ extension BillingInfo {
                     item(key: "Expiry", value: "\(month)/\(year)") as Node,
                     vat_number?.nonEmpty.map { num in
                         item(key: "VAT Number", value: num)
-                    } ?? .none
+                    } ?? .none()
                 ])
             ]),
             .link(to: .account(.updatePayment), class: "color-blue no-decoration border-bottom border-1 hover-color-black bold", ["Update Billing Info"])
@@ -354,17 +354,17 @@ func billingView(subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice,
                                     label(text: "Trial Ends At"),
                                     value(text: DateFormatter.fullPretty.string(from: trialEndDate))
                                 ])
-                            } ?? Node.none,
+                            } ?? Node.none(),
                             sub.state == .active ? Node.li(class: "flex", [
                                 label(text: "Next Billing"),
                                 .div(class: "flex-auto color-gray-30 stack-", [
                                     .p([
                                         .text(dollarAmount(cents: total)),
-                                        vat == 0 ? .none : " (including \(dollarAmount(cents: vat)) VAT)",
+                                        vat == 0 ? .none() : " (including \(dollarAmount(cents: vat)) VAT)",
                                         " on ",
                                         .text(sub.current_period_ends_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "n/a"),
                                     ]),
-                                    redemptions.isEmpty ? .none : .p(class: " input-note mt-", [
+                                    redemptions.isEmpty ? .none() : .p(class: " input-note mt-", [
                                         .span(class: "bold", ["Note:"])
                                     ] + redemptions.map { x in
                                         let (redemption, coupon) = x
@@ -373,20 +373,20 @@ func billingView(subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice,
                                     }),
                                     button(to: .subscription(.cancel), text: "Cancel Subscription", class: "color-invalid")
                                 ])
-                            ]) : .none,
+                            ]) : .none(),
                             sub.upgrade(vatExempt: billingInfo.vatExempt).map { upgrade in
                                 .li(class: "flex", [
                                     label(text: "Upgrade"),
                                     .div(class: "flex-auto color-gray-30 stack--", upgrade.pretty())
                                 ])
-                            } ?? .none,
+                            } ?? .none(),
                             sub.state == .canceled ? Node.li(class: "flex", [
                                 label(text: "Expires on"),
                                 .div(class: "flex-auto color-gray-30 stack-", [
                                     .text(sub.expires_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "<unknown date>"),
                                     button(to: .subscription(.reactivate), text: "Reactivate Subscription", class: "color-invalid")
                                 ])
-                            ]) : .none
+                            ]) : .none()
                         ])
                     ])
                 ]),
@@ -449,7 +449,7 @@ func teamMembersView(teamMembers: [Row<UserData>], price: String?, signupLink: U
                 .div(class: "color-gray-25 lh-110", [
                     .p(["To add team members, please send them the following link for signup:"]),
                     .div(class: "type-mono ms-1 mv", [.text(signupLink.absoluteString)]),
-                    price.map { .p(class: "color-gray-50 ms-1", [.text("Team members cost \($0) (excl. VAT).")]) } ?? .none,
+                    price.map { .p(class: "color-gray-50 ms-1", [.text("Team members cost \($0) (excl. VAT).")]) } ?? .none(),
                     .button(to: .account(.invalidateTeamToken), confirm: "WARNING: This will invalidate the current signup link. Do you want to proceed?", class: "button mt+", ["Generate New Signup Link"]),
                 ])
             ]),

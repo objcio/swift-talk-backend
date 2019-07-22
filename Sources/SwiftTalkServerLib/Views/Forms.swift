@@ -82,7 +82,7 @@ extension FormView {
                     note.map { .label(class: "input-note mt-", attributes: ["for": id], [
                         .span(class: "bold", [.raw("Note: ")]),
                         .raw($0)
-                    ]) } ?? .none
+                    ]) } ?? .none()
 			]
                 )
             case let .input(id, value, type, placeHolder, attributes):
@@ -100,14 +100,14 @@ extension FormView {
         }
         
         return [
-            errors.isEmpty ? .none : .ul(class: "mb++ bgcolor-invalid color-white ms-1 pa radius-3 bold", errors.map { .li([.text($0.message)]) }),
+            errors.isEmpty ? .none() : .ul(class: "mb++ bgcolor-invalid color-white ms-1 pa radius-3 bold", errors.map { .li([.text($0.message)]) }),
             .div(class: "", [
                 .form(class: `class`, action: action.path, attributes: ["id": id], [
                     .withCSRF { csrf in .input(name: "csrf", id: "csrf", type: "hidden", attributes: ["value": csrf.string], []) },
                     .div(class: "stack+", fields.map(renderField) + [
                             .div([
                                 .input(class: "c-button c-button--blue", name: "commit", type: "submit", attributes: ["value": submitTitle, "data-disable-with": submitTitle], []),
-                                submitNote.map { .p(class: "ms-1 color-gray-40 mt", [.raw($0)]) } ?? .none
+                                submitNote.map { .p(class: "ms-1 color-gray-40 mt", [.raw($0)]) } ?? .none()
                             ])
                         ])
                     ])

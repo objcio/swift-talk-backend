@@ -149,10 +149,10 @@ func giftThankYou(gift: GiftData) -> Node {
                     .div(class: "c-text mt mb-", [
                         .p(["Thank you for gifting Swift Talk!"]),
                         .p(["\(gift.gifteeName) will receive your gift \(gift.sendAt.isToday ? "today" : "on " + DateFormatter.fullPretty.string(from: gift.sendAt)), delivered by email to \(gift.gifteeEmail)."]),
-                        gift.sendAt.isToday ? .none :.p(["Your credit card will be charged on the day of delivery."]),
+                        gift.sendAt.isToday ? .none() :.p(["Your credit card will be charged on the day of delivery."]),
                         .p([
                             "If you have any questions, feel free to contact us at",
-                            .link(to: URL(string: "mailto:\(email)")!, [.text(email)]),
+                            .link(to: URL(string: "mailto:\(email)")!, [Node.text(email)]),
                             "."
                         ])
                     ])

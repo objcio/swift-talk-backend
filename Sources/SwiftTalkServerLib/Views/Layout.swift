@@ -117,7 +117,7 @@ extension LayoutConfig {
                 "type": "application/atom+xml"
                 ]),
             .hashedStylesheet(href: "/assets/stylesheets/application.css"),
-            includeRecurlyJS ? .script(src: "https://js.recurly.com/v4/recurly.js") : .none,
+            includeRecurlyJS ? .script(src: "https://js.recurly.com/v4/recurly.js") : .none(),
             .hashedScript(src: "/assets/application.js"),
             googleAnalytics,
         ] + structured)
@@ -147,7 +147,7 @@ extension LayoutConfig {
         var bodyChildren: [Node] = [
             header,
             .main(
-                [.none] + // TODO flash messsage should go here (there's a flash helper below)
+                [.none()] + // TODO flash messsage should go here (there's a flash helper below)
                 contents
             )
         ]
@@ -178,7 +178,7 @@ extension LayoutConfig {
                 "type": "application/atom+xml"
                 ]),
             .hashedStylesheet(href: "/assets/stylesheets/application.css"),
-            includeRecurlyJS ? .script(src: "https://js.recurly.com/v4/recurly.js") : .none,
+            includeRecurlyJS ? .script(src: "https://js.recurly.com/v4/recurly.js") : .none(),
             .hashedScript(src: "/assets/application.js"),
             googleAnalytics,
         ] + structured)

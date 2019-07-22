@@ -70,7 +70,7 @@ fileprivate extension Plan {
         return .div([
             .div(class: "smallcaps-large mb-", [.text(prettyInterval)]),
             price.pretty,
-            team ? .div(class: "smallcaps-large mt-", [.raw("Per Person<sup>*</sup>")]) : .none
+            team ? .div(class: "smallcaps-large mt-", [Node.raw("Per Person<sup>*</sup>")]) : .none()
         ])
     }
 }
@@ -105,7 +105,7 @@ func renderSubscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node
                             .span(class: "smallcaps inline-block", ["Special Deal"]),
                             .p(class: "ms-1", [.text(c.description)])
                         ])
-                    } ?? .none,
+                    } ?? .none(),
                     .div(class: "pattern-gradient pattern-gradient--swifttalk pv++ ph+ radius-5", [
                         .div(class: "flex items-center justify-around text-center color-white", [
                             monthly.priceBox(coupon: coupon),
@@ -151,7 +151,7 @@ func renderSubscribeTeam(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> 
                             .span(class: "smallcaps inline-block", ["Special Deal"]),
                             .p(class: "ms-1", [.text(c.description)])
                         ])
-                    } ?? .none,
+                    } ?? .none(),
                     .div(class: "pattern-gradient pattern-gradient--swifttalk pv++ ph+ radius-5", [
                         .div(class: "flex items-center justify-around text-center color-white", [
                             monthly.priceBox(coupon: coupon, team: true),
