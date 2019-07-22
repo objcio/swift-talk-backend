@@ -8,7 +8,6 @@
 import Foundation
 import TinyNetworking
 
-public let defaultTimeOutInterval: TimeInterval = 30
 public protocol URLSessionProtocol {
     @discardableResult
     func load<A>(_ e: Endpoint<A>, onComplete: @escaping (Result<A, Error>) -> ()) -> URLSessionDataTask
