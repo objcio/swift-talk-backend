@@ -283,6 +283,9 @@ fileprivate let migrations: [String] = [
     """,
     """
     CREATE INDEX IF NOT EXISTS team_members_created_at_index ON team_members (created_at)
+    """,
     """
+    ALTER TABLE files ADD COLUMN IF NOT EXISTS sha text
+    """,
 ]
 

@@ -17,6 +17,7 @@ let postgres = env.databaseURL.flatMap { URL(string: $0).map { Postgres(url: $0)
 struct FileData: Codable, Insertable {
     var key: String
     var value: String
+    var sha: String?
     
     static let tableName: TableName = "files"
 }
@@ -48,8 +49,8 @@ struct GiftData: Codable, Insertable {
 }
 
 extension FileData {
-    init(repository: String, path: String, value: String) {
-        self.init(key: FileData.key(forRepository: repository, path: path), value: value)
+    init(repository: String, path: String, value: String, sha: String?) {
+        self.init(key: FileData.key(forRepository: repository, path: path), value: value, sha: sha)
     }
     
     static func key(forRepository repository: String, path: String) -> String {
