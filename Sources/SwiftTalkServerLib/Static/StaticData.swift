@@ -12,17 +12,17 @@ import Incremental
 fileprivate let staticQueue = DispatchQueue(label: "static data")
 
 final class Static<A> {
-    typealias Compute = (_ callback: @escaping (A?) -> ()) -> ()
+    typealias Compute = (_ callback: @escaping (A?, _ done: Bool) -> ()) -> ()
     private var compute: Compute
     fileprivate let observable: Observable<A?>
-    private var isRefreshing: Bool = false
+    private var isRefreshing: Atomic<Bool> = Atomic(false)
     
     init(sync: @escaping () -> A?) {
         observable = Observable(sync())
         self.compute = { cb in
             let result = sync()
             staticQueue.async {
-                cb(result)
+                cb(result, true)
             }
         }
     }
@@ -34,14 +34,17 @@ final class Static<A> {
     }
     
     func refresh() {
-        if isRefreshing {
+        if isRefreshing.value {
             return
         }
-        isRefreshing = true
-        compute { [weak self] x in
+        
+        isRefreshing.mutate { $0 = true }
+        compute { [weak self] x, done in
             staticQueue.async {
                 self?.observable.send(x)
-                self?.isRefreshing = false
+                if done {
+                    self?.isRefreshing.mutate { $0 = false }
+                }
             }
         }
     }
@@ -63,9 +66,11 @@ fileprivate let collaboratorsSource: Static<[Collaborator]> = Static<[Collaborat
 
 fileprivate let transcriptsSource: Static<[Transcript]> = Static(async: { cb in
     queryTranscripts(fast: true) { transcripts in
-        cb(transcripts)
+        cb(transcripts, false)
         refreshTranscripts(knownShas: transcripts.compactMap { $0.sha }) {
-            queryTranscripts(cb)
+            queryTranscripts {
+                cb($0, true)
+            }
         }
     }
 })
@@ -73,9 +78,9 @@ fileprivate let transcriptsSource: Static<[Transcript]> = Static(async: { cb in
 fileprivate let plansSource: Static<[Plan]> = Static(async: { cb in
     let jsonName = "plans.json"
     let initial: [Plan] = loadStaticData(name: jsonName)
-    cb(initial)
+    cb(initial, false)
     globals.urlSession.load(recurly.plans) { value in
-        cb(try? value.get())
+        cb(try? value.get(), true)
         guard let v = try? value.get() else { log(error: "Could not load plans from Recurly \(value)"); return }
         cacheStaticData(v, name: jsonName)
     }
@@ -181,7 +186,7 @@ fileprivate let episodesVimeoInfo = Static<(full: [Id<Episode>:Video], previews:
     q2.async {
         g.wait()
         print("Done loading video data", full.count, previews.count)
-        cb((full, previews))
+        cb((full, previews), true)
     }
 })
 

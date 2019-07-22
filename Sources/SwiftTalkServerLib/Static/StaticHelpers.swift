@@ -62,12 +62,12 @@ extension Static {
     static func fromStaticRepo<A: StaticLoadable>(onRefresh: @escaping ([A]) -> () = { _ in }) -> Static<[A]> {
         return Static<[A]>(async: { cb in
             let initial: [A] = loadStaticData(name: A.jsonName)
-            cb(initial)
+            cb(initial, false)
             let ep: Endpoint<[A]> = github.staticData()
             refreshStaticData(ep) {
                 let data: [A] = loadStaticData(name: A.jsonName)
                 onRefresh(data)
-                cb(data)
+                cb(data, true)
             }
         })
     }
