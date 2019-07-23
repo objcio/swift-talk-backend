@@ -78,21 +78,6 @@ createdb swifttalk_dev
 
 ### Compiling Assets
 
-Make sure to have browserify installed, then run:
-
-```sh
-npm install -g browserify
-```
-
-Then generate the javascript:
-
-```sh
-npm install
-browserify assets_source/javascripts/application.js > assets/application.js
-```
-
-You can also use `--debug` to include source maps (for better debugging).
-
 To build the stylesheets:
 
 ```sh

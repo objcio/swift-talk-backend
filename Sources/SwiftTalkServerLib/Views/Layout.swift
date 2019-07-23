@@ -118,7 +118,6 @@ extension LayoutConfig {
                 ]),
             .hashedStylesheet(href: "/assets/stylesheets/application.css"),
             includeRecurlyJS ? .script(src: "https://js.recurly.com/v4/recurly.js") : .none,
-            .hashedScript(src: "/assets/application.js"),
             googleAnalytics,
         ] + structured)
         let logo = Node.link(to: URL(string: "https://www.objc.io")!, class: "flex-none outline-none mr++ flex", [
@@ -179,7 +178,6 @@ extension LayoutConfig {
                 ]),
             .hashedStylesheet(href: "/assets/stylesheets/application.css"),
             includeRecurlyJS ? .script(src: "https://js.recurly.com/v4/recurly.js") : .none,
-            .hashedScript(src: "/assets/application.js"),
             googleAnalytics,
         ] + structured)
         let linkClasses: Class = "no-decoration color-inherit hover-color-black mr"
