@@ -404,8 +404,11 @@ extension Episode {
         var scripts: [Node] = [
             .script(src: "https://player.vimeo.com/api/player.js"),
             .script(code: """
+                function playerLoaded() { }
                 window.addEventListener('DOMContentLoaded', function () {
                     window.player = new Vimeo.Player(document.querySelector('iframe'));
+                    playerLoaded();
+
                     var items = document.querySelector('.js-transcript').querySelectorAll("a[href^='#']");
                     items.forEach(function (item) {
                         if (/^\\d+$/.test(item.hash.slice(1)) && /^\\d{1,2}(:\\d{2}){1,2}$/.test(item.innerHTML)) {
@@ -435,15 +438,17 @@ extension Episode {
         if let token = session?.user.data.csrfToken {
             scripts.append(
                 .script(code: """
-                    $(function () {
+                    function playerLoaded() { // override
                         var playedUntil = 0
                     
                         function postProgress(time) {
-                            $.post(\"\(Route.episode(id, .playProgress).absoluteString)\", {
-                                \"csrf\": \"\(token.stringValue ?? "")\",
-                                \"progress": Math.floor(time)
-                            }, function(data, status) {
-                            });
+                            var httpRequest = new XMLHttpRequest();
+                            httpRequest.open('POST', "\(Route.episode(id, .playProgress).absoluteString)");
+                            httpRequest.send(JSON.stringify({
+                                "csrf": "\(token.stringValue ?? "")",
+                                "progress": Math.floor(time)
+                            }));                    
+
                         }
                     
                         player.on('timeupdate', function(data) {
@@ -452,7 +457,7 @@ extension Episode {
                                 postProgress(playedUntil);
                             }
                         });
-                    });
+                    };
                     """
                 )
             )

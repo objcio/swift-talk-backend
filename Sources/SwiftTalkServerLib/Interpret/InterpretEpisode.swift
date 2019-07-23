@@ -9,7 +9,7 @@ import Foundation
 import Promise
 import Database
 import WebServer
-
+import Model
 
 extension Route.EpisodeR {
     func interpret<I: STResponse>(id: Id<Episode>) throws -> I where I.Env == STRequestEnvironment {
@@ -59,15 +59,16 @@ extension Route.EpisodeR {
         case .playProgress:
             return .withSession { sess in
                 guard let s = sess else { return .write("", status: .ok) }
-                return .verifiedPost { body in
-                    if let progress = body["progress"].flatMap(Int.init) {
-                        let data = PlayProgressData.init(userId: s.user.id, episodeNumber: ep.number, progress: progress, furthestWatched: progress)
-                        return .query(data.insertOrUpdate(uniqueKey: "user_id, episode_number")) { _ in
-                            return .write("", status: .ok)
-                        }
+                return .jsonPost(do: { (p: PlayProgress) in
+                    // TODO find a built-in way to verify the CSRF
+                    guard s.user.data.csrfToken == CSRFToken(stringValue: p.csrf) else {
+                        throw ServerError(privateMessage: "Invalid CSRF")
                     }
-                    return .write("", status: .ok)
-                }
+                    let data = PlayProgressData.init(userId: s.user.id, episodeNumber: ep.number, progress: p.progress, furthestWatched: p.progress)
+                    return .query(data.insertOrUpdate(uniqueKey: "user_id, episode_number")) { _ in
+                        return .write("", status: .ok)
+                    }
+                })
             }
             
         }
