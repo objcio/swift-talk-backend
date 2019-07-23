@@ -19,9 +19,9 @@ extension Route.Subscription {
     }
 
     private func interpret<I: STResponse>(sesssion sess: Session) throws -> I where I.Env == STRequestEnvironment {
-        func newSubscription(couponCode: String?, planCode: String?, team: Bool, errs: [String]) throws -> I {
+        func newSubscription(couponCode: String?, planCode: String?, team: Bool, errors: [RecurlyError]) throws -> I {
             if let p = planCode, let plan = Plan.find(code: p), plan.isEnterprisePlan {
-                return try I.write(html: newSub(coupon: nil, team: team, plans: [plan], errs: errs))
+                return try I.write(html: newSub(coupon: nil, team: team, plans: [plan], errors: errors))
             }
             guard let m = Plan.monthly, let y = Plan.yearly else {
                 throw ServerError(privateMessage: "No monthly or yearly plan: \(Plan.all)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
@@ -29,10 +29,10 @@ extension Route.Subscription {
             let plans = [m,y]
             if let c = couponCode {
                 return .onSuccess(promise: recurly.coupon(code: c).promise, do: { coupon in
-                    return try .write(html: newSub(coupon: coupon, team: team, plans: plans, errs: errs))
+                    return try .write(html: newSub(coupon: coupon, team: team, plans: plans, errors: errors))
                 })
             } else {
-                return try I.write(html: newSub(coupon: nil, team: team, plans: plans, errs: errs))
+                return try I.write(html: newSub(coupon: nil, team: team, plans: plans, errors: errors))
             }
         }
 
@@ -48,13 +48,13 @@ extension Route.Subscription {
                 let cr = CreateSubscription.init(plan_code: plan.plan_code, currency: "USD", coupon_code: couponCode, starts_at: nil, account: .init(account_code: user.id, email: user.data.email, billing_info: .init(token_id: token)))
                 return .onSuccess(promise: recurly.createSubscription(cr).promise, message: "Something went wrong, please try again", do: { sub_ in
                     switch sub_ {
-                    case .errors(let messages):
-                        log(RecurlyErrors(messages))
-                        if messages.contains(where: { $0.field == "subscription.account.email" && $0.symbol == "invalid_email" }) {
+                    case .errors(let errors):
+                        log(RecurlyErrors(errors))
+                        if errors.contains(where: { $0.field == "subscription.account.email" && $0.symbol == "invalid_email" }) {
                             let response = registerForm(couponCode: couponCode, planCode: planId, team: team).render(.init(user.data), [ValidationError("email", "Please provide a valid email address and try again.")])
                             return .write(html: response)
                         }
-                        return try newSubscription(couponCode: couponCode, planCode: planId, team: team, errs: messages.map { $0.message })
+                        return try newSubscription(couponCode: couponCode, planCode: planId, team: team, errors: errors)
                     case .success(let sub):
                         return .query(user.changeSubscriptionStatus(sub.state == .active)) {
                             // todo: flash: "Thank you for supporting us
@@ -73,7 +73,7 @@ extension Route.Subscription {
                     var u = user
                     u.data.role = team ? .teamManager : .user
                     return .query(u.update()) {
-                        try newSubscription(couponCode: couponCode, planCode: planCode, team: team, errs: [])
+                        try newSubscription(couponCode: couponCode, planCode: planCode, team: team, errors: [])
                     }
                 }
             }

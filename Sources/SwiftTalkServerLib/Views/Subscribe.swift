@@ -193,8 +193,8 @@ fileprivate func smallPrint(_ lines: [Node]) -> Node {
     return .ul(class: "stack pl", lines.map { .li([$0])})
 }
 
-func newSub(coupon: Coupon?, team: Bool, plans: [Plan], errs: [String]) throws -> Node {
-    let data = SubscriptionFormData(plans: plans, selectedPlan: plans[0], coupon: coupon, paymentErrors: errs)
+func newSub(coupon: Coupon?, team: Bool, plans: [Plan], errors: [RecurlyError]) throws -> Node {
+    let data = SubscriptionFormData(plans: plans, selectedPlan: plans[0], coupon: coupon, errors: errors)
     return LayoutConfig(contents: [
         .header([
             .div(class: "container-h pb+ pt+", [

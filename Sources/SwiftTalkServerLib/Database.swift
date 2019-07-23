@@ -175,14 +175,6 @@ extension TeamMemberData {
     }
 }
 
-fileprivate let emailRegex = try! NSRegularExpression(pattern: "^[^@]+@(?:[^@.]+?\\.)+.{2,}$", options: [.caseInsensitive])
-
-extension String {
-    fileprivate var isValidEmail: Bool {
-        return !emailRegex.matches(in: self, options: [], range: NSRange(startIndex..<endIndex, in: self)).isEmpty
-    }
-}
-
 extension UserData {
     var premiumAccess: Bool {
         guard role != .teamManager else { return false }

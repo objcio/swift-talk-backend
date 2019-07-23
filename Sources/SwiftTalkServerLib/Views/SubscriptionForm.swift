@@ -8,7 +8,7 @@
 import Foundation
 import HTML
 
-func subscriptionForm(_ data: SubscriptionFormData, action: Route) -> Node {
+func subscriptionForm(_ data: SubscriptionFormData, initial: BillingInfo? = nil, action: Route) -> Node {
     let planRadios: [Node] = data.plans.map { plan in
         var a: [String: String] = ["value": plan.plan_code]
         if plan.plan_code == data.plan {
@@ -16,21 +16,33 @@ func subscriptionForm(_ data: SubscriptionFormData, action: Route) -> Node {
         }
         return .input(class: "visuallyhidden", name: "plan_id", id: "plan_id\(plan.plan_code)", type: "radio", attributes: a)
     }
+    let form: Node
+    if initial == nil {
+        form = .div(class: "cols m-|stack++", [
+            .div(class: "col m+|width-2/3", [
+                .p(class: "mb++ bgcolor-invalid color-white ms-1 pa radius-3 bold", attributes: ["id": "errors"], []),
+                data.gift ? giftSection() : .div(),
+                creditCardSection(initial: initial),
+                billingDetailsSection(initial: initial)
+            ]),
+            .div(class: "col width-full m+|width-1/3", attributes: ["id": "pricingInfo"])
+        ])
+    } else {
+        form = .div(class: "m-|stack++", [
+            .p(class: "mb++ bgcolor-invalid color-white ms-1 pa radius-3 bold", attributes: ["id": "errors"], []),
+            data.gift ? giftSection() : .div(),
+            creditCardSection(initial: initial),
+            billingDetailsSection(initial: initial),
+            .button(class: "c-button c-button--wide", ["Update"])
+        ])
+    }
     return .withCSRF { csrf in
         Node.div(class: "container", [
             .form(action: action.path, method: .post, attributes: ["id": "cc-form"], planRadios + [
                 .input(name: "_method", type: "hidden", attributes: ["value": "POST"]),
                 .input(name: "csrf", id: "csrf", type: "hidden", attributes: ["value": csrf.string]),
                 .input(name: "billing_info[token]", type: "hidden", attributes: ["value": ""]),
-                .div(class: "cols m-|stack++", [
-                    .div(class: "col m+|width-2/3", [
-                        .p(class: "mb++ bgcolor-invalid color-white ms-1 pa radius-3 bold", attributes: ["id": "errors"], []),
-                        data.gift ? giftSection() : .div(),
-                        creditCardSection(),
-                        billingDetailsSection()
-                    ]),
-                    .div(class: "col width-full m+|width-1/3", attributes: ["id": "pricingInfo"])
-                ])
+                form
             ]),
             .script(code: formJS(recurlyPublicKey: env.recurlyPublicKey, data: data))
         ])
@@ -51,9 +63,12 @@ fileprivate func field(name: String, title: String, required: Bool = true, input
     ])
 }
 
-fileprivate func textField(name: String, title: String, required: Bool = true) -> Node {
+fileprivate func textField(name: String, title: String, initial: String? = nil, required: Bool = true) -> Node {
     return field(name: name, title: title, required: required, input:
-        .input(class: "text-input inline-block width-full form-control-danger", name: name, id: name, type: "text", attributes: ["data-recurly": name])
+        .input(class: "text-input inline-block width-full form-control-danger", name: name, id: name, type: "text", attributes: [
+            "data-recurly": name,
+            "value": initial ?? ""
+        ])
     )
 }
 
@@ -61,12 +76,12 @@ fileprivate func recurlyField(name: String, title: String, required: Bool = true
     return field(name: name, title: title, required: required, input: .div(attributes: ["data-recurly": name]))
 }
 
-fileprivate func creditCardSection() -> Node {
+fileprivate func creditCardSection(initial: BillingInfo?) -> Node {
     return Node.div([
         .h2(class: "ms1 color-blue bold mb+", ["Credit Card"]),
         .div(class: "cols", [
-            .div(class: "col width-1/2", [textField(name: "first_name", title: "First name")]),
-            .div(class: "col width-1/2", [textField(name: "last_name", title: "Last name")]),
+            .div(class: "col width-1/2", [textField(name: "first_name", title: "First name", initial: initial?.first_name)]),
+            .div(class: "col width-1/2", [textField(name: "last_name", title: "Last name", initial: initial?.last_name)]),
         ]),
         .div(class: "cols", [
             .div(class: "col width-full s+|width-1/2", [recurlyField(name: "number", title: "Number")]),
@@ -89,23 +104,23 @@ fileprivate func creditCardSection() -> Node {
     ])
 }
 
-fileprivate func billingDetailsSection() -> Node {
+fileprivate func billingDetailsSection(initial: BillingInfo?) -> Node {
     return .div([
         .h2(class: "ms1 color-blue bold mb+ mt++", ["Billing Address"]),
-        textField(name: "address1", title: "Street Address"),
-        textField(name: "address2", title: "Street Address (cont.)", required: false),
+        textField(name: "address1", title: "Street Address", initial: initial?.address1),
+        textField(name: "address2", title: "Street Address (cont.)", initial: initial?.address2, required: false),
         .div(class: "cols", [
-            .div(class: "col width-1/2", [textField(name: "city", title: "City")]),
-            .div(class: "col width-1/2", [textField(name: "state", title: "State")]),
-            .div(class: "col width-1/2", [textField(name: "postal_code", title: "Zip/Postal code")]),
+            .div(class: "col width-1/2", [textField(name: "city", title: "City", initial: initial?.city)]),
+            .div(class: "col width-1/2", [textField(name: "state", title: "State", initial: initial?.state)]),
+            .div(class: "col width-1/2", [textField(name: "postal_code", title: "Zip/Postal code", initial: initial?.zip)]),
             .div(class: "col width-1/2", [
-                field(name: "country", title: "Country", input: Node.select(class: "text-input inline-block width-full c-select", name: "country", attributes: ["id": "country"], options: countries)),
-                .input(name: "realCountry", id: "realCountry", type: "hidden", attributes: ["data-recurly": "country"])
+                field(name: "country", title: "Country", input: Node.select(class: "text-input inline-block width-full c-select", name: "country", attributes: ["id": "country", "value": initial?.country ?? ""], options: countries)),
+                .input(name: "realCountry", id: "realCountry", type: "hidden", attributes: ["data-recurly": "country", "value": initial?.country ?? ""])
             ]),
         ]),
         .div(class: "cols", [
-            .div(class: "col width-1/2", [textField(name: "company", title: "Company", required: false)]),
-            .div(class: "col width-1/2", [textField(name: "vat_number", title: "EU VAT ID (if applicable)", required: false)]),
+            .div(class: "col width-1/2", [textField(name: "company", title: "Company", initial: initial?.company, required: false)]),
+            .div(class: "col width-1/2", [textField(name: "vat_number", title: "EU VAT ID (if applicable)", initial: initial?.vat_number, required: false)]),
         ])
     ])
 }
@@ -169,7 +184,7 @@ struct SubscriptionFormData: Encodable {
     fileprivate var gift: Bool = false
     fileprivate var plans: [FormPlan]
     fileprivate var errors: [String] = []
-    fileprivate var paymentErrors: [String]
+    fileprivate var paymentErrors: [String] = []
     fileprivate var loading: Bool = false
     fileprivate var plan: String
     fileprivate var vatRate: JSONOptional<Double> = nil
@@ -177,18 +192,26 @@ struct SubscriptionFormData: Encodable {
     fileprivate var coupon: JSONOptional<FormCoupon> = nil
     fileprivate var belowButtonText: String = ""
     
-    init(giftPlan: Plan, startDate: String, paymentErrors: [String] = []) {
+    init(errors: [RecurlyError]) {
+        self.plans = []
+        self.plan = ""
+        self.paymentErrors = errors.map { $0.message }
+        self.errors = errors.compactMap { $0.field }
+    }
+    
+    init(giftPlan: Plan, startDate: String, errors: [String] = []) {
         self.gift = true
         self.plans = [FormPlan(giftPlan)]
         self.plan = giftPlan.plan_code
-        self.paymentErrors = paymentErrors
+        self.errors = errors
         self.belowButtonText = "Your card will be billed on \(startDate)."
     }
     
-    init(plans: [Plan], selectedPlan: Plan, coupon: SwiftTalkServerLib.Coupon? = nil, paymentErrors: [String] = []) {
+    init(plans: [Plan], selectedPlan: Plan, coupon: SwiftTalkServerLib.Coupon? = nil, errors: [RecurlyError] = []) {
         self.plans = plans.map { .init($0) }
         self.plan = selectedPlan.plan_code
-        self.paymentErrors = paymentErrors
+        self.paymentErrors = errors.map { $0.message }
+        self.errors = errors.compactMap { $0.field }
         self.coupon = JSONOptional(coupon.map { .init($0) })
     }
 }
@@ -246,10 +269,12 @@ function update() {
     function showErrors() {
         const errorContainer = document.getElementById('errors');
         if (state.errors.length > 0 || state.paymentErrors.length > 0) {
-            let message = [
-                'There were errors in the fields marked in red. Please correct and try again.'
-            ].concat(state.paymentErrors).join('<br/>');
-            errorContainer.innerHTML = message;
+            let message = []
+            if (state.errors.length > 0) {
+                message.push('There were errors in the fields marked in red. Please correct and try again.');
+            }
+            message = message.concat(state.paymentErrors);
+            errorContainer.innerHTML = message.join('<br/>');
             errorContainer.hidden = false
 
             state.errors.forEach((fieldName) => {
@@ -268,12 +293,13 @@ function update() {
     
     function updatePricingInfo() {
         const pricingContainer = document.getElementById('pricingInfo');
-        if (!pricingContainer) return;
-    
         const selectedPlan = state.plans.find((plan) => {
             return plan.id === state.plan;
         });
+
+        if (!pricingContainer || !selectedPlan) return;
     
+
         let html = [];
     
         if (state.gift) {
@@ -364,7 +390,7 @@ function update() {
                 <button type='submit' class='c-button c-button--wide' ${state.loading ? 'disabled' : ''}>
                     ${state.loading
                         ? "<span><i class='fa fa-spinner fa-spin fa-fw'></i>Please wait...</span>"
-                        : "<span>Subscribe</span>"
+                        : "<span>" + state.gift ? "Pay Gift" : "Subscribe" + "</span>"
                     }
                 </button>
                 <p class="mt color-gray-60 ms-1 text-center">${state.belowButtonText}</p>

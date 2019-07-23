@@ -145,3 +145,12 @@ extension Process {
     }
 }
 
+fileprivate let emailRegex = try! NSRegularExpression(pattern: "^[^@]+@(?:[^@.]+?\\.)+.{2,}$", options: [.caseInsensitive])
+
+extension String {
+    var isValidEmail: Bool {
+        return !emailRegex.matches(in: self, options: [], range: NSRange(startIndex..<endIndex, in: self)).isEmpty
+    }
+}
+
+
