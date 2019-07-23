@@ -4,6 +4,4 @@ require('./objcjs/plugins/scrollTo.jquery.js');
 require('./objcjs/utilities/scrollTo.jquery.js');
 require('./objcjs/index.js');
 
-require('./app-components.js');
-
 
