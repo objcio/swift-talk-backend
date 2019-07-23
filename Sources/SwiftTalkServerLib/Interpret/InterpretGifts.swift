@@ -43,9 +43,8 @@ extension Route.Gifts {
                         let cr = CreateSubscription(plan_code: plan.plan_code, currency: "USD", coupon_code: nil, starts_at: start, account: .init(account_code: userId, email: result.gifter_email, billing_info: .init(token_id: result.token)))
                         return .onSuccess(promise: recurly.createSubscription(cr).promise, message: "Something went wrong, please try again", do: { sub_ in
                             switch sub_ {
-                            case .errors(let messages):
-                                log(RecurlyErrors(messages))
-                                let theMessages = messages.map { ($0.field ?? "", $0.message) } + [("", "There was a problem with the payment. You have not been charged. Please try again or contact us for assistance.")]
+                            case .error(let error):
+                                let theMessages = [("", "There was a problem with the payment: \(error.transaction_error.customer_message)")]
                                 let response = f.render(result, theMessages)
                                 return .write(html: response)
                             case .success(let sub):

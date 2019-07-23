@@ -521,15 +521,25 @@ struct UpdateSubscription: Codable, RootElement {
     }
 }
 
-struct RecurlyError: Decodable {
+struct RecurlyTransactionError: Decodable {
+    var error_code: String
+    var customer_message: String
+}
+
+struct RecurlyErrorField: Decodable {
     let field: String?
     let symbol: String?
     let message: String
 }
 
+struct RecurlyError: Decodable, Error {
+    var transaction_error: RecurlyTransactionError
+    var error: RecurlyErrorField
+}
+
 enum RecurlyResult<A> {
     case success(A)
-    case errors([RecurlyError])
+    case error(RecurlyError)
 }
 
 struct RecurlyVoid: Decodable {
@@ -541,8 +551,8 @@ extension RecurlyResult: Decodable where A: Decodable {
             let value = try A(from: decoder)
             self = .success(value)
         } catch {
-            let value = try [RecurlyError](from: decoder)
-            self = .errors(value)
+            let value = try RecurlyError(from: decoder)
+            self = .error(value)
         }
     }
 }
@@ -582,11 +592,6 @@ extension Row where Element == UserData {
             return recurly.updateSubscription(s, numberOfTeamMembers: numberOfTeamMembers).c
         }
     }
-}
-
-struct RecurlyErrors: Error {
-    let errs: [RecurlyError]
-    init(_ errs: [RecurlyError]) { self.errs = errs }
 }
 
 struct Recurly {

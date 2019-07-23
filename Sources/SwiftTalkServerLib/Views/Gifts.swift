@@ -247,8 +247,8 @@ struct GiftResult {
     
     func validate() -> [ValidationError] {
         var errs: [ValidationError] = []
-        if gifter_name.count == 0 { errs.append(("gifter_name", "Name cannot be empty")) }
-        if !gifter_email.isValidEmail { errs.append(("gifter_email", "Email cannot be empty")) }
+        if gifter_name.count == 0 { errs.append(("gifter_name", "")) }
+        if !gifter_email.isValidEmail { errs.append(("gifter_email", "")) }
         return errs
     }
 }
@@ -259,7 +259,7 @@ func payGiftForm(plan: Plan, gift: GiftData, route: Route) -> Form<GiftResult, S
         return GiftResult(token: d, gifter_email: e, gifter_name: n)
     }, render: { (_, errs) -> Node in
         return .withCSRF { csrf in
-            let data = SubscriptionFormData(giftPlan: plan, startDate: DateFormatter.fullPretty.string(from: gift.sendAt), errors: errs.map { $0.field })
+            let data = SubscriptionFormData(giftPlan: plan, startDate: DateFormatter.fullPretty.string(from: gift.sendAt), errors: errs)
             return LayoutConfig(contents: [
                 .header([
                     .div(class: "container-h pb+ pt+", [

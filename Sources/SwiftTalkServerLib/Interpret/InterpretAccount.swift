@@ -122,9 +122,9 @@ extension Route.Account {
             
         case .updatePayment:
             // todo use the form helper
-            func renderForm(errs: [RecurlyError]) -> I {
+            func renderForm(error: RecurlyError?) -> I {
                 return .onSuccess(promise: sess.user.billingInfo.promise, do: { billingInfo in
-                    let data = SubscriptionFormData(errors: errs)
+                    let data = SubscriptionFormData(error: error)
                     let view = updatePaymentView(data: data, initial: billingInfo)
                     return .write(html: view)
                 })
@@ -135,11 +135,11 @@ extension Route.Account {
                 return .onSuccess(promise: sess.user.updateBillingInfo(token: token).promise, do: { (response: RecurlyResult<BillingInfo>) -> I in
                     switch response {
                     case .success: return .redirect(to: .account(.updatePayment)) // todo show message?
-                    case .errors(let errs): return renderForm(errs: errs)
+                    case .error(let error): return renderForm(error: error)
                     }
                 })
             }, or: {
-                renderForm(errs: [])
+                renderForm(error: nil)
             })
             
         case .teamMembers:

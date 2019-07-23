@@ -7,6 +7,7 @@
 
 import Foundation
 import HTML
+import WebServer
 
 func subscriptionForm(_ data: SubscriptionFormData, initial: BillingInfo? = nil, action: Route) -> Node {
     let planRadios: [Node] = data.plans.map { plan in
@@ -183,8 +184,8 @@ fileprivate struct FormCoupon: Encodable {
 struct SubscriptionFormData: Encodable {
     fileprivate var gift: Bool = false
     fileprivate var plans: [FormPlan]
-    fileprivate var errors: [String] = []
-    fileprivate var paymentErrors: [String] = []
+    fileprivate var errorFields: [String] = []
+    fileprivate var errorMessages: [String] = []
     fileprivate var loading: Bool = false
     fileprivate var plan: String
     fileprivate var vatRate: JSONOptional<Double> = nil
@@ -192,26 +193,25 @@ struct SubscriptionFormData: Encodable {
     fileprivate var coupon: JSONOptional<FormCoupon> = nil
     fileprivate var belowButtonText: String = ""
     
-    init(errors: [RecurlyError]) {
+    init(error: RecurlyError? = nil) {
         self.plans = []
         self.plan = ""
-        self.paymentErrors = errors.map { $0.message }
-        self.errors = errors.compactMap { $0.field }
+        self.errorMessages = error.map { [$0.transaction_error.customer_message] } ?? [];
     }
     
-    init(giftPlan: Plan, startDate: String, errors: [String] = []) {
+    init(giftPlan: Plan, startDate: String, errors: [ValidationError] = []) {
         self.gift = true
         self.plans = [FormPlan(giftPlan)]
         self.plan = giftPlan.plan_code
-        self.errors = errors
+        self.errorFields = errors.map { $0.field }.filter { !$0.isEmpty }
+        self.errorMessages = errors.filter { $0.field.isEmpty && !$0.message.isEmpty }.map { $0.message }
         self.belowButtonText = "Your card will be billed on \(startDate)."
     }
     
-    init(plans: [Plan], selectedPlan: Plan, coupon: SwiftTalkServerLib.Coupon? = nil, errors: [RecurlyError] = []) {
+    init(plans: [Plan], selectedPlan: Plan, coupon: SwiftTalkServerLib.Coupon? = nil, error: RecurlyError? = nil) {
         self.plans = plans.map { .init($0) }
         self.plan = selectedPlan.plan_code
-        self.paymentErrors = errors.map { $0.message }
-        self.errors = errors.compactMap { $0.field }
+        self.errorMessages = error.map { [$0.transaction_error.customer_message] } ?? [];
         self.coupon = JSONOptional(coupon.map { .init($0) })
     }
 }
@@ -268,24 +268,25 @@ function update() {
     
     function showErrors() {
         const errorContainer = document.getElementById('errors');
-        if (state.errors.length > 0 || state.paymentErrors.length > 0) {
-            let message = []
-            if (state.errors.length > 0) {
-                message.push('There were errors in the fields marked in red. Please correct and try again.');
-            }
-            message = message.concat(state.paymentErrors);
-            errorContainer.innerHTML = message.join('<br/>');
-            errorContainer.hidden = false
-
-            state.errors.forEach((fieldName) => {
+        if (state.errorFields.length > 0 || state.errorMessages.length > 0) {
+            state.errorFields.forEach((fieldName) => {
                 if (fieldName == "year" || fieldName == "month") {
                     fieldName = "expiry";
                 }
-                const fieldSet = document.querySelector('fieldset#' + fieldName);
-                if (fieldSet) {
-                    fieldSet.classList.add('has-error');
+                let element = document.querySelector('fieldset#' + fieldName);
+                if (element) {
+                    element.classList.add('has-error');
                 }
             });
+
+            let messages = []
+            if (state.errorFields.length > 0) {
+                messages.push('There were errors in the fields marked in red. Please correct and try again.');
+            }
+            messages = messages.concat(state.errorMessages);
+
+            errorContainer.innerHTML = messages.join('<br/>');
+            errorContainer.hidden = messages.length === 0;
         } else {
             errorContainer.hidden = true
         }
@@ -390,7 +391,7 @@ function update() {
                 <button type='submit' class='c-button c-button--wide' ${state.loading ? 'disabled' : ''}>
                     ${state.loading
                         ? "<span><i class='fa fa-spinner fa-spin fa-fw'></i>Please wait...</span>"
-                        : "<span>" + state.gift ? "Pay Gift" : "Subscribe" + "</span>"
+                        : "<span>" + state.gift === true ? "Pay Gift" : "Subscribe" + "</span>"
                     }
                 </button>
                 <p class="mt color-gray-60 ms-1 text-center">${state.belowButtonText}</p>
@@ -466,7 +467,7 @@ function handleSubmit(e) {
     var form = document.querySelector('form#cc-form');
     recurly.token(form, function (err, token) {
         if (err) {
-            setState({ loading: false, errors: err.fields })
+            setState({ loading: false, errorFields: err.fields })
         } else {
             setState({ errors: [] });
             document.querySelector('input[name="billing_info[token]"]').value = token.id
