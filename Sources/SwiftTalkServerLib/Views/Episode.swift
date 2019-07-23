@@ -404,16 +404,15 @@ extension Episode {
         var scripts: [Node] = [
             .script(src: "https://player.vimeo.com/api/player.js"),
             .script(code: """
-                $(function () {
+                window.addEventListener('DOMContentLoaded', function () {
                     window.player = new Vimeo.Player(document.querySelector('iframe'));
-                
-                    $('.js-transcript').find("a[href^='#']").each(function () {
-                        if (/^\\d+$/.test(this.hash.slice(1)) && /^\\d{1,2}(:\\d{2}){1,2}$/.test(this.innerHTML)) {
-                            var time = parseInt(this.hash.slice(1));
-                            $(this)
-                                .data('time', time)
-                                .attr('href', '?t='+time)
-                                .addClass('js-episode-seek js-transcript-cue');
+                    var items = document.querySelector('.js-transcript').querySelectorAll("a[href^='#']");
+                    items.forEach(function (item) {
+                        if (/^\\d+$/.test(item.hash.slice(1)) && /^\\d{1,2}(:\\d{2}){1,2}$/.test(item.innerHTML)) {
+                            var time = parseInt(item.hash.slice(1));
+                            item.dataset.time = time;
+                            item.setAttribute('href', '?t='+time);
+                            item.classList.add('js-episode-seek', 'js-transcript-cue');
                         }
                     });
 
