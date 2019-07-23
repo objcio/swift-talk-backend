@@ -417,13 +417,17 @@ extension Episode {
                     });
 
                     // Catch clicks on timestamps and forward to player
-                    $(document).on('click singletap', '.js-episode .js-episode-seek', function (event) {
-                        if ($(this).data('time') !== undefined) {
-                            player.setCurrentTime($(this).data('time'));
-                            player.play();
-                            event.preventDefault();
-                        }
+                    document.querySelectorAll('.js-episode .js-episode-seek').forEach(function(el) {
+                        el.addEventListener('click', function (event) {
+                            var time = event.target.dataset.time;
+                            if (time !== undefined) {
+                                player.setCurrentTime(time);
+                                player.play();
+                                event.preventDefault();
+                            }
+                        })
                     });
+
                 });
                 """
             )
