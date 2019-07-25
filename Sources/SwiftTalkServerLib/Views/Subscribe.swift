@@ -193,121 +193,14 @@ fileprivate func smallPrint(_ lines: [Node]) -> Node {
     return .ul(class: "stack pl", lines.map { .li([$0])})
 }
 
-func newSub(coupon: Coupon?, team: Bool, plans: [Plan], errs: [String]) throws -> Node {
-    return .withCSRF { csrf in
-        let data = NewSubscriptionData(action: Route.subscription(.create(couponCode: coupon?.coupon_code, team: team)).path, public_key: env.recurlyPublicKey, plans: plans.map { .init($0) }, payment_errors: errs, method: .post, coupon: coupon.map(NewSubscriptionData.Coupon.init), csrf: csrf)
-        return LayoutConfig(contents: [
-            .header([
-                .div(class: "container-h pb+ pt+", [
-                    .h1(class: "ms4 color-blue bold", ["Subscribe to Swift Talk"])
-                ])
-            ]),
-            .div(class: "container", [
-                ReactComponent.newSubscription.build(data)
+func newSub(coupon: Coupon?, team: Bool, plans: [Plan], error: RecurlyError? = nil) throws -> Node {
+    let data = SubscriptionFormData(plans: plans, selectedPlan: plans[0], coupon: coupon, error: error)
+    return LayoutConfig(contents: [
+        .header([
+            .div(class: "container-h pb+ pt+", [
+                .h1(class: "ms4 color-blue bold", ["Subscribe to Swift Talk"])
             ])
-        ], includeRecurlyJS: true).layoutForCheckout
-    }
-}
-
-extension ReactComponent where A == NewSubscriptionData {
-    static let newSubscription: ReactComponent<A> = ReactComponent(name: "NewSubscription")
-}
-
-
-extension ReactComponent where A == NewGiftSubscriptionData {
-    static let newGiftSubscription: ReactComponent<A> = ReactComponent(name: "NewGiftSubscription")
-}
-
-extension Plan {
-    var prettyInterval: String {
-        switch  plan_interval_unit {
-        case .months where plan_interval_length == 1:
-            return "monthly"
-        case .months where plan_interval_length == 12:
-            return "yearly"
-        default:
-            return "every \(plan_interval_length) \(plan_interval_unit.rawValue)"
-        }
-    }
-    
-    var prettyDuration: String {
-        switch  plan_interval_unit {
-        case .days:
-            return "\(plan_interval_length) Days"
-        case .months:
-            if plan_interval_length == 12 {
-                return "One Year"
-            } else if plan_interval_length == 1 {
-            	return "1 Month"
-            } else {
-                return "\(plan_interval_length) Months"
-            }
-        }
-    }
-}
-
-struct NewGiftSubscriptionData: Codable {
-    struct SubscriptionPlan: Codable {
-        var id: String
-        var base_price: Int
-        var interval: String
-        
-        init(_ plan: Plan) {
-            id = plan.plan_code
-            base_price = plan.unit_amount_in_cents.usdCents
-            interval = plan.prettyDuration
-            // todo make sure we don't renew
-//            myAssert(plan.total_billing_cycles == 1) // we don't support other plans yet
-        }
-    }
-    var action: String
-    var public_key: String
-    var plan: SubscriptionPlan
-    var start_date: String
-    var payment_errors: [String] // TODO verify type
-    var csrf: String
-    var method: HTTPMethod = .post
-}
-
-struct NewSubscriptionData: Codable {
-    struct SubscriptionPlan: Codable {
-        var id: String
-        var base_price: Int
-        var interval: String
-        
-        init(_ plan: Plan) {
-            id = plan.plan_code
-            base_price = plan.unit_amount_in_cents.usdCents
-            interval = plan.prettyInterval
-        }
-    }
-    struct Coupon: Codable {
-        var code: String
-        var discount_type: String
-        var discount_percent: Int?
-        var description: String
-        var discount_in_cents: Amount?
-        var free_trial_amount: Int?
-        var free_trial_unit: TemporalUnit?
-
-    }
-    var action: String
-    var public_key: String
-    var plans: [SubscriptionPlan]
-    var payment_errors: [String] // TODO verify type
-    var method: HTTPMethod = .post
-    var coupon: Coupon?
-    var csrf: CSRFToken
-}
-
-extension NewSubscriptionData.Coupon {
-    init(_ coupon: Coupon) {
-        code = coupon.coupon_code
-        discount_type = coupon.discount_type.rawValue
-        description = coupon.description
-        discount_percent = coupon.discount_percent
-        discount_in_cents = coupon.discount_in_cents
-        free_trial_amount = coupon.free_trial_amount
-        free_trial_unit = coupon.free_trial_unit
-    }
+        ]),
+        subscriptionForm(data, action: .subscription(.create(couponCode: coupon?.coupon_code, team: team)))
+    ], includeRecurlyJS: true).layoutForCheckout
 }

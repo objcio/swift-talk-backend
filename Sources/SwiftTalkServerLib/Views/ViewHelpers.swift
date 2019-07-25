@@ -74,3 +74,31 @@ struct EpisodeWithProgress {
     }
 }
 
+extension Plan {
+    var prettyInterval: String {
+        switch  plan_interval_unit {
+        case .months where plan_interval_length == 1:
+            return "monthly"
+        case .months where plan_interval_length == 12:
+            return "yearly"
+        default:
+            return "every \(plan_interval_length) \(plan_interval_unit.rawValue)"
+        }
+    }
+    
+    var prettyDuration: String {
+        switch  plan_interval_unit {
+        case .days:
+            return "\(plan_interval_length) Days"
+        case .months:
+            if plan_interval_length == 12 {
+                return "One Year"
+            } else if plan_interval_length == 1 {
+                return "1 Month"
+            } else {
+                return "\(plan_interval_length) Months"
+            }
+        }
+    }
+}
+

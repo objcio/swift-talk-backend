@@ -69,8 +69,8 @@
         "repositoryURL": "https://github.com/jpsim/SourceKitten",
         "state": {
           "branch": null,
-          "revision": "fd9091759201473aa234c22322a3939615aef59a",
-          "version": "0.23.2"
+          "revision": "35c9e0e437592661a51b160d80a4feaa5d4630d1",
+          "version": "0.24.0"
         }
       },
       {
@@ -78,8 +78,8 @@
         "repositoryURL": "https://github.com/ianpartridge/swift-backtrace.git",
         "state": {
           "branch": null,
-          "revision": "4ba1c190a1e7be53c743f55920c24bd9e000f8b2",
-          "version": "1.0.2"
+          "revision": "f244ad10744fc8e1b9f012682df94a27672c7033",
+          "version": "1.1.0"
         }
       },
       {
@@ -87,17 +87,17 @@
         "repositoryURL": "https://github.com/apple/swift-nio.git",
         "state": {
           "branch": null,
-          "revision": "334815f6580b5256409d48431751938c4e966e72",
-          "version": "2.4.0"
+          "revision": "6a79d4687ede7c088fe3e31d9b3452d6e6cd91eb",
+          "version": "2.5.1"
         }
       },
       {
         "package": "swift-talk-shared",
         "repositoryURL": "https://github.com/objcio/swift-talk-shared",
         "state": {
-          "branch": "master",
-          "revision": "5eed0513bc81135c699c0af8782f3bbdca9f69f1",
-          "version": null
+          "branch": null,
+          "revision": "addd5f880ad49ae1d0f559708b81a678b9d834ce",
+          "version": "0.1.0"
         }
       },
       {

@@ -244,6 +244,13 @@ struct GiftResult {
     var token: String = ""
     var gifter_email: String = ""
     var gifter_name: String = ""
+    
+    func validate() -> [ValidationError] {
+        var errs: [ValidationError] = []
+        if gifter_name.count == 0 { errs.append(("gifter_name", "")) }
+        if !gifter_email.isValidEmail { errs.append(("gifter_email", "")) }
+        return errs
+    }
 }
 
 func payGiftForm(plan: Plan, gift: GiftData, route: Route) -> Form<GiftResult, STRequestEnvironment> {
@@ -252,16 +259,14 @@ func payGiftForm(plan: Plan, gift: GiftData, route: Route) -> Form<GiftResult, S
         return GiftResult(token: d, gifter_email: e, gifter_name: n)
     }, render: { (_, errs) -> Node in
         return .withCSRF { csrf in
-            let data = NewGiftSubscriptionData(action: route.path, public_key: env.recurlyPublicKey, plan: .init(plan), start_date: DateFormatter.fullPretty.string(from: gift.sendAt), payment_errors: errs.map { "\($0.field): \($0.message)" }, csrf: csrf.string, method: .post)
+            let data = SubscriptionFormData(giftPlan: plan, startDate: DateFormatter.fullPretty.string(from: gift.sendAt), errors: errs)
             return LayoutConfig(contents: [
                 .header([
                     .div(class: "container-h pb+ pt+", [
                         .h1(class: "ms4 color-blue bold mb-", ["Your Details"])
                     ])
-                    ]),
-                .div(class: "container", [
-                    ReactComponent.newGiftSubscription.build(data)
-                    ])
+                ]),
+                subscriptionForm(data, action: route)
             ], includeRecurlyJS: true).layoutForCheckout
         }
     })

@@ -205,22 +205,14 @@ extension Episode {
     private func show_(session: Session?, playPosition: Int?, downloadStatus: DownloadStatus, otherEpisodes: [EpisodeWithProgress]) -> Node {
         let canWatch = !subscriptionOnly || session.premiumAccess
         
-        let scroller = Node.aside(class: "bgcolor-pale-gray pt++ js-scroller", [
+        let scroller = Node.aside(class: "bgcolor-pale-gray pt++", [
             .header(class: "container-h flex items-center justify-between", [
                 .div([
                     .h3(class: "inline-block bold color-black", ["Recent Episodes"]),
                     .link(to: .episodes, class: "inline-block ms-1 ml- color-blue no-decoration hover-underline", ["See All"])
                 ]),
-                .div(class: "js-scroller-buttons flex items-center", [
-                    .button(class: "scroller-button no-js-hide js-scroller-button-left ml-", attributes: ["label": "Scroll left"], [
-                        .inlineSvg(class: "icon-16 color-white svg-fill-current block", path: "icon-arrow-16-left.svg", preserveAspectRatio: "xMinYMid meet")
-                    ]),
-                    .button(class: "scroller-button no-js-hide js-scroller-button-right ml-", attributes: ["label": "Scroll right"], [
-                        .inlineSvg(class: "icon-16 color-white svg-fill-current block", path: "icon-arrow-16.svg", preserveAspectRatio: "xMinYMid meet")
-                    ])
-                ])
             ]),
-            .div(class: "flex scroller js-scroller-container p-edges pt pb++", [
+            .div(class: "flex scroller p-edges pt pb++", [
                 .div(class: "scroller__offset flex-none")
             ] + otherEpisodes.map { e in
                 .div(class: "flex-110 pr+ min-width-5", [e.episode.render(.init(synopsis: false, watched: e.watched, canWatch: e.episode.canWatch(session: session)))])
@@ -380,7 +372,6 @@ extension Episode {
                 ] + episodeUpdates + [
                     .div(class: "flex-auto relative min-height-5", [
                         .div(class: "js-transcript js-expandable z-0", attributes: ["data-expandable-collapsed": "absolute position-stretch position-nw overflow-hidden", "id": "transcript"], [
-                            .raw(expandTranscript),
                             .div(class: "c-text c-text--fit-code z-0 js-has-codeblocks", [
                                 .raw(highlightedTranscript ?? "No transcript yet.")
                             ])
@@ -410,20 +401,54 @@ extension Episode {
             ? noTranscript(text: "Team manager accounts don't have access to Swift Talk content by default. To enable content access on this account, please add yourself as a team member.", buttonTitle: "Manage Team Members", target: .account(.teamMembers))
             : noTranscript(text: "Become a subscriber to watch future and all \(Episode.subscriberOnly) current subscriber-only episodes, plus enjoy access to episode video downloads and \(teamDiscount)% discount for your team members.", buttonTitle: "Become a subscriber", target: .signup(.subscribe(planName: nil)))
 
-        let scripts: [Node] = (session?.user.data.csrfToken).map { token in
-            return [
-                .script(src: "https://player.vimeo.com/api/player.js"),
+        var scripts: [Node] = [
+            .script(src: "https://player.vimeo.com/api/player.js"),
+            .script(code: """
+                function playerLoaded() { }
+                window.addEventListener('DOMContentLoaded', function () {
+                    window.player = new Vimeo.Player(document.querySelector('iframe'));
+                    playerLoaded();
+
+                    var items = document.querySelector('.js-transcript').querySelectorAll("a[href^='#']");
+                    items.forEach(function (item) {
+                        if (/^\\d+$/.test(item.hash.slice(1)) && /^\\d{1,2}(:\\d{2}){1,2}$/.test(item.innerHTML)) {
+                            var time = parseInt(item.hash.slice(1));
+                            item.dataset.time = time;
+                            item.setAttribute('href', '?t='+time);
+                            item.classList.add('js-episode-seek', 'js-transcript-cue');
+                        }
+                    });
+
+                    // Catch clicks on timestamps and forward to player
+                    document.querySelectorAll('.js-episode .js-episode-seek').forEach(function(el) {
+                        el.addEventListener('click', function (event) {
+                            var time = event.target.dataset.time;
+                            if (time !== undefined) {
+                                player.setCurrentTime(time);
+                                player.play();
+                                event.preventDefault();
+                            }
+                        })
+                    });
+
+                });
+                """
+            )
+        ]
+        if let token = session?.user.data.csrfToken {
+            scripts.append(
                 .script(code: """
-                    $(function () {
-                        var player = new Vimeo.Player(document.querySelector('iframe'));
+                    function playerLoaded() { // override
                         var playedUntil = 0
                     
                         function postProgress(time) {
-                            $.post(\"\(Route.episode(id, .playProgress).absoluteString)\", {
-                                \"csrf\": \"\(token.stringValue ?? "")\",
-                                \"progress": Math.floor(time)
-                            }, function(data, status) {
-                            });
+                            var httpRequest = new XMLHttpRequest();
+                            httpRequest.open('POST', "\(Route.episode(id, .playProgress).absoluteString)");
+                            httpRequest.send(JSON.stringify({
+                                "csrf": "\(token.stringValue ?? "")",
+                                "progress": Math.floor(time)
+                            }));                    
+
                         }
                     
                         player.on('timeupdate', function(data) {
@@ -432,35 +457,11 @@ extension Episode {
                                 postProgress(playedUntil);
                             }
                         });
-
-                        $('.js-transcript').find("a[href^='#']").each(function () {
-                            if (/^\\d+$/.test(this.hash.slice(1)) && /^\\d{1,2}(:\\d{2}){1,2}$/.test(this.innerHTML)) {
-                            var time = parseInt(this.hash.slice(1));
-                            $(this)
-                                .data('time', time)
-                                .attr('href', '?t='+time)
-                                .addClass('js-episode-seek js-transcript-cue');
-                            }
-                        });
-
-                        // Auto-expand transcript if #transcript hash is passed
-                        if (window.location.hash.match(/^#?transcript$/)) {
-                            $('#transcript').find('.js-expandable-trigger').trigger('click');
-                        }
-
-                        // Catch clicks on timestamps and forward to player
-                        $(document).on('click singletap', '.js-episode .js-episode-seek', function (event) {
-                            if ($(this).data('time') !== undefined) {
-                                player.setCurrentTime($(this).data('time'));
-                                player.play();
-                                event.preventDefault();
-                            }
-                        });
-                    });
+                    };
                     """
                 )
-            ]
-        } ?? []
+            )
+        }
         
         let main = Node.div(class: "js-episode", [
             headerAndPlayer,
@@ -473,14 +474,6 @@ extension Episode {
         return LayoutConfig(contents: [main, scroller] + (session.premiumAccess ? [] : [subscribeBanner()]), footerContent: scripts, structuredData: data).layout
     }
 }
-
-let expandTranscript = """
-<div class="no-js-hide absolute height-4 gradient-fade-to-white position-stretch-h position-s ph z-1" data-expandable-expanded="hide">
-<div class="absolute position-s width-full text-wrapper text-center">
-<button type="button" class="js-expandable-trigger smallcaps button radius-full ph+++">Continue reading…</button>
-</div>
-</div>
-"""
 
 let subscriptionPitch = Node.div(class: "bgcolor-pale-blue border border-1 border-color-subtle-blue color-blue-darkest pa+ radius-5 mb++", [
     .div(class: "max-width-8 center text-center", [

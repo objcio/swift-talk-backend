@@ -111,11 +111,13 @@ extension ResponseRequiringEnvironment where Self: FailableResponse {
             return cont(or())
         }
     }
+    
+    public static func expectedPost() throws -> Self {
+        throw ServerError(privateMessage: "Expected POST", publicMessage: "Something went wrong.")
+    }
 
     public static func verifiedPost(do cont: @escaping ([String:String]) throws -> Self) -> Self {
-        return verifiedPost(do: cont, or: {
-            throw ServerError(privateMessage: "Expected POST", publicMessage: "Something went wrong.")
-        })
+        return verifiedPost(do: cont, or: expectedPost)
     }
     
     public static func verifiedPost(do cont: @escaping ([String:String]) throws -> Self, or: @escaping () throws -> Self) -> Self {
@@ -128,6 +130,19 @@ extension ResponseRequiringEnvironment where Self: FailableResponse {
                         }
                         return try cont(body)
                     }
+                }
+            } else {
+                return catchAndDisplayError(or)
+            }
+        }
+    }
+    
+    public static func jsonPost<A: Decodable>(do cont: @escaping (A) throws -> Self, or: @escaping () throws -> Self = expectedPost) -> Self {
+        return .withPostData { data in
+            if !data.isEmpty {
+                let decoder = JSONDecoder()
+                return catchAndDisplayError {
+                    try cont(try decoder.decode(A.self, from: data))
                 }
             } else {
                 return catchAndDisplayError(or)

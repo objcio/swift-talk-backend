@@ -1,6 +1,3 @@
-[submodule "vendor/objcjs"]
-	path = vendor/objcjs
-	url = git@github.com:objcio/objcjs.git
 [submodule "assets_source/stylesheets/objcss"]
 	path = assets_source/stylesheets/objcss
 	url = git@github.com:objcio/objcss.git
