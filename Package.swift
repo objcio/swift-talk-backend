@@ -18,7 +18,7 @@ let package = Package(
         .library(name: "Incremental", targets: ["Incremental"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-nio.git", .exact: "2.5.1"),
+        .package(url: "https://github.com/apple/swift-nio.git", .exact("2.5.1")),
         .package(url: "https://github.com/objcio/commonmark-swift", .branch("master")),
         .package(url: "https://github.com/objcio/LibPQ", .branch("master")),
         .package(url: "https://github.com/objcio/tiny-networking", from: "0.2.0"),
