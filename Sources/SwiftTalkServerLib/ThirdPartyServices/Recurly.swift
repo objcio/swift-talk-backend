@@ -488,6 +488,7 @@ struct CreateSubscription: Codable, RootElement {
     static let rootElementName: String = "subscription"
     struct CreateBillingInfo: Codable {
         var token_id: String
+        var three_d_secure_action_result_token_id: String? = nil
     }
     struct CreateAccount: Codable {
         var account_code: UUID // Recurly allows more things than this, but we'll just go for the UUID
@@ -524,6 +525,7 @@ struct UpdateSubscription: Codable, RootElement {
 struct RecurlyTransactionError: Decodable {
     var error_code: String
     var customer_message: String
+    var three_d_secure_action_token_id: String?
 }
 
 struct RecurlyErrorField: Decodable {
@@ -535,6 +537,15 @@ struct RecurlyErrorField: Decodable {
 struct RecurlyError: Decodable, Error {
     var transaction_error: RecurlyTransactionError
     var error: RecurlyErrorField
+    
+    var isInvalidEmail: Bool {
+        return error.field == "subscription.account.email" && error.message == "invalid_email"
+    }
+    
+    var threeDActionToken: String? {
+        guard transaction_error.error_code == "three_d_secure_action_required", let token = transaction_error.three_d_secure_action_token_id else { return nil }
+        return token
+    }
 }
 
 enum RecurlyResult<A> {
@@ -600,7 +611,7 @@ struct Recurly {
     let base: URL
     var headers: [String:String] {
         return [
-            "X-Api-Version": "2.13",
+            "X-Api-Version": "2.21",
             "Content-Type": "application/xml; charset=utf-8",
             "Authorization": "Basic \(apiKey.base64Encoded)"
         ]

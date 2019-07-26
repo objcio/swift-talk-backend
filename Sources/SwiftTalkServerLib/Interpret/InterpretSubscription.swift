@@ -19,6 +19,8 @@ extension Route.Subscription {
     }
 
     private func interpret<I: STResponse>(sesssion sess: Session) throws -> I where I.Env == STRequestEnvironment {
+        let user = sess.user
+
         func newSubscription(couponCode: String?, planCode: String?, team: Bool, error: RecurlyError? = nil) throws -> I {
             if let p = planCode, let plan = Plan.find(code: p), plan.isEnterprisePlan {
                 return try I.write(html: newSub(coupon: nil, team: team, plans: [plan], error: error))
@@ -35,35 +37,46 @@ extension Route.Subscription {
                 return try I.write(html: newSub(coupon: nil, team: team, plans: plans, error: error))
             }
         }
+        
+        func createSubscription(planId: String, recurlyToken: String, threeDResultToken: String?, couponCode: String?, team: Bool) throws -> I {
+            let plan = try Plan.all.first(where: { $0.plan_code == planId }) ?! ServerError.init(privateMessage: "Illegal plan: \(planId)", publicMessage: "Couldn't find the plan you selected.")
+            let cr = CreateSubscription.init(plan_code: plan.plan_code, currency: "USD", coupon_code: couponCode, starts_at: nil, account: .init(account_code: user.id, email: user.data.email, billing_info: .init(token_id: recurlyToken, three_d_secure_action_result_token_id: threeDResultToken)))
+            return .onSuccess(promise: recurly.createSubscription(cr).promise, message: "Something went wrong, please try again", do: { sub_ in
+                switch sub_ {
+                case .error(let error):
+                    log(error)
+                    if error.isInvalidEmail {
+                        let response = registerForm(couponCode: couponCode, planCode: planId, team: team).render(.init(user.data), [ValidationError("email", "Please provide a valid email address and try again.")])
+                        return .write(html: response)
+                    } else if let threeDActionToken = error.threeDActionToken {
+                        return .redirect(to: .subscription(.threeDSecureChallenge(threeDActionToken: threeDActionToken, recurlyToken: recurlyToken, planId: planId, couponCode: couponCode, team: team)))
+                    } else {
+                        return try newSubscription(couponCode: couponCode, planCode: planId, team: team, error: error)
+                    }
+                case .success(let sub):
+                    return .query(user.changeSubscriptionStatus(sub.state == .active)) {
+                        // todo: flash: "Thank you for supporting us
+                        .redirect(to: team ? .account(.teamMembers) : .home)
+                    }
+                }
+            })
+        }
 
-        let user = sess.user
         switch self {
             
         case let .create(couponCode, team):
             return .verifiedPost { dict in
-                guard let planId = dict["plan_id"], let token = dict["billing_info[token]"] else {
+                guard let planId = dict["plan_id"], let recurlyToken = dict["billing_info[token]"] else {
                     throw ServerError(privateMessage: "Incorrect post data")
                 }
-                let plan = try Plan.all.first(where: { $0.plan_code == planId }) ?! ServerError.init(privateMessage: "Illegal plan: \(planId)", publicMessage: "Couldn't find the plan you selected.")
-                let cr = CreateSubscription.init(plan_code: plan.plan_code, currency: "USD", coupon_code: couponCode, starts_at: nil, account: .init(account_code: user.id, email: user.data.email, billing_info: .init(token_id: token)))
-                return .onSuccess(promise: recurly.createSubscription(cr).promise, message: "Something went wrong, please try again", do: { sub_ in
-                    switch sub_ {
-                    case .error(let error):
-                        log(error)
-                        if error.error.field == "subscription.account.email" && error.error.message == "invalid_email" {
-                            let response = registerForm(couponCode: couponCode, planCode: planId, team: team).render(.init(user.data), [ValidationError("email", "Please provide a valid email address and try again.")])
-                            return .write(html: response)
-                        } else {
-                            return try newSubscription(couponCode: couponCode, planCode: planId, team: team, error: error)
-                        }
-                    case .success(let sub):
-                        return .query(user.changeSubscriptionStatus(sub.state == .active)) {
-                            // todo: flash: "Thank you for supporting us
-                            .redirect(to: team ? .account(.teamMembers) : .home)
-                        }
-                    }
-                })
+                return try createSubscription(planId: planId, recurlyToken: recurlyToken, threeDResultToken: nil, couponCode: couponCode, team: team)
             }
+            
+        case let .threeDSecureChallenge(threeDActionToken, recurlyToken, planId, couponCode, team):
+            return try .write(html: threeDSecureView(threeDActionToken: threeDActionToken, recurlyToken: recurlyToken, planId: planId, couponCode: couponCode, team: team))
+            
+        case let .threeDSecureResponse(threeDResultToken, recurlyToken, planId, couponCode, team):
+            return try createSubscription(planId: planId, recurlyToken: recurlyToken, threeDResultToken: threeDResultToken, couponCode: couponCode, team: team)
         
         case let .new(couponCode, planCode, team):
             if !user.data.confirmedNameAndEmail {

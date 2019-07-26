@@ -61,6 +61,8 @@ public indirect enum Route: Equatable {
         case create(couponCode: String?, team: Bool)
         case new(couponCode: String?, planCode: String?, team: Bool)
         case registerAsTeamMember(token: UUID, terminate: Bool)
+        case threeDSecureChallenge(threeDActionToken: String, recurlyToken: String, planId: String, couponCode: String?, team: Bool)
+        case threeDSecureResponse(threeDResultToken: String, recurlyToken: String, planId: String, couponCode: String?, team: Bool)
     }
    
     public enum Account: Equatable {
@@ -192,6 +194,18 @@ private let subscriptionRoutes: [Router<Route.Subscription>] = [
     }, {
         guard case let .create(couponCode, team) = $0 else { return nil }
         return (couponCode, team)
+    }),
+    .c("three_d_secure_challenge") / (Router.string() / Router.queryParam(name: "recurly_token") / Router.queryParam(name: "plan_id") / Router.optionalQueryParam(name: "coupon_code") / Router.booleanQueryParam(name: "team")).transform({
+        Route.Subscription.threeDSecureChallenge(threeDActionToken: $0.0.0.0.0, recurlyToken: $0.0.0.0.1, planId: $0.0.0.1, couponCode: $0.0.1, team: $0.1)
+    }, {
+        guard case let .threeDSecureChallenge(threeDActionToken, recurlyToken, planId, couponCode, team) = $0 else { return nil }
+        return ((((threeDActionToken, recurlyToken), planId), couponCode), team)
+    }),
+    .c("three_d_secure_response") / (Router.string() / Router.queryParam(name: "recurly_token") / Router.queryParam(name: "plan_id") / Router.optionalQueryParam(name: "coupon_code") / Router.booleanQueryParam(name: "team")).transform({
+        Route.Subscription.threeDSecureResponse(threeDResultToken: $0.0.0.0.0, recurlyToken: $0.0.0.0.1, planId: $0.0.0.1, couponCode: $0.0.1, team: $0.1)
+    }, {
+        guard case let .threeDSecureResponse(threeDResultToken, recurlyToken, planId, couponCode, team) = $0 else { return nil }
+        return ((((threeDResultToken, recurlyToken), planId), couponCode), team)
     }),
 ]
 
