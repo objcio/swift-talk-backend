@@ -34,8 +34,8 @@ extension Reader: NIOWrapper.Response where Result: NIOWrapper.Response {
         return .const(.write(data, status: status, headers: headers))
     }
     
-    public static func writeFile(path: String, maxAge: UInt64?) -> Reader<Value, Result> {
-        return .const(.writeFile(path: path, maxAge: maxAge))
+    public static func writeFile(path: String, gzipped: String?, maxAge: UInt64?) -> Reader<Value, Result> {
+        return .const(.writeFile(path: path, gzipped: gzipped, maxAge: maxAge))
     }
     
     public static func redirect(path: String, headers: [String : String]) -> Reader<Value, Result> {
