@@ -49,7 +49,11 @@ extension Route.Subscription {
                         let response = registerForm(couponCode: couponCode, planCode: planId, team: team).render(.init(user.data), [ValidationError("email", "Please provide a valid email address and try again.")])
                         return .write(html: response)
                     } else if let threeDActionToken = error.threeDActionToken {
-                        return .redirect(to: .subscription(.threeDSecureChallenge(threeDActionToken: threeDActionToken, recurlyToken: recurlyToken, planId: planId, couponCode: couponCode, team: team)))
+                        let success = ThreeDSuccessRoute { token in
+                            .subscription(.threeDSecureResponse(threeDResultToken: token, recurlyToken: recurlyToken, planId: planId, couponCode: couponCode, team: team))
+                        }
+                        let otherPaymentMethod = Route.subscription(.new(couponCode: couponCode, planCode: planId, team: team))
+                        return .redirect(to: .subscription(.threeDSecureChallenge(threeDActionToken: threeDActionToken, success: success, otherPaymentMethod: otherPaymentMethod)))
                     } else {
                         return try newSubscription(couponCode: couponCode, planCode: planId, team: team, error: error)
                     }
@@ -72,8 +76,8 @@ extension Route.Subscription {
                 return try createSubscription(planId: planId, recurlyToken: recurlyToken, threeDResultToken: nil, couponCode: couponCode, team: team)
             }
             
-        case let .threeDSecureChallenge(threeDActionToken, recurlyToken, planId, couponCode, team):
-            return try .write(html: threeDSecureView(threeDActionToken: threeDActionToken, recurlyToken: recurlyToken, planId: planId, couponCode: couponCode, team: team))
+        case let .threeDSecureChallenge(threeDActionToken, success, otherPaymentMethod):
+            return try .write(html: threeDSecureView(threeDActionToken: threeDActionToken, success: success, otherPaymentMethod: otherPaymentMethod))
             
         case let .threeDSecureResponse(threeDResultToken, recurlyToken, planId, couponCode, team):
             return try createSubscription(planId: planId, recurlyToken: recurlyToken, threeDResultToken: threeDResultToken, couponCode: couponCode, team: team)

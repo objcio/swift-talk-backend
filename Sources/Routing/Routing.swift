@@ -40,7 +40,9 @@ struct RelativePath {
 
     var prettyPath: String {
         let components = NSURLComponents(string: "http://localhost")!
-        components.queryItems = query.map { x in URLQueryItem(name: x.0, value: x.1.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)) }
+        var allowed = CharacterSet.urlHostAllowed
+        allowed.remove(charactersIn: "+&")
+        components.queryItems = query.map { x in URLQueryItem(name: x.0, value: x.1.addingPercentEncoding(withAllowedCharacters: allowed)) }
         let q = components.query ?? ""
         return "/" + path.joined(separator: "/") + (q.isEmpty ? "" : "?\(q)")
     }

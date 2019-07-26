@@ -61,7 +61,7 @@ public indirect enum Route: Equatable {
         case create(couponCode: String?, team: Bool)
         case new(couponCode: String?, planCode: String?, team: Bool)
         case registerAsTeamMember(token: UUID, terminate: Bool)
-        case threeDSecureChallenge(threeDActionToken: String, recurlyToken: String, planId: String, couponCode: String?, team: Bool)
+        case threeDSecureChallenge(threeDActionToken: String, success: ThreeDSuccessRoute, otherPaymentMethod: Route)
         case threeDSecureResponse(threeDResultToken: String, recurlyToken: String, planId: String, couponCode: String?, team: Bool)
     }
    
@@ -93,6 +93,14 @@ public indirect enum Route: Equatable {
             case find(String)
             case sync(UUID)
         }
+    }
+}
+
+public struct ThreeDSuccessRoute: Equatable {
+    static let threeDSecureResultTokenPlaceholder = "_3dresultoken_"
+    var route: Route
+    public init(_ build: (String) -> Route) {
+        self.route = build(ThreeDSuccessRoute.threeDSecureResultTokenPlaceholder)
     }
 }
 
@@ -195,11 +203,13 @@ private let subscriptionRoutes: [Router<Route.Subscription>] = [
         guard case let .create(couponCode, team) = $0 else { return nil }
         return (couponCode, team)
     }),
-    .c("three_d_secure_challenge") / (Router.string() / Router.queryParam(name: "recurly_token") / Router.queryParam(name: "plan_id") / Router.optionalQueryParam(name: "coupon_code") / Router.booleanQueryParam(name: "team")).transform({
-        Route.Subscription.threeDSecureChallenge(threeDActionToken: $0.0.0.0.0, recurlyToken: $0.0.0.0.1, planId: $0.0.0.1, couponCode: $0.0.1, team: $0.1)
+    .c("three_d_secure_challenge") / (Router.string() / Router.queryParam(name: "success") / Router.queryParam(name: "other_payment_method")).transform({ params in
+        guard let success = router.route(forURI: params.0.1).map({ r in ThreeDSuccessRoute { _ in r } }) else { return nil }
+        guard let other = router.route(forURI: params.1) else { return nil }
+        return Route.Subscription.threeDSecureChallenge(threeDActionToken: params.0.0, success: success, otherPaymentMethod: other)
     }, {
-        guard case let .threeDSecureChallenge(threeDActionToken, recurlyToken, planId, couponCode, team) = $0 else { return nil }
-        return ((((threeDActionToken, recurlyToken), planId), couponCode), team)
+        guard case let .threeDSecureChallenge(threeDActionToken, success, otherPaymentMethod) = $0 else { return nil }
+        return ((threeDActionToken, success.route.path), otherPaymentMethod.path)
     }),
     .c("three_d_secure_response") / (Router.string() / Router.queryParam(name: "recurly_token") / Router.queryParam(name: "plan_id") / Router.optionalQueryParam(name: "coupon_code") / Router.booleanQueryParam(name: "team")).transform({
         Route.Subscription.threeDSecureResponse(threeDResultToken: $0.0.0.0.0, recurlyToken: $0.0.0.0.1, planId: $0.0.0.1, couponCode: $0.0.1, team: $0.1)

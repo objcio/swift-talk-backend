@@ -205,8 +205,8 @@ func newSub(coupon: Coupon?, team: Bool, plans: [Plan], error: RecurlyError? = n
     ], includeRecurlyJS: true).layoutForCheckout
 }
 
-func threeDSecureView(threeDActionToken: String, recurlyToken: String, planId: String, couponCode: String?, team: Bool) throws -> Node {
-    let placeholder = "_3dresultoken_"
+func threeDSecureView(threeDActionToken: String, success: ThreeDSuccessRoute, otherPaymentMethod: Route) throws -> Node {
+    
     return LayoutConfig(contents: [
         .header([
             .div(class: "container-h pb+ pt+", [
@@ -224,11 +224,11 @@ func threeDSecureView(threeDActionToken: String, recurlyToken: String, planId: S
                 const threeDSecure = risk.ThreeDSecure({ actionTokenId: '\(threeDActionToken)' });
                 threeDSecure.on('error', err => {
                     container.innerHTML = `
-                        <p class="c-text">Something went wrong during 3-D Secure authentication. Please retry or <a href="\(Route.subscription(.new(couponCode: couponCode, planCode: planId, team: team)).path)">use a different payment method</a>.</p>
+                        <p class="c-text">Something went wrong during 3-D Secure authentication. Please retry or <a href="\(otherPaymentMethod.path)">use a different payment method</a>.</p>
                     `
                 });
                 threeDSecure.on('token', token => {
-                    window.location.assign('\(Route.subscription(.threeDSecureResponse(threeDResultToken: placeholder, recurlyToken: recurlyToken, planId: planId, couponCode: couponCode, team: team)).path)'.replace('\(placeholder)', token.id));
+                    window.location.assign('\(success.route.path)'.replace('\(ThreeDSuccessRoute.threeDSecureResultTokenPlaceholder)', token.id));
                 });
                 threeDSecure.attach(container);
             });
