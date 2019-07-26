@@ -36,8 +36,8 @@ public protocol ResponseRequiringEnvironment: Response {
 
 
 extension Response {
-    public static func writeFile(path: String, maxAge: UInt64? = 60) -> Self {
-        return .writeFile(path: path, maxAge: maxAge)
+    public static func writeFile(path: String, gzipped: String? = nil, maxAge: UInt64? = 60) -> Self {
+        return .writeFile(path: path, gzipped: gzipped, maxAge: maxAge)
     }
     
     public static func write(_ string: String, status: HTTPResponseStatus = .ok) -> Self {

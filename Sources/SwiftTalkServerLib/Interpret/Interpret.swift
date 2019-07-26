@@ -95,7 +95,7 @@ extension Route {
         case let .staticFile(path: p):
             let name = p.map { $0.removingPercentEncoding ?? "" }.joined(separator: "/")
             if let n = assets.fileName(hash: name) {
-                return .writeFile(path: n, maxAge: 31536000)
+                return .writeFile(path: n.original, gzipped: n.gzipped, maxAge: 31536000)
             } else {
             	return .writeFile(path: name)
             }
