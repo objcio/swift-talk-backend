@@ -93,11 +93,13 @@ extension Route {
             return .write(json: collectionsJSONView())
             
         case let .staticFile(path: p):
+            let longExpiry: UInt64 = 60*60*24*365 // 1 year
             let name = p.map { $0.removingPercentEncoding ?? "" }.joined(separator: "/")
             if let n = assets.fileName(hash: name) {
-                return .writeFile(path: n.original, gzipped: n.gzipped, maxAge: 31536000)
+                return .writeFile(path: n.original, gzipped: n.gzipped, maxAge: longExpiry)
             } else {
-            	return .writeFile(path: name)
+                let infrequentChanges = name.hasSuffix(".woff")
+                return .writeFile(path: name, maxAge: infrequentChanges ? longExpiry : 60)
             }
             
         case .error:
