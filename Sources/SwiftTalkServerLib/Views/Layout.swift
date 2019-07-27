@@ -14,15 +14,17 @@ struct LayoutConfig {
     var pageTitle: String
     var contents: [Node]
     var theme: String
+    var metaDescription: String?
     var footerContent: [Node]
     var preFooter: [Node]
     var structuredData: StructuredData?
     var includeRecurlyJS: Bool = false
     
-    init(pageTitle: String = "objc.io", contents: [Node], theme: String = "default", preFooter: [Node] = [], footerContent: [Node] = [], structuredData: StructuredData? = nil, includeRecurlyJS: Bool = false) {
+    init(pageTitle: String = "objc.io", contents: [Node], theme: String = "default", description: String? = nil, preFooter: [Node] = [], footerContent: [Node] = [], structuredData: StructuredData? = nil, includeRecurlyJS: Bool = false) {
         self.pageTitle = pageTitle
         self.contents = contents
         self.theme = theme
+        self.metaDescription = description
         self.footerContent = footerContent
         self.structuredData = structuredData
         self.preFooter = preFooter
@@ -98,11 +100,13 @@ extension LayoutConfig {
     }
     
     var layout: Node {
+        let desc: String? = metaDescription ?? structuredData?.description
         let head = Node.head([
             .meta(attributes: ["charset": "utf-8"]),
             .meta(attributes: ["http-equiv": "X-UA-Compatible", "content": "IE=edge"]),
             .meta(attributes: ["name": "viewport", "content": "width=device-width, initial-scale=1, user-scalable=no"]),
-        ] + [
+            desc.map { .meta(attributes: ["name": "description", "content": $0]) } ?? .none
+            ] + [
             .title(pageTitle),
             .xml(name: "link", attributes: [
                 "href": rssURL,
