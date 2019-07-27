@@ -11,7 +11,7 @@ import WebServer
 
 
 func index(_ episodes: [EpisodeWithProgress]) -> Node {
-    return LayoutConfig( contents: [
+    return LayoutConfig(pageTitle: "All Episodes".constructTitle, contents: [
         pageHeader(.link(header: "All Episodes", backlink: .home, label: "Swift Talk")),
         .div(class: "container pb0", [
             .div([
@@ -471,7 +471,7 @@ extension Episode {
         ])
         
         let data = StructuredData(title: title, description: synopsis, url: Route.episode(id, .view(playPosition: nil)).url, image: posterURL(width: 600, height: 338), type: .video(duration: Int(mediaDuration), releaseDate: releaseAt))
-        return LayoutConfig(contents: [main, scroller] + (session.premiumAccess ? [] : [subscribeBanner()]), footerContent: scripts, structuredData: data).layout
+        return LayoutConfig(pageTitle: title.constructTitle, contents: [main, scroller] + (session.premiumAccess ? [] : [subscribeBanner()]), footerContent: scripts, structuredData: data).layout
     }
 }
 

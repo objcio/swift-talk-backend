@@ -9,6 +9,12 @@ import Foundation
 import HTML
 import WebServer
 
+let basicPageTitle: String = "Swift Talk - objc.io"
+extension String {
+    var constructTitle: String {
+        return "\(self) - \(basicPageTitle)"
+    }
+}
 
 struct LayoutConfig {
     var pageTitle: String
@@ -20,7 +26,7 @@ struct LayoutConfig {
     var structuredData: StructuredData?
     var includeRecurlyJS: Bool = false
     
-    init(pageTitle: String = "objc.io", contents: [Node], theme: String = "default", description: String? = nil, preFooter: [Node] = [], footerContent: [Node] = [], structuredData: StructuredData? = nil, includeRecurlyJS: Bool = false) {
+    init(pageTitle: String = basicPageTitle, contents: [Node], theme: String = "default", description: String? = nil, preFooter: [Node] = [], footerContent: [Node] = [], structuredData: StructuredData? = nil, includeRecurlyJS: Bool = false) {
         self.pageTitle = pageTitle
         self.contents = contents
         self.theme = theme

@@ -13,7 +13,7 @@ func index(_ items: [Collection]) -> Node {
     let lis: [Node] = items.map({ (coll: Collection) -> Node in
         return .li(class: "col width-full s+|width-1/2 l+|width-1/3 mb++", coll.render(.init(episodes: true)))
     })
-    return LayoutConfig(contents: [
+    return LayoutConfig(pageTitle: "All Collections", contents: [
         pageHeader(HeaderContent.link(header: "All Collections", backlink: .home, label: "Swift Talk")),
         .div(class: "container pb0", [
             .h2(class: "bold lh-100 mb+", ["\(items.count) Collections"]),
@@ -29,7 +29,7 @@ extension Collection {
             let bgImage = "background-image: url('\(imageURL.path)');"
             let numberOfEpisodes = "\(episodes.count) \("Episode".pluralize(episodes.count))"
             let structuredData = StructuredData(title: "Swift Talk Collection: \(self.title)", description: self.description, url: currentRoute.url, image: imageURL, type: .website)
-            return LayoutConfig(contents: [
+            return LayoutConfig(pageTitle: self.title.constructTitle, contents: [
                 .div(attributes: ["class": "pattern-illustration overflow-hidden", "style": bgImage], [
                     .div(class: "wrapper", [
                         .header(class: "offset-content offset-header pv++ bgcolor-white", [
