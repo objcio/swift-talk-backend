@@ -51,6 +51,6 @@ func renderHome(episodes: [EpisodeWithProgress]) -> Node {
             .li(class: "col width-full s+|width-1/2 l+|width-1/3 mb++", coll.render())
         })
     ])
-    return LayoutConfig(description: metaDescription, contents: [header, recentEpisodes, collections]).layout
+    return LayoutConfig(contents: [header, recentEpisodes, collections], description: metaDescription).layout
 }
 
