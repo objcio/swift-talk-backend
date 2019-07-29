@@ -37,35 +37,6 @@ func accountContainer(content: Node, forRoute: Route) -> Node {
     }
 }
 
-// Icon from font-awesome
-func faIcon(name: String, class: Class = "") -> Node {
-    let iconName = Class(stringLiteral: "fa-" + name)
-    return .i(class: "fa" + iconName + `class`)
-}
-
-extension Invoice.State {
-    var icon: (String, Class) {
-        switch self {
-        case .pending:
-            return ("refresh", "color-gray-50 fa-spin")
-        case .paid:
-            return ("check", "color-blue")
-        case .failed:
-            return ("times", "color-invalid")
-        case .past_due:
-            return ("clock-o", "color-invalid")
-        case .open:
-            return ("ellipsis-h", "color-gray-50")
-        case .closed:
-            return ("times", "color-invalid")
-        case .voided:
-            return ("ban", "color-invalid")
-        case .processing:
-            return ("refresh", "color-gray-50 fa-spin")
-        }
-    }
-}
-
 func screenReader(_ text: String) -> Node {
     return .span(class: "sr-only", [.text(text)])
 }

@@ -390,7 +390,7 @@ function update() {
             <div>
                 <button type='submit' class='c-button c-button--wide' ${state.loading ? 'disabled' : ''}>
                     ${state.loading
-                        ? "<span><i class='fa fa-spinner fa-spin fa-fw'></i>Please wait...</span>"
+                        ? "<span>Please wait...</span>"
                         : "<span>" + state.gift === true ? "Pay Gift" : "Subscribe" + "</span>"
                     }
                 </button>
