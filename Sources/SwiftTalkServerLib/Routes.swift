@@ -52,6 +52,7 @@ public indirect enum Route: Equatable {
         case download
         case view(playPosition: Int?)
         case playProgress
+        case details // JSON
     }
     
     public enum Subscription: Equatable {
@@ -232,7 +233,8 @@ private let episodeRoutes: [Router<Route.EpisodeR>] = [
         return t.map { "\($0)s" } ?? .some(nil)
     }),
     .c("download", .download),
-    .c("play-progress", .playProgress)
+    .c("play-progress", .playProgress),
+    .c("details", .details)
 ]
 
 extension Router where A == Id<Episode> {

@@ -71,6 +71,10 @@ extension Route.EpisodeR {
                 })
             }
             
+        case .details:
+            return .withSession { sess in
+                return I.write(json: episodeDetailJSONView(ep, session))
+            }
         }
     }
 }
