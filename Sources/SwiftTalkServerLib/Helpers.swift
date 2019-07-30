@@ -140,7 +140,7 @@ extension Process {
         out.fileHandleForWriting.closeFile()
         
         let output = String(data: data, encoding: .utf8)
-        //        task.terminate() // crashes on linux
+        task.terminate() // crashes on linux
         return output ?? ""
     }
 }
