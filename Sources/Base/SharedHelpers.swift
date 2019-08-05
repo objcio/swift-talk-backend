@@ -61,8 +61,8 @@ extension Array where Element == URL {
 }
 
 extension String {
-    fileprivate var decoded: String {
-        return (removingPercentEncoding ?? "").replacingOccurrences(of: "+", with: " ")
+    fileprivate var decoded: String? {
+        return replacingOccurrences(of: "+", with: " ").removingPercentEncoding
     }
 }
 
@@ -75,7 +75,7 @@ extension StringProtocol {
     
     public var parseAsQueryPart: [String:String] {
         let items = split(separator: "&").compactMap { $0.keyAndValue }
-        return Dictionary(items.map { (k, v) in (k.decoded, v.decoded) }, uniquingKeysWith: { $1 })
+        return Dictionary(items.map { (k, v) in (k.decoded ?? "", v.decoded ?? "") }, uniquingKeysWith: { $1 })
     }
 
     fileprivate var parseQuery: (String, [String:String]) {
