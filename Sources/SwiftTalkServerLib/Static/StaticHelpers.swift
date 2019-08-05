@@ -89,7 +89,7 @@ func queryTranscripts(fast: Bool = false, _ cb: @escaping ([Transcript]) -> ()) 
 func queryTranscriptsHelper(fast: Bool = false) -> [Transcript] {
     return tryOrLog { try postgres.withConnection { connection in
         let rows = try connection.execute(Row<FileData>.transcripts())
-        return rows.compactMap { f in Transcript(fileName: f.data.key, sha: f.data.sha, raw: f.data.value, highlight: !fast) }
+        return rows.concurrentCompactMap { f in Transcript(fileName: f.data.key, sha: f.data.sha, raw: f.data.value, highlight: !fast) }
     }} ?? []
 }
 

@@ -150,3 +150,40 @@ extension Collection where Index: Strideable {
         }
     }
 }
+
+final public class Atomic<A> {
+    private let queue = DispatchQueue(label: "Atomic serial queue")
+    private var _value: A
+    public init(_ value: A) {
+        self._value = value
+    }
+    
+    public var value: A {
+        return queue.sync { self._value }
+    }
+    
+    public func mutate(_ transform: (inout A) -> ()) {
+        queue.sync {
+            transform(&self._value)
+        }
+    }
+}
+
+extension RandomAccessCollection where Index == Int {
+    public func concurrentCompactMap<B>(_ transform: @escaping (Element) -> B?) -> [B] {
+        return concurrentMap(transform).filter { $0 != nil }.map { $0! }
+    }
+    
+    public func concurrentMap<B>(_ transform: @escaping (Element) -> B) -> [B] {
+        let result = Atomic([B?](repeating: nil, count: count))
+        DispatchQueue.concurrentPerform(iterations: count) { idx in
+            let element = self[idx]
+            let transformed = transform(element)
+            result.mutate {
+                $0[idx] = transformed
+            }
+        }
+        return result.value.map { $0! }
+        
+    }
+}
