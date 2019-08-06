@@ -12,19 +12,6 @@ import HTML
 import Database
 import Promise
 
-
-public struct Reader<Value, Result> {
-    public let run: (Value) -> Result
-    
-    public init(_ run: @escaping (Value) -> Result) {
-        self.run = run
-    }
-    
-    public static func const(_ value: Result) -> Reader {
-        return Reader { _ in value }
-    }
-}
-
 extension Reader: NIOWrapper.Response where Result: NIOWrapper.Response {
     public static func write(_ string: String, status: HTTPResponseStatus, headers: [String : String]) -> Reader<Value, Result> {
         return .const(.write(string, status: status, headers: headers))

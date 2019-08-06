@@ -7,6 +7,7 @@
 
 import Foundation
 import WebServer
+import Base
 
 extension WebServer.Response {
     static func redirect(to route: Route, headers: [String: String] = [:]) -> Self {
