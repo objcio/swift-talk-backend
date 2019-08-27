@@ -110,6 +110,9 @@ extension Route {
                 }
                 return I.redirect(path: "swifttalk://authorize/?session_id=\(s.sessionId.uuidString)&csrf=\(s.user.data.csrfToken.string)", headers: [:])
             }
+
+        case let .threeDSecureChallenge(threeDActionToken, success, otherPaymentMethod):
+            return try .write(html: threeDSecureView(threeDActionToken: threeDActionToken, success: success, otherPaymentMethod: otherPaymentMethod))
         }
     }
 }

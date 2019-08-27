@@ -53,7 +53,7 @@ extension Route.Subscription {
                             .subscription(.threeDSecureResponse(threeDResultToken: token, recurlyToken: recurlyToken, planId: planId, couponCode: couponCode, team: team))
                         }
                         let otherPaymentMethod = Route.subscription(.new(couponCode: couponCode, planCode: planId, team: team))
-                        return .redirect(to: .subscription(.threeDSecureChallenge(threeDActionToken: threeDActionToken, success: success, otherPaymentMethod: otherPaymentMethod)))
+                        return .redirect(to: .threeDSecureChallenge(threeDActionToken: threeDActionToken, success: success, otherPaymentMethod: otherPaymentMethod))
                     } else {
                         return try newSubscription(couponCode: couponCode, planCode: planId, team: team, error: error)
                     }
@@ -75,9 +75,6 @@ extension Route.Subscription {
                 }
                 return try createSubscription(planId: planId, recurlyToken: recurlyToken, threeDResultToken: nil, couponCode: couponCode, team: team)
             }
-            
-        case let .threeDSecureChallenge(threeDActionToken, success, otherPaymentMethod):
-            return try .write(html: threeDSecureView(threeDActionToken: threeDActionToken, success: success, otherPaymentMethod: otherPaymentMethod))
             
         case let .threeDSecureResponse(threeDResultToken, recurlyToken, planId, couponCode, team):
             return try createSubscription(planId: planId, recurlyToken: recurlyToken, threeDResultToken: threeDResultToken, couponCode: couponCode, team: team)

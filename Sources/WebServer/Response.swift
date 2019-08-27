@@ -151,7 +151,7 @@ extension ResponseRequiringEnvironment where Self: FailableResponse {
     }
     
     // Renders a form. If it's POST, we try to parse the result and call the `onPost` handler, otherwise (a GET) we render the form.
-    public static func form<A, B>(_ f: Form<A, Env>, initial: A, convert: @escaping (A) -> Either<B, [ValidationError]>, onPost: @escaping (B) throws -> Self) -> Self {
+    public static func form<A, B>(_ f: Form<A, Env>, initial: A, errors: [ValidationError] = [], convert: @escaping (A) -> Either<B, [ValidationError]>, onPost: @escaping (B) throws -> Self) -> Self {
         return verifiedPost(do: { (body: [String:String]) -> Self in
             withCSRF { csrf in
                 catchAndDisplayError {
@@ -165,12 +165,12 @@ extension ResponseRequiringEnvironment where Self: FailableResponse {
                 }
             }
         }, or: {
-            return .write(html: f.render(initial, []), status: .ok)
+            return .write(html: f.render(initial, errors), status: .ok)
         })
         
     }
 
-    public static func form<A>(_ f: Form<A, Env>, initial: A, validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> Self) -> Self {
+    public static func form<A>(_ f: Form<A, Env>, initial: A, errors: [ValidationError] = [], validate: @escaping (A) -> [ValidationError], onPost: @escaping (A) throws -> Self) -> Self {
         return form(f, initial: initial, convert: { (a: A) -> Either<A, [ValidationError]> in
             let errs = validate(a)
             return errs.isEmpty ? .left(a) : .right(errs)

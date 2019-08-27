@@ -23,6 +23,7 @@ public indirect enum Route: Equatable {
     case staticFile(path: [String])
     case error
     case authorizeApp
+    case threeDSecureChallenge(threeDActionToken: String, success: ThreeDSuccessRoute, otherPaymentMethod: Route)
     case gift(Gifts)
     case account(Account)
     case webhook(Webhook)
@@ -61,7 +62,6 @@ public indirect enum Route: Equatable {
         case create(couponCode: String?, team: Bool)
         case new(couponCode: String?, planCode: String?, team: Bool)
         case registerAsTeamMember(token: UUID, terminate: Bool)
-        case threeDSecureChallenge(threeDActionToken: String, success: ThreeDSuccessRoute, otherPaymentMethod: Route)
         case threeDSecureResponse(threeDResultToken: String, recurlyToken: String, planId: String, couponCode: String?, team: Bool)
     }
    
@@ -73,6 +73,7 @@ public indirect enum Route: Equatable {
         case deleteTeamMember(UUID)
         case invalidateTeamToken
         case updatePayment
+        case threeDSecureResponse(threeDResultToken: String, recurlyToken: String)
         case logout
     }
     
@@ -80,6 +81,7 @@ public indirect enum Route: Equatable {
         case home
         case new(planCode: String)
         case pay(UUID)
+        case threeDSecureResponse(threeDResultToken: String, recurlyToken: String, giftId: UUID)
         case redeem(UUID)
         case thankYou(UUID)
     }
@@ -160,6 +162,12 @@ private let accountRoutes: [Router<Route.Account>] = [
     .c("profile", .profile),
     .c("billing", .billing),
     .c("payment", .updatePayment),
+    .c("three_d_secure_response") / (Router.string() / Router.queryParam(name: "recurly_token")).transform({
+        Route.Account.threeDSecureResponse(threeDResultToken: $0.0, recurlyToken: $0.1)
+    }, {
+        guard case let .threeDSecureResponse(threeDResultToken, recurlyToken) = $0 else { return nil }
+        return (threeDResultToken, recurlyToken)
+    }),
     .c("team_members", .teamMembers),
     .c("team_members") / .c("delete") / Router.uuid.transform({
         .deleteTeamMember($0)
@@ -202,14 +210,6 @@ private let subscriptionRoutes: [Router<Route.Subscription>] = [
     }, {
         guard case let .create(couponCode, team) = $0 else { return nil }
         return (couponCode, team)
-    }),
-    .c("three_d_secure_challenge") / (Router.string() / Router.queryParam(name: "success") / Router.queryParam(name: "other_payment_method")).transform({ params in
-        guard let success = router.route(forURI: params.0.1).map({ r in ThreeDSuccessRoute { _ in r } }) else { return nil }
-        guard let other = router.route(forURI: params.1) else { return nil }
-        return Route.Subscription.threeDSecureChallenge(threeDActionToken: params.0.0, success: success, otherPaymentMethod: other)
-    }, {
-        guard case let .threeDSecureChallenge(threeDActionToken, success, otherPaymentMethod) = $0 else { return nil }
-        return ((threeDActionToken, success.route.path), otherPaymentMethod.path)
     }),
     .c("three_d_secure_response") / (Router.string() / Router.queryParam(name: "recurly_token") / Router.queryParam(name: "plan_id") / Router.optionalQueryParam(name: "coupon_code") / Router.booleanQueryParam(name: "team")).transform({
         Route.Subscription.threeDSecureResponse(threeDResultToken: $0.0.0.0.0, recurlyToken: $0.0.0.0.1, planId: $0.0.0.1, couponCode: $0.0.1, team: $0.1)
@@ -295,6 +295,12 @@ private let giftRoutes: [Router<Route.Gifts>] = [
         guard case let .pay(x) = $0 else { return nil }
         return x
     }),
+    .c("three_d_secure_response") / (Router.uuid / Router.string() / Router.queryParam(name: "recurly_token")).transform({
+        Route.Gifts.threeDSecureResponse(threeDResultToken: $0.0.1, recurlyToken: $0.1, giftId: $0.0.0)
+    }, {
+        guard case let .threeDSecureResponse(threeDResultToken, recurlyToken, giftId) = $0 else { return nil }
+        return ((giftId, threeDResultToken), recurlyToken)
+    }),
     .c("redeem") / Router.uuid.transform({ .redeem($0) }, {
         guard case let .redeem(x) = $0 else { return nil }
         return x
@@ -360,6 +366,14 @@ private let generalRoutes: [Router<Route>] = [
     .c("collections.json", .collectionsJSON),
     .c("sitemap", .sitemap),
     .c("authorize_app", .authorizeApp),
+    .c("three_d_secure_challenge") / (Router.string() / Router.queryParam(name: "success") / Router.queryParam(name: "other_payment_method")).transform({ params in
+        guard let success = router.route(forURI: params.0.1).map({ r in ThreeDSuccessRoute { _ in r } }) else { return nil }
+        guard let other = router.route(forURI: params.1) else { return nil }
+        return Route.threeDSecureChallenge(threeDActionToken: params.0.0, success: success, otherPaymentMethod: other)
+    }, {
+        guard case let .threeDSecureChallenge(threeDActionToken, success, otherPaymentMethod) = $0 else { return nil }
+        return ((threeDActionToken, success.route.path), otherPaymentMethod.path)
+    }),
 ]
 
 private let subRoutes: [Router<Route>] = [

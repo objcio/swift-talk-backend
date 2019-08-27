@@ -57,6 +57,35 @@ extension Route.Account {
             })
         }
         
+        // todo use the form helper
+        func renderUpdatePaymentForm(error: RecurlyError?) -> I {
+            return .onSuccess(promise: sess.user.billingInfo.promise, do: { billingInfo in
+                let data = SubscriptionFormData(error: error)
+                let view = updatePaymentView(data: data, initial: billingInfo)
+                return .write(html: view)
+            })
+        }
+
+        func updatePaymentMethod(recurlyToken: String, threeDResultToken: String? = nil) -> I {
+            return .onSuccess(promise: sess.user.updateBillingInfo(token: recurlyToken, threeDResultToken: threeDResultToken).promise, do: { (response: RecurlyResult<BillingInfo>) -> I in
+                switch response {
+                case .success:
+                    return .redirect(to: .account(.billing)) // todo show message?
+                case .error(let error):
+                    log(error)
+                    if let threeDActionToken = error.threeDActionToken {
+                        let success = ThreeDSuccessRoute { threeDResultToken in
+                            .account(.threeDSecureResponse(threeDResultToken: threeDResultToken, recurlyToken: recurlyToken))
+                        }
+                        let otherPaymentMethod = Route.account(.updatePayment)
+                        return .redirect(to: .threeDSecureChallenge(threeDActionToken: threeDActionToken, success: success, otherPaymentMethod: otherPaymentMethod))
+                    } else {
+                        return renderUpdatePaymentForm(error: error)
+                    }
+                }
+            })
+        }
+        
         switch self {
         case .logout:
             return I.query(sess.user.deleteSession(sess.sessionId)) {
@@ -121,26 +150,16 @@ extension Route.Account {
             return renderBilling(recurlyToken: t)
             
         case .updatePayment:
-            // todo use the form helper
-            func renderForm(error: RecurlyError?) -> I {
-                return .onSuccess(promise: sess.user.billingInfo.promise, do: { billingInfo in
-                    let data = SubscriptionFormData(error: error)
-                    let view = updatePaymentView(data: data, initial: billingInfo)
-                    return .write(html: view)
-                })
-            }
             return .verifiedPost(do: { body in
-                let token = try body["billing_info[token]"] ?!
+                let recurlyToken = try body["billing_info[token]"] ?!
                     ServerError(privateMessage: "No billing_info[token]")
-                return .onSuccess(promise: sess.user.updateBillingInfo(token: token).promise, do: { (response: RecurlyResult<BillingInfo>) -> I in
-                    switch response {
-                    case .success: return .redirect(to: .account(.updatePayment)) // todo show message?
-                    case .error(let error): return renderForm(error: error)
-                    }
-                })
+                return updatePaymentMethod(recurlyToken: recurlyToken)
             }, or: {
-                renderForm(error: nil)
+                renderUpdatePaymentForm(error: nil)
             })
+            
+        case let .threeDSecureResponse(threeDResultToken, recurlyToken):
+            return updatePaymentMethod(recurlyToken: recurlyToken, threeDResultToken: threeDResultToken)
             
         case .teamMembers:
             let signupLink = Route.signup(.teamMember(token: sess.user.data.teamToken)).url

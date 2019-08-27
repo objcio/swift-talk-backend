@@ -593,8 +593,8 @@ extension Row where Element == UserData {
         return recurly.billingInfo(accountId: id)
     }
     
-    func updateBillingInfo(token: String) -> Endpoint<RecurlyResult<BillingInfo>> {
-        return recurly.updatePaymentMethod(for: id, token: token)
+    func updateBillingInfo(token: String, threeDResultToken: String? = nil) -> Endpoint<RecurlyResult<BillingInfo>> {
+        return recurly.updatePaymentMethod(for: id, token: token, threeDResultToken: threeDResultToken)
     }
     
     func updateCurrentSubscription(numberOfTeamMembers: Int) -> CombinedEndpoint<Subscription> {
@@ -637,12 +637,13 @@ struct Recurly {
         return Endpoint(xml: .get, url: base.appendingPathComponent("plans/\(plan_code)/add_ons/\(teamMemberAddOnCode)"), headers: headers)
     }
     
-    func updatePaymentMethod(for accountId: UUID, token: String) -> Endpoint<RecurlyResult<BillingInfo>> {
+    func updatePaymentMethod(for accountId: UUID, token: String, threeDResultToken: String?) -> Endpoint<RecurlyResult<BillingInfo>> {
         struct UpdateData: Codable, RootElement {
             var token_id: String
+            var three_d_secure_action_result_token_id: String?
             static let rootElementName = "billing_info"
         }
-        return Endpoint(xml: .put, url: base.appendingPathComponent("accounts/\(accountId.uuidString)/billing_info"), value: UpdateData(token_id: token), headers: headers)
+        return Endpoint(xml: .put, url: base.appendingPathComponent("accounts/\(accountId.uuidString)/billing_info"), value: UpdateData(token_id: token, three_d_secure_action_result_token_id: threeDResultToken), headers: headers)
     }
 
     func account(with id: UUID) -> Endpoint<Account> {
