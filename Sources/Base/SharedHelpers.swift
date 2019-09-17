@@ -86,6 +86,16 @@ extension StringProtocol {
     }
 }
 
+extension DateFormatter {
+    static public let iso8601WithTrailingZ: DateFormatter = {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return dateFormatter
+    }()
+}
+
 public func measure<A>(message: String, file: StaticString = #file, line: UInt = #line, threshold: TimeInterval = 0.01, _ code: () throws -> A) rethrows -> A {
     let start = Date()
     let result = try code()
