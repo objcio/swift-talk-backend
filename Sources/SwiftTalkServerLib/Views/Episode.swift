@@ -271,9 +271,17 @@ extension Episode {
         
         let blogpostItems: [Node] = relatedBlogposts.map { post in
             Node.li(class: "flex items-baseline justify-between ms-1 line-125", [
-                .span(class: "nowrap overflow-hidden text-overflow-ellipsis pv- color-gray-45", [
-                    .link(to: post.fullURL, class: "color-inherit no-decoration hover-underline", [
-                        .text(post.title)
+                .div(class: "", [
+                    .h4([
+                        .link(to: post.fullURL, class: "color-black bold no-decoration hover-underline", [
+                            .text(post.title)
+                            ])
+                        ]),
+                    .p(class: "pv- color-gray-45 ms-1", [
+                        .text(DateFormatter.fullPretty.string(from: post.date)),
+                    ]),
+                    .p(class: "color-gray-50", [
+                        .text(post.synopsis ?? "")
                     ])
                 ])
         	])

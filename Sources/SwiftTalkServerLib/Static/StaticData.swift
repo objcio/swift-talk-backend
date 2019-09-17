@@ -196,6 +196,9 @@ typealias BlogpostCache = [Int:[Blogpost]]
 fileprivate let blogposts0 = Static<BlogpostCache>(async: { cb in
     globals.urlSession.load(Objcio.shared.blogPosts) { (res: Result<[Blogpost], Error>) in
         let posts: [Blogpost]? = try? res.get()
+        if case let .failure(err) = res {
+            log(err)
+        }
         var result: [Int:[Blogpost]] = [:]
         for post in posts ?? [] {
             guard let id = post.episode else { continue }
