@@ -141,14 +141,16 @@ extension Task {
                 }
             }
 
+            onCompletion(true)
+
             globals.urlSession.load(github.changeVisibility(private: false, of: ep.id.rawValue)).flatMap { _ in
-                globals.urlSession.load(circle.triggerMainSiteBuild)
-            }.flatMap { _ in
                 globals.urlSession.load(mailchimp.existsCampaign(for: ep))
             }.flatMap { campaignExists in
                 return campaignExists == false ? sendCampaign : Promise { $0(false) }
             }.run { success in
-                onCompletion(success)
+                if !success {
+                    log(error: "Something went wrong while releasing episode \(number).")
+                }
             }
         
         case .unfinishedSubscriptionReminder(let userId):
