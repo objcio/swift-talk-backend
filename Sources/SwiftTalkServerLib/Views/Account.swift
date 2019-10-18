@@ -170,6 +170,16 @@ func updatePaymentView(data: SubscriptionFormData, initial: BillingInfo) -> Node
     ], includeRecurlyJS: true).layout
 }
 
+func noBillingInfoView() -> Node {
+    return LayoutConfig(contents: [
+        accountHeader,
+        accountContainer(content: .div([
+            heading("Update Payment Method"),
+            .p(["No billing info present."])
+        ]), forRoute: .account(.billing))
+    ]).layout
+}
+
 extension BillingInfo {
     var cardMask: String {
         return "\(first_six.first!)*** **** **** \(last_four)"
@@ -247,13 +257,45 @@ func unsubscribedBillingContent() -> [Node] {
     ]
 }
 
-func billingView(subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo, redemptions: [(Redemption, Coupon)]) -> Node {
+func billingView(subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice, pdfURL: URL)], billingInfo: BillingInfo?, redemptions: [(Redemption, Coupon)]) -> Node {
     return .withSession { session in
         guard let session = session else { return billingLayout(unsubscribedBillingContent()) }
         let user = session.user
         let subscriptionInfo: [Node]
         if let (sub, addOn) = subscription {
-            let (total, vat) = sub.totalAtRenewal(addOn: addOn, vatExempt: billingInfo.vatExempt)
+            let nextBilling: Node
+            if sub.state == .active, let b = billingInfo {
+                let (total, vat) = sub.totalAtRenewal(addOn: addOn, vatExempt: b.vatExempt)
+                nextBilling = .li(class: "flex", [
+                    label(text: "Next Billing"),
+                    .div(class: "flex-auto color-gray-30 stack-", [
+                        .p([
+                            .text(dollarAmount(cents: total)),
+                            vat == 0 ? .none : " (including \(dollarAmount(cents: vat)) VAT)",
+                            " on ",
+                            .text(sub.current_period_ends_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "n/a"),
+                        ]),
+                        redemptions.isEmpty ? .none : .p(class: " input-note mt-", [
+                            .span(class: "bold", ["Note:"])
+                        ] + redemptions.map { x in
+                            let (redemption, coupon) = x
+                            let start = DateFormatter.fullPretty.string(from: redemption.created_at)
+                            return "Due to a technical limation, the displayed price does not take your active coupon (\(coupon.billingDescription), started at \(start)) into account."
+                        }),
+                        button(to: .subscription(.cancel), text: "Cancel Subscription", class: "color-invalid")
+                    ])
+                ])            } else {
+                nextBilling = .none
+            }
+            let upgrade: Node
+            if let vatExempt = billingInfo?.vatExempt, let u = sub.upgrade(vatExempt: vatExempt) {
+                upgrade = .li(class: "flex", [
+                    label(text: "Upgrade"),
+                    .div(class: "flex-auto color-gray-30 stack--", u.pretty())
+                ])
+            } else {
+                upgrade = .none
+            }
             subscriptionInfo = [
                 .div([
                     heading("Subscription"),
@@ -273,32 +315,9 @@ func billingView(subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice,
                                     value(text: DateFormatter.fullPretty.string(from: trialEndDate))
                                 ])
                             } ?? Node.none,
-                            sub.state == .active ? Node.li(class: "flex", [
-                                label(text: "Next Billing"),
-                                .div(class: "flex-auto color-gray-30 stack-", [
-                                    .p([
-                                        .text(dollarAmount(cents: total)),
-                                        vat == 0 ? .none : " (including \(dollarAmount(cents: vat)) VAT)",
-                                        " on ",
-                                        .text(sub.current_period_ends_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "n/a"),
-                                    ]),
-                                    redemptions.isEmpty ? .none : .p(class: " input-note mt-", [
-                                        .span(class: "bold", ["Note:"])
-                                    ] + redemptions.map { x in
-                                        let (redemption, coupon) = x
-                                        let start = DateFormatter.fullPretty.string(from: redemption.created_at)
-                                        return "Due to a technical limation, the displayed price does not take your active coupon (\(coupon.billingDescription), started at \(start)) into account."
-                                    }),
-                                    button(to: .subscription(.cancel), text: "Cancel Subscription", class: "color-invalid")
-                                ])
-                            ]) : .none,
-                            sub.upgrade(vatExempt: billingInfo.vatExempt).map { upgrade in
-                                .li(class: "flex", [
-                                    label(text: "Upgrade"),
-                                    .div(class: "flex-auto color-gray-30 stack--", upgrade.pretty())
-                                ])
-                            } ?? .none,
-                            sub.state == .canceled ? Node.li(class: "flex", [
+                            nextBilling,
+                            upgrade,
+                            sub.state == .canceled && billingInfo != nil ? Node.li(class: "flex", [
                                 label(text: "Expires on"),
                                 .div(class: "flex-auto color-gray-30 stack-", [
                                     .text(sub.expires_at.map { DateFormatter.fullPretty.string(from: $0) } ?? "<unknown date>"),
@@ -308,7 +327,7 @@ func billingView(subscription: (Subscription, Plan.AddOn)?, invoices: [(Invoice,
                         ])
                     ])
                 ]),
-                .div(billingInfo.show)
+                .div(billingInfo?.show ?? [])
             ]
         } else if session.gifterPremiumAccess {
             subscriptionInfo = gifteeBillingContent()

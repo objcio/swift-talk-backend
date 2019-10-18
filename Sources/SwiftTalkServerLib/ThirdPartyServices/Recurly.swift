@@ -545,6 +545,20 @@ enum RecurlyResult<A> {
 struct RecurlyVoid: Decodable {
 }
 
+enum RecurlyOptional<A>: Decodable where A: Decodable {
+    case some(A)
+    case none
+    
+    init(from decoder: Decoder) throws {
+        do {
+            let value = try A(from: decoder)
+            self = .some(value)
+        } catch {
+            self = .none
+        }
+    }
+}
+
 extension RecurlyResult: Decodable where A: Decodable {
     init(from decoder: Decoder) throws {
         do {
@@ -578,8 +592,11 @@ extension Row where Element == UserData {
         return subscriptions.map { $0.first { $0.state == .active || $0.state == .canceled } }
     }
     
-    var billingInfo: Endpoint<BillingInfo> {
-        return recurly.billingInfo(accountId: id)
+    var billingInfo: Endpoint<BillingInfo?> {
+        return recurly.billingInfo(accountId: id).map {
+            guard case let .some(x) = $0 else { return nil }
+            return x
+        }
     }
     
     func updateBillingInfo(token: String) -> Endpoint<RecurlyResult<BillingInfo>> {
@@ -618,7 +635,7 @@ struct Recurly {
         return Endpoint(xml: .get, url: base.appendingPathComponent("accounts"), headers: headers)
     }
     
-    func billingInfo(accountId id: UUID) -> Endpoint<BillingInfo> {
+    func billingInfo(accountId id: UUID) -> Endpoint<RecurlyOptional<BillingInfo>> {
         return Endpoint(xml: .get, url: base.appendingPathComponent("accounts/\(id.uuidString)/billing_info"), headers: headers)
     }
     
