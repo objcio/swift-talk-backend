@@ -18,7 +18,7 @@ extension WebServer.Response {
 extension Reader: FailableResponse where Result: WebServer.Response, Value == STRequestEnvironment {
     public static func renderError(_ error: Error) -> Reader<Value, Result> {
         if let e = error as? ServerError {
-            return Reader { .write(html: errorView(e.publicMessage).ast(input: $0), status: .internalServerError) }
+            return Reader { .write(html: errorView(e.publicMessage).ast(input: $0), status: e.status) }
         } else if let _ = error as? AuthorizationError {
             return Reader { .write(html: errorView("You're not authorized to view this page. Please login and try again.").ast(input: $0), status: .unauthorized) }
         } else {

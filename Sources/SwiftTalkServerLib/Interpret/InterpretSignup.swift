@@ -9,6 +9,7 @@ import Foundation
 import Database
 import WebServer
 import Base
+import NIOWrapper
 
 extension Route.Signup {
     func interpret<I: STResponse>() throws -> I where I.Env == STRequestEnvironment {
@@ -56,7 +57,7 @@ extension Route.Signup {
         case .promoCode(let str):
             return .onSuccess(promise: recurly.coupon(code: str).promise, message: "Can't find that coupon.", do: { coupon in
                 guard coupon.state == "redeemable" else {
-                    throw ServerError(privateMessage: "not redeemable: \(str)", publicMessage: "This coupon is not redeemable anymore.")
+                    throw ServerError(privateMessage: "not redeemable: \(str)", publicMessage: "This coupon is not redeemable anymore.", status: HTTPResponseStatus.forbidden)
                 }
                 guard let m = Plan.monthly, let y = Plan.yearly else {
                     throw ServerError(privateMessage: "Plans not loaded", publicMessage: "A small hiccup. Please try again in a little while.")
