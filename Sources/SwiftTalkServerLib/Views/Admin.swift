@@ -9,7 +9,7 @@ import Foundation
 
 extension Array where Element == TaskData {
     var show: Node {
-        Node.table([
+        return Node.table([
             Node.thead([
                 Node.tr([
                     Node.td(["Date"]),
