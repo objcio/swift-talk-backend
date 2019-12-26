@@ -90,6 +90,8 @@ struct TaskData: Insertable {
     var date: Date
     var json: String
     var key: String
+    var failed: Bool = false
+    var errorMessage: String? = nil
     
     init(date: Date, task: Task) {
         self.date = date

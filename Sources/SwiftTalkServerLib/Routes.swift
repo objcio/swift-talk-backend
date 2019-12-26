@@ -86,6 +86,7 @@ public indirect enum Route: Equatable {
     public enum Admin: Equatable {
         case home
         case users(Users)
+        case tasks
         public enum Users: Equatable {
             case home
             case view(UUID)
@@ -309,6 +310,7 @@ private let adminUserRoutes: [Router<Route.Admin.Users>] = [
 
 private let adminRoutes: [Router<Route.Admin>] = [
     Router(.home),
+    .c("tasks", .tasks),
     .c("users") / choice(adminUserRoutes).transform(Route.Admin.users, {
         guard case let .users(x) = $0 else { return nil }
         return x

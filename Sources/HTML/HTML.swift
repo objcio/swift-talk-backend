@@ -192,6 +192,10 @@ extension Node {
         return .node(Element(name: "td", class: `class`, attributes: attributes, children: children))
     }
     
+    public static func pre(class: Class? = nil, attributes: [String:String] = [:], _ text: String) -> Node {
+        return .node(Element(name: "pre", class: `class`, attributes: attributes, children: [.text(text)]))
+    }
+    
     public static func th(class: Class? = nil, attributes: [String:String] = [:], _ children: [Node] = []) -> Node {
         return .node(Element(name: "th", class: `class`, attributes: attributes, children: children))
     }

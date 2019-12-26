@@ -17,6 +17,10 @@ extension Route.Admin {
         switch self {
         case .home:
             return I.write("Home")
+        case .tasks:
+            return I.query(Row<TaskData>.allTasks) { tasks in
+                I.write(html: tasks.map { $0.data }.show)
+            }
         case .users(.home):
             return I.write("Users")
         case .users(.find(let searchString)):

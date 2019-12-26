@@ -287,5 +287,11 @@ fileprivate let migrations: [String] = [
     """
     ALTER TABLE files ADD COLUMN IF NOT EXISTS sha text
     """,
+    """
+    ALTER TABLE tasks
+        ADD COLUMN IF NOT EXISTS failed boolean DEFAULT FALSE NOT NULL,
+        ADD COLUMN IF NOT EXISTS error_message text
+        ;
+    """
 ]
 

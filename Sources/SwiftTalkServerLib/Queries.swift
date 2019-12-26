@@ -109,7 +109,11 @@ extension Database.Row where Element == UserData {
 
 extension Database.Row where Element == TaskData {
     static var dueTasks: Query<[Database.Row<TaskData>]> {
-        return Database.Row<TaskData>.select.appending("WHERE date < LOCALTIMESTAMP ORDER BY date ASC")
+        return Database.Row<TaskData>.select.appending("WHERE date < LOCALTIMESTAMP AND failed=false ORDER BY date ASC")
+    }
+    
+    static var allTasks: Query<[Database.Row<TaskData>]> {
+        return Database.Row<TaskData>.select.appending("ORDER BY date ASC")
     }
 }
 
