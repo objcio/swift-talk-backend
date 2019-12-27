@@ -80,7 +80,7 @@ struct Flow {
             XCTFail("Couldn't find a form with action \(action)", file: file, line: line)
             return
         }
-        var postData = Dictionary(f.inputs, uniquingKeysWith: { $1 })
+        let postData = Dictionary(f.inputs, uniquingKeysWith: { $1 })
         for (key,_) in data {
             XCTAssert(postData[key] != nil)
         }

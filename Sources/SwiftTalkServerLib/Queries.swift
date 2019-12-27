@@ -112,7 +112,7 @@ extension Database.Row where Element == TaskData {
         return Database.Row<TaskData>.select.appending("WHERE date < LOCALTIMESTAMP AND failed=false ORDER BY date ASC")
     }
     
-    static var allTasks: Query<[Database.Row<TaskData>]> {
+    static var all: Query<[Database.Row<TaskData>]> {
         return Database.Row<TaskData>.select.appending("ORDER BY date ASC")
     }
 }

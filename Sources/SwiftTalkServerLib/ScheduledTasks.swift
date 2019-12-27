@@ -166,11 +166,20 @@ extension Task {
 extension Row where Element == TaskData {
     func process(_ c: Lazy<ConnectionProtocol>, onCompletion: @escaping (Bool) -> ()) throws {
         let task = try JSONDecoder().decode(Task.self, from: self.data.json.data(using: .utf8)!)
-        try task.interpret(c) { success in
-            if success {
-                tryOrLog("Failed to delete task \(self.id) from database") { try c.get().execute(self.delete) }
+        do {
+            try task.interpret(c) { success in
+                if success {
+                    tryOrLog("Failed to delete task \(self.id) from database") { try c.get().execute(self.delete) }
+                }
+                onCompletion(success)
             }
-            onCompletion(success)
+        } catch {
+            var copy = self
+            var msg = ""
+            dump(error, to: &msg)
+            copy.data.errorMessage = msg
+            copy.data.failed = true
+            tryOrLog("Failed to mark task \(self.id) as error") { try c.get().execute(copy.update()) }
         }
     }
 }

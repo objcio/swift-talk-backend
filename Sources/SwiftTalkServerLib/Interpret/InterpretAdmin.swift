@@ -18,7 +18,7 @@ extension Route.Admin {
         case .home:
             return I.write("Home")
         case .tasks:
-            return I.query(Row<TaskData>.allTasks) { tasks in
+            return I.query(Row<TaskData>.all) { tasks in
                 I.write(html: tasks.map { $0.data }.show)
             }
         case .users(.home):
