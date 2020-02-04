@@ -95,7 +95,7 @@ let navigationItems: [(LinkTarget, String)] = [
     (Route.home, "Swift Talk"),
     (URL(string: "https://www.objc.io/books")!, "Books"),
     (URL(string: "https://www.objc.io/issues")!, "Issues"),
-    (URL(string: "https://www.objc.io/blog/2018/12/11/swift-talk-gift-subscription/")!, "🎁 Gifts"),
+    (URL(string: "https://www.objc.io/blog/2018/12/11/swift-talk-gift-subscription/")!, "Gifts"),
 ]
 
 let rssURL = Route.rssFeed.url.absoluteString
