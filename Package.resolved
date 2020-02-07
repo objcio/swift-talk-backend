@@ -6,8 +6,8 @@
         "repositoryURL": "https://github.com/Carthage/Commandant.git",
         "state": {
           "branch": null,
-          "revision": "2cd0210f897fe46c6ce42f52ccfa72b3bbb621a0",
-          "version": "0.16.0"
+          "revision": "ab68611013dec67413628ac87c1f29e8427bc8e4",
+          "version": "0.17.0"
         }
       },
       {
@@ -17,6 +17,24 @@
           "branch": "master",
           "revision": "04f9cd3d89d86c05d2cd6db070dedaeed984ba2c",
           "version": null
+        }
+      },
+      {
+        "package": "CwlCatchException",
+        "repositoryURL": "https://github.com/mattgallagher/CwlCatchException.git",
+        "state": {
+          "branch": null,
+          "revision": "7cd2f8cacc4d22f21bc0b2309c3b18acf7957b66",
+          "version": "1.2.0"
+        }
+      },
+      {
+        "package": "CwlPreconditionTesting",
+        "repositoryURL": "https://github.com/mattgallagher/CwlPreconditionTesting.git",
+        "state": {
+          "branch": null,
+          "revision": "c228db5d2ad1b01ebc84435e823e6cca4e3db98b",
+          "version": "1.2.0"
         }
       },
       {
@@ -42,8 +60,8 @@
         "repositoryURL": "https://github.com/Quick/Nimble.git",
         "state": {
           "branch": null,
-          "revision": "f8657642dfdec9973efc79cc68bcef43a653a2bc",
-          "version": "8.0.2"
+          "revision": "b02b00b30b6353632aa4a5fb6124f8147f7140c0",
+          "version": "8.0.5"
         }
       },
       {
@@ -51,17 +69,8 @@
         "repositoryURL": "https://github.com/Quick/Quick.git",
         "state": {
           "branch": null,
-          "revision": "94df9b449508344667e5afc7e80f8bcbff1e4c37",
-          "version": "2.1.0"
-        }
-      },
-      {
-        "package": "Result",
-        "repositoryURL": "https://github.com/antitypical/Result.git",
-        "state": {
-          "branch": null,
-          "revision": "2ca499ba456795616fbc471561ff1d963e6ae160",
-          "version": "4.1.0"
+          "revision": "33682c2f6230c60614861dfc61df267e11a1602f",
+          "version": "2.2.0"
         }
       },
       {
@@ -69,8 +78,8 @@
         "repositoryURL": "https://github.com/jpsim/SourceKitten",
         "state": {
           "branch": null,
-          "revision": "35c9e0e437592661a51b160d80a4feaa5d4630d1",
-          "version": "0.24.0"
+          "revision": "77a4dbbb477a8110eb8765e3c44c70fb4929098f",
+          "version": "0.29.0"
         }
       },
       {
@@ -78,8 +87,8 @@
         "repositoryURL": "https://github.com/ianpartridge/swift-backtrace.git",
         "state": {
           "branch": null,
-          "revision": "f244ad10744fc8e1b9f012682df94a27672c7033",
-          "version": "1.1.0"
+          "revision": "eaf2cef011c0c23d1701aa60b364def8015dc3c7",
+          "version": "1.1.1"
         }
       },
       {
@@ -96,8 +105,8 @@
         "repositoryURL": "https://github.com/objcio/swift-talk-shared",
         "state": {
           "branch": null,
-          "revision": "579283a3f519a95ce4f43f3c17b12aad049fcfb8",
-          "version": "0.2.0"
+          "revision": "0238161c1bf1a3db01c6d51b801e6d02656199b4",
+          "version": "0.3.3"
         }
       },
       {
@@ -105,8 +114,8 @@
         "repositoryURL": "https://github.com/drmohundro/SWXMLHash.git",
         "state": {
           "branch": null,
-          "revision": "f43166a8e18fdd0857f29e303b1bb79a5428bca0",
-          "version": "4.9.0"
+          "revision": "a4931e5c3bafbedeb1601d3bb76bbe835c6d475a",
+          "version": "5.0.1"
         }
       },
       {
@@ -114,8 +123,8 @@
         "repositoryURL": "https://github.com/objcio/tiny-networking",
         "state": {
           "branch": null,
-          "revision": "7e898a21962428316c36fd40f9949e60b90a0e65",
-          "version": "0.2.0"
+          "revision": "6676e026109376e6aa51af4830cc5eab57397573",
+          "version": "0.3.0"
         }
       },
       {

@@ -71,10 +71,10 @@ extension String {
         var result: String = ""
         var previous = utf8.startIndex
         for token in map.tokens {
-            let start = utf8.index(utf8.startIndex, offsetBy: token.offset)
+            let start = utf8.index(utf8.startIndex, offsetBy: Int(token.offset.value))
             if start < previous { continue } // skip overlapping token, not sure why this happens
             result.append(contentsOf: self[previous..<start])
-            let end = utf8.index(start, offsetBy: token.length)
+            let end = utf8.index(start, offsetBy: token.length.value)
             let cl = Kind(sourceKitType: token.type)?.htmlClass ?? ""
             result.append(contentsOf: "<span class=\"\(cl)\">" + self[start..<end] + "</span>")
             previous = end
