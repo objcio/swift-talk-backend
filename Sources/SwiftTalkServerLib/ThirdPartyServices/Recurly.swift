@@ -695,7 +695,7 @@ struct Recurly {
     
     func updateSubscription(_ subscription: Subscription, plan_code: String? = nil, numberOfTeamMembers: Int) -> Endpoint<Subscription> {
         let addons: [UpdateSubscription.AddOn]
-        addons = numberOfTeamMembers > 0 ? [] : [UpdateSubscription.AddOn(add_on_code: teamMemberAddOnCode, quantity: numberOfTeamMembers)]
+        addons = numberOfTeamMembers > 0 ? [UpdateSubscription.AddOn(add_on_code: teamMemberAddOnCode, quantity: numberOfTeamMembers)] : []
         let url = base.appendingPathComponent("subscriptions/\(subscription.uuid)")
         return Endpoint(xml: .put, url: url, value: UpdateSubscription(timeframe: "now", plan_code: plan_code, subscription_add_ons: addons), headers: headers, query: [:])
     }
