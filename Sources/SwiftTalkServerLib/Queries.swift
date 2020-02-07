@@ -100,6 +100,7 @@ extension Database.Row where Element == UserData {
         , parse: Element.parseEmpty)
     }
     
+    // todo: this might return -1 when there's a team manager and teamMembers.count = 0. 
     var teamMemberCountForRecurly: Query<Int> {
         return teamMembers.map { teamMembers in
             return self.data.role == .teamManager ? teamMembers.count - 1 : teamMembers.count
