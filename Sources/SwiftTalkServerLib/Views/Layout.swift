@@ -153,8 +153,15 @@ extension LayoutConfig {
                 ])
             ])
         ])
+        
+        let thinkingInSwiftUIPromo = Node.raw(
+            """
+            <div class="theme-thinking-in-swiftui"> <section class=" pattern-shade bgcolor-theme-main color-white"> <div class="container pb+ pt+"> <a href="https://www.objc.io/books/thinking-in-swiftui" class="color-white no-decoration">→ <strong class="bold">Thinking in SwiftUI</strong>: Our new book is available as a prerelease</a> </div></section></div>
+            """
+        )
         var bodyChildren: [Node] = [
             header,
+            thinkingInSwiftUIPromo,
             .main(
                 [.none] + // TODO flash messsage should go here (there's a flash helper below)
                 contents
