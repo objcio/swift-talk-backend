@@ -1364,6 +1364,8 @@ body.has-modal > *:not(.o-modal) {
       color: #068DC2; }
     .theme-app-architecture .c-text a {
       color: #49910F; }
+    .theme-thinking-in-swiftui .c-text a {
+      color: #006064; }
     .theme-complete-collection .c-text a {
       color: #F8BA5E; }
     .theme-swift-essentials .c-text a {
@@ -1446,6 +1448,8 @@ body.has-modal > *:not(.o-modal) {
         color: #068DC2; }
       .theme-app-architecture .c-text > hr:before {
         color: #49910F; }
+      .theme-thinking-in-swiftui .c-text > hr:before {
+        color: #006064; }
       .theme-complete-collection .c-text > hr:before {
         color: #F8BA5E; }
       .theme-swift-essentials .c-text > hr:before {
@@ -1475,6 +1479,8 @@ body.has-modal > *:not(.o-modal) {
       border-left-color: #068DC2; }
     .theme-app-architecture .c-text blockquote {
       border-left-color: #49910F; }
+    .theme-thinking-in-swiftui .c-text blockquote {
+      border-left-color: #006064; }
     .theme-complete-collection .c-text blockquote {
       border-left-color: #F8BA5E; }
     .theme-swift-essentials .c-text blockquote {
@@ -1801,6 +1807,10 @@ body.has-modal > *:not(.o-modal) {
       color: #49910F; }
       .theme-app-architecture .c-text pre > button:hover, .theme-app-architecture .c-text pre > button:focus {
         color: #BECD0C; }
+    .theme-thinking-in-swiftui .c-text pre > button {
+      color: #006064; }
+      .theme-thinking-in-swiftui .c-text pre > button:hover, .theme-thinking-in-swiftui .c-text pre > button:focus {
+        color: #5FD0DA; }
     .theme-complete-collection .c-text pre > button {
       color: #F8BA5E; }
       .theme-complete-collection .c-text pre > button:hover, .theme-complete-collection .c-text pre > button:focus {
@@ -1911,6 +1921,8 @@ body.has-modal > *:not(.o-modal) {
     color: #068DC2; }
   .theme-app-architecture .links a {
     color: #49910F; }
+  .theme-thinking-in-swiftui .links a {
+    color: #006064; }
   .theme-complete-collection .links a {
     color: #F8BA5E; }
   .theme-swift-essentials .links a {
@@ -2093,6 +2105,10 @@ body.has-modal > *:not(.o-modal) {
     background-color: #49910F; }
     .theme-app-architecture .button--themed:hover, .theme-app-architecture .button--themed:focus {
       background-color: #BECD0C; }
+  .theme-thinking-in-swiftui .button--themed {
+    background-color: #006064; }
+    .theme-thinking-in-swiftui .button--themed:hover, .theme-thinking-in-swiftui .button--themed:focus {
+      background-color: #5FD0DA; }
   .theme-complete-collection .button--themed {
     background-color: #F8BA5E; }
     .theme-complete-collection .button--themed:hover, .theme-complete-collection .button--themed:focus {
@@ -2136,6 +2152,10 @@ body.has-modal > *:not(.o-modal) {
   .theme-app-architecture .button--themed-highlight {
     background-color: #BECD0C; }
     .theme-app-architecture .button--themed-highlight:hover, .theme-app-architecture .button--themed-highlight:focus {
+      background-color: #262626; }
+  .theme-thinking-in-swiftui .button--themed-highlight {
+    background-color: #5FD0DA; }
+    .theme-thinking-in-swiftui .button--themed-highlight:hover, .theme-thinking-in-swiftui .button--themed-highlight:focus {
       background-color: #262626; }
   .theme-complete-collection .button--themed-highlight {
     background-color: #F8BA5E; }
@@ -2196,6 +2216,10 @@ body.has-modal > *:not(.o-modal) {
     color: #49910F; }
     .theme-app-architecture .bordered-button--themed:hover, .theme-app-architecture .bordered-button--themed:focus {
       color: #BECD0C; }
+  .theme-thinking-in-swiftui .bordered-button--themed {
+    color: #006064; }
+    .theme-thinking-in-swiftui .bordered-button--themed:hover, .theme-thinking-in-swiftui .bordered-button--themed:focus {
+      color: #5FD0DA; }
   .theme-complete-collection .bordered-button--themed {
     color: #F8BA5E; }
     .theme-complete-collection .bordered-button--themed:hover, .theme-complete-collection .bordered-button--themed:focus {
@@ -2231,6 +2255,8 @@ body.has-modal > *:not(.o-modal) {
         color: #068DC2; }
       .theme-app-architecture .bordered-button--white:hover, .bordered-button--white:focus {
         color: #49910F; }
+      .theme-thinking-in-swiftui .bordered-button--white:hover, .bordered-button--white:focus {
+        color: #006064; }
       .theme-complete-collection .bordered-button--white:hover, .bordered-button--white:focus {
         color: #F8BA5E; }
       .theme-swift-essentials .bordered-button--white:hover, .bordered-button--white:focus {
@@ -2264,6 +2290,8 @@ body.has-modal > *:not(.o-modal) {
     color: #00CC96; }
   .theme-app-architecture .arrowed-button.bordered-button--themed::after {
     color: #BECD0C; }
+  .theme-thinking-in-swiftui .arrowed-button.bordered-button--themed::after {
+    color: #5FD0DA; }
   .theme-complete-collection .arrowed-button.bordered-button--themed::after {
     color: #F8BA5E; }
   .theme-swift-essentials .arrowed-button.bordered-button--themed::after {
@@ -2377,6 +2405,11 @@ body.has-modal > *:not(.o-modal) {
     .theme-app-architecture .scroller-button:hover, .theme-app-architecture .scroller-button:focus {
       outline: none;
       background-color: #BECD0C; }
+  .theme-thinking-in-swiftui .scroller-button {
+    background-color: #006064; }
+    .theme-thinking-in-swiftui .scroller-button:hover, .theme-thinking-in-swiftui .scroller-button:focus {
+      outline: none;
+      background-color: #5FD0DA; }
   .theme-complete-collection .scroller-button {
     background-color: #F8BA5E; }
     .theme-complete-collection .scroller-button:hover, .theme-complete-collection .scroller-button:focus {
@@ -2470,6 +2503,8 @@ body.has-modal > *:not(.o-modal) {
       color: #068DC2; }
     .theme-app-architecture .c-toc__body a.is-visible {
       color: #49910F; }
+    .theme-thinking-in-swiftui .c-toc__body a.is-visible {
+      color: #006064; }
     .theme-complete-collection .c-toc__body a.is-visible {
       color: #F8BA5E; }
     .theme-swift-essentials .c-toc__body a.is-visible {
@@ -2577,6 +2612,10 @@ a.tag:focus {
   fill: #49910F; }
 .theme-app-architecture .logo--themed #arrows, .theme-app-architecture .logo--themed:hover #letters {
   fill: #BECD0C; }
+.theme-thinking-in-swiftui .logo--themed #letters {
+  fill: #006064; }
+.theme-thinking-in-swiftui .logo--themed #arrows, .theme-thinking-in-swiftui .logo--themed:hover #letters {
+  fill: #5FD0DA; }
 .theme-complete-collection .logo--themed #letters {
   fill: #4d4d4d; }
 .theme-complete-collection .logo--themed #arrows, .theme-complete-collection .logo--themed:hover #letters {
@@ -6824,6 +6863,18 @@ a.tag:focus {
 .bgcolor-book-app-architecture-bottom {
   background-color: #49910F; }
 
+.color-book-thinking-in-swiftui-top {
+  color: #5FD0DA; }
+
+.bgcolor-book-thinking-in-swiftui-top {
+  background-color: #5FD0DA; }
+
+.color-book-thinking-in-swiftui-bottom {
+  color: #006064; }
+
+.bgcolor-book-thinking-in-swiftui-bottom {
+  background-color: #006064; }
+
 .color-bundle-complete-collection {
   color: #F8BA5E; }
 
@@ -6934,6 +6985,19 @@ a.tag:focus {
   color: #49910F; }
 .theme-app-architecture .bgcolor-theme-nav {
   background-color: #49910F; }
+
+.theme-thinking-in-swiftui .color-theme-main {
+  color: #006064; }
+.theme-thinking-in-swiftui .bgcolor-theme-main {
+  background-color: #006064; }
+.theme-thinking-in-swiftui .color-theme-highlight {
+  color: #5FD0DA; }
+.theme-thinking-in-swiftui .bgcolor-theme-highlight {
+  background-color: #5FD0DA; }
+.theme-thinking-in-swiftui .color-theme-nav {
+  color: #006064; }
+.theme-thinking-in-swiftui .bgcolor-theme-nav {
+  background-color: #006064; }
 
 .theme-complete-collection .color-theme-main {
   color: #F8BA5E; }
@@ -7058,6 +7122,19 @@ a.tag:focus {
 .theme-app-architecture.is-scoped-theme .bgcolor-theme-nav, .theme-app-architecture.is-scoped-theme.bgcolor-theme-nav {
   background-color: #49910F; }
 
+.theme-thinking-in-swiftui.is-scoped-theme .color-theme-main, .theme-thinking-in-swiftui.is-scoped-theme.color-theme-main {
+  color: #006064; }
+.theme-thinking-in-swiftui.is-scoped-theme .bgcolor-theme-main, .theme-thinking-in-swiftui.is-scoped-theme.bgcolor-theme-main {
+  background-color: #006064; }
+.theme-thinking-in-swiftui.is-scoped-theme .color-theme-highlight, .theme-thinking-in-swiftui.is-scoped-theme.color-theme-highlight {
+  color: #5FD0DA; }
+.theme-thinking-in-swiftui.is-scoped-theme .bgcolor-theme-highlight, .theme-thinking-in-swiftui.is-scoped-theme.bgcolor-theme-highlight {
+  background-color: #5FD0DA; }
+.theme-thinking-in-swiftui.is-scoped-theme .color-theme-nav, .theme-thinking-in-swiftui.is-scoped-theme.color-theme-nav {
+  color: #006064; }
+.theme-thinking-in-swiftui.is-scoped-theme .bgcolor-theme-nav, .theme-thinking-in-swiftui.is-scoped-theme.bgcolor-theme-nav {
+  background-color: #006064; }
+
 .theme-complete-collection.is-scoped-theme .color-theme-main, .theme-complete-collection.is-scoped-theme.color-theme-main {
   color: #F8BA5E; }
 .theme-complete-collection.is-scoped-theme .bgcolor-theme-main, .theme-complete-collection.is-scoped-theme.bgcolor-theme-main {
@@ -7181,6 +7258,19 @@ a.tag:focus {
 .theme-app-architecture.is-element-theme.bgcolor-theme-nav {
   background-color: #49910F; }
 
+.theme-thinking-in-swiftui.is-element-theme.color-theme-main {
+  color: #006064; }
+.theme-thinking-in-swiftui.is-element-theme.bgcolor-theme-main {
+  background-color: #006064; }
+.theme-thinking-in-swiftui.is-element-theme.color-theme-highlight {
+  color: #5FD0DA; }
+.theme-thinking-in-swiftui.is-element-theme.bgcolor-theme-highlight {
+  background-color: #5FD0DA; }
+.theme-thinking-in-swiftui.is-element-theme.color-theme-nav {
+  color: #006064; }
+.theme-thinking-in-swiftui.is-element-theme.bgcolor-theme-nav {
+  background-color: #006064; }
+
 .theme-complete-collection.is-element-theme.color-theme-main {
   color: #F8BA5E; }
 .theme-complete-collection.is-element-theme.bgcolor-theme-main {
@@ -7275,6 +7365,9 @@ a.tag:focus {
   .pattern-gradient--app-architecture {
     background-color: #49910F;
     background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 240'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cpath fill='none' d='M0 0h300v240H0z'/%3E%3Cpath fill='%23000000' fill-opacity='0.065' d='M83 53l-5 4.955L56 35.5V93h-7V35.5L27 57.955 22 53l30.5-31L83 53zm66 15l-5-4.955L122 85.5V28h-7v57.5L93 63.045 88 68l30.5 31L149 68zm63 104l-5 4.955-22-22.455V212h-7v-57.5l-22 22.455-5-4.955 30.5-31 30.5 31zm66 15l-5-4.955-22 22.455V147h-7v57.5l-22-22.455-5 4.955 30.5 31 30.5-31z'/%3E%3C/g%3E%3C/svg%3E"), linear-gradient(#BECD0C, #49910F); }
+  .pattern-gradient--thinking-in-swiftui {
+    background-color: #006064;
+    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 240'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cpath fill='none' d='M0 0h300v240H0z'/%3E%3Cpath fill='%23000000' fill-opacity='0.065' d='M83 53l-5 4.955L56 35.5V93h-7V35.5L27 57.955 22 53l30.5-31L83 53zm66 15l-5-4.955L122 85.5V28h-7v57.5L93 63.045 88 68l30.5 31L149 68zm63 104l-5 4.955-22-22.455V212h-7v-57.5l-22 22.455-5-4.955 30.5-31 30.5 31zm66 15l-5-4.955-22 22.455V147h-7v57.5l-22-22.455-5 4.955 30.5 31 30.5-31z'/%3E%3C/g%3E%3C/svg%3E"), linear-gradient(#5FD0DA, #006064); }
 
 .pattern-illustration {
   background-size: 50%;
@@ -7304,6 +7397,10 @@ a.tag:focus {
 .gradient-app-architecture {
   background-color: #49910F;
   background-image: linear-gradient(#BECD0C, #49910F); }
+
+.gradient-thinking-in-swiftui {
+  background-color: #006064;
+  background-image: linear-gradient(#5FD0DA, #006064); }
 
 .gradient-fade-to-white {
   background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.75) 25%, white 100%); }
@@ -8038,6 +8135,14 @@ a.tag:focus {
   color: #BECD0C; }
 .theme-app-architecture .hover-bgcolor-theme-highlight:hover {
   background-color: #BECD0C; }
+.theme-thinking-in-swiftui .hover-color-theme-main:hover {
+  color: #006064; }
+.theme-thinking-in-swiftui .hover-bgcolor-theme-main:hover {
+  background-color: #006064; }
+.theme-thinking-in-swiftui .hover-color-theme-highlight:hover {
+  color: #5FD0DA; }
+.theme-thinking-in-swiftui .hover-bgcolor-theme-highlight:hover {
+  background-color: #5FD0DA; }
 .theme-complete-collection .hover-color-theme-main:hover {
   color: #F8BA5E; }
 .theme-complete-collection .hover-bgcolor-theme-main:hover {
