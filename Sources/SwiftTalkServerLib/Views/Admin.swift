@@ -18,6 +18,7 @@ extension Array where Element == TaskData {
                         Node.td(["JSON"]),
                         Node.td(["State"]),
                         Node.td(["Error"]),
+                        Node.td(["Sent Failure Email"]),
                     ])
                 ])]
                 + self.map { task in
@@ -27,6 +28,7 @@ extension Array where Element == TaskData {
                     Node.td([Node.pre(task.json)]),
                     Node.td([Node.text(task.failed ? "failed" : "pending")]),
                     Node.td([task.errorMessage.map { Node.pre($0) } ?? Node.none]),
+                    Node.td([Node.text(task.sentErrorNotification ? "yes" : "")]),
                 ])
             })
         ]).layoutForCheckout

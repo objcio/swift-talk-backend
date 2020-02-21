@@ -26,6 +26,14 @@ func scheduleTaskTimer() -> DispatchSourceTimer {
             }
             let tasks = try conn.get().execute(Row<TaskData>.dueTasks)
             process(tasks[...])
+            let hopelessTasks = try conn.get().execute(Row<TaskData>.hopelessTasks)
+            for var task in hopelessTasks {
+                let ep = sendgrid.send(to: email, name: "Swift Talk Backend", subject: "Hopeless Tasks", text: "\(task.id) \(task.data)")
+                globals.urlSession.load(ep) { _ in
+                }
+                task.data.sentErrorNotification = true
+                try conn.get().execute(task.update())
+            }
         }
     }
     timer.resume()
@@ -91,6 +99,7 @@ struct TaskData: Insertable {
     var json: String
     var key: String
     var failed: Bool = false
+    var sentErrorNotification = false
     var errorMessage: String? = nil
     
     init(date: Date, task: Task) {
