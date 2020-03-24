@@ -23,12 +23,12 @@ public func run() throws {
                 let user = try conn.get().execute(Row<UserData>.select(sessionId: sId))
                 return try user.map { u in
                     if u.data.premiumAccess {
-                        return Session(sessionId: sId, user: u, teamMember: nil, teamManager: nil, gifter: nil)
+                        return Session(sessionId: sId, user: u, teamManager: nil, gifter: nil)
                     } else {
                         let teamMember = try conn.get().execute(u.teamMember)
                         let teamManager = try teamMember.flatMap { try conn.get().execute(Row<UserData>.select($0.data.userId)) }
                         let gifter: Row<UserData>? = try conn.get().execute(u.gifter)
-                        return Session(sessionId: sId, user: u, teamMember: teamMember, teamManager: teamManager, gifter: gifter)
+                        return Session(sessionId: sId, user: u, teamManager: teamManager, gifter: gifter)
                     }
                 }
             } catch {

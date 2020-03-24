@@ -13,14 +13,12 @@ import WebServer
 public struct Session {
     var sessionId: UUID
     var user: Row<UserData>
-    private var teamMember: Row<TeamMemberData>?
     private var teamManager: Row<UserData>?
     private var gifter: Row<UserData>?
     
-    init(sessionId: UUID, user: Row<UserData>, teamMember: Row<TeamMemberData>?, teamManager: Row<UserData>?, gifter: Row<UserData>?) {
+    init(sessionId: UUID, user: Row<UserData>, teamManager: Row<UserData>?, gifter: Row<UserData>?) {
         self.sessionId = sessionId
         self.user = user
-        self.teamMember = teamMember
         self.teamManager = teamManager
         self.gifter = gifter
     }
@@ -61,8 +59,8 @@ public struct Session {
             credits = user.data.downloadCredits
         } else if gifterPremiumAccess, let g = gifter {
             credits = g.data.downloadCredits
-        } else if teamMemberPremiumAccess, let tm = teamMember {
-            credits = tm.data.activeMonths * 4
+        } else if teamMemberPremiumAccess, let tm = teamManager {
+            credits = tm.data.downloadCredits
         } else {
             credits = 0
         }

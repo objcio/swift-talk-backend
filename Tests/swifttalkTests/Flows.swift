@@ -215,7 +215,7 @@ final class FlowTests: XCTestCase {
             QueryAndResult(query: teamMember.data.insert, response: teamMember.id),
             QueryAndResult(query: Task.syncTeamMembersWithRecurly(userId: subscribedTeamManager.user.id).schedule(minutes: 5), response: ())
         ]) {
-            var subscribed = Session(sessionId: nonSubscribedUser.sessionId, user: nonSubscribedUser.user, teamMember: teamMember, teamManager: subscribedTeamManager.user, gifter: nil)
+            var subscribed = Session(sessionId: nonSubscribedUser.sessionId, user: nonSubscribedUser.user, teamManager: subscribedTeamManager.user, gifter: nil)
             subscribed.user.data.confirmedNameAndEmail = true
             try $0.withSession(subscribed) {
                 try $0.fillForm(to: .account(.register(couponCode: nil, planCode: nil, team: false)), data: ["name": subscribed.user.data.name, "email": subscribed.user.data.email], expectedQueries: [
