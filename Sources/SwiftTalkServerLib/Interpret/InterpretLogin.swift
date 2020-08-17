@@ -24,36 +24,38 @@ extension Route.Login {
             return .redirect(path: path, headers: [:])
         
         case .githubCallback(let optionalCode, let origin):
-            let code = try optionalCode ?! ServerError(privateMessage: "No auth code")
-            let loadToken = github.getAccessToken(code).promise.map({ $0?.access_token })
-            return .onCompleteOrCatch(promise: loadToken, do: { token in
-                let t = try token ?! ServerError(privateMessage: "No github access token", publicMessage: "Couldn't access your Github profile.")
-                let loadProfile = Github(accessToken: t).profile.promise
-                return .onSuccess(promise: loadProfile, message: "Couldn't access your Github profile", do: { profile in
-                    let uid: UUID
-                    return .query(Row<UserData>.select(githubId: profile.id)) {
-                        func createSession(uid: UUID) -> I {
-                            return .query(SessionData(userId: uid).insert) { sid in
-                                let destination: String
-                                if let o = origin?.removingPercentEncoding, o.hasPrefix("/") {
-                                    destination = o
-                                } else {
-                                    destination = "/"
+            return .catchAndDisplayError {
+                let code = try optionalCode ?! ServerError(privateMessage: "No auth code")
+                let loadToken = github.getAccessToken(code).promise.map({ $0?.access_token })
+                return .onCompleteOrCatch(promise: loadToken, do: { token in
+                    let t = try token ?! ServerError(privateMessage: "No github access token", publicMessage: "Couldn't access your Github profile.")
+                    let loadProfile = Github(accessToken: t).profile.promise
+                    return .onSuccess(promise: loadProfile, message: "Couldn't access your Github profile", do: { profile in
+                        let uid: UUID
+                        return .query(Row<UserData>.select(githubId: profile.id)) {
+                            func createSession(uid: UUID) -> I {
+                                return .query(SessionData(userId: uid).insert) { sid in
+                                    let destination: String
+                                    if let o = origin?.removingPercentEncoding, o.hasPrefix("/") {
+                                        destination = o
+                                    } else {
+                                        destination = "/"
+                                    }
+                                    return .redirect(path: destination, headers: ["Set-Cookie": "sessionid=\"\(sid.uuidString)\"; HttpOnly; Path=/"]) // TODO secure
                                 }
-                                return .redirect(path: destination, headers: ["Set-Cookie": "sessionid=\"\(sid.uuidString)\"; HttpOnly; Path=/"]) // TODO secure
                             }
+                            if let user = $0 {
+                                return createSession(uid: user.id)
+                            } else {
+                                let userData = UserData(email: profile.email ?? "", githubUID: profile.id, githubLogin: profile.login, githubToken: t, avatarURL: profile.avatar_url, name: profile.name ?? "")
+                                return .query(userData.insert, createSession)
+                            }
+                            
+                            
                         }
-                        if let user = $0 {
-                            return createSession(uid: user.id)
-                        } else {
-                            let userData = UserData(email: profile.email ?? "", githubUID: profile.id, githubLogin: profile.login, githubToken: t, avatarURL: profile.avatar_url, name: profile.name ?? "")
-                            return .query(userData.insert, createSession)
-                        }
-                        
-                        
-                    }
+                    })
                 })
-            })
+            }
         }
     }
 }
