@@ -149,13 +149,15 @@ extension Subscription.Upgrade {
         }
         return [
                 .p(["Upgrade to the \(plan.name) plan."]),
-                .p(class: "lh-110", [.text(
-                    "Your new plan will cost \(dollarAmount(cents: total_in_cents)) \(plan.prettyInterval)" +
+                .p(class: "lh-110", [
+                    .text(
+                        "Your new plan will cost \(dollarAmount(cents: total_in_cents)) \(plan.prettyInterval)" +
                         vat +
                         teamMemberText +
-                    ". You'll be charged immediately, and credited for the remainder of the current billing period."
-                    )]),
-                button(to: .subscription(.upgrade), text: "Upgrade Subscription", class: "color-invalid")
+                        ". You'll be charged immediately, and credited for the remainder of the current billing period."
+                    ),
+                    .button(to: .subscription(.upgrade), class: "button button--tight", ["Confirm Upgrade"])
+                ])
             ]
     }
 }
