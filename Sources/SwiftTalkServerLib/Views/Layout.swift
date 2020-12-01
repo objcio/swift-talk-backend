@@ -154,14 +154,14 @@ extension LayoutConfig {
             ])
         ])
         
-        let salePromo = Node.raw(
+        let thinkingInSwiftUIPromo = Node.raw(
             """
-            <div class="theme-functional-swift"> <section class=" pattern-shade bgcolor-theme-main color-white"> <div class="container pb+ pt+"> <a href="https://www.objc.io/blog/2020/11/27/black-friday-sale/" class="color-white no-decoration">→ <strong class="bold">Black Friday Sale 2020</strong> — 30% on all eBooks and Swift Talk subscriptions!</a> </div></section></div>
+            <div class="theme-thinking-in-swiftui"> <section class=" pattern-shade bgcolor-theme-main color-white"> <div class="container pb+ pt+"> <a href="https://www.objc.io/books/thinking-in-swiftui" class="color-white no-decoration">→ <strong class="bold">Thinking in SwiftUI</strong>: Our new book is now available!</a> </div></section></div>
             """
         )
         var bodyChildren: [Node] = [
             header,
-            salePromo,
+            thinkingInSwiftUIPromo,
             .main(
                 [.none] + // TODO flash messsage should go here (there's a flash helper below)
                 contents
