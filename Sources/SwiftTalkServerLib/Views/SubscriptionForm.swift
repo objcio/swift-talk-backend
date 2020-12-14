@@ -115,7 +115,7 @@ fileprivate func billingDetailsSection(initial: BillingInfo?) -> Node {
             .div(class: "col width-1/2", [textField(name: "state", title: "State", initial: initial?.state)]),
             .div(class: "col width-1/2", [textField(name: "postal_code", title: "Zip/Postal code", initial: initial?.zip)]),
             .div(class: "col width-1/2", [
-                field(name: "country", title: "Country", input: Node.select(class: "text-input inline-block width-full c-select", name: "country", attributes: ["id": "country", "value": initial?.country ?? ""], options: countries)),
+                field(name: "country", title: "Country", input: Node.select(class: "text-input inline-block width-full c-select", name: "country", attributes: ["id": "country"], options: countries, selected: initial?.country)),
                 .input(name: "realCountry", id: "realCountry", type: "hidden", attributes: ["data-recurly": "country", "value": initial?.country ?? ""])
             ]),
         ]),

@@ -213,11 +213,15 @@ extension Node {
         return .node(Element(name: "input", class: `class`, attributes: a, children: children))
     }
     
-    public static func select(class: Class? = nil, name: String, attributes: [String: String] = [:], options: [(String, String)]) -> Node {
+    public static func select(class: Class? = nil, name: String, attributes: [String: String] = [:], options: [(String, String)], selected: String?) -> Node {
         var a = attributes
         a["name"] = name
         return Node.node(Element(name: "select", class: `class`, attributes: a, children: options.map { option in
-            Node.node(Element(name: "option", attributes: ["value": option.0], children: [Node.text(option.1)]))
+            var attrs: [String: String] = ["value": option.0]
+            if selected == option.0 {
+                attrs["selected"] = "1"
+            }
+            return Node.node(Element(name: "option", attributes: attrs, children: [Node.text(option.1)]))
         }))
     }
     
