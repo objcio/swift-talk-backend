@@ -41,6 +41,10 @@ struct Github {
         self.accessToken = accessToken
     }
     
+    var authorizedHeader: [String:String] {
+        return ["Authorization": "token \(accessToken)"]
+    }
+    
     func getAccessToken(_ code: String) -> Endpoint<AccessTokenResponse> {
         let url = URL(string: "https://github.com/login/oauth/access_token")!
         let query = [
@@ -54,14 +58,12 @@ struct Github {
     
     var profile: Endpoint<Profile> {
         let url = URL(string: "https://api.github.com/user")!
-        let query = ["access_token": accessToken]
-        return Endpoint<Profile>(json: .get, url: url, query: query)
+        return Endpoint<Profile>(json: .get, url: url, headers: authorizedHeader)
     }
     
     func profile(username: String) -> Endpoint<Profile> {
         let url = URL(string: "https://api.github.com/users/\(username)")!
-        let query = ["access_token": accessToken]
-        return Endpoint(json: .get, url: url, query: query)
+        return Endpoint(json: .get, url: url, headers: authorizedHeader)
     }
     
     func changeVisibility(`private`: Bool, of repository: String) -> Endpoint<Bool> {
@@ -71,21 +73,21 @@ struct Github {
         }
         
         let url = URL(string: "https://api.github.com/repos/objcio/\(repository)")!
-        let headers = ["Authorization": "token \(accessToken)"]
         let data = Repository(name: repository, private: `private`)
-        return Endpoint<Repository>(json: .patch, url: url, body: data, headers: headers).map { $0.`private` == `private` }
+        return Endpoint<Repository>(json: .patch, url: url, body: data, headers: authorizedHeader).map { $0.`private` == `private` }
     }
     
     private var transcriptFiles: Endpoint<[Github.File]> {
         let url = URL(string: "https://api.github.com/repos/objcio/\(transcriptsRepo)/contents/")!
-        let query = ["access_token": accessToken, "ref": "master"]
-        return Endpoint<[Github.File]>(json: .get, url: url, query: query).map { files in
+        let query = ["ref": "master"]
+        return Endpoint<[Github.File]>(json: .get, url: url, headers: authorizedHeader, query: query).map { files in
             return files.filter { $0.name.hasPrefix("episode") }
         }
     }
 
     private func contents(_ file: File) -> Endpoint<(file: File, content: String)> {
-        let headers = ["Authorization": "token \(accessToken)", "Accept": "application/vnd.github.v3.raw"]
+        var headers = authorizedHeader
+        headers["Accept"] = "application/vnd.github.v3.raw"
         return Endpoint(.get, url: file.url, headers: headers) { data, _ in
             guard let d = data, let str = String(data: d, encoding: .utf8) else { return .failure(DecodingError(message: "Expected UTF8")) }
             return .success((file: file, content: str))
@@ -106,7 +108,8 @@ struct Github {
     
     func staticData<A: StaticLoadable>() -> Endpoint<[A]> {
         let url = URL(string: "https://api.github.com/repos/objcio/\(staticDataRepo)/contents/\(A.jsonName)")!
-        let headers = ["Authorization": "token \(accessToken)", "Accept": "application/vnd.github.v3.raw"]
+        var headers = authorizedHeader
+        headers["Accept"] = "application/vnd.github.v3.raw"
         return Endpoint(json: .get, url: url, headers: headers, decoder: Github.staticDataDecoder)
     }
     

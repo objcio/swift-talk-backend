@@ -61,8 +61,8 @@ extension Array where Element == URL {
 }
 
 extension String {
-    fileprivate var decoded: String {
-        return (removingPercentEncoding ?? "").replacingOccurrences(of: "+", with: " ")
+    fileprivate var decoded: String? {
+        return replacingOccurrences(of: "+", with: " ").removingPercentEncoding
     }
 }
 
@@ -75,7 +75,7 @@ extension StringProtocol {
     
     public var parseAsQueryPart: [String:String] {
         let items = split(separator: "&").compactMap { $0.keyAndValue }
-        return Dictionary(items.map { (k, v) in (k.decoded, v.decoded) }, uniquingKeysWith: { $1 })
+        return Dictionary(items.map { (k, v) in (k.decoded ?? "", v.decoded ?? "") }, uniquingKeysWith: { $1 })
     }
 
     fileprivate var parseQuery: (String, [String:String]) {
@@ -84,6 +84,16 @@ extension StringProtocol {
         let remainder = self[index(after: i)...]
         return (String(path), remainder.parseAsQueryPart)
     }
+}
+
+extension DateFormatter {
+    static public let iso8601WithTrailingZ: DateFormatter = {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return dateFormatter
+    }()
 }
 
 public func measure<A>(message: String, file: StaticString = #file, line: UInt = #line, threshold: TimeInterval = 0.01, _ code: () throws -> A) rethrows -> A {
@@ -148,5 +158,42 @@ extension Collection where Index: Strideable {
             let end = next <= endIndex ? next : endIndex
             return Array(self[startIndex ..< end])
         }
+    }
+}
+
+final public class Atomic<A> {
+    private let queue = DispatchQueue(label: "Atomic serial queue")
+    private var _value: A
+    public init(_ value: A) {
+        self._value = value
+    }
+    
+    public var value: A {
+        return queue.sync { self._value }
+    }
+    
+    public func mutate(_ transform: (inout A) -> ()) {
+        queue.sync {
+            transform(&self._value)
+        }
+    }
+}
+
+extension RandomAccessCollection where Index == Int {
+    public func concurrentCompactMap<B>(_ transform: @escaping (Element) -> B?) -> [B] {
+        return concurrentMap(transform).filter { $0 != nil }.map { $0! }
+    }
+    
+    public func concurrentMap<B>(_ transform: @escaping (Element) -> B) -> [B] {
+        let result = Atomic([B?](repeating: nil, count: count))
+        DispatchQueue.concurrentPerform(iterations: count) { idx in
+            let element = self[idx]
+            let transformed = transform(element)
+            result.mutate {
+                $0[idx] = transformed
+            }
+        }
+        return result.value.map { $0! }
+        
     }
 }

@@ -38,6 +38,13 @@ extension CollectionView {
     }
 }
 
+extension EpisodeDetails {
+    init?(_ e: Episode, session: Session?) {
+        guard e.canWatch(session: session) else { return nil }
+        self = EpisodeDetails(id: e.id.rawValue, hls_url: e.video?.hlsURL, toc: e.tableOfContents.map { TocItem(position: $0.0, title: $0.1)}, transcript: Markdown(Transcript.forEpisode(number: e.number)?.raw ?? ""))
+    }
+}
+
 func episodesJSONView() -> Data {
     let eps = Episode.all.released.map(EpisodeView.init)
     return (try? encoder.encode(eps)) ?? Data()
@@ -46,4 +53,9 @@ func episodesJSONView() -> Data {
 func collectionsJSONView() -> Data {
     let colls = Collection.all.filter { $0.public }.map(CollectionView.init)
     return (try? encoder.encode(colls)) ?? Data()
+}
+
+func episodeDetailJSONView(_ episode: Episode, _ session: Session?) -> Data {
+    let details = EpisodeDetails(episode, session: session)
+    return (try? encoder.encode(details)) ?? Data()
 }

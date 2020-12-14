@@ -100,6 +100,7 @@ extension Database.Row where Element == UserData {
         , parse: Element.parseEmpty)
     }
     
+    // todo: this might return -1 when there's a team manager and teamMembers.count = 0. 
     var teamMemberCountForRecurly: Query<Int> {
         return teamMembers.map { teamMembers in
             return self.data.role == .teamManager ? teamMembers.count - 1 : teamMembers.count
@@ -109,7 +110,15 @@ extension Database.Row where Element == UserData {
 
 extension Database.Row where Element == TaskData {
     static var dueTasks: Query<[Database.Row<TaskData>]> {
-        return Database.Row<TaskData>.select.appending("WHERE date < LOCALTIMESTAMP ORDER BY date ASC")
+        return Database.Row<TaskData>.select.appending("WHERE date < LOCALTIMESTAMP AND date > (LOCALTIMESTAMP - interval '1 hour') AND failed=false ORDER BY date ASC")
+    }
+    
+    static var hopelessTasks: Query<[Database.Row<TaskData>]> {
+        return Database.Row<TaskData>.select.appending("WHERE date < (LOCALTIMESTAMP - interval '1 hour') AND sent_error_notification=false ORDER BY date ASC")
+    }
+    
+    static var all: Query<[Database.Row<TaskData>]> {
+        return Database.Row<TaskData>.select.appending("ORDER BY date ASC")
     }
 }
 

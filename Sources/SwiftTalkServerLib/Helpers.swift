@@ -18,24 +18,6 @@ public func myAssert(_ cond: @autoclosure () -> Bool, _ message: @autoclosure ()
     }
 }
 
-final class Atomic<A> {
-    private let queue = DispatchQueue(label: "Atomic serial queue")
-    private var _value: A
-    init(_ value: A) {
-        self._value = value
-    }
-    
-    var value: A {
-        return queue.sync { self._value }
-    }
-    
-    func mutate(_ transform: (inout A) -> ()) {
-        queue.sync {
-            transform(&self._value)
-        }
-    }
-}
-
 extension Scanner {
     var remainder: String {
         return NSString(string: string).substring(from: scanLocation)
@@ -140,7 +122,7 @@ extension Process {
         out.fileHandleForWriting.closeFile()
         
         let output = String(data: data, encoding: .utf8)
-        //        task.terminate() // crashes on linux
+        task.terminate() // crashes on linux
         return output ?? ""
     }
 }

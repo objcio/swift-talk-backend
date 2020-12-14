@@ -14,4 +14,8 @@ public protocol URLSessionProtocol {
     func onDelegateQueue(_ f: @escaping () -> ())
 }
 
-extension URLSession: URLSessionProtocol {}
+extension URLSession: URLSessionProtocol {
+    public func onDelegateQueue(_ f: @escaping () -> ()) {
+        self.delegateQueue.addOperation(f)
+    }
+}

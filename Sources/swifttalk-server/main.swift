@@ -5,10 +5,9 @@ import Backtrace
 
 Backtrace.install()
 
-while true {
-    do {
-        try run()
-    } catch {
-        log(error)
-    }
+do {
+    try run()
+} catch {
+    log(error)
+    throw error
 }

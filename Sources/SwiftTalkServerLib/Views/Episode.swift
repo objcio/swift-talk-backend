@@ -11,7 +11,7 @@ import WebServer
 
 
 func index(_ episodes: [EpisodeWithProgress]) -> Node {
-    return LayoutConfig( contents: [
+    return LayoutConfig(pageTitle: "All Episodes".constructTitle, contents: [
         pageHeader(.link(header: "All Episodes", backlink: .home, label: "Swift Talk")),
         .div(class: "container pb0", [
             .div([
@@ -269,6 +269,29 @@ extension Episode {
             ])
         ] : []
         
+        let blogpostItems: [Node] = relatedBlogposts.map { post in
+            Node.li(class: "flex items-baseline justify-between ms-1 line-125", [
+                .div(class: "", [
+                    .h4([
+                        .link(to: post.fullURL, class: "color-black bold no-decoration hover-underline", [
+                            .text(post.title)
+                            ])
+                        ]),
+                    .p(class: "pv- color-gray-45 ms-1", [
+                        .text(DateFormatter.fullPretty.string(from: post.date)),
+                    ]),
+                    .p(class: "color-gray-50", [
+                        .text(post.synopsis ?? "")
+                    ])
+                ])
+        	])
+        }
+        let blogposts: [Node] = !relatedBlogposts.isEmpty ? [
+            .section(class: "pb++", [
+                smallBlueH3("Related Blogposts"),
+                .ul(class: "stack",  blogpostItems)
+                ])
+            ] : []
         let inCollection: [Node] = primaryCollection.map { coll in
             [
                 .section(class: "pb++", [
@@ -305,7 +328,7 @@ extension Episode {
                 })
             ])
         ] : []
-        let sidebar = Node.aside(class: "p-col max-width-7 center stack l+|width-1/3 xl+|width-3/10 l+|flex-auto", resources + inCollection + details)
+        let sidebar = Node.aside(class: "p-col max-width-7 center stack l+|width-1/3 xl+|width-3/10 l+|flex-auto", resources + blogposts + inCollection + details)
         let epTitle: [Node] = [
             .p(class: "color-orange ms1", [
                 .link(to: .home, class: "color-inherit no-decoration bold hover-border-bottom", ["Swift Talk"]),
@@ -471,7 +494,7 @@ extension Episode {
         ])
         
         let data = StructuredData(title: title, description: synopsis, url: Route.episode(id, .view(playPosition: nil)).url, image: posterURL(width: 600, height: 338), type: .video(duration: Int(mediaDuration), releaseDate: releaseAt))
-        return LayoutConfig(contents: [main, scroller] + (session.premiumAccess ? [] : [subscribeBanner()]), footerContent: scripts, structuredData: data).layout
+        return LayoutConfig(pageTitle: title.constructTitle, contents: [main, scroller] + (session.premiumAccess ? [] : [subscribeBanner()]), footerContent: scripts, structuredData: data).layout
     }
 }
 

@@ -18,7 +18,7 @@ public typealias HTTPResponseStatus = NIOHTTP1.HTTPResponseStatus
 public protocol Response {
     static func write(_ string: String, status: HTTPResponseStatus, headers: [String: String]) -> Self
     static func write(_ data: Data, status: HTTPResponseStatus, headers: [String: String]) -> Self
-    static func writeFile(path: String, maxAge: UInt64?) -> Self
+    static func writeFile(path: String, gzipped: String?, maxAge: UInt64?) -> Self
     static func redirect(path: String, headers: [String: String]) -> Self
     static func onComplete<A>(promise: Promise<A>, do cont: @escaping (A) -> Self) -> Self
     static func withPostData(do cont: @escaping (Data) -> Self) -> Self
@@ -59,8 +59,11 @@ public struct NIOInterpreter: Response {
         }
     }
     
-    public static func writeFile(path: String, maxAge: UInt64? = 60) -> NIOInterpreter {
+    public static func writeFile(path original: String, gzipped: String?, maxAge: UInt64? = 60) -> NIOInterpreter {
         return NIOInterpreter { deps in
+            let acceptsGzip = deps.header.headers["Accept-Encoding"].joined(separator: ",").contains("gzip")
+            let willSendGzipped = acceptsGzip && gzipped != nil
+            let path = (acceptsGzip ? gzipped : nil) ?? original
             let fullPath = deps.resourcePaths.resolve(path) ?? URL(fileURLWithPath: "")
             let fileHandleAndRegion = deps.fileIO.openFile(path: fullPath.path, eventLoop: deps.context.eventLoop)
             fileHandleAndRegion.whenFailure { _ in
@@ -69,9 +72,12 @@ public struct NIOInterpreter: Response {
             fileHandleAndRegion.whenSuccess { (file, region) in
                 var response = HTTPResponseHead(version: deps.header.version, status: .ok)
                 response.headers.add(name: "Content-Length", value: "\(region.endIndex)")
+                if willSendGzipped {
+                    response.headers.add(name: "Content-Encoding", value: "gzip")
+                }
                 let contentType: String
                 // (path as NSString) doesn't work on Linux... so using the initializer below.
-                switch NSString(string: path).pathExtension {
+                switch NSString(string: original).pathExtension {
                 case "css": contentType = "text/css; charset=utf-8"
                 case "svg": contentType = "image/svg+xml; charset=utf8"
                 default: contentType = "text/plain; charset=utf-8"

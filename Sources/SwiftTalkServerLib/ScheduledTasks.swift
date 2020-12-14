@@ -26,6 +26,14 @@ func scheduleTaskTimer() -> DispatchSourceTimer {
             }
             let tasks = try conn.get().execute(Row<TaskData>.dueTasks)
             process(tasks[...])
+            let hopelessTasks = try conn.get().execute(Row<TaskData>.hopelessTasks)
+            for var task in hopelessTasks {
+                let ep = sendgrid.send(to: email, name: "Swift Talk Backend", subject: "Hopeless Tasks", text: "\(task.id) \(task.data)")
+                globals.urlSession.load(ep) { _ in
+                }
+                task.data.sentErrorNotification = true
+                try conn.get().execute(task.update())
+            }
         }
     }
     timer.resume()
@@ -90,6 +98,9 @@ struct TaskData: Insertable {
     var date: Date
     var json: String
     var key: String
+    var failed: Bool = false
+    var sentErrorNotification = false
+    var errorMessage: String? = nil
     
     init(date: Date, task: Task) {
         self.date = date
@@ -124,7 +135,7 @@ extension Task {
             let memberCount = try c.get().execute(user.teamMemberCountForRecurly)
             globals.urlSession.load(user.updateCurrentSubscription(numberOfTeamMembers: memberCount), onComplete: { sub in
                 guard let s = try? sub.get() else { onCompletion(false); return }
-                onCompletion((s.subscription_add_ons?.first?.quantity ?? 0) == memberCount)
+                onCompletion((s.subscription_add_ons?.first?.quantity ?? 0) == max(memberCount, 0)) // todo the `max` is necessary because memberCount might be -1
             })
         
         case .releaseEpisode(let number):
@@ -141,14 +152,16 @@ extension Task {
                 }
             }
 
+            onCompletion(true)
+
             globals.urlSession.load(github.changeVisibility(private: false, of: ep.id.rawValue)).flatMap { _ in
-                globals.urlSession.load(circle.triggerMainSiteBuild)
-            }.flatMap { _ in
                 globals.urlSession.load(mailchimp.existsCampaign(for: ep))
             }.flatMap { campaignExists in
                 return campaignExists == false ? sendCampaign : Promise { $0(false) }
             }.run { success in
-                onCompletion(success)
+                if !success {
+                    log(error: "Something went wrong while releasing episode \(number).")
+                }
             }
         
         case .unfinishedSubscriptionReminder(let userId):
@@ -162,11 +175,20 @@ extension Task {
 extension Row where Element == TaskData {
     func process(_ c: Lazy<ConnectionProtocol>, onCompletion: @escaping (Bool) -> ()) throws {
         let task = try JSONDecoder().decode(Task.self, from: self.data.json.data(using: .utf8)!)
-        try task.interpret(c) { success in
-            if success {
-                tryOrLog("Failed to delete task \(self.id) from database") { try c.get().execute(self.delete) }
+        do {
+            try task.interpret(c) { success in
+                if success {
+                    tryOrLog("Failed to delete task \(self.id) from database") { try c.get().execute(self.delete) }
+                }
+                onCompletion(success)
             }
-            onCompletion(success)
+        } catch {
+            var copy = self
+            var msg = ""
+            dump(error, to: &msg)
+            copy.data.errorMessage = msg
+            copy.data.failed = true
+            tryOrLog("Failed to mark task \(self.id) as error") { try c.get().execute(copy.update()) }
         }
     }
 }

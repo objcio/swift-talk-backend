@@ -12,19 +12,6 @@ import HTML
 import Database
 import Promise
 
-
-public struct Reader<Value, Result> {
-    public let run: (Value) -> Result
-    
-    public init(_ run: @escaping (Value) -> Result) {
-        self.run = run
-    }
-    
-    public static func const(_ value: Result) -> Reader {
-        return Reader { _ in value }
-    }
-}
-
 extension Reader: NIOWrapper.Response where Result: NIOWrapper.Response {
     public static func write(_ string: String, status: HTTPResponseStatus, headers: [String : String]) -> Reader<Value, Result> {
         return .const(.write(string, status: status, headers: headers))
@@ -34,8 +21,8 @@ extension Reader: NIOWrapper.Response where Result: NIOWrapper.Response {
         return .const(.write(data, status: status, headers: headers))
     }
     
-    public static func writeFile(path: String, maxAge: UInt64?) -> Reader<Value, Result> {
-        return .const(.writeFile(path: path, maxAge: maxAge))
+    public static func writeFile(path: String, gzipped: String?, maxAge: UInt64?) -> Reader<Value, Result> {
+        return .const(.writeFile(path: path, gzipped: gzipped, maxAge: maxAge))
     }
     
     public static func redirect(path: String, headers: [String : String]) -> Reader<Value, Result> {

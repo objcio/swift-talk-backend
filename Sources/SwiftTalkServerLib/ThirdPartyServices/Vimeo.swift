@@ -31,6 +31,10 @@ extension Video {
     var hlsURL: URL? {
         return files.first { $0.quality == "hls" }?.link
     }
+    
+    var maxResolutionDownloadURL: URL? {
+        return download.sorted { $0.width > $1.width }.first?.link
+    }
 }
 
 
@@ -49,8 +53,6 @@ struct Vimeo {
     }
     
     func downloadURL(for videoId: Int) -> Endpoint<URL?> {
-        return videoInfo(for: videoId).map { video in
-            video.download.first { $0.width == 1920 }?.link
-        }
+        return videoInfo(for: videoId).map { $0.maxResolutionDownloadURL }
     }
 }

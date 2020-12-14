@@ -220,12 +220,14 @@ struct Transcript {
     var number: Int
     var sha: String?
     var highlighted: String
+    var raw: String
     var tableOfContents: [(TimeInterval, title: String)]
     
     init?(fileName: String, sha: String?, raw: String, highlight: Bool = false) {
         guard let number = Int(fileName.trimmingCharacters(in: CharacterSet.decimalDigits.inverted)) else { return nil }
         self.sha = sha
         self.number = number
+        self.raw = raw
 
         
         // Add timestamp links

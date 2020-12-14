@@ -61,9 +61,6 @@ If you want to run this locally (without Docker), you need to install the follow
 - cmake
 - cmark
 - curl
-- nodejs
-- npm
-- libxml2
 
 ### PostgreSQL
 

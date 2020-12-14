@@ -17,7 +17,8 @@ extension Foundation.FileHandle : TextOutputStream {
 }
 
 public func log(file: StaticString = #file, line: UInt = #line, _ e: Error) {
-    print("ERROR \(file):\(line) " + e.localizedDescription, to: &standardError)
+    print("ERROR \(file):\(line) ", to: &standardError)
+    dump(e, to: &standardError)
     standardError.synchronizeFile()
 }
 

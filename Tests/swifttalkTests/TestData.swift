@@ -24,11 +24,11 @@ let plans = [
 
 let noConnection = Lazy<ConnectionProtocol>({ fatalError() }, cleanup: { _ in () })
 
-let nonSubscribedUser = Session(sessionId: UUID(), user: Row(id: UUID(), data: UserData(email: "test@example.com", avatarURL: "", name: "Tester")), teamMember: nil, teamManager: nil, gifter: nil)
+let nonSubscribedUser = Session(sessionId: UUID(), user: Row(id: UUID(), data: UserData(email: "test@example.com", avatarURL: "", name: "Tester")), teamManager: nil, gifter: nil)
 
-let subscribedUser = Session(sessionId: UUID(), user: Row(id: UUID(), data: UserData(email: "test@example.com", avatarURL: "", name: "Tester", confirmedNameAndEmail: true, subscriber: true)), teamMember: nil, teamManager: nil, gifter: nil)
+let subscribedUser = Session(sessionId: UUID(), user: Row(id: UUID(), data: UserData(email: "test@example.com", avatarURL: "", name: "Tester", confirmedNameAndEmail: true, subscriber: true)), teamManager: nil, gifter: nil)
 let subscribedUserAccount = Account(account_code: subscribedUser.user.id.uuidString, hosted_login_token: "test", has_active_subscription: true, has_canceled_subscription: false)
 
-let subscribedTeamManager = Session(sessionId: UUID(), user: Row(id: UUID(), data: UserData(email: "test@example.com", avatarURL: "", name: "Tester", role: .teamManager, subscriber: true)), teamMember: nil, teamManager: nil, gifter: nil)
+let subscribedTeamManager = Session(sessionId: UUID(), user: Row(id: UUID(), data: UserData(email: "test@example.com", avatarURL: "", name: "Tester", role: .teamManager, subscriber: true)), teamManager: nil, gifter: nil)
 
 let activeSubscription = Subscription(state: .active, uuid: UUID().uuidString, activated_at: Date().addingTimeInterval(-10000), expires_at: nil, current_period_ends_at: nil, trial_ends_at: nil, plan: .init(plan_code: "monthly", name: "Subscription"), quantity: 1, unit_amount_in_cents: 1000, tax_rate: nil, subscription_add_ons: nil)

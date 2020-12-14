@@ -56,12 +56,17 @@ extension Route.Account {
                 })
             })
         }
-        
+
         // todo use the form helper
         func renderUpdatePaymentForm(error: RecurlyError?) -> I {
             return .onSuccess(promise: sess.user.billingInfo.promise, do: { billingInfo in
                 let data = SubscriptionFormData(error: error)
-                let view = updatePaymentView(data: data, initial: billingInfo)
+                let view: Node
+                if let b = billingInfo {
+                    view = updatePaymentView(data: data, initial: b)
+                } else {
+                    view  = noBillingInfoView()
+                }
                 return .write(html: view)
             })
         }
