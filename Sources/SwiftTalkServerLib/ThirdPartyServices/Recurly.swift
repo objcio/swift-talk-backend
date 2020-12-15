@@ -489,6 +489,11 @@ struct CreateSubscription: Codable, RootElement {
     struct CreateBillingInfo: Codable {
         var token_id: String
         var three_d_secure_action_result_token_id: String? = nil
+        
+        public init(token_id: String, three_d_secure_action_result_token_id: String? = nil) {
+            self.token_id = token_id
+            self.three_d_secure_action_result_token_id = three_d_secure_action_result_token_id
+        }
     }
     struct CreateAccount: Codable {
         var account_code: UUID // Recurly allows more things than this, but we'll just go for the UUID

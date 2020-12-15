@@ -363,7 +363,7 @@ class RecurlyTests: XCTestCase {
         XCTAssertEqual(webhook.subscription?.plan, expectedPlan)
     }
     
-    func createSubscriptionXML() throws {
+    func testCreateSubscriptionXML() throws {
         let x = CreateSubscription(plan_code: "monthly-test", currency: "USD", coupon_code: nil, starts_at: nil, account: CreateSubscription.CreateAccount(account_code: UUID(uuidString: "241A52B6-CE23-4B6A-90B7-52710F3E6312")!, email: "mail@floriankugler.com", billing_info: CreateSubscription.CreateBillingInfo(token_id: "O_zV7-8FNW6gYR0tXqrxjA")))
         XCTAssertEqual(try encodeXML(x), createSubXML)
     }

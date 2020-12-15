@@ -29,6 +29,7 @@ extension RecurlyTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__RecurlyTests = [
+        ("testCreateSubscriptionXML", testCreateSubscriptionXML),
         ("testNewSubscriptionNotification", testNewSubscriptionNotification),
         ("testPlan", testPlan),
         ("testSubscriptions", testSubscriptions),
