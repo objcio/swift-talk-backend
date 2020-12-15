@@ -19,7 +19,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-nio.git", .exact("2.5.1")),
-        .package(url: "https://github.com/objcio/commonmark-swift", .branch("master")),
+        .package(url: "https://github.com/chriseidhof/commonmark-swift", .branch("embed-c")),
         .package(url: "https://github.com/objcio/LibPQ", .branch("master")),
         .package(url: "https://github.com/objcio/tiny-networking", from: "0.2.0"),
         .package(url: "https://github.com/objcio/swift-talk-shared", from: "0.2.0"),
