@@ -161,7 +161,6 @@ extension LayoutConfig {
         )
         var bodyChildren: [Node] = [
             header,
-            thinkingInSwiftUIPromo,
             .main(
                 [.none] + // TODO flash messsage should go here (there's a flash helper below)
                 contents
