@@ -12,10 +12,10 @@
       },
       {
         "package": "CommonMark",
-        "repositoryURL": "https://github.com/objcio/commonmark-swift",
+        "repositoryURL": "https://github.com/chriseidhof/commonmark-swift",
         "state": {
-          "branch": "master",
-          "revision": "04f9cd3d89d86c05d2cd6db070dedaeed984ba2c",
+          "branch": "embed-c",
+          "revision": "df72c50897a0494ccd606d5105818475915b2778",
           "version": null
         }
       },

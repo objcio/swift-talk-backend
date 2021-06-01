@@ -27,7 +27,7 @@ extension String {
     var markdownToHighlightedHTML: String {
         guard let h = highlighter else {
             log(error: "Can't find a highlighting binary")
-            return CommonMark.Node(markdown: self)?.html(options: [.unsafe]) ?? ""
+            return CommonMark.Node(markdown: self).html(options: [.unsafe])
         }
         return Process.pipe(launchPath: h, self)
     }

@@ -12,11 +12,6 @@ RUN apt-get install -y postgresql libpq-dev cmake
 
 WORKDIR /app
 
-# cmark
-RUN git clone -b '0.29.0' https://github.com/commonmark/cmark
-RUN make -C cmark INSTALL_PREFIX=/usr/local
-RUN make -C cmark install
-
 COPY assets ./assets
 COPY Package.swift LinuxMain.swift ./
 RUN swift package update
@@ -24,10 +19,6 @@ RUN swift package update
 COPY Sources ./Sources
 COPY Tests ./Tests
 
-# workaround for -libcmark linker flag instead of -lcmark
-RUN ln -s /usr/local/lib/libcmark.so /usr/local/lib/liblibcmark.so
-# workaround for libcmark not being found during testing
-RUN ln -s /usr/local/lib/libcmark.so.0.29.0 /usr/lib/libcmark.so.0.29.0
 RUN swift test
 RUN swift build --configuration release -Xswiftc -g
 

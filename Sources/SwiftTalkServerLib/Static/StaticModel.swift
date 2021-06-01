@@ -231,7 +231,7 @@ struct Transcript {
 
         
         // Add timestamp links
-        guard let nodes = CommonMark.Node(markdown: raw) else { return nil }
+        let nodes = CommonMark.Node(markdown: raw)
         let contents = CommonMark.Node(blocks: nodes.elements.deepApply({ (inl: Inline) -> [Inline] in
             guard case let .text(t) = inl else { return [inl] }
             if let (m, s, remainder) = t.scanTimePrefix() {
