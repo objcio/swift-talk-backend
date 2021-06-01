@@ -487,11 +487,6 @@ extension Coupon {
 struct CreateSubscription: Codable, RootElement {
     static let rootElementName: String = "subscription"
     struct CreateBillingInfo: Codable {
-        init(token_id: String, three_d_secure_action_result_token_id: String? = nil) {
-            self.token_id = token_id
-            self.three_d_secure_action_result_token_id = three_d_secure_action_result_token_id
-        }
-
         var token_id: String
         var three_d_secure_action_result_token_id: String? = nil
         
