@@ -97,7 +97,7 @@ func refreshStaticData() {
     plansSource.refresh()
     collaboratorsSource.refresh()
     transcriptsSource.refresh()
-    blogposts0.refresh()
+//    blogposts0.refresh()
     verifyStaticData()
 }
 
@@ -191,22 +191,22 @@ fileprivate let episodesVimeoInfo = Static<(full: [Id<Episode>:Video], previews:
     }
 })
 
-typealias BlogpostCache = [Int:[Blogpost]]
-
-fileprivate let blogposts0 = Static<BlogpostCache>(async: { cb in
-    globals.urlSession.load(Objcio.shared.blogPosts) { (res: Result<[Blogpost], Error>) in
-        let posts: [Blogpost]? = try? res.get()
-        if case let .failure(err) = res {
-            log(err)
-        }
-        var result: [Int:[Blogpost]] = [:]
-        for post in posts ?? [] {
-            guard let id = post.episode else { continue }
-            result[id, default: []].append(post)
-        }
-        cb(result, true)
-    }
-})
+//typealias BlogpostCache = [Int:[Blogpost]]
+//
+//fileprivate let blogposts0 = Static<BlogpostCache>(async: { cb in
+//    globals.urlSession.load(Objcio.shared.blogPosts) { (res: Result<[Blogpost], Error>) in
+//        let posts: [Blogpost]? = try? res.get()
+//        if case let .failure(err) = res {
+//            log(err)
+//        }
+//        var result: [Int:[Blogpost]] = [:]
+//        for post in posts ?? [] {
+//            guard let id = post.episode else { continue }
+//            result[id, default: []].append(post)
+//        }
+//        cb(result, true)
+//    }
+//})
 
 extension Collection {
     fileprivate var expensive_allEpisodes: [Episode] {
@@ -236,7 +236,7 @@ fileprivate var collaborators = collaboratorsO.atomic
 fileprivate var transcripts = transcriptsO.atomic
 fileprivate var plans = plansO.atomic
 fileprivate var vimeoInfo = episodesVimeoInfo.observable.atomic
-fileprivate var blogposts = blogposts0.observable.atomic
+//fileprivate var blogposts = blogposts0.observable.atomic
 
 // Public properties
 
@@ -255,10 +255,10 @@ extension Episode {
         return vimeoInfo.value?.previews[id]
     }
     
-    var relatedBlogposts: [Blogpost] {
-        guard let x = blogposts.value, let posts = x[number] else { return [] }
-        return posts
-    }
+//    var relatedBlogposts: [Blogpost] {
+//        guard let x = blogposts.value, let posts = x[number] else { return [] }
+//        return posts
+//    }
 }
 
 extension Collection {
