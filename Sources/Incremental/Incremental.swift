@@ -44,16 +44,16 @@ fileprivate struct Register<A> {
 }
 
 final class Observer {
-    let _height: () -> Int
+    let _height: (_ seen: [AnyObject]) -> Int
     let fire: () -> ()
     var cancelled = false
     
-    init(fire: @escaping () -> (), height: @escaping () -> Int) {
+    init(fire: @escaping () -> (), height: @escaping (_ seen: [AnyObject]) -> Int) {
         self.fire = fire
         self._height = height
     }
-    var height: Int {
-        return _height()
+    func height(_ seen: [AnyObject]) -> Int {
+        return _height(seen + [self])
     }
 }
 
@@ -64,7 +64,7 @@ final class Queue {
     
     func enqueue(_ newObservers: [Observer]) {
         observers.append(contentsOf: newObservers)
-        observers.sort { $0.height < $1.height }
+        observers.sort { $0.height([]) < $1.height([]) }
         process()
     }
     
@@ -98,7 +98,7 @@ public class Observable<A> {
         observer(value)
         return observers.add(Observer(fire: {
             observer(self.value)
-        }, height: {
+        }, height: { _ in
             return 0
         }))
     }
@@ -108,15 +108,16 @@ public class Observable<A> {
         observers.remove(token)
     }
     
-    var height: Int {
-        let maxChildHeight = observers.values.map { $0.height }.max()
+    func height(_ seen: [AnyObject]) -> Int {
+        let newSeen = seen + [self]
+        let maxChildHeight = observers.values.filter { child in !newSeen.contains { $0 === child } }.map { $0.height(newSeen) }.max()
         return (maxChildHeight ?? 0) + 1
     }
     
     @discardableResult func addChild<A>(fire: @escaping () -> (), dependent: @escaping () -> Observable<A>) -> Token {
         fire()
         return observers.add(Observer(fire: fire, height: {
-            dependent().height
+            dependent().height($0)
         }))
     }
     
