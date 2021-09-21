@@ -103,12 +103,15 @@ extension Episode {
         return releaseAt < globals.currentDate()
     }
     
-    func posterURL() -> URL {
-        return URL(string: "https://i.vimeocdn.com/video/\(thumbnailId).jpg")!
+    var thumbnailIdentifier: String? {
+        guard  let id = pictureUrl!.pathComponents.last,
+               let end = id.lastIndex(of: "_") else { return nil }
+        return String(id[...end])
     }
     
-    func posterURL(width: Int, height: Int) -> URL {
-        return URL(string: "https://i.vimeocdn.com/video/\(thumbnailId)_\(width)x\(height).jpg")!
+    func posterURL(width: Int = 1920, height: Int = 1080) -> URL {
+        guard let i = thumbnailIdentifier else { return URL(string: "/")! }
+        return URL(string: "https://i.vimeocdn.com/video/")!.appendingPathComponent(i + "\(width)x\(height)")
     }
 
     var theCollections: [Collection] {
