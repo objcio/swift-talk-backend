@@ -68,8 +68,10 @@ public struct Episode: Codable, Equatable {
     var resources: [Resource]
     var vimeoId: Int
     var previewVimeoId: Int?
+    @available(*, deprecated, message: "This property can go away")
     var thumbnailId: Int
     var updates: [Update]?
+    var pictureUrl: URL?
 }
 
 struct Resource: Codable, Equatable {
