@@ -42,7 +42,7 @@
         "repositoryURL": "https://github.com/objcio/LibPQ",
         "state": {
           "branch": "master",
-          "revision": "d261a8f020885c0376b610c014ecfc68907541c1",
+          "revision": "e6fb474d6ddca9873d6ad757798dc7fd26fa916e",
           "version": null
         }
       },
@@ -96,8 +96,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio.git",
         "state": {
           "branch": null,
-          "revision": "6a79d4687ede7c088fe3e31d9b3452d6e6cd91eb",
-          "version": "2.5.1"
+          "revision": "124119f0bb12384cef35aa041d7c3a686108722d",
+          "version": "2.40.0"
         }
       },
       {
