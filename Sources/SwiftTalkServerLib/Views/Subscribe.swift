@@ -194,7 +194,7 @@ fileprivate func smallPrint(_ lines: [Node]) -> Node {
 }
 
 func newSub(coupon: Coupon?, team: Bool, plans: [Plan], error: RecurlyError? = nil) throws -> Node {
-    let data = SubscriptionFormData(plans: plans, selectedPlan: plans[0], coupon: coupon, error: error)
+    let data = SubscriptionFormData(plans: plans, selectedPlan: plans[0], team: team, coupon: coupon, error: error)
     return LayoutConfig(contents: [
         .header([
             .div(class: "container-h pb+ pt+", [

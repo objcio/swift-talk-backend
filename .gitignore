@@ -4,6 +4,7 @@
 /*.xcodeproj
 *.swp
 .postgres
+.postgres-old
 .swiftpm
 
 # Elastic Beanstalk Files
