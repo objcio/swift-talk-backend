@@ -1,9 +1,12 @@
-// swift-tools-version:5.0
+// swift-tools-version:5.5
 
 import PackageDescription
 
 let package = Package(
     name: "swifttalk-server",
+    platforms: [
+        .macOS(.v12)
+    ],
     products: [
         .executable(name: "swifttalk-server", targets: ["swifttalk-server"]),
         .library(name: "SwiftTalkServerLib", targets: ["SwiftTalkServerLib"]),
@@ -25,7 +28,8 @@ let package = Package(
         .package(url: "https://github.com/objcio/swift-talk-shared", from: "0.2.0"),
         .package(url: "https://github.com/objcio/md5", .exact("0.1.0")),
         .package(url: "https://github.com/jpsim/SourceKitten", .exact("0.29.0")), // todo 0.29 introduces a breaking change.
-		.package(url: "https://github.com/ianpartridge/swift-backtrace.git", from: "1.0.2"),
+        .package(url: "https://github.com/ianpartridge/swift-backtrace.git", from: "1.0.2"),
+        .package(url: "https://github.com/chriseidhof/backend-experiments", .branch("main")),
     ],
     targets: [
         .target(
@@ -49,7 +53,8 @@ let package = Package(
         .target(
             name: "Networking",
             dependencies: [
-			  "TinyNetworking"
+                .product(name: "TinyNetworking", package: "tiny-networking"),
+
             ],
             path: "Sources/Networking"
         ),
@@ -58,9 +63,9 @@ let package = Package(
             dependencies: [
                 "Base",
                 "Promise",
-                "NIO",
-                "NIOHTTP1",
-                "NIOFoundationCompat",
+                .product(name: "NIO", package: "swift-nio"),
+                .product(name: "NIOHTTP1", package: "swift-nio"),
+                .product(name: "NIOFoundationCompat", package: "swift-nio"),
             ],
             path: "Sources/NIOWrapper"
         ),
@@ -98,8 +103,9 @@ let package = Package(
         .target(
             name: "SwiftTalkServerLib",
             dependencies: [
+//                "EndpointBuilder",
                 "Incremental",
-                "TinyNetworking",
+                .product(name: "TinyNetworking", package: "tiny-networking"),
                 "Networking",
                 "Promise",
                 "Base",
@@ -108,11 +114,11 @@ let package = Package(
                 "NIOWrapper",
                 "Database",
                 "WebServer",
-                "CommonMark",
-				"Model",
-				"ViewHelpers",
+                .product(name: "CommonMark", package: "commonmark-swift"),
+                .product(name: "Model", package: "swift-talk-shared"),
+                .product(name: "ViewHelpers", package: "swift-talk-shared"),
 				"md5",
-				"SourceKittenFramework",
+                .product(name: "SourceKittenFramework", package: "SourceKitten"),
 			],
 			path: "Sources/SwiftTalkServerLib"
 		),
@@ -120,15 +126,15 @@ let package = Package(
             name: "swifttalk-server",
         	dependencies: [
                 "SwiftTalkServerLib",
-				"Backtrace",
+                .product(name: "Backtrace", package: "swift-backtrace")
         	],
 			path: "Sources/swifttalk-server"
         ),
 		.target(
 			name: "highlight-html",
 			dependencies: [
-                "SourceKittenFramework",
-                "CommonMark"
+                .product(name: "SourceKittenFramework", package: "SourceKitten"),
+                .product(name: "CommonMark", package: "commonmark-swift"),
 			],
 			path: "Sources/highlight-html"
 		),

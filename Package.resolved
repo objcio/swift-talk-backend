@@ -2,6 +2,15 @@
   "object": {
     "pins": [
       {
+        "package": "EndpointBuilder",
+        "repositoryURL": "https://github.com/chriseidhof/backend-experiments",
+        "state": {
+          "branch": "main",
+          "revision": "5aa66111a41a2585deb43d218a5c7576c9d082f1",
+          "version": null
+        }
+      },
+      {
         "package": "Commandant",
         "repositoryURL": "https://github.com/Carthage/Commandant.git",
         "state": {
