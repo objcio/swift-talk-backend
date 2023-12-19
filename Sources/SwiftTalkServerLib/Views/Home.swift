@@ -18,6 +18,20 @@ func renderHome(episodes: [EpisodeWithProgress]) -> Node {
             .link(to: .episodes, class: "inline-block ms-1 ml- color-blue no-decoration hover-under", ["See All"])
         ])
     ]
+    var projects: [Node] = Episode.allGroupedByProject.map { pv in
+        switch pv {
+        case let .single(ep):
+            return Node.p([
+                Node.text("Single: \(ep.number) \(ep.title)")
+            ])
+        case let .multiple(eps):
+            return Node.p([
+                Node.text("Multiple \(eps[0].theProject!.title): \(eps.map { "\($0.number) \($0.title)" }.joined(separator: ", "))")
+            ])
+        }
+    }
+    let projectsView = Node.section(class: "container", projects)
+
     if episodes.count >= 5 {
         let slice = episodes[0..<5]
         let featured = slice[0]
@@ -51,6 +65,6 @@ func renderHome(episodes: [EpisodeWithProgress]) -> Node {
             .li(class: "col width-full s+|width-1/2 l+|width-1/3 mb++", coll.render())
         })
     ])
-    return LayoutConfig(contents: [header, recentEpisodes, collections], description: metaDescription).layout
+    return LayoutConfig(contents: [header, projectsView, recentEpisodes, collections], description: metaDescription).layout
 }
 

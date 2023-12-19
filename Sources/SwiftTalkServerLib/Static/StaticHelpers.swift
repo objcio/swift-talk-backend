@@ -27,6 +27,10 @@ extension Collection: StaticLoadable {
     static var jsonName: String { return "collections.json" }
 }
 
+extension Project: StaticLoadable {
+    static var jsonName: String { return "projects.json" }
+}
+
 func loadStaticData<A: Codable>(name: String) -> [A] {
     return tryOrLog { try postgres.withConnection { connection in
         guard

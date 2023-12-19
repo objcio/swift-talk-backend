@@ -72,9 +72,48 @@ public struct Episode: Codable, Equatable {
     var thumbnailId: Int
     var updates: [Update]?
     var pictureUrl: URL?
+    var project: Id<Project>?
 }
 
-enum Project: String, Codable, Equatable {
+public struct Project: Codable, Hashable {
+    var id: Id<Project>
+    var title: String
+    var description: String
+}
+
+public enum ProjectView {
+    case single(Episode)
+    case multiple([Episode])
+}
+
+extension Episode {
+    static var allGroupedByProject: [ProjectView] {
+        var result: [ProjectView] = []
+        var episodes: [Episode] = []
+        func flush() {
+            if episodes[0].project == nil {
+                result.append(.single(episodes[0]))
+            } else {
+                result.append(.multiple(episodes))
+            }
+            episodes = []
+        }
+        for ep in all {
+            guard !episodes.isEmpty else {
+                episodes.append(ep)
+                continue
+            }
+            if ep.project == nil || episodes.last!.project != ep.project {
+                flush()
+            }
+            episodes.append(ep)
+        }
+        flush()
+        return result
+    }
+}
+
+public enum Projects: String, Codable, Equatable {
     case tinyNetworkingLibrary
     case renderingCommonMark
     case ledgerMacApp
@@ -195,6 +234,10 @@ extension Episode {
         return collections.compactMap { cid in
             Collection.allDict[cid]
         }
+    }
+    
+    var theProject: Project? {
+        return project.flatMap { Project.allDict[$0] }
     }
     
     var theCollaborators: [Collaborator] {

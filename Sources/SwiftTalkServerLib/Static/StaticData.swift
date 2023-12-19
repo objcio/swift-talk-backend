@@ -62,6 +62,8 @@ fileprivate let episodesSource: Static<[Episode]> = .fromStaticRepo(onRefresh: {
 
 fileprivate let collectionsSource: Static<[Collection]> = .fromStaticRepo()
 
+fileprivate let projectsSource: Static<[Project]> = .fromStaticRepo()
+
 fileprivate let collaboratorsSource: Static<[Collaborator]> = Static<[Collaborator]>.fromStaticRepo()
 
 fileprivate let transcriptsSource: Static<[Transcript]> = Static(async: { cb in
@@ -94,6 +96,7 @@ func refreshStaticData() {
         episodesVimeoInfo.refresh()
     }
     collectionsSource.refresh()
+    projectsSource.refresh()
     plansSource.refresh()
     collaboratorsSource.refresh()
     transcriptsSource.refresh()
@@ -139,6 +142,28 @@ fileprivate let collectionsDictO: Observable<[Id<Collection>:Collection]> = sort
 fileprivate var collectionEpisodesO: Observable<[Id<Collection>:[Episode]]> = sortedCollectionsO.flatMap { colls in
     sortedEpisodesO.map { eps in
         return Dictionary(colls.map { c in
+            return (c.id, c.expensive_allEpisodes)
+        }, uniquingKeysWith: { x, _ in x })
+    }
+}
+
+fileprivate let sortedProjectsO: Observable<[Project]> = projectsSource.observable.map { (projects: [Project]?) in
+    guard let p = projects else { return [] }
+    return p.filter {
+        !$0.expensive_allEpisodes.isEmpty && $0.expensive_allEpisodes.contains { $0.released }
+    }.sorted {
+        $0.expensive_allEpisodes.last!.number > $1.expensive_allEpisodes.last!.number
+    }
+}
+
+fileprivate let projectsDictO: Observable<[Id<Project>:Project]> = sortedProjectsO.map { (projects: [Project]?) in
+    guard let p = projects else { return [:] }
+    return Dictionary.init(p.map { ($0.id, $0) }, uniquingKeysWith: { x, _ in x })
+}
+
+fileprivate var projectEpisodesO: Observable<[Id<Project>:[Episode]]> = sortedProjectsO.flatMap { projects in
+    sortedEpisodesO.map { eps in
+        return Dictionary(projects.map { c in
             return (c.id, c.expensive_allEpisodes)
         }, uniquingKeysWith: { x, _ in x })
     }
@@ -214,6 +239,12 @@ extension Collection {
     }
 }
 
+extension Project {
+    fileprivate var expensive_allEpisodes: [Episode] {
+        return (episodesSource.observable.value ?? []).filter { $0.project?.rawValue == id.rawValue }
+    }
+}
+
 
 
 // Atomic accessors — only these are used to create the public properties below
@@ -232,6 +263,9 @@ fileprivate var sortedEpisodes = sortedEpisodesO.atomic
 fileprivate var sortedCollections = sortedCollectionsO.atomic
 fileprivate var collectionsDict = collectionsDictO.atomic
 fileprivate var collectionEpisodes = collectionEpisodesO.atomic
+fileprivate var projectEpisodes = projectEpisodesO.atomic
+fileprivate var sortedProjects = sortedProjectsO.atomic
+fileprivate var projectsDict = projectsDictO.atomic
 fileprivate var collaborators = collaboratorsO.atomic
 fileprivate var transcripts = transcriptsO.atomic
 fileprivate var plans = plansO.atomic
@@ -265,6 +299,12 @@ extension Collection {
     static var all: [Collection] { return sortedCollections.value }
     static var allDict: [Id<Collection>:Collection] { return collectionsDict.value }
     var allEpisodes: [Episode] { return collectionEpisodes.value[id] ?? [] }
+}
+
+extension Project {
+    static var all: [Project] { return sortedProjects.value }
+    static var allDict: [Id<Project>:Project] { return projectsDict.value }
+    var allEpisodes: [Episode] { return projectEpisodes.value[id] ?? [] }
 }
 
 extension Collaborator {
