@@ -127,7 +127,6 @@ public enum Projects: String, Codable, Equatable {
     case xcode9
     case mutableSharedStructs
     case theElmArchitecture
-    case typeSafeFilePaths
     case viewStateDrivenApp
     case incrementalProgramming
     case swiftStrings
@@ -140,7 +139,6 @@ public enum Projects: String, Codable, Equatable {
     case buildingALayoutLibrary
     case mapRouting
     case swiftTalkBackend
-    case stringInterpolationInSwif5
     case markdownPlaygrounds
     case functionalProgramming
     case swiftTalkApp
@@ -154,7 +152,7 @@ public enum Projects: String, Codable, Equatable {
     case quickOpen
     case swiftUiSlides
     case drawingTrees
-    case SwiftUiLayoutExplained
+    case swiftUiLayoutExplained
     case designingWithPreviews
     case swiftUiLayoutChallenge
     case swiftUiPathBuilder
@@ -188,6 +186,7 @@ public enum Projects: String, Codable, Equatable {
     case buildingKeyframeAnimations
     case interactiveMarqueeView
     case structuralProgramming
+    case tweakableValues
 }
 
 struct Resource: Codable, Equatable {

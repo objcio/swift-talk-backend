@@ -18,7 +18,7 @@ func renderHome(episodes: [EpisodeWithProgress]) -> Node {
             .link(to: .episodes, class: "inline-block ms-1 ml- color-blue no-decoration hover-under", ["See All"])
         ])
     ]
-    var projects: [Node] = Episode.allGroupedByProject.map { pv in
+    let projects: [Node] = Episode.allGroupedByProject.map { pv in
         switch pv {
         case let .single(ep):
             return Node.p([
