@@ -6,7 +6,7 @@
 //
 
 import Foundation
-@testable import HTML
+@testable import HTML1
 
 extension Element where I == () {
     // todo: we might want to check for forms as well

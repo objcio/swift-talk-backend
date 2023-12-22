@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import HTML
+import HTML1
 
 public typealias ValidationError = (field: String, message: String)
 

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import HTML
+import HTML1
 
 
 struct DecodingError: Error {
@@ -637,5 +637,5 @@ protocol RootElement {
 func encodeXML<T: Encodable>(_ value: T) throws -> String where T: RootElement {
     let encoder = RecurlyXMLEncoder(T.rootElementName)
     try value.encode(to: encoder)
-    return HTML.Node<()>.node(encoder.rootElement).xmlDocument
+    return HTML1.Node<()>.node(encoder.rootElement).xmlDocument
 }

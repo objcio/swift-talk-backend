@@ -6,7 +6,7 @@
         "repositoryURL": "https://github.com/chriseidhof/backend-experiments",
         "state": {
           "branch": "main",
-          "revision": "5aa66111a41a2585deb43d218a5c7576c9d082f1",
+          "revision": "4f7a84d80842c9d0c3ff6513ac63a93d805583e4",
           "version": null
         }
       },
@@ -24,26 +24,8 @@
         "repositoryURL": "https://github.com/chriseidhof/commonmark-swift",
         "state": {
           "branch": "embed-c",
-          "revision": "df72c50897a0494ccd606d5105818475915b2778",
+          "revision": "c5776f716f666cd6a011cf20cb6fbb09244d6162",
           "version": null
-        }
-      },
-      {
-        "package": "CwlCatchException",
-        "repositoryURL": "https://github.com/mattgallagher/CwlCatchException.git",
-        "state": {
-          "branch": null,
-          "revision": "7cd2f8cacc4d22f21bc0b2309c3b18acf7957b66",
-          "version": "1.2.0"
-        }
-      },
-      {
-        "package": "CwlPreconditionTesting",
-        "repositoryURL": "https://github.com/mattgallagher/CwlPreconditionTesting.git",
-        "state": {
-          "branch": null,
-          "revision": "c228db5d2ad1b01ebc84435e823e6cca4e3db98b",
-          "version": "1.2.0"
         }
       },
       {
@@ -51,7 +33,7 @@
         "repositoryURL": "https://github.com/objcio/LibPQ",
         "state": {
           "branch": "master",
-          "revision": "e6fb474d6ddca9873d6ad757798dc7fd26fa916e",
+          "revision": "e16ce4a5f742dd7b14ce326b6aac2d425fb314d9",
           "version": null
         }
       },
@@ -69,8 +51,8 @@
         "repositoryURL": "https://github.com/Quick/Nimble.git",
         "state": {
           "branch": null,
-          "revision": "b02b00b30b6353632aa4a5fb6124f8147f7140c0",
-          "version": "8.0.5"
+          "revision": "7a46a5fc86cb917f69e3daf79fcb045283d8f008",
+          "version": "8.1.2"
         }
       },
       {
@@ -78,8 +60,8 @@
         "repositoryURL": "https://github.com/Quick/Quick.git",
         "state": {
           "branch": null,
-          "revision": "33682c2f6230c60614861dfc61df267e11a1602f",
-          "version": "2.2.0"
+          "revision": "09b3becb37cb2163919a3842a4c5fa6ec7130792",
+          "version": "2.2.1"
         }
       },
       {
@@ -96,8 +78,8 @@
         "repositoryURL": "https://github.com/ianpartridge/swift-backtrace.git",
         "state": {
           "branch": null,
-          "revision": "eaf2cef011c0c23d1701aa60b364def8015dc3c7",
-          "version": "1.1.1"
+          "revision": "80746bdd0ac8a7d83aad5d89dac3cbf15de652e6",
+          "version": "1.3.4"
         }
       },
       {
@@ -119,12 +101,21 @@
         }
       },
       {
+        "package": "HTML",
+        "repositoryURL": "https://github.com/robb/Swim",
+        "state": {
+          "branch": null,
+          "revision": "a0943e6f3cb5751ee7b69ed43a33613ea67d0c6a",
+          "version": "0.4.0"
+        }
+      },
+      {
         "package": "SWXMLHash",
         "repositoryURL": "https://github.com/drmohundro/SWXMLHash.git",
         "state": {
           "branch": null,
-          "revision": "a4931e5c3bafbedeb1601d3bb76bbe835c6d475a",
-          "version": "5.0.1"
+          "revision": "9183170d20857753d4f331b0ca63f73c60764bf3",
+          "version": "5.0.2"
         }
       },
       {
@@ -132,8 +123,8 @@
         "repositoryURL": "https://github.com/objcio/tiny-networking",
         "state": {
           "branch": null,
-          "revision": "6676e026109376e6aa51af4830cc5eab57397573",
-          "version": "0.3.0"
+          "revision": "45ba230cc9a843bf82a642803a43ef8838dc5b70",
+          "version": "0.5.0"
         }
       },
       {

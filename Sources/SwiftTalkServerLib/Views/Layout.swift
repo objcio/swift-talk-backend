@@ -6,8 +6,9 @@
 //
 
 import Foundation
-import HTML
+import HTML1
 import WebServer
+import HTML
 
 let basicPageTitle: String = "Swift Talk - objc.io"
 extension String {
@@ -126,39 +127,129 @@ extension LayoutConfig {
                 "title": "Atom",
                 "type": "application/atom+xml"
                 ]),
-            .hashedStylesheet(href: "/assets/stylesheets/application.css"),
+            .stylesheet(href: "/assets/stylesheets/normalize.css"),
+            .stylesheet(href: "/assets/stylesheets/webflow.css"),
+            .stylesheet(href: "/assets/stylesheets/objc-io-redesign.webflow.css"),
+//            .hashedStylesheet(href: "/assets/stylesheets/application.css"),
             includeRecurlyJS ? .script(src: "https://js.recurly.com/v4/recurly.js") : .none,
             googleAnalytics,
         ] + structured)
-        let logo = Node.link(to: URL(string: "https://www.objc.io")!, class: "flex-none outline-none mr++ flex", [
-            .inlineSvg(class: "block logo logo--themed height-auto", path: "logo.svg"),
-            .h1(class: "visuallyhidden", ["objc.io"])
-        ] as [Node])
-        let navigation = Node.nav(class: "flex flex-grow", [
-            .ul(class: "flex flex-auto", navigationItems.map { l in
-                .li(class: "flex mr+", [
-                    .link(to: l.0, attributes: [
-                        "class": "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration"
-                    ], [.span([.text(l.1)])])
-                ])
-            }) // todo: search
-        ])
+//        let logo = Node.link(to: URL(string: "https://www.objc.io")!, class: "flex-none outline-none mr++ flex", [
+//            .inlineSvg(class: "block logo logo--themed height-auto", path: "logo.svg"),
+//            .h1(class: "visuallyhidden", ["objc.io"])
+//        ] as [Node])
+//        let navigation = Node.nav(class: "flex flex-grow", [
+//            .ul(class: "flex flex-auto", navigationItems.map { l in
+//                .li(class: "flex mr+", [
+//                    .link(to: l.0, attributes: [
+//                        "class": "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration"
+//                    ], [.span([.text(l.1)])])
+//                ])
+//            }) // todo: search
+//        ])
 
-        let header = Node.header(class: "bgcolor-white", [
-            .div(class: "height-3 flex scroller", [
-                .div(class: "container-h flex-grow flex", [
-                    logo,
-                    navigation,
-                    .withSession(userHeader)
-                ])
-            ])
-        ])
+//        let header = Node.header(class: "bgcolor-white", [
+//            .div(class: "height-3 flex scroller", [
+//                .div(class: "container-h flex-grow flex", [
+//                    logo,
+//                    navigation,
+//                    .withSession(userHeader)
+//                ])
+//            ])
+//        ])
         
-        let thinkingInSwiftUIPromo = Node.raw(
-            """
-            <div class="theme-thinking-in-swiftui"> <section class=" pattern-shade bgcolor-theme-main color-white"> <div class="container pb+ pt+"> <a href="https://www.objc.io/books/thinking-in-swiftui" class="color-white no-decoration">→ <strong class="bold">Thinking in SwiftUI</strong>: Our new book is now available!</a> </div></section></div>
-            """
-        )
+        let headerNode =
+            div(class: "navbar dark w-nav", role: "banner", customAttributes: ["data-animation": "default", "data-collapse": "small", "data-duration": "200", "data-easing": "ease", "data-easing2": "ease"]) {
+        
+                div(class: "nav-container w-container") {
+        
+                    div(class: "nav-content") {
+        
+                        a(class: "nav-logo-link-block w-inline-block", href: "/") {
+                            img(alt: "", class: "nav-logo", height: "30", loading: "lazy", src: "/images/logo-letters-dark.png")
+        
+                            div(class: "mobile-logo-container") {
+        
+                                div(class: "mobile-logo-column") {
+                                    img(alt: "", class: "mobile-logo-image", loading: "lazy", src: "/images/arrow-up-swift-talks.png")
+                                }
+        
+                                div(class: "mobile-logo-column") {
+                                    img(alt: "", class: "mobile-logo-image right", loading: "lazy", src: "/images/arrow-down-swift-talks.png")
+                                }
+        
+                            }
+        
+                            div(class: "logo-animation-container") {
+        
+                                div(class: "logo-animation-column-container") {
+        
+                                    div(class: "logo-animation-left-container") {
+                                        img(alt: "", class: "logo-animation-left-image", loading: "lazy", src: "/images/arrow-up-swift-talks.png")
+                                        img(alt: "", class: "logo-animation-left-image", loading: "lazy", src: "/images/arrow-up-swift-talks.png")
+                                    }
+        
+                                }
+        
+                                div(class: "logo-animation-column-container") {
+        
+                                    div(class: "logo-animation-right-container") {
+                                        img(alt: "", class: "logo-animation-right-image", loading: "lazy", src: "/images/arrow-down-swift-talks.png")
+                                        img(alt: "", class: "logo-animation-right-image", loading: "lazy", src: "/images/arrow-down-swift-talks.png")
+                                    }
+        
+                                }
+        
+                            }
+        
+                        }
+        
+                        nav(class: "nav-menu dark w-nav-menu", role: "navigation") {
+        
+                            a(class: "nav-link dark workshops underline-animation w-nav-link", href: "/workshops") {
+                                "Workshops"
+                            }
+        
+                            a(class: "nav-link dark swift-talk underline-animation w-nav-link w--current", href: "/swift-talks", customAttributes: ["aria-current": "page"]) {
+                                "Swift Talk"
+                            }
+        
+                            a(class: "nav-link dark books underline-animation w-nav-link", href: "/books") {
+                                "Books"
+                            }
+        
+                            div(class: "login-subscribe-buttons-container") {
+        
+                                a(class: "log-in-button w-button", href: "#") {
+                                    "Log in"
+                                }
+        
+                                a(class: "subscribe-button w-button", href: "#") {
+                                    "Subscribe"
+                                }
+        
+                            }
+        
+                        }
+        
+                        div(class: "menu-button dark w-nav-button") {
+        
+                            div(class: "menu-button-text dark") {
+                                "Menu"
+                            }
+        
+                        }
+        
+                    }
+        
+                }
+        
+            }
+
+        var headerStr = ""
+        headerNode.write(to: &headerStr)
+        let header = Node.raw(headerStr)
+        
         var bodyChildren: [Node] = [
             header,
             .main(
@@ -170,7 +261,7 @@ extension LayoutConfig {
         bodyChildren.append(contentsOf: preFooter)
         bodyChildren.append(.raw(footer))
         bodyChildren.append(contentsOf: footerContent)
-        let body = Node.body(attributes: ["class": "theme-" + theme], bodyChildren)
+        let body = Node.body(attributes: ["class": "body-dark"], bodyChildren)
         return .html(attributes: ["lang": "en"], [head, body])
     }
     

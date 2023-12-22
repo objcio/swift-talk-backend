@@ -7,12 +7,12 @@
 
 import Foundation
 import Base
-import HTML
+import HTML1
 import WebServer
 import CommonMark
 
 
-typealias Node = HTML.Node<STRequestEnvironment>
+typealias Node = HTML1.Node<STRequestEnvironment>
 
 protocol LinkTarget {
     var absoluteString: String { get }
@@ -22,7 +22,7 @@ extension Route: LinkTarget {
     var absoluteString: String { return path }
 }
 
-extension HTML.Node where I == STRequestEnvironment {
+extension HTML1.Node where I == STRequestEnvironment {
     static func hashedStylesheet(media: String = "all", href: String) -> Node {
         return Node.withInput { deps in
             return Node.stylesheet(media: media, href: deps.hashedAssetName(href))

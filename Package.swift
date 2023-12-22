@@ -15,7 +15,7 @@ let package = Package(
         .library(name: "Promise", targets: ["Promise"]),
         .library(name: "Networking", targets: ["Networking"]),
         .library(name: "NIOWrapper", targets: ["NIOWrapper"]),
-        .library(name: "HTML", targets: ["HTML"]),
+        .library(name: "HTML1", targets: ["HTML1"]),
         .library(name: "Database", targets: ["Database"]),
         .library(name: "WebServer", targets: ["WebServer"]),
         .library(name: "Incremental", targets: ["Incremental"]),
@@ -30,6 +30,7 @@ let package = Package(
         .package(url: "https://github.com/jpsim/SourceKitten", .exact("0.29.0")), // todo 0.29 introduces a breaking change.
         .package(url: "https://github.com/ianpartridge/swift-backtrace.git", from: "1.0.2"),
         .package(url: "https://github.com/chriseidhof/backend-experiments", .branch("main")),
+        .package(name: "Swim", url: "https://github.com/robb/Swim", .exact("0.4.0"))
     ],
     targets: [
         .target(
@@ -70,9 +71,9 @@ let package = Package(
             path: "Sources/NIOWrapper"
         ),
         .target(
-            name: "HTML",
+            name: "HTML1",
             dependencies: [ "Base" ],
-            path: "Sources/HTML"
+            path: "Sources/HTML1"
         ),
         .target(
             name: "Routing",
@@ -93,7 +94,7 @@ let package = Package(
             name: "WebServer",
             dependencies: [
                 "Base",
-                "HTML",
+                "HTML1",
                 "NIOWrapper",
                 "Promise",
                 "Database",
@@ -110,7 +111,7 @@ let package = Package(
                 "Promise",
                 "Base",
                 "Routing",
-                "HTML",
+                "HTML1",
                 "NIOWrapper",
                 "Database",
                 "WebServer",
@@ -119,6 +120,8 @@ let package = Package(
                 .product(name: "ViewHelpers", package: "swift-talk-shared"),
 				"md5",
                 .product(name: "SourceKittenFramework", package: "SourceKitten"),
+                .product(name: "Swim", package: "Swim"),
+                .product(name: "HTML", package: "Swim"),
 			],
 			path: "Sources/SwiftTalkServerLib"
 		),

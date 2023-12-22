@@ -11,7 +11,7 @@ import Base
 import XCTest
 import LibPQ
 import NIOWrapper
-import HTML
+import HTML1
 import Database
 import WebServer
 import TinyNetworking
@@ -28,7 +28,7 @@ enum TestInterpreter: NIOWrapper.Response, WebServer.Response, WebServer.Respons
     case _onComplete(promise: Promise<Any>, do: (Any) -> TestInterpreter)
     case _withPostData(do: (Data) -> TestInterpreter)
     
-    case _writeHTML(HTML.Node<()>, status: HTTPResponseStatus)
+    case _writeHTML(HTML1.Node<()>, status: HTTPResponseStatus)
     
     case _withCSRF(cont: (CSRFToken) -> TestInterpreter)
     case _execute(Query<Any>, cont: (Either<Any, Error>) -> TestInterpreter)
@@ -58,7 +58,7 @@ enum TestInterpreter: NIOWrapper.Response, WebServer.Response, WebServer.Respons
         return ._withPostData(do: cont)
     }
     
-    static func write(html: HTML.Node<()>, status: HTTPResponseStatus) -> TestInterpreter {
+    static func write(html: HTML1.Node<()>, status: HTTPResponseStatus) -> TestInterpreter {
         return ._writeHTML(html, status: status)
     }
 

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import HTML
+import HTML1
 import WebServer
 
 func subscriptionForm(_ data: SubscriptionFormData, initial: BillingInfo? = nil, action: Route) -> Node {
