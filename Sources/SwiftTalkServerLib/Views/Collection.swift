@@ -56,7 +56,7 @@ extension Collection {
                         ])
                     })
                 ]),
-            ], theme: "collection", structuredData: structuredData).layout
+            ], structuredData: structuredData).layout
         }
     }
 }

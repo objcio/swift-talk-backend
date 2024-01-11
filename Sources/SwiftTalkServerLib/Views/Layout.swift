@@ -17,24 +17,32 @@ extension String {
     }
 }
 
+extension HTML.Node {
+    var raw: String {
+        var str: String = ""
+        write(to: &str)
+        return str
+    }
+    
+    var asOldNode: HTML1.Node<STRequestEnvironment> {
+        .raw(raw)
+    }
+}
+
 struct LayoutConfig {
     var pageTitle: String
     var contents: [Node]
-    var theme: String
     var metaDescription: String?
     var footerContent: [Node]
-    var preFooter: [Node]
     var structuredData: StructuredData?
     var includeRecurlyJS: Bool = false
     
-    init(pageTitle: String = basicPageTitle, contents: [Node], theme: String = "default", description: String? = nil, preFooter: [Node] = [], footerContent: [Node] = [], structuredData: StructuredData? = nil, includeRecurlyJS: Bool = false) {
+    init(pageTitle: String = basicPageTitle, contents: [Node], description: String? = nil, footerContent: [Node] = [], structuredData: StructuredData? = nil, includeRecurlyJS: Bool = false) {
         self.pageTitle = pageTitle
         self.contents = contents
-        self.theme = theme
         self.metaDescription = description
         self.footerContent = footerContent
         self.structuredData = structuredData
-        self.preFooter = preFooter
         self.includeRecurlyJS = includeRecurlyJS
     }
 }
@@ -132,134 +140,84 @@ extension LayoutConfig {
             .stylesheet(href: "/assets/stylesheets/objc-io-redesign.webflow.css"),
 //            .hashedStylesheet(href: "/assets/stylesheets/application.css"),
             includeRecurlyJS ? .script(src: "https://js.recurly.com/v4/recurly.js") : .none,
-            googleAnalytics,
+//            googleAnalytics,
         ] + structured)
-//        let logo = Node.link(to: URL(string: "https://www.objc.io")!, class: "flex-none outline-none mr++ flex", [
-//            .inlineSvg(class: "block logo logo--themed height-auto", path: "logo.svg"),
-//            .h1(class: "visuallyhidden", ["objc.io"])
-//        ] as [Node])
-//        let navigation = Node.nav(class: "flex flex-grow", [
-//            .ul(class: "flex flex-auto", navigationItems.map { l in
-//                .li(class: "flex mr+", [
-//                    .link(to: l.0, attributes: [
-//                        "class": "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration"
-//                    ], [.span([.text(l.1)])])
-//                ])
-//            }) // todo: search
-//        ])
-
-//        let header = Node.header(class: "bgcolor-white", [
-//            .div(class: "height-3 flex scroller", [
-//                .div(class: "container-h flex-grow flex", [
-//                    logo,
-//                    navigation,
-//                    .withSession(userHeader)
-//                ])
-//            ])
-//        ])
         
-        let headerNode =
-            div(class: "navbar dark w-nav", role: "banner", customAttributes: ["data-animation": "default", "data-collapse": "small", "data-duration": "200", "data-easing": "ease", "data-easing2": "ease"]) {
-        
+        let header = HTML1.Node.withInput { env in
+            HTML.div(class: "navbar dark w-nav", role: "banner", customAttributes: ["data-animation": "default", "data-collapse": "small", "data-duration": "200", "data-easing": "ease", "data-easing2": "ease"]) {
                 div(class: "nav-container w-container") {
-        
                     div(class: "nav-content") {
-        
-                        a(class: "nav-logo-link-block w-inline-block", href: "/") {
+                        a(class: "nav-logo-link-block w-inline-block", href: "https://www.objc.io") {
                             img(alt: "", class: "nav-logo", height: "30", loading: "lazy", src: "/images/logo-letters-dark.png")
-        
                             div(class: "mobile-logo-container") {
-        
                                 div(class: "mobile-logo-column") {
                                     img(alt: "", class: "mobile-logo-image", loading: "lazy", src: "/images/arrow-up-swift-talks.png")
                                 }
-        
                                 div(class: "mobile-logo-column") {
                                     img(alt: "", class: "mobile-logo-image right", loading: "lazy", src: "/images/arrow-down-swift-talks.png")
                                 }
-        
                             }
-        
                             div(class: "logo-animation-container") {
-        
                                 div(class: "logo-animation-column-container") {
-        
                                     div(class: "logo-animation-left-container") {
                                         img(alt: "", class: "logo-animation-left-image", loading: "lazy", src: "/images/arrow-up-swift-talks.png")
                                         img(alt: "", class: "logo-animation-left-image", loading: "lazy", src: "/images/arrow-up-swift-talks.png")
                                     }
-        
                                 }
-        
                                 div(class: "logo-animation-column-container") {
-        
                                     div(class: "logo-animation-right-container") {
                                         img(alt: "", class: "logo-animation-right-image", loading: "lazy", src: "/images/arrow-down-swift-talks.png")
                                         img(alt: "", class: "logo-animation-right-image", loading: "lazy", src: "/images/arrow-down-swift-talks.png")
                                     }
-        
                                 }
-        
                             }
-        
                         }
-        
                         nav(class: "nav-menu dark w-nav-menu", role: "navigation") {
-        
-                            a(class: "nav-link dark workshops underline-animation w-nav-link", href: "/workshops") {
+                            a(class: "nav-link dark workshops underline-animation w-nav-link", href: "https://www.objc.io/workshops") {
                                 "Workshops"
                             }
-        
-                            a(class: "nav-link dark swift-talk underline-animation w-nav-link w--current", href: "/swift-talks", customAttributes: ["aria-current": "page"]) {
+                            a(class: "nav-link dark swift-talk underline-animation w-nav-link w--current", href: "https://talk.objc.io", customAttributes: ["aria-current": "page"]) {
                                 "Swift Talk"
                             }
-        
-                            a(class: "nav-link dark books underline-animation w-nav-link", href: "/books") {
+                            a(class: "nav-link dark books underline-animation w-nav-link", href: "https://www.objc.io/books") {
                                 "Books"
                             }
-        
                             div(class: "login-subscribe-buttons-container") {
-        
-                                a(class: "log-in-button w-button", href: "#") {
-                                    "Log in"
+                                if let _ = env.session {
+                                    a(class: "log-in-button w-button", href: Route.account(.logout).path) {
+                                        "Log out"
+                                    }
+                                    a(class: "subscribe-button w-button", href: Route.account(.profile).path) {
+                                        "Account"
+                                    }
+                                } else {
+                                    a(class: "log-in-button w-button", href: Route.login(.login(continue: env.route)).path) {
+                                        "Log in"
+                                    }
+                                    a(class: "subscribe-button w-button", href: Route.signup(.subscribe(planName: nil)).path) {
+                                        "Subscribe"
+                                    }
                                 }
-        
-                                a(class: "subscribe-button w-button", href: "#") {
-                                    "Subscribe"
-                                }
-        
                             }
-        
                         }
-        
                         div(class: "menu-button dark w-nav-button") {
-        
                             div(class: "menu-button-text dark") {
                                 "Menu"
                             }
-        
                         }
-        
                     }
-        
                 }
-        
-            }
-
-        var headerStr = ""
-        headerNode.write(to: &headerStr)
-        let header = Node.raw(headerStr)
-        
+            }.asOldNode
+        }
+            
         var bodyChildren: [Node] = [
             header,
             .main(
-                [.none] + // TODO flash messsage should go here (there's a flash helper below)
                 contents
             )
         ]
         // these are appends because of compile time
-        bodyChildren.append(contentsOf: preFooter)
-        bodyChildren.append(.raw(footer))
+        bodyChildren.append(footer)
         bodyChildren.append(contentsOf: footerContent)
         let body = Node.body(attributes: ["class": "body-dark"], bodyChildren)
         return .html(attributes: ["lang": "en"], [head, body])
@@ -285,10 +243,10 @@ extension LayoutConfig {
                 ]),
             .hashedStylesheet(href: "/assets/stylesheets/application.css"),
             includeRecurlyJS ? .script(src: "https://js.recurly.com/v4/recurly.js") : .none,
-            googleAnalytics,
+//            googleAnalytics,
         ] + structured)
         let linkClasses: Class = "no-decoration color-inherit hover-color-black mr"
-        let body = Node.body(attributes: ["class": "theme-" + theme], [
+        let body = Node.body(attributes: ["class": "theme-"/* + theme*/], [
             .header(class: "site-header", [
         		.div(class: "site-header__nav flex", [
                     .div(class: "container-h flex-grow flex items-center height-3", [
@@ -300,7 +258,6 @@ extension LayoutConfig {
                 ])
             ]),
             .main(contents),
-        ] + preFooter + [
             .footer([
                 .div(class: "container-h pv", [
                     .div(class: "ms-1 color-gray-60", [
@@ -314,148 +271,330 @@ extension LayoutConfig {
     }
 }
 
-public enum FlashType {
-    case notice
-    case alert
-}
+//let googleAnalytics = Node.raw("""
+//<script async src="https://www.googletagmanager.com/gtag/js?id=UA-40809116-1"></script>
+//<script>
+//  window.dataLayer = window.dataLayer || [];
+//  function gtag(){dataLayer.push(arguments);}
+//  gtag('js', new Date());
+//
+//  gtag('config', 'UA-40809116-1');
+//</script>
+//""")
 
-func flash(message: String, type: FlashType) -> Node {
-    let `class`: Class
-    switch type {
-    case .notice: `class` = "bgcolor-blue-dark"
-    case .alert: `class` = "bgcolor-invalid"
+fileprivate let footer: HTML1.Node<STRequestEnvironment> = HTML.div(class: "footer dark") {
+    div(class: "footer-container") {
+
+        div(class: "footer-company-info") {
+
+            div(class: "footer-logo") {
+                img(alt: "", class: "footer-logo-letters", height: "30", loading: "lazy", src: "/images/logo-letters-dark.png")
+
+                div(class: "mobile-logo-container") {
+
+                    div(class: "mobile-logo-column footer") {
+                        img(alt: "", class: "mobile-logo-image", loading: "lazy", src: "/images/arrow-up-swift-talks.png")
+                    }
+
+                    div(class: "mobile-logo-column footer") {
+                        img(alt: "", class: "mobile-logo-image right", loading: "lazy", src: "/images/arrow-down-swift-talks.png")
+                    }
+
+                }
+
+                div(class: "logo-animation-container footer") {
+
+                    div(class: "logo-animation-column-container footer") {
+
+                        div(class: "logo-animation-left-container footer") {
+                            img(alt: "", class: "logo-animation-left-image footer", loading: "lazy", src: "/images/arrow-up-swift-talks.png")
+                            img(alt: "", class: "logo-animation-left-image footer", loading: "lazy", src: "/images/arrow-up-swift-talks.png")
+                        }
+
+                    }
+
+                    div(class: "logo-animation-column-container footer") {
+
+                        div(class: "logo-animation-right-container footer") {
+                            img(alt: "", class: "logo-animation-right-image footer", loading: "lazy", src: "/images/arrow-down-swift-talks.png")
+                            img(alt: "", class: "logo-animation-right-image footer", loading: "lazy", src: "/images/arrow-down-swift-talks.png")
+                        }
+
+                    }
+
+                }
+
+                div(class: "nav-logo-arrows-container") {
+                    img(alt: "", class: "footer-logo-arrow", height: "30", loading: "lazy", src: "/images/arrow-up-swift-talks.png")
+                    img(alt: "", class: "footer-logo-arrow", height: "30", loading: "lazy", src: "/images/arrow-down-swift-talks.png")
+                }
+
+            }
+
+            div(class: "body dark footer mobile") {
+                "objc.io publishes books, videos, and articles on advanced techniques for iOS and macOS development."
+            }
+
+        }
+
+        div(class: "footer-sections-container") {
+
+            div(class: "footer-section") {
+
+                h5(class: "h5 dark") {
+                    "Learn"
+                }
+
+                div(class: "footer-links-container") {
+
+                    a(class: "footer-link dark w--current", href: "/swift-talks", customAttributes: ["aria-current": "page"]) {
+                        "Swift Talk"
+                    }
+
+                    a(class: "footer-link dark", href: "/books") {
+                        "Books"
+                    }
+
+                    a(class: "footer-link dark", href: "/workshops") {
+                        "Workshops"
+                    }
+
+                    a(class: "footer-link dark", href: "/issues") {
+                        "Issues"
+                    }
+
+                }
+
+            }
+
+            div(class: "footer-section") {
+
+                h5(class: "h5 dark") {
+                    "Connect"
+                }
+
+                div(class: "footer-links-container") {
+
+                    a(class: "footer-link dark", href: "/blog") {
+                        "Blog"
+                    }
+
+                    a(class: "footer-link dark", href: "http://twitter.com/objcio", target: "_blank") {
+                        "Twitter"
+                    }
+
+                    a(class: "footer-link dark", href: "https://www.youtube.com/@objcio", target: "_blank") {
+                        "YouTube"
+                    }
+
+                }
+
+            }
+
+            div(class: "footer-section") {
+
+                h5(class: "h5 dark") {
+                    "More"
+                }
+
+                div(class: "footer-links-container") {
+
+                    a(class: "footer-link dark", href: "/about") {
+                        "About"
+                    }
+
+                    a(class: "footer-link dark", href: "/mailto:mail@objc.io") {
+                        "Email"
+                    }
+
+                    a(class: "footer-link dark", href: "#") {
+                        "Imprint & Legal"
+                    }
+
+                }
+
+            }
+
+        }
+
+        div(class: "footer-sections-container-mobile") {
+
+            div(class: "footer-dropdown dark w-dropdown", customAttributes: ["data-hover": "false", "data-delay": "0"]) {
+
+                div(class: "footer-dropdown-toggle learn w-dropdown-toggle") {
+
+                    div(class: "h5 mobile dark") {
+                        "Learn"
+                    }
+
+                    h5(class: "h5 mobile toggle-icon footer dark") {
+                        "+"
+                    }
+
+                }
+
+                nav(class: "footer-dropdown-list w-dropdown-list") {
+
+                    a(class: "footer-dropdown-link dark w-dropdown-link w--current", href: "/swift-talks", customAttributes: ["aria-current": "page"]) {
+                        "Swift Talk"
+                    }
+
+                    a(class: "footer-dropdown-link dark w-dropdown-link", href: "/books") {
+                        "Books"
+                    }
+
+                    a(class: "footer-dropdown-link dark w-dropdown-link", href: "/workshops") {
+                        "Workshops"
+                    }
+
+                    a(class: "footer-dropdown-link dark w-dropdown-link", href: "/issues") {
+                        "Issues"
+                    }
+
+                }
+
+            }
+
+            div(class: "footer-dropdown dark w-dropdown", customAttributes: ["data-hover": "false", "data-delay": "0"]) {
+
+                div(class: "footer-dropdown-toggle connect w-dropdown-toggle") {
+
+                    div(class: "h5 mobile dark") {
+                        "Connect"
+                    }
+
+                    h5(class: "h5 mobile toggle-icon footer dark") {
+                        "+"
+                    }
+
+                }
+
+                nav(class: "footer-dropdown-list w-dropdown-list") {
+
+                    a(class: "footer-dropdown-link dark w-dropdown-link", href: "/blog") {
+                        "Blog"
+                    }
+
+                    a(class: "footer-dropdown-link dark w-dropdown-link", href: "http://twitter.com/objcio", target: "_blank") {
+                        "Twitter"
+                    }
+
+                    a(class: "footer-dropdown-link dark w-dropdown-link", href: "http://youtube.com/@objcio", target: "_blank") {
+                        "YouTube"
+                    }
+
+                }
+
+            }
+
+            div(class: "footer-dropdown dark w-dropdown", customAttributes: ["data-hover": "false", "data-delay": "0"]) {
+
+                div(class: "footer-dropdown-toggle more w-dropdown-toggle") {
+
+                    div(class: "h5 mobile dark") {
+                        "More"
+                    }
+
+                    h5(class: "h5 mobile toggle-icon footer dark") {
+                        "+"
+                    }
+
+                }
+
+                nav(class: "footer-dropdown-list w-dropdown-list") {
+
+                    a(class: "footer-dropdown-link dark w-dropdown-link", href: "#") {
+                        "About"
+                    }
+
+                    a(class: "footer-dropdown-link dark w-dropdown-link", href: "/mailto:mail@objc.io") {
+                        "Email"
+                    }
+
+                    a(class: "footer-dropdown-link dark w-dropdown-link", href: "/imprint-legal") {
+                        "Imprint & Legal"
+                    }
+
+                }
+
+            }
+
+        }
+
     }
-    return .div(class: "p-edges pv" + `class` + "color-white js-closeable pattern-shade", [
-        .div(class: "wrapper flex items-center justify-between", [
-            .p(class: "bold flex-auto", [.text(message)]),
-            .button(class: "smallcaps reset-button color-inherit hover-color-black js-closeable-toggle", attributes: ["type": "button"], ["Close"])
-        ])
-    ])
-}
 
-func userHeader(_ session: Session?) -> Node {
-    let subscribeButton = Node.li(class: "flex items-center ml+", [
-        .link(to: .signup(.subscribe(planName: nil)), class: "button button--tight button--themed fz-nav", ["Subscribe"])
-    ])
+    div(class: "footer-dark-html-embed w-embed w-script") {
+
+        script() {
+
+#"""
+
+var Webflow = Webflow || [];
+Webflow.push(function () {
+var learnDropdownToggle = document.querySelector('.footer-dropdown-toggle.learn');
+var learnOpenImage = document.querySelector('.dropdown-open-image.learn');
+var learnClosedImage = document.querySelector('.dropdown-closed-image.learn');
+var connectDropdownToggle = document.querySelector('.footer-dropdown-toggle.connect');
+var connectOpenImage = document.querySelector('.dropdown-open-image.connect');
+var connectClosedImage = document.querySelector('.dropdown-closed-image.connect');
+var moreDropdownToggle = document.querySelector('.footer-dropdown-toggle.more');
+var moreOpenImage = document.querySelector('.dropdown-open-image.more');
+var moreClosedImage = document.querySelector('.dropdown-closed-image.more');
+learnDropdownToggle.addEventListener('click', function() {
+const learnOpenImageStyle = getComputedStyle(learnOpenImage);
+const learnOpenImageDisplay = learnOpenImageStyle.display;
+if (learnOpenImageDisplay === 'block') {
+learnOpenImage.style.display = 'none';
+learnClosedImage.style.display = 'block';
+} else if (learnOpenImageDisplay === 'none') {
+learnOpenImage.style.display = 'block';
+learnClosedImage.style.display = 'none';
+}
+connectClosedImage.style.display = 'block';
+connectOpenImage.style.display = 'none';
+moreClosedImage.style.display = 'block';
+moreOpenImage.style.display = 'none';
+});
+connectDropdownToggle.addEventListener('click', function() {
+const connectOpenImageStyle = getComputedStyle(connectOpenImage);
+const connectOpenImageDisplay = connectOpenImageStyle.display;
+if (connectOpenImageDisplay === 'block') {
+connectOpenImage.style.display = 'none';
+connectClosedImage.style.display = 'block';
+} else if (connectOpenImageDisplay === 'none') {
+connectOpenImage.style.display = 'block';
+connectClosedImage.style.display = 'none';
+}
+learnClosedImage.style.display = 'block';
+learnOpenImage.style.display = 'none';
+moreClosedImage.style.display = 'block';
+moreOpenImage.style.display = 'none';
+});
+moreDropdownToggle.addEventListener('click', function() {
+const moreOpenImageStyle = getComputedStyle(moreOpenImage);
+const moreOpenImageDisplay = moreOpenImageStyle.display;
+if (moreOpenImageDisplay === 'block') {
+moreOpenImage.style.display = 'none';
+moreClosedImage.style.display = 'block';
+} else if (moreOpenImageDisplay === 'none') {
+moreOpenImage.style.display = 'block';
+moreClosedImage.style.display = 'none';
+}
+connectClosedImage.style.display = 'block';
+connectOpenImage.style.display = 'none';
+learnClosedImage.style.display = 'block';
+learnOpenImage.style.display = 'none';
+});
+});
+
+"""#
+        }
+
+    }
+
     
-    func link(to route: Route, text: String) -> Node {
-        return .li(class: "flex ml+", [
-            .link(to: route, class: "flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration", [.text(text)])
-        ])
-    }
-    
-    let items: [Node]
-    if let s = session {
-        let account = link(to: .account(.profile), text: "Account")
-        let logout = link(to: .account(.logout), text: "Log out")
-        items = s.activeSubscription ? [account, logout] : [account, subscribeButton]
-    } else {
-        items = [
-            .withRoute { link(to: .login(.login(continue: $0)), text: "Log in") },
-            subscribeButton
-        ]
-    }
-    return .nav(class: "flex-none self-center border-left border-1 border-color-gray-85 flex ml+", [
-        .ul(class: "flex items-stretch", items)
-    ])
-}
+    script(crossorigin: "anonymous", integrity: "sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=", src: "https://d3e54v103j8qbb.cloudfront.net/js/jquery-3.5.1.min.dc5e7f18c8.js?site=63d78ac5cdfd660fee2a79da", type: "text/javascript")
 
-let googleAnalytics = Node.raw("""
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-40809116-1"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    script(src: "/js/webflow.js", type: "text/javascript")
 
-  gtag('config', 'UA-40809116-1');
-</script>
-""")
-let footer = """
-<footer>
-<div class="container">
-<div class="cols m-|stack++">
-<div class="col m+|width-1/2">
-<a class="inline-block mb" href="https://www.objc.io/">
-<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMaxYMax meet" viewBox="0 0 528 158" width="528" height="158" class="logo logo--themed">
-<g id="Logo" fill="none" fill-rule="evenodd">
-<g id="objc-logo-white-fit">
-<g id="arrows" fill="#FFA940">
-<path id="arrow-up" d="M423 73l8-7-45.5-46L340 66l8 7 32-34v86h11V39l32 34z"></path>
-<path id="arrow-down" d="M520 80l8 7-45.5 46L437 87l8-7 32 34V28h11v86l32-34z"></path>
-</g>
-<g id="letters" fill="#0091D9">
-<path id="letter-c" d="M260.362 124c-15.38 0-25.18-7.104-31.26-16.07C224.534 101.162 222 91.855 222 79c0-12.854 2.535-22.16 7.1-28.927C235.184 41.107 244.815 34 260.196 34c10.136 0 18.417 3.383 24.334 9.136C290.272 48.72 294.327 55.696 295 65h-14.5c-1.172-5.918-3.24-10.022-6.45-13.238-3.382-3.213-8.28-5.242-13.855-5.242-6.592 0-11.156 2.367-14.87 5.583-6.76 5.753-8.622 16.408-8.622 26.898 0 10.49 1.862 21.147 8.62 26.897 3.716 3.216 8.28 5.586 14.872 5.586 5.91 0 11.15-2.2 14.528-5.753 3.044-3.213 5.072-7.105 5.777-12.73H295c-.67 9.136-4.22 16.115-9.966 21.698-6.082 5.92-14.193 9.302-24.672 9.302z"></path>
-<path id="letter-j" d="M168 156.306V143.94c3.582.675 7.17.846 10.757.846 6.484 0 9.732-5.086 9.243-10.846V36h15v97.77c.002 14.91-7.34 24.23-23.732 24.23-4.438 0-7-.338-11.268-1.694zM188 0h15v15h-15V0z"></path>
-<path id="letter-b" d="M132.358 124c-9.67 0-20.696-4.724-25.616-13.326L106 122H93V0h15v46c4.58-7.76 15.028-11.75 24.358-11.75 10.007 0 17.98 3.373 23.578 8.604C164.59 51.12 169 64.618 169 79.294c.002 14.173-4.238 27.162-12.38 35.43-5.6 5.735-13.743 9.276-24.262 9.276zm-1.786-78c-6.317 0-10.587 2.513-14.006 5.528-7.173 6.2-9.566 16.42-9.566 26.973 0 10.553 2.393 20.774 9.566 26.972 3.42 3.015 7.69 5.528 14.006 5.528C149.872 111 155 94.08 155 78.5c0-15.578-5.127-32.5-24.428-32.5z"></path>
-<path id="letter-o" d="M63.844 114.018c-6.25 6.093-15.03 9.982-25.84 9.982s-19.592-3.89-25.843-9.982C2.876 104.884 0 92.534 0 79 0 65.47 2.875 53.117 12.16 43.983 18.41 37.892 27.192 34 38 34c10.81 0 19.59 3.89 25.84 9.982C73.13 53.116 76 65.468 76 79.002c0 13.532-2.868 25.882-12.156 35.016zm-9.85-61.953C50.42 48.528 45.315 46 38.503 46c-6.81 0-11.92 2.526-15.497 6.065C16.875 58.295 15 68.565 15 78.5c0 9.937 1.876 20.206 8.005 26.438C26.58 108.472 31.692 111 38.502 111c6.81 0 11.917-2.526 15.493-6.062C60.125 98.708 62 88.438 62 78.5c0-9.934-1.88-20.206-8.005-26.435z"></path>
-</g>
-</g>
-</g>
-</svg>
-
-</a>        <p class="lh-125 color-gray-40">
-objc.io publishes books, videos, and articles on advanced techniques for iOS and macOS development.
-</p>
-</div>
-<div class="col width-full m+|width-1/2">
-<div class="cols">
-<div class="col width-1/3">
-<p class="mb">
-<span class="smallcaps color-gray-40">Learn</span>
-</p>
-<ul class="stack-">
-<li>
-<a class="no-decoration color-gray-60 hover-color-black" href="/">Swift Talk</a>
-</li>
-<li>
-<a class="no-decoration color-gray-60 hover-color-black" href="https://www.objc.io/books">Books</a>
-</li>
-<li>
-<a class="no-decoration color-gray-60 hover-color-black" href="https://www.objc.io/workshops">Workshops</a>
-</li>
-<li>
-<a class="no-decoration color-gray-60 hover-color-black" href="https://www.objc.io/issues">Issues</a>
-</li>
-</ul>
-</div><!-- .col -->
-<div class="col width-1/3">
-<p class="mb">
-<span class="smallcaps color-gray-40">Follow</span>
-</p>
-<ul class="stack-">
-<li>
-<a class="no-decoration color-gray-60 hover-color-black" href="https://www.objc.io/blog">Blog</a>
-</li>
-<li>
-<a class="no-decoration color-gray-60 hover-color-black" href="https://www.objc.io/newsletter">Newsletter</a>
-</li>
-<li>
-<a class="no-decoration color-gray-60 hover-color-black" href="https://twitter.com/objcio">Twitter</a>
-</li>
-<li>
-<a class="no-decoration color-gray-60 hover-color-black" href="https://www.youtube.com/objcio">YouTube</a>
-</li>
-</ul>
-</div><!-- .col -->
-<div class="col width-1/3">
-<p class="mb">
-<span class="smallcaps color-gray-40">More</span>
-</p>
-<ul class="stack-">
-<li>
-<a class="no-decoration color-gray-60 hover-color-black" href="https://www.objc.io/about">About</a>
-</li>
-<li>
-<a class="no-decoration color-gray-60 hover-color-black" href="mailto:mail@objc.io">Email</a>
-</li>
-<li>
-<a class="no-decoration color-gray-60 hover-color-black" href="https://www.objc.io/imprint">Imprint &amp; Legal</a>
-</li>
-</ul>
-</div><!-- .col -->
-</div> <!-- .cols -->
-</div>
-</div>
-</div>
-</footer>
-"""
+}.asOldNode
