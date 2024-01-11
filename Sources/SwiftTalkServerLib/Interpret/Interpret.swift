@@ -54,8 +54,10 @@ extension Route {
 
         case .home:
             return .withSession { session in
-                let scoped = Episode.all.scoped(for: session?.user.data)
-                return scoped.withProgress(for: session?.user.id) { .write(html: renderHome(episodes: $0)) }
+                let scopedEps = Episode.all.scoped(for: session?.user.data)
+                return scopedEps.withProgress(for: session?.user.id) { 
+                    .write(html: newHome(episodes: $0, projects: Project.all, grouped: Episode.allGroupedByProject))
+                }
             }
             
         case .episodes:

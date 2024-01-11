@@ -79,11 +79,19 @@ public struct Project: Codable, Hashable {
     var id: Id<Project>
     var title: String
     var description: String
+    var color: String = "#BF8EDC"
 }
 
 public enum ProjectView {
     case single(Episode)
     case multiple([Episode])
+    
+    var episodes: [Episode] {
+        switch self {
+        case .single(let ep): [ep]
+        case .multiple(let eps): eps
+        }
+    }
 }
 
 extension Episode {
@@ -288,6 +296,34 @@ extension Swift.Collection where Element == Episode {
         guard end > start else { return nil }
         let number = Int(id.rawValue[start..<end])
         return eps.first { $0.number == number }
+    }
+}
+
+extension Swift.Collection where Element == Project {
+    var released: [Project] {
+        return filter { $0.allEpisodes.contains { $0.released } }
+    }
+    
+    func scoped(for user: UserData?) -> [Project] {
+        guard let u = user, u.isAdmin || u.isCollaborator else { return released }
+        return Array(self)
+    }
+
+}
+
+extension Swift.Collection where Element == ProjectView {
+    var released: [ProjectView] {
+        return filter {
+            switch $0 {
+            case .single(let ep): ep.released
+            case .multiple(let eps): eps.contains { $0.released }
+            }
+        }
+    }
+    
+    func scoped(for user: UserData?) -> [ProjectView] {
+        guard let u = user, u.isAdmin || u.isCollaborator else { return released }
+        return Array(self)
     }
 }
 
