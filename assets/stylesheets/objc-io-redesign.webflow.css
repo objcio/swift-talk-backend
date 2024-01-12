@@ -9810,36 +9810,55 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
 
 @font-face {
   font-family: 'Akkurat';
-  src: url('../fonts/AkkuratTT-Bold.ttf') format('truetype');
-  font-weight: 700;
+  src: url('/assets/fonts/akk-regular.ttf') format('truetype');
+  font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'Akkurat';
-  src: url('../fonts/AkkuratTT-BoldItalic.ttf') format('truetype');
-  font-weight: 700;
+  src: url('/assets/fonts/akk-bolditalic-c.ttf') format('truetype');
+  font-weight: bold;
   font-style: italic;
   font-display: swap;
 }
 @font-face {
   font-family: 'Akkurat';
-  src: url('../fonts/AkkuratTT-Italic.ttf') format('truetype');
-  font-weight: 400;
+  src: url('/assets/fonts/akk-bold-c.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Akkurat';
+  src: url('/assets/fonts/akk-italic-c.ttf') format('truetype');
+  font-weight: normal;
   font-style: italic;
   font-display: swap;
 }
 @font-face {
   font-family: 'Akkurat';
-  src: url('../fonts/AkkuratTT-Regular.ttf') format('truetype');
-  font-weight: 400;
+  src: url('/assets/fonts/akk-regular.ttf') format('truetype');
+  font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'Akkurat Mono';
-  src: url('../fonts/AkkMo___.ttf') format('truetype');
-  font-weight: 400;
+  src: url('/assets/fonts/akk-mono.ttf') format('truetype');
+  font-weight: normal;
   font-style: normal;
   font-display: swap;
+}
+
+
+.timestamp {
+  text-decoration: underline;
+  color: #8869E0;
+}
+.swift-word-highlight {
+  font-family: 'Akkurat Mono';
+  background-color: #FFFFFF33;
+  border-radius: 4px;
+  padding: 2px 4px;
 }

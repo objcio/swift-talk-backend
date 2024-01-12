@@ -141,6 +141,9 @@ extension LayoutConfig {
 //            .hashedStylesheet(href: "/assets/stylesheets/application.css"),
             includeRecurlyJS ? .script(src: "https://js.recurly.com/v4/recurly.js") : .none,
 //            googleAnalytics,
+            .script(src: "https://d3e54v103j8qbb.cloudfront.net/js/jquery-3.5.1.min.dc5e7f18c8.js?site=63d78ac5cdfd660fee2a79da"),
+            .script(src: "/assets/javascripts/all.js"),
+            .script(src: "/assets/javascripts/webflow.js"),
         ] + structured)
         
         let header = HTML1.Node.withInput { env in
@@ -148,26 +151,26 @@ extension LayoutConfig {
                 div(class: "nav-container w-container") {
                     div(class: "nav-content") {
                         a(class: "nav-logo-link-block w-inline-block", href: "https://www.objc.io") {
-                            img(alt: "", class: "nav-logo", height: "30", loading: "lazy", src: "/images/logo-letters-dark.png")
+                            img(alt: "", class: "nav-logo", height: "30", loading: "lazy", src: "/assets/images/logo-letters-dark.png")
                             div(class: "mobile-logo-container") {
                                 div(class: "mobile-logo-column") {
-                                    img(alt: "", class: "mobile-logo-image", loading: "lazy", src: "/images/arrow-up-swift-talks.png")
+                                    img(alt: "", class: "mobile-logo-image", loading: "lazy", src: "/assets/images/arrow-up-swift-talks.png")
                                 }
                                 div(class: "mobile-logo-column") {
-                                    img(alt: "", class: "mobile-logo-image right", loading: "lazy", src: "/images/arrow-down-swift-talks.png")
+                                    img(alt: "", class: "mobile-logo-image right", loading: "lazy", src: "/assets/images/arrow-down-swift-talks.png")
                                 }
                             }
                             div(class: "logo-animation-container") {
                                 div(class: "logo-animation-column-container") {
                                     div(class: "logo-animation-left-container") {
-                                        img(alt: "", class: "logo-animation-left-image", loading: "lazy", src: "/images/arrow-up-swift-talks.png")
-                                        img(alt: "", class: "logo-animation-left-image", loading: "lazy", src: "/images/arrow-up-swift-talks.png")
+                                        img(alt: "", class: "logo-animation-left-image", loading: "lazy", src: "/assets/images/arrow-up-swift-talks.png")
+                                        img(alt: "", class: "logo-animation-left-image", loading: "lazy", src: "/assets/images/arrow-up-swift-talks.png")
                                     }
                                 }
                                 div(class: "logo-animation-column-container") {
                                     div(class: "logo-animation-right-container") {
-                                        img(alt: "", class: "logo-animation-right-image", loading: "lazy", src: "/images/arrow-down-swift-talks.png")
-                                        img(alt: "", class: "logo-animation-right-image", loading: "lazy", src: "/images/arrow-down-swift-talks.png")
+                                        img(alt: "", class: "logo-animation-right-image", loading: "lazy", src: "/assets/images/arrow-down-swift-talks.png")
+                                        img(alt: "", class: "logo-animation-right-image", loading: "lazy", src: "/assets/images/arrow-down-swift-talks.png")
                                     }
                                 }
                             }
@@ -284,317 +287,162 @@ extension LayoutConfig {
 
 fileprivate let footer: HTML1.Node<STRequestEnvironment> = HTML.div(class: "footer dark") {
     div(class: "footer-container") {
-
         div(class: "footer-company-info") {
-
             div(class: "footer-logo") {
-                img(alt: "", class: "footer-logo-letters", height: "30", loading: "lazy", src: "/images/logo-letters-dark.png")
-
+                img(alt: "", class: "footer-logo-letters", height: "30", loading: "lazy", src: "/assets/images/logo-letters-dark.png")
                 div(class: "mobile-logo-container") {
-
                     div(class: "mobile-logo-column footer") {
-                        img(alt: "", class: "mobile-logo-image", loading: "lazy", src: "/images/arrow-up-swift-talks.png")
+                        img(alt: "", class: "mobile-logo-image", loading: "lazy", src: "/assets/images/arrow-up-swift-talks.png")
                     }
-
                     div(class: "mobile-logo-column footer") {
-                        img(alt: "", class: "mobile-logo-image right", loading: "lazy", src: "/images/arrow-down-swift-talks.png")
+                        img(alt: "", class: "mobile-logo-image right", loading: "lazy", src: "/assets/images/arrow-down-swift-talks.png")
                     }
-
                 }
-
                 div(class: "logo-animation-container footer") {
-
                     div(class: "logo-animation-column-container footer") {
-
                         div(class: "logo-animation-left-container footer") {
-                            img(alt: "", class: "logo-animation-left-image footer", loading: "lazy", src: "/images/arrow-up-swift-talks.png")
-                            img(alt: "", class: "logo-animation-left-image footer", loading: "lazy", src: "/images/arrow-up-swift-talks.png")
+                            img(alt: "", class: "logo-animation-left-image footer", loading: "lazy", src: "/assets/images/arrow-up-swift-talks.png")
+                            img(alt: "", class: "logo-animation-left-image footer", loading: "lazy", src: "/assets/images/arrow-up-swift-talks.png")
                         }
-
                     }
-
                     div(class: "logo-animation-column-container footer") {
-
                         div(class: "logo-animation-right-container footer") {
-                            img(alt: "", class: "logo-animation-right-image footer", loading: "lazy", src: "/images/arrow-down-swift-talks.png")
-                            img(alt: "", class: "logo-animation-right-image footer", loading: "lazy", src: "/images/arrow-down-swift-talks.png")
+                            img(alt: "", class: "logo-animation-right-image footer", loading: "lazy", src: "/assets/images/arrow-down-swift-talks.png")
+                            img(alt: "", class: "logo-animation-right-image footer", loading: "lazy", src: "/assets/images/arrow-down-swift-talks.png")
                         }
-
                     }
-
                 }
-
                 div(class: "nav-logo-arrows-container") {
-                    img(alt: "", class: "footer-logo-arrow", height: "30", loading: "lazy", src: "/images/arrow-up-swift-talks.png")
-                    img(alt: "", class: "footer-logo-arrow", height: "30", loading: "lazy", src: "/images/arrow-down-swift-talks.png")
+                    img(alt: "", class: "footer-logo-arrow", height: "30", loading: "lazy", src: "/assets/images/arrow-up-swift-talks.png")
+                    img(alt: "", class: "footer-logo-arrow", height: "30", loading: "lazy", src: "/assets/images/arrow-down-swift-talks.png")
                 }
-
             }
-
             div(class: "body dark footer mobile") {
                 "objc.io publishes books, videos, and articles on advanced techniques for iOS and macOS development."
             }
-
         }
-
         div(class: "footer-sections-container") {
-
             div(class: "footer-section") {
-
                 h5(class: "h5 dark") {
                     "Learn"
                 }
-
                 div(class: "footer-links-container") {
-
                     a(class: "footer-link dark w--current", href: "/swift-talks", customAttributes: ["aria-current": "page"]) {
                         "Swift Talk"
                     }
-
                     a(class: "footer-link dark", href: "/books") {
                         "Books"
                     }
-
                     a(class: "footer-link dark", href: "/workshops") {
                         "Workshops"
                     }
-
                     a(class: "footer-link dark", href: "/issues") {
                         "Issues"
                     }
-
                 }
-
             }
-
             div(class: "footer-section") {
-
                 h5(class: "h5 dark") {
                     "Connect"
                 }
-
                 div(class: "footer-links-container") {
-
                     a(class: "footer-link dark", href: "/blog") {
                         "Blog"
                     }
-
                     a(class: "footer-link dark", href: "http://twitter.com/objcio", target: "_blank") {
                         "Twitter"
                     }
-
                     a(class: "footer-link dark", href: "https://www.youtube.com/@objcio", target: "_blank") {
                         "YouTube"
                     }
-
                 }
-
             }
-
             div(class: "footer-section") {
-
                 h5(class: "h5 dark") {
                     "More"
                 }
-
                 div(class: "footer-links-container") {
-
                     a(class: "footer-link dark", href: "/about") {
                         "About"
                     }
-
                     a(class: "footer-link dark", href: "/mailto:mail@objc.io") {
                         "Email"
                     }
-
                     a(class: "footer-link dark", href: "#") {
                         "Imprint & Legal"
                     }
-
                 }
-
             }
-
         }
-
         div(class: "footer-sections-container-mobile") {
-
             div(class: "footer-dropdown dark w-dropdown", customAttributes: ["data-hover": "false", "data-delay": "0"]) {
-
                 div(class: "footer-dropdown-toggle learn w-dropdown-toggle") {
-
                     div(class: "h5 mobile dark") {
                         "Learn"
                     }
-
                     h5(class: "h5 mobile toggle-icon footer dark") {
                         "+"
                     }
-
                 }
-
                 nav(class: "footer-dropdown-list w-dropdown-list") {
-
                     a(class: "footer-dropdown-link dark w-dropdown-link w--current", href: "/swift-talks", customAttributes: ["aria-current": "page"]) {
                         "Swift Talk"
                     }
-
                     a(class: "footer-dropdown-link dark w-dropdown-link", href: "/books") {
                         "Books"
                     }
-
                     a(class: "footer-dropdown-link dark w-dropdown-link", href: "/workshops") {
                         "Workshops"
                     }
-
                     a(class: "footer-dropdown-link dark w-dropdown-link", href: "/issues") {
                         "Issues"
                     }
-
                 }
-
             }
-
             div(class: "footer-dropdown dark w-dropdown", customAttributes: ["data-hover": "false", "data-delay": "0"]) {
-
                 div(class: "footer-dropdown-toggle connect w-dropdown-toggle") {
-
                     div(class: "h5 mobile dark") {
                         "Connect"
                     }
-
                     h5(class: "h5 mobile toggle-icon footer dark") {
                         "+"
                     }
-
                 }
-
                 nav(class: "footer-dropdown-list w-dropdown-list") {
-
                     a(class: "footer-dropdown-link dark w-dropdown-link", href: "/blog") {
                         "Blog"
                     }
-
                     a(class: "footer-dropdown-link dark w-dropdown-link", href: "http://twitter.com/objcio", target: "_blank") {
                         "Twitter"
                     }
-
                     a(class: "footer-dropdown-link dark w-dropdown-link", href: "http://youtube.com/@objcio", target: "_blank") {
                         "YouTube"
                     }
-
                 }
-
             }
-
             div(class: "footer-dropdown dark w-dropdown", customAttributes: ["data-hover": "false", "data-delay": "0"]) {
-
                 div(class: "footer-dropdown-toggle more w-dropdown-toggle") {
-
                     div(class: "h5 mobile dark") {
                         "More"
                     }
-
                     h5(class: "h5 mobile toggle-icon footer dark") {
                         "+"
                     }
-
                 }
-
                 nav(class: "footer-dropdown-list w-dropdown-list") {
-
                     a(class: "footer-dropdown-link dark w-dropdown-link", href: "#") {
                         "About"
                     }
-
                     a(class: "footer-dropdown-link dark w-dropdown-link", href: "/mailto:mail@objc.io") {
                         "Email"
                     }
-
                     a(class: "footer-dropdown-link dark w-dropdown-link", href: "/imprint-legal") {
                         "Imprint & Legal"
                     }
-
                 }
-
             }
-
         }
-
     }
-
-    div(class: "footer-dark-html-embed w-embed w-script") {
-
-        script() {
-
-#"""
-
-var Webflow = Webflow || [];
-Webflow.push(function () {
-var learnDropdownToggle = document.querySelector('.footer-dropdown-toggle.learn');
-var learnOpenImage = document.querySelector('.dropdown-open-image.learn');
-var learnClosedImage = document.querySelector('.dropdown-closed-image.learn');
-var connectDropdownToggle = document.querySelector('.footer-dropdown-toggle.connect');
-var connectOpenImage = document.querySelector('.dropdown-open-image.connect');
-var connectClosedImage = document.querySelector('.dropdown-closed-image.connect');
-var moreDropdownToggle = document.querySelector('.footer-dropdown-toggle.more');
-var moreOpenImage = document.querySelector('.dropdown-open-image.more');
-var moreClosedImage = document.querySelector('.dropdown-closed-image.more');
-learnDropdownToggle.addEventListener('click', function() {
-const learnOpenImageStyle = getComputedStyle(learnOpenImage);
-const learnOpenImageDisplay = learnOpenImageStyle.display;
-if (learnOpenImageDisplay === 'block') {
-learnOpenImage.style.display = 'none';
-learnClosedImage.style.display = 'block';
-} else if (learnOpenImageDisplay === 'none') {
-learnOpenImage.style.display = 'block';
-learnClosedImage.style.display = 'none';
-}
-connectClosedImage.style.display = 'block';
-connectOpenImage.style.display = 'none';
-moreClosedImage.style.display = 'block';
-moreOpenImage.style.display = 'none';
-});
-connectDropdownToggle.addEventListener('click', function() {
-const connectOpenImageStyle = getComputedStyle(connectOpenImage);
-const connectOpenImageDisplay = connectOpenImageStyle.display;
-if (connectOpenImageDisplay === 'block') {
-connectOpenImage.style.display = 'none';
-connectClosedImage.style.display = 'block';
-} else if (connectOpenImageDisplay === 'none') {
-connectOpenImage.style.display = 'block';
-connectClosedImage.style.display = 'none';
-}
-learnClosedImage.style.display = 'block';
-learnOpenImage.style.display = 'none';
-moreClosedImage.style.display = 'block';
-moreOpenImage.style.display = 'none';
-});
-moreDropdownToggle.addEventListener('click', function() {
-const moreOpenImageStyle = getComputedStyle(moreOpenImage);
-const moreOpenImageDisplay = moreOpenImageStyle.display;
-if (moreOpenImageDisplay === 'block') {
-moreOpenImage.style.display = 'none';
-moreClosedImage.style.display = 'block';
-} else if (moreOpenImageDisplay === 'none') {
-moreOpenImage.style.display = 'block';
-moreClosedImage.style.display = 'none';
-}
-connectClosedImage.style.display = 'block';
-connectOpenImage.style.display = 'none';
-learnClosedImage.style.display = 'block';
-learnOpenImage.style.display = 'none';
-});
-});
-
-"""#
-        }
-
-    }
-
-    
-    script(crossorigin: "anonymous", integrity: "sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=", src: "https://d3e54v103j8qbb.cloudfront.net/js/jquery-3.5.1.min.dc5e7f18c8.js?site=63d78ac5cdfd660fee2a79da", type: "text/javascript")
-
-    script(src: "/assets/javascripts/all.js", type: "text/javascript")
-
 }.asOldNode
+
+

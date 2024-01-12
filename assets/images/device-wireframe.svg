@@ -1,0 +1,20 @@
+<svg width="334" height="453" viewBox="0 0 334 453" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="23" y="170" width="212.4" height="144" rx="12" stroke="white" stroke-dasharray="1.5 3"/>
+<rect x="259.4" y="170" width="51.6" height="144" rx="12" stroke="white" stroke-dasharray="1.5 3"/>
+<rect x="23" y="337" width="288" height="36" rx="12" stroke="white" stroke-dasharray="1.5 3"/>
+<rect x="175" y="397" width="136" height="36" rx="12" stroke="white" stroke-dasharray="1.5 3"/>
+<rect x="131.75" y="25.25" width="70.5" height="24" rx="12" stroke="url(#paint0_linear_911_52921)" stroke-width="1.5"/>
+<rect x="23" y="84.5" width="62" height="62" rx="31" stroke="white" stroke-dasharray="1.5 3"/>
+<rect x="109" y="84.5" width="202" height="61.5" rx="12" stroke="white" stroke-dasharray="1.5 3"/>
+<rect x="1.25" y="1.25" width="331.5" height="721.5" rx="40.35" stroke="url(#paint1_linear_911_52921)" stroke-width="1.5"/>
+<defs>
+<linearGradient id="paint0_linear_911_52921" x1="179.75" y1="17.75" x2="175.071" y2="43.2171" gradientUnits="userSpaceOnUse">
+<stop stop-color="white"/>
+<stop offset="1" stop-color="white" stop-opacity="0.31"/>
+</linearGradient>
+<linearGradient id="paint1_linear_911_52921" x1="266.481" y1="-33.5164" x2="167.978" y2="302.456" gradientUnits="userSpaceOnUse">
+<stop stop-color="white"/>
+<stop offset="1" stop-color="white" stop-opacity="0.5"/>
+</linearGradient>
+</defs>
+</svg>

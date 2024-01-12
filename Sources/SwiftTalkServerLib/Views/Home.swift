@@ -14,7 +14,7 @@ extension Project {
         div(class: "project-container") {
             div(class: "project-cover-container purple") {
                 div(class: "play-video-button")
-                img(alt: "", class: "project-cover-image", loading: "lazy", src: "/images/apple-watch.png", width: "210")
+                img(alt: "", class: "project-cover-image", loading: "lazy", src: "/assets/images/apple-watch.png", width: "210")
             }
             div(class: "project-details-container") {
                 div(class: "project-details-header") {
@@ -46,7 +46,7 @@ extension Episode {
                     }
                 }
                 div(class: "swift-talk-latest-episode-details-container") {
-                    a(class: "latest-episode-container w-inline-block", href: "/episode-detail") {
+                    a(class: "latest-episode-container w-inline-block", href: Route.episode(id, .view(playPosition: nil)).path) {
                         div(class: "swift-talks-latest-episode-details") {
                             div(class: "swift-talks-latest-episode-details-header") {
                                 div(class: "nano-text medium-purple small") {
@@ -115,7 +115,7 @@ fileprivate func tabs(env: STRequestEnvironment) -> HTML.Node {
             "Episodes"
         }
         div(class: "swift-talk-search-container") {
-            img(alt: "", class: "image-16", loading: "lazy", src: "/images/magnifying-glass.png", width: "20")
+            img(alt: "", class: "image-16", loading: "lazy", src: "/assets/images/magnifying-glass.png", width: "20")
             form(action: "/search", class: "search w-form") {
                 label(class: "field-label", for: "search") {
                     "Search"
@@ -242,7 +242,7 @@ func newHome(episodes: [EpisodeWithProgress], projects: [Project], grouped: [Pro
                                                     div(class: "nano-text medium-purple small") {
                                                         "Episode \(episode.number) · \(episode.releaseAt.pretty)"
                                                     }
-                                                    img(alt: "", class: "dropdown-chevron", loading: "lazy", src: "/images/chevron-down.png", width: "24")
+                                                    img(alt: "", class: "dropdown-chevron", loading: "lazy", src: "/assets/images/chevron-down.png", width: "24")
                                                 }
                                             }
                                             div(class: "episode-dropdown-container-mobile") {
@@ -255,7 +255,7 @@ func newHome(episodes: [EpisodeWithProgress], projects: [Project], grouped: [Pro
                                                         "Episode \(episode.number) · \(episode.releaseAt.pretty)"
                                                     }
                                                     div(class: "episode-right-container") {
-                                                        img(alt: "", class: "dropdown-chevron", loading: "lazy", src: "/images/chevron-down.png", width: "24")
+                                                        img(alt: "", class: "dropdown-chevron", loading: "lazy", src: "/assets/images/chevron-down.png", width: "24")
                                                     }
                                                 }
                                             }
