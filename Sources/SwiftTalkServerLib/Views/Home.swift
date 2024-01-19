@@ -21,7 +21,7 @@ extension Project {
                     h4(class: "h4 dark") { title }
                     div(class: "body dark") { description }
                 }
-                div(class: "nano-text small purple") {
+                div(class: "nano-text small", style: "color: \(color)") {
                     let eps = allEpisodes
                     "\(eps.count) episodes · \(eps.totalDuration.hoursAndMinutes) · \(eps.first?.releaseAt.pretty ?? "<unkown>")"
                 }
@@ -221,8 +221,9 @@ func newHome(episodes: [EpisodeWithProgress], projects: [Project], grouped: [Pro
                     div(class: "episodes-project-container") {
                         switch p {
                         case let .multiple(eps):
-                            a(class: "project-title-button w-button", href: "/swift-talks-project") {
-                                "project: \(eps[0].theProject?.title ?? "<unknown>")"
+                            let project = eps[0].theProject!
+                            a(class: "project-title-button w-button", href: "/swift-talks-project", style: "color: \(project.color)", customAttributes: ["onmouseover": "this.style.color=pSBC(0.35, this.style.color);", "onmouseout": "this.style.color=\"\(project.color)\";"]) {
+                                "project: \(project.title)"
                                 span(class: "text-span-3") {
                                     "→"
                                 }
@@ -238,35 +239,35 @@ func newHome(episodes: [EpisodeWithProgress], projects: [Project], grouped: [Pro
                                             div(class: "episode-left-container") {
                                                 a(class: "episode-play-button w-button", href: "/episode-detail")
                                                 div(class: "p3 dark") { episode.title }
+                                            }
+                                            div(class: "episode-right-container") {
+                                                div(class: "nano-text small medium-purple", style: (episode.theProject?.color).map { "color: \($0)" }) {
+                                                    "Episode \(episode.number) · \(episode.releaseAt.pretty)"
+                                                }
+                                                img(alt: "", class: "dropdown-chevron", loading: "lazy", src: "/assets/images/chevron-down.png", width: "24")
+                                            }
+                                        }
+                                        div(class: "episode-dropdown-container-mobile") {
+                                            div(class: "episode-left-container") {
+                                                a(class: "episode-play-button w-button", href: "#")
+                                            }
+                                            div(class: "episode-center-container") {
+                                                div(class: "p3 dark") { episode.title }
+                                                div(class: "nano-text medium-purple small") {
+                                                    "Episode \(episode.number) · \(episode.releaseAt.pretty)"
+                                                }
                                                 div(class: "episode-right-container") {
-                                                    div(class: "nano-text medium-purple small") {
-                                                        "Episode \(episode.number) · \(episode.releaseAt.pretty)"
-                                                    }
                                                     img(alt: "", class: "dropdown-chevron", loading: "lazy", src: "/assets/images/chevron-down.png", width: "24")
                                                 }
                                             }
-                                            div(class: "episode-dropdown-container-mobile") {
-                                                div(class: "episode-left-container") {
-                                                    a(class: "episode-play-button w-button", href: "#")
-                                                }
-                                                div(class: "episode-center-container") {
-                                                    div(class: "p3 dark") { episode.title }
-                                                    div(class: "nano-text medium-purple small") {
-                                                        "Episode \(episode.number) · \(episode.releaseAt.pretty)"
-                                                    }
-                                                    div(class: "episode-right-container") {
-                                                        img(alt: "", class: "dropdown-chevron", loading: "lazy", src: "/assets/images/chevron-down.png", width: "24")
-                                                    }
-                                                }
+                                        }
+                                    }
+                                    nav(class: "episode-dropdown-list w-dropdown-list") {
+                                        div(class: "episode-more-details-container") {
+                                            div(class: "episode-summary-container") {
+                                                div(class: "p3 dark _50-opacity") { episode.synopsis }
                                             }
-                                            nav(class: "episode-dropdown-list w-dropdown-list") {
-                                                div(class: "episode-more-details-container") {
-                                                    div(class: "episode-summary-container") {
-                                                        div(class: "p3 dark _50-opacity") { episode.synopsis }
-                                                    }
-                                                    img(alt: "", class: "image-15", loading: "lazy", sizes: "100vw", src: episode.posterURL(width: 980, height: Int(980/(16.0/9))).absoluteString, width: "980")
-                                                }
-                                            }
+                                            img(alt: "", class: "image-15", loading: "lazy", sizes: "100vw", src: episode.posterURL(width: 980, height: Int(980/(16.0/9))).absoluteString, width: "980")
                                         }
                                     }
                                 }

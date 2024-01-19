@@ -2283,6 +2283,7 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
   max-width: 50%;
   border-radius: 8px;
   padding-top: 0;
+  aspect-ratio: 16/9;
 }
 
 .project-episodes-container {
@@ -9861,4 +9862,93 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
   background-color: #FFFFFF33;
   border-radius: 4px;
   padding: 2px 4px;
+}
+
+.project-container {
+  background-color: rgba(255, 255, 255, 0.08);
+  transition: background-color 200ms ease-out;
+}
+
+.project-container:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.episode-chapter-link {
+  font-weight: normal;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 100ms ease-out;
+}
+
+.episode-chapter-link:hover {
+  font-weight: bold;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.chapter-timestamp {
+  color: #8869e0;
+  text-decoration: underline rgba(136, 105, 224, 0);
+  transition: all 100ms ease-out;
+}
+
+.episode-chapter-link:hover .chapter-timestamp {
+  color: #FFFFFF;
+  text-decoration: underline #FFFFFF;
+}
+
+.episode-chapter-link:hover .chapter-name {
+  color: #FFFFFF;
+}
+
+.nano-text.medium-purple.small.project-title {
+  color: #8869E0;
+  transition: color 200ms ease-out;
+}
+
+.project-title-button {
+  color: #8869E0;
+  transition: color 200ms ease-out;
+}
+
+.project-title-button:hover {
+  color: #CCBEF4;
+}
+
+.episode-dropdown-toggle {
+  background-color: rgba(255, 255, 255, 0);
+  transition: background-color 200ms ease-out;
+}
+
+.episode-dropdown-toggle:hover:not(.w--open) {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.h6.episode-count {
+  color: rgba(255, 255, 255, 0.75);
+  transition: color 100ms ease-out;
+}
+
+.episode-name {
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: normal;
+  transition: all 100ms ease-out;
+}
+
+.episode-name.current {
+  color: #FFFFFF;
+  font-weight: normal;
+  transition: font-weight 100ms ease-out;
+}
+
+.sidebar-episode-container:hover .h6.episode-count,
+.sidebar-episode-container:hover .episode-name {
+  color: #FFFFFF;
+  font-weight: bold;
+}
+
+.dropdown-chevron {
+  transform: rotate(0);
+}
+
+.episode-dropdown-toggle.w--open .dropdown-chevron {
+  transform: rotate(180deg);
 }
