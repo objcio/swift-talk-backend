@@ -187,17 +187,17 @@ extension LayoutConfig {
                             }
                             div(class: "login-subscribe-buttons-container") {
                                 if let _ = env.session {
-                                    a(class: "log-in-button w-button", href: Route.account(.logout).path) {
+                                    a(class: "log-in-button w-button", href: Route.account(.logout).absoluteString) {
                                         "Log out"
                                     }
-                                    a(class: "subscribe-button w-button", href: Route.account(.profile).path) {
+                                    a(class: "subscribe-button w-button", href: Route.account(.profile).absoluteString) {
                                         "Account"
                                     }
                                 } else {
-                                    a(class: "log-in-button w-button", href: Route.login(.login(continue: env.route)).path) {
+                                    a(class: "log-in-button w-button", href: Route.login(.login(continue: env.route)).absoluteString) {
                                         "Log in"
                                     }
-                                    a(class: "subscribe-button w-button", href: Route.signup(.subscribe(planName: nil)).path) {
+                                    a(class: "subscribe-button w-button", href: Route.signup(.subscribe(planName: nil)).absoluteString) {
                                         "Subscribe"
                                     }
                                 }

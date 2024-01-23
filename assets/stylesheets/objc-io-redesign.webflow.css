@@ -2523,14 +2523,18 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
 }
 
 .episode-chapter-link {
-  height: 36px;
-  border-bottom: 1px solid rgba(255, 255, 255, .1);
+min-height: 36px;
+  padding-top: 8px;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
   text-decoration: none;
   display: flex;
 }
 
+.episode-chapter-link:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, .1);
+}
+    
 .p4 {
   color: #fff;
   flex: 0 auto;
@@ -2585,9 +2589,10 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
 }
 
 .sidebar-episode-container {
-  height: 36px;
+  min-height: 36px;
+  padding-top: 8px;
   justify-content: space-between;
-  align-items: center;
+  align-items: top;
   display: flex;
 }
 
@@ -9873,15 +9878,21 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
   background-color: rgba(255, 255, 255, 0.15);
 }
 
+.episode-chapter-link:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 .episode-chapter-link {
   font-weight: normal;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 100ms ease-out;
+}
+
+.episode-chapter-link:hover:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .episode-chapter-link:hover {
   font-weight: bold;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .chapter-timestamp {

@@ -205,7 +205,7 @@ extension Episode {
     
     private func show_(session: Session?, playPosition: Int?, downloadStatus: DownloadStatus, otherEpisodes: [EpisodeWithProgress]) -> Node {
         let canWatch = !subscriptionOnly || session.premiumAccess
-        let content = newEpisodeDetail()
+        let content = newEpisodeDetail(downloadStatus: downloadStatus, playPosition: playPosition, otherEpisodes: otherEpisodes)
         
         let data = StructuredData(title: title, description: synopsis, url: Route.episode(id, .view(playPosition: nil)).url, image: posterURL(width: 600, height: 338), type: .video(duration: Int(mediaDuration), releaseDate: releaseAt))
         return LayoutConfig(pageTitle: title.constructTitle, contents: [content], footerContent: [], structuredData: data).layout
@@ -567,479 +567,274 @@ func subscribeBanner() -> Node {
     ])
 }
 
-fileprivate func newEpisodeDetail() -> HTML1.Node<STRequestEnvironment> {
-    .withInput { env in
-        div(class: "episode-detail-content-container") {
-            div(class: "episode-video-section") {
-                div(class: "save-share-buttons-container mobile") {
-                    a(class: "save-button mobile w-button", href: "#")
-                    a(class: "share-button mobile w-button", href: "#")
-                }
-                div(class: "episode-details-header") {
-                    div(class: "nano-text small purple episode-count-date") {
-                        "Episode 335 · Dec 16 2022"
+extension Episode {
+    fileprivate func newEpisodeDetail(downloadStatus: DownloadStatus, playPosition: Int?, otherEpisodes: [EpisodeWithProgress]) -> HTML1.Node<STRequestEnvironment> {
+        .withInput { env in
+            let p = theProject!
+            let pColor = "color: \(p.color) !important;"
+            let pEps = p.allEpisodes.scoped(for: env.session?.user.data)
+            let idx = pEps.firstIndex(of: self)!
+            let next = idx < pEps.endIndex-1 ? pEps[idx+1] : nil
+            let prev = idx > pEps.startIndex ? pEps[idx-1] : nil
+            let canAccess = canWatch(session: env.session)
+            
+            return div(class: "episode-detail-content-container") {
+                div(class: "episode-video-section") {
+                    div(class: "save-share-buttons-container mobile") {
+                        a(class: "save-button mobile w-button", href: "#")
+                        a(class: "share-button mobile w-button", href: "#")
                     }
-                    div(class: "episode-name-export-share-buttons-container") {
-                        h2(class: "h2 dark") {
-                            "Views and Nodes"
+                    div(class: "episode-details-header") {
+                        div(class: "nano-text small purple episode-count-date", style: pColor) {
+                            "Episode 335 · Dec 16 2022"
                         }
-                        div(class: "save-share-buttons-container") {
-                            a(class: "save-button w-button", href: "#")
-                            a(class: "share-button w-button", href: "#")
+                        div(class: "episode-name-export-share-buttons-container") {
+                            h2(class: "h2 dark") { title }
+                            div(class: "save-share-buttons-container") {
+                                a(class: "save-button w-button", href: "#")
+                                a(class: "share-button w-button", href: "#")
+                            }
+                        }
+                        a(class: "project-title-button small w-button", href: "/swift-talks-project", style: pColor) {
+                            "project:"
+                            span(class: "text-span-17") { p.title }
+                            span(class: "text-span-3") { "→" }
                         }
                     }
-                    a(class: "project-title-button small w-button", href: "/swift-talks-project") {
+                    div(class: "episode-video-container") {
+                        div(class: "vimeo-container") {
+                            div(class: "video w-video w-embed", style: "padding-top:56.27659574468085%") {
+                                let startTime = playPosition.map { "#t=\($0)s" } ?? ""
+                                let videoId = canAccess ? vimeoId : (previewVimeoId ?? 0)
+                                iframe(allowfullscreen: false, class: "embedly-embed", src: "https://player.vimeo.com/video/\(videoId)\(startTime)")
+                            }
+                        }
+                        div(class: "previous-next-buttons-container") {
+                            if let prev {
+                                a(class: "secondary-button-small _75-opacity w-button", href: Route.episode(prev.id, .view(playPosition: nil)).absoluteString) {
+                                    span(class: "text-span-4") {
+                                        "←"
+                                    }
+                                    if next == nil {
+                                        "Previous episode in project"
+                                    } else {
+                                        "Previous"
+                                    }
+                                }
+                            }
+                            if let next {
+                                a(class: "secondary-button-small _75-opacity w-button", href: Route.episode(next.id, .view(playPosition: nil)).absoluteString) {
+                                    "Next episode in project"
+                                    span(class: "text-span-5") { "→" }
+                                }
+                            }
+                        }
+                    }
+                    a(class: "project-title-button small mobile w-button", href: "/swift-talks-project", style: pColor) {
                         "project:"
-                        span(class: "text-span-17") {
-                            "building a watch complication"
-                        }
-                        span(class: "text-span-3") {
-                            "→"
-                        }
+                        span(class: "text-span-17") { p.title }
+                        span(class: "text-span-3") { "→" }
                     }
                 }
-                div(class: "episode-video-container") {
-                    div(class: "vimeo-container") {
-                        div(class: "video w-video w-embed", style: "padding-top:56.27659574468085%") {
-                            iframe(allowfullscreen: false, class: "embedly-embed", src: "https://cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fplayer.vimeo.com%2Fvideo%2F398237337%3Fh%3D423eff25f6%26app_id%3D122963&dntp=1&display_name=Vimeo&url=https%3A%2F%2Fvimeo.com%2F398237337&image=https%3A%2F%2Fi.vimeocdn.com%2Fvideo%2F865792283-4a64babc7d9c838ae084e21484ee0b3a3ee61e7a280075eb7e1194d1fae3e0f2-d_1280&key=96f1f04c5f4143bcb0f2e68c87d65feb&type=text%2Fhtml&schema=vimeo", title: "Thinking in SwiftUI", customAttributes: ["scrolling": "no"])
-                        }
-                    }
-                    div(class: "previous-next-buttons-container") {
-                        a(class: "secondary-button-small _50-opacity w-button", href: "#") {
-                            span(class: "text-span-4") {
-                                "←"
-                            }
-                            "Previous"
-                        }
-                        a(class: "secondary-button-small _75-opacity w-button", href: "#") {
-                            "Next episode in project"
-                            span(class: "text-span-5") {
-                                "→"
-                            }
-                        }
-                    }
-                }
-                a(class: "project-title-button small mobile w-button", href: "/swift-talks-project") {
-                    "project:"
-                    span(class: "text-span-17") {
-                        "building a watch complication"
-                    }
-                    span(class: "text-span-3") {
-                        "→"
-                    }
-                }
-            }
-            div(class: "episode-content-section") {
-                div(class: "episode-content-details") {
-                    div(class: "episode-sidebar") {
-                        div(class: "sidebar-component-container in-this-episode") {
-                            div(class: "nano-text half-white") {
-                                "In this episode"
-                            }
-                            div(class: "chapters-container") {
-                                a(class: "episode-chapter-link w-inline-block", href: "#") {
-                                    div(class: "chapter-name") {
-                                        "Introduction"
-                                    }
-                                    div(class: "chapter-timestamp") {
-                                        "00:06"
-                                    }
+                div(class: "episode-content-section") {
+                    div(class: "episode-content-details") {
+                        div(class: "episode-sidebar") {
+                            div(class: "sidebar-component-container in-this-episode") {
+                                div(class: "nano-text half-white") {
+                                    canAccess ? "In this episode" : "In the full episode"
                                 }
-                                a(class: "episode-chapter-link w-inline-block", href: "#") {
-                                    div(class: "chapter-name") {
-                                        "Test Case"
-                                    }
-                                    div(class: "chapter-timestamp") {
-                                        "02:26"
-                                    }
-                                }
-                                a(class: "episode-chapter-link w-inline-block", href: "#") {
-                                    div(class: "chapter-name") {
-                                        "View Lifetime"
-                                    }
-                                    div(class: "chapter-timestamp") {
-                                        "12:23"
-                                    }
-                                }
-                                a(class: "episode-chapter-link w-inline-block", href: "#") {
-                                    div(class: "chapter-name") {
-                                        "Introduction"
-                                    }
-                                    div(class: "chapter-timestamp") {
-                                        "17:06"
-                                    }
-                                }
-                                a(class: "episode-chapter-link w-inline-block", href: "#") {
-                                    div(class: "chapter-name") {
-                                        "Test Case"
-                                    }
-                                    div(class: "chapter-timestamp") {
-                                        "20:26"
-                                    }
-                                }
-                                a(class: "episode-chapter-link w-inline-block", href: "#") {
-                                    div(class: "chapter-name") {
-                                        "View Lifetime"
-                                    }
-                                    div(class: "chapter-timestamp") {
-                                        "21:23"
-                                    }
-                                }
-                            }
-                        }
-                        div(class: "sidebar-component-container resources") {
-                            div(class: "nano-text half-white") {
-                                "REsources"
-                            }
-                            div(class: "resources-container") {
-                                div(class: "resource-container") {
-                                    div(class: "resource-image-container") {
-                                        img(alt: "", class: "resource-image", loading: "lazy", src: "/assets/images/{-}.png", width: "27.5")
-                                    }
-                                    div(class: "resource-details-container") {
-                                        h6(class: "h6 dark small _75-opacity resource-name") {
-                                            "Sample Code"
-                                        }
-                                        div(class: "p4 half-white resource-detail") {
-                                            "Written in Swift 5.4"
+                                div(class: "chapters-container") {
+                                    let items = [(6, title: "Introduction")] + tableOfContents
+                                    items.map { entry in
+                                        a(class: "episode-chapter-link w-inline-block", href: "?t=\(Int(entry.0))", customAttributes: ["data-time": "\(entry.0)"]) {
+                                            div(class: "chapter-name") { entry.title }
+                                            div(class: "chapter-timestamp", style: pColor) { entry.0.timeString }
                                         }
                                     }
                                 }
-                                div(class: "resource-container") {
-                                    div(class: "resource-image-container") {
-                                        img(alt: "", class: "resource-image", loading: "lazy", src: "/assets/images/arrow-down.png", width: "17.5")
-                                    }
-                                    div(class: "resource-details-container") {
-                                        h6(class: "h6 dark small _75-opacity resource-name") {
-                                            "Download Episodes"
+                            }
+                            div(class: "sidebar-component-container resources") {
+                                div(class: "nano-text half-white") {
+                                    "Resources"
+                                }
+                                div(class: "resources-container") {
+                                    resources.map { r in
+                                        div(class: "resource-container") {
+                                            div(class: "resource-image-container") {
+                                                img(alt: "", class: "resource-image", loading: "lazy", src: "/assets/images/{-}.png", width: "27.5")
+                                            }
+                                            div(class: "resource-details-container") {
+                                                h6(class: "h6 dark small _75-opacity resource-name") {
+                                                    r.title
+                                                }
+                                                div(class: "p4 half-white resource-detail") {
+                                                    r.subtitle
+                                                }
+                                            }
                                         }
-                                        div(class: "p4 half-white resource-detail") {
-                                            "Available to our subscribers"
+                                    }
+                                    div(class: "resource-container") {
+                                        div(class: "resource-image-container") {
+                                            img(alt: "", class: "resource-image", loading: "lazy", src: "/assets/images/arrow-down.png", width: "17.5")
+                                        }
+                                        div(class: "resource-details-container") {
+                                            h6(class: "h6 dark small _75-opacity resource-name") {
+                                                "Download Episode"
+                                            }
+                                            div(class: "p4 half-white resource-detail") { downloadStatus.text }
+                                        }
+                                    }
+                                }
+                            }
+                            div(class: "sidebar-component-container in-this-project") {
+                                div(class: "nano-text half-white") {
+                                    "In this project"
+                                }
+                                div(class: "project-sidebar-episodes-container") {
+                                    pEps.enumerated().map { idx, ep in
+                                        div(class: "sidebar-episode-container") {
+                                            div(class: "sidebar-episode-details") {
+                                                let current = ep == self ? "current" : ""
+                                                h6(class: "h6 episode-count \(current)") { "\(idx)." }
+                                                div(class: "episode-name \(current)") { ep.title }
+                                            }
+                                            let progress = otherEpisodes.first { $0.episode == ep }
+                                            let href = Route.episode(ep.id, .view(playPosition: progress?.progress)).absoluteString
+                                            if progress?.watched == true {
+                                                a(href: href)
+                                                img(alt: "", height: "20", loading: "lazy", src: "/assets/images/checkmark-circle.png", width: "20")
+                                            } else {
+                                                a(class: "episode-play-button w-button", href: href)
+                                            }
+                                        }
+                                    }
+                                }
+                                a(class: "secondary-button-small _75-opacity w-button", href: Route.home.absoluteString) {
+                                    "View all projects"
+                                    span(class: "text-span-5") {
+                                        "→"
+                                    }
+                                }
+                            }
+                            div(class: "sidebar-component-container credits") {
+                                let detailItems: [(String,String, URL?)] = [
+                                    ("Released", DateFormatter.fullPretty.string(from: releaseAt), nil)
+                                ] + theCollaborators.sorted(by: { $0.role < $1.role }).map { coll in
+                                    (coll.role.name, coll.name, .some(coll.url))
+                                }
+                                div(class: "nano-text half-white") {
+                                    "Credits"
+                                }
+                                div(class: "chapters-container") {
+                                    detailItems.map { key, value, url in
+                                        div(class: "episode-credit-container") {
+                                            div(class: "p4 _75-opacity") { key }
+                                            div(class: "p4 purple") {
+                                                if let url {
+                                                    a(href: url.absoluteString, style: pColor) { value }
+                                                } else {
+                                                    value
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-                        div(class: "sidebar-component-container in-this-project") {
-                            div(class: "nano-text half-white") {
-                                "In this project"
-                            }
-                            div(class: "project-sidebar-episodes-container") {
-                                div(class: "sidebar-episode-container") {
-                                    div(class: "sidebar-episode-details") {
-                                        h6(class: "h6 episode-count current") {
-                                            "1."
-                                        }
-                                        div(class: "episode-name current") {
-                                            "Views and Nodes"
+                        div(class: "episode-transcript-container") {
+                            if canAccess {
+                                div(class: "episode-transcript-content") {
+                                    h4(class: "h5 dark") { synopsis }
+                                    div(class: "transcript-container") {
+                                        div(class: "body dark episode-transcript") {
+                                            let _ = print(highlightedTranscript)
+                                            Swim.Node.raw(highlightedTranscript ?? "No transcript yet.")
                                         }
                                     }
-                                    img(alt: "", height: "20", loading: "lazy", src: "/assets/images/checkmark-circle.png", width: "20")
-                                }
-                                div(class: "sidebar-episode-container") {
-                                    div(class: "sidebar-episode-details") {
-                                        h6(class: "h6 episode-count") {
-                                            "2."
-                                        }
-                                        div(class: "episode-name") {
-                                            "Observed Objects"
-                                        }
-                                    }
-                                    img(alt: "", height: "20", loading: "lazy", src: "/assets/images/checkmark-circle.png", width: "20")
-                                }
-                                div(class: "sidebar-episode-container") {
-                                    div(class: "sidebar-episode-details") {
-                                        h6(class: "h6 episode-count") {
-                                            "3."
-                                        }
-                                        div(class: "episode-name") {
-                                            "Tuple Views and View Builders"
-                                        }
-                                    }
-                                    img(alt: "", height: "20", loading: "lazy", src: "/assets/images/checkmark-circle.png", width: "20")
-                                }
-                                div(class: "sidebar-episode-container") {
-                                    div(class: "sidebar-episode-details") {
-                                        h6(class: "h6 episode-count") {
-                                            "4."
-                                        }
-                                        div(class: "episode-name") {
-                                            "Comparing Views"
-                                        }
-                                    }
-                                    img(alt: "", class: "image-17", height: "20", loading: "lazy", src: "/assets/images/checkmark-circle.png", width: "20")
-                                    a(class: "episode-play-button w-button", href: "#")
-                                }
-                                div(class: "sidebar-episode-container") {
-                                    div(class: "sidebar-episode-details") {
-                                        h6(class: "h6 episode-count") {
-                                            "5."
-                                        }
-                                        div(class: "episode-name") {
-                                            "Bindings"
-                                        }
-                                    }
-                                    img(alt: "", class: "image-18", height: "20", loading: "lazy", src: "/assets/images/checkmark-circle.png", width: "20")
-                                    a(class: "episode-play-button w-button", href: "#")
-                                }
-                                div(class: "sidebar-episode-container") {
-                                    div(class: "sidebar-episode-details") {
-                                        h6(class: "h6 episode-count") {
-                                            "6."
-                                        }
-                                        div(class: "episode-name") {
-                                            "State Properties"
-                                        }
-                                    }
-                                    img(alt: "", class: "image-19", height: "20", loading: "lazy", src: "/assets/images/checkmark-circle.png", width: "20")
-                                    a(class: "episode-play-button w-button", href: "#")
-                                }
-                                div(class: "sidebar-episode-container") {
-                                    div(class: "sidebar-episode-details") {
-                                        h6(class: "h6 episode-count") {
-                                            "7."
-                                        }
-                                        div(class: "episode-name") {
-                                            "State dependencies"
-                                        }
-                                    }
-                                    img(alt: "", class: "image-20", height: "20", loading: "lazy", src: "/assets/images/checkmark-circle.png", width: "20")
-                                    a(class: "episode-play-button w-button", href: "#")
-                                }
-                                div(class: "sidebar-episode-container") {
-                                    div(class: "sidebar-episode-details") {
-                                        h6(class: "h6 episode-count") {
-                                            "8."
-                                        }
-                                        div(class: "episode-name") {
-                                            "State and Bindings"
-                                        }
-                                    }
-                                    img(alt: "", class: "image-21", height: "20", loading: "lazy", src: "/assets/images/checkmark-circle.png", width: "20")
-                                    a(class: "episode-play-button w-button", href: "#")
                                 }
                             }
-                            a(class: "secondary-button-small _75-opacity w-button", href: "/swift-talks") {
-                                "View all projects"
-                                span(class: "text-span-5") {
-                                    "→"
-                                }
-                            }
-                        }
-                        div(class: "sidebar-component-container credits") {
-                            div(class: "nano-text half-white") {
-                                "Credits"
-                            }
-                            div(class: "chapters-container") {
-                                div(class: "episode-credit-container") {
-                                    div(class: "p4 _75-opacity") {
-                                        "Released"
-                                    }
-                                    div(class: "p4 purple") {
-                                        "July 02, 2021"
-                                    }
-                                }
-                                div(class: "episode-credit-container") {
-                                    div(class: "p4 _75-opacity") {
-                                        "Hosts"
-                                    }
-                                    div(class: "p4 purple") {
-                                        "Chris Eidhof,"
-                                        br()
-                                        "Florian Kugler"
-                                    }
-                                }
-                                div(class: "episode-credit-container") {
-                                    div(class: "p4 _75-opacity") {
-                                        "Transcript"
-                                    }
-                                    div(class: "p4 purple") {
-                                        "Juul Spee"
-                                    }
-                                }
-                                div(class: "episode-credit-container") {
-                                    div(class: "p4 _75-opacity") {
-                                        "Copy Editing"
-                                    }
-                                    div(class: "p4 purple") {
-                                        "Natalye Childress"
+                            if let next {
+                                div(class: "button-container") {
+                                    a(class: "secondary-button-with-image w-button", href: Route.episode(next.id, .view(playPosition: nil)).absoluteString) {
+                                        "Next Episode in project: \(p.title)"
+                                        span(class: "text-span-14") {
+                                            "→"
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                    div(class: "episode-transcript-container") {
-                        div(class: "episode-transcript-content") {
-                            h4(class: "h5 dark") {
-                                "We define the basic view protocols and build a persistent object tree from view values."
-                            }
-                            div(class: "transcript-container") {
-                                div(class: "body dark episode-transcript") {
-                                    "00:06 In the SwiftUI Layout Explained series, we reimplemented SwiftUI's layout system to get a better understanding of its inner workings. Today, we're starting a new series in which we want to reimplement SwiftUI's state system. 00:27 If some state changes after a view hierarchy has been rendered in SwiftUI, the system rerenders the parts of the view hierarchy that depend on that particular piece of state. We establish a view's dependency on some state using various property wrappers, such as State, ObservedObject, and Binding . Without fully understanding how these dependencies work, it can be difficult to know when and why state changes trigger view updates. Our goal with this series is to replicate SwiftUI's behavior when it comes to state changes, and to get a feeling for why things work the way they do. 01:34 Something to keep in mind during this series is the difference between initializing a View value and executing its body property. These are two separate actions, and we want to examine and replicate how SwiftUI performs these actions. And in doing so, our goal isn't to write the most efficient code possible, but to make the state system as understandable as possible."
+                        div(class: "episode-sidebar mobile") {
+                            div(class: "sidebar-component-container in-this-project mobile") {
+                                div(class: "nano-text half-white") {
+                                    "In this project"
+                                }
+                                div(class: "project-sidebar-episodes-container") {
+                                    pEps.enumerated().map { (idx, ep) in
+                                        div(class: "sidebar-episode-container") {
+                                            div(class: "sidebar-episode-details") {
+                                                h6(class: "h6 dark small episode-count") { "\(idx)." }
+                                                div(class: "p4 episode-name current") { ep.title }
+                                            }
+                                            img(alt: "", height: "20", loading: "lazy", src: "/assets/images/checkmark-circle.png", width: "20")
+                                            a(class: "episode-play-button w-button", href: Route.episode(ep.id, .view(playPosition: nil)).absoluteString)
+                                        }
+                                    }
+                                }
+                                a(class: "secondary-button-small _75-opacity w-button", href: Route.home.absoluteString) {
+                                    "View all projects"
+                                    span(class: "text-span-5") {
+                                        "→"
+                                    }
                                 }
                             }
-                        }
-                        div(class: "button-container") {
-                            a(class: "secondary-button-with-image w-button", href: "#") {
-                                "Next Episode in project: Observed objects"
-                                span(class: "text-span-14") {
-                                    "→"
+                            div(class: "sidebar-component-container credits mobile") {
+                                div(class: "nano-text half-white") {
+                                    "Credits"
                                 }
-                            }
-                        }
-                    }
-                    div(class: "episode-sidebar mobile") {
-                        div(class: "sidebar-component-container in-this-project mobile") {
-                            div(class: "nano-text half-white") {
-                                "In this project"
-                            }
-                            div(class: "project-sidebar-episodes-container") {
-                                div(class: "sidebar-episode-container") {
-                                    div(class: "sidebar-episode-details") {
-                                        h6(class: "h6 dark small episode-count") {
-                                            "1."
+                                div(class: "chapters-container") {
+                                    div(class: "episode-credit-container") {
+                                        div(class: "p4 _75-opacity") {
+                                            "Released"
                                         }
-                                        div(class: "p4 episode-name current") {
-                                            "Views and Nodes"
+                                        div(class: "p4 purple") {
+                                            "July 02, 2021"
                                         }
                                     }
-                                    img(alt: "", height: "20", loading: "lazy", src: "/assets/images/checkmark-circle.png", width: "20")
-                                }
-                                div(class: "sidebar-episode-container") {
-                                    div(class: "sidebar-episode-details") {
-                                        h6(class: "h6 dark small _75-opacity episode-count") {
-                                            "2."
+                                    div(class: "episode-credit-container") {
+                                        div(class: "p4 _75-opacity") {
+                                            "Hosts"
                                         }
-                                        div(class: "p4 half-white episode-name") {
-                                            "Observed Objects"
-                                        }
-                                    }
-                                    img(alt: "", height: "20", loading: "lazy", src: "/assets/images/checkmark-circle.png", width: "20")
-                                }
-                                div(class: "sidebar-episode-container") {
-                                    div(class: "sidebar-episode-details") {
-                                        h6(class: "h6 dark small _75-opacity episode-count") {
-                                            "3."
-                                        }
-                                        div(class: "p4 half-white episode-name") {
-                                            "Tuple Views and View Builders"
+                                        div(class: "p4 purple") {
+                                            "Chris Eidhof,"
+                                            br()
+                                            "Florian Kugler"
                                         }
                                     }
-                                    img(alt: "", height: "20", loading: "lazy", src: "/assets/images/checkmark-circle.png", width: "20")
-                                }
-                                div(class: "sidebar-episode-container") {
-                                    div(class: "sidebar-episode-details") {
-                                        h6(class: "h6 dark small _75-opacity episode-count") {
-                                            "4."
+                                    div(class: "episode-credit-container") {
+                                        div(class: "p4 _75-opacity") {
+                                            "Transcript"
                                         }
-                                        div(class: "p4 half-white episode-name") {
-                                            "Comparing Views"
+                                        div(class: "p4 purple") {
+                                            "Juul Spee"
                                         }
                                     }
-                                    img(alt: "", class: "image-17", height: "20", loading: "lazy", src: "/assets/images/checkmark-circle.png", width: "20")
-                                    a(class: "episode-play-button w-button", href: "#")
-                                }
-                                div(class: "sidebar-episode-container") {
-                                    div(class: "sidebar-episode-details") {
-                                        h6(class: "h6 dark small _75-opacity episode-count") {
-                                            "5."
+                                    div(class: "episode-credit-container") {
+                                        div(class: "p4 _75-opacity") {
+                                            "Copy Editing"
                                         }
-                                        div(class: "p4 half-white episode-name") {
-                                            "Bindings"
+                                        div(class: "p4 purple") {
+                                            "Natalye Childress"
                                         }
-                                    }
-                                    img(alt: "", class: "image-18", height: "20", loading: "lazy", src: "/assets/images/checkmark-circle.png", width: "20")
-                                    a(class: "episode-play-button w-button", href: "#")
-                                }
-                                div(class: "sidebar-episode-container") {
-                                    div(class: "sidebar-episode-details") {
-                                        h6(class: "h6 dark small _75-opacity episode-count") {
-                                            "6."
-                                        }
-                                        div(class: "p4 half-white episode-name") {
-                                            "State Properties"
-                                        }
-                                    }
-                                    img(alt: "", class: "image-19", height: "20", loading: "lazy", src: "/assets/images/checkmark-circle.png", width: "20")
-                                    a(class: "episode-play-button w-button", href: "#")
-                                }
-                                div(class: "sidebar-episode-container") {
-                                    div(class: "sidebar-episode-details") {
-                                        h6(class: "h6 dark small _75-opacity episode-count") {
-                                            "7."
-                                        }
-                                        div(class: "p4 half-white episode-name") {
-                                            "State dependencies"
-                                        }
-                                    }
-                                    img(alt: "", class: "image-20", height: "20", loading: "lazy", src: "/assets/images/checkmark-circle.png", width: "20")
-                                    a(class: "episode-play-button w-button", href: "#")
-                                }
-                                div(class: "sidebar-episode-container") {
-                                    div(class: "sidebar-episode-details") {
-                                        h6(class: "h6 dark small _75-opacity episode-count") {
-                                            "8."
-                                        }
-                                        div(class: "p4 half-white episode-name") {
-                                            "State and Bindings"
-                                        }
-                                    }
-                                    img(alt: "", class: "image-21", height: "20", loading: "lazy", src: "/assets/images/checkmark-circle.png", width: "20")
-                                    a(class: "episode-play-button w-button", href: "#")
-                                }
-                            }
-                            a(class: "secondary-button-small _75-opacity w-button", href: "/swift-talks") {
-                                "View all projects"
-                                span(class: "text-span-5") {
-                                    "→"
-                                }
-                            }
-                        }
-                        div(class: "sidebar-component-container credits mobile") {
-                            div(class: "nano-text half-white") {
-                                "Credits"
-                            }
-                            div(class: "chapters-container") {
-                                div(class: "episode-credit-container") {
-                                    div(class: "p4 _75-opacity") {
-                                        "Released"
-                                    }
-                                    div(class: "p4 purple") {
-                                        "July 02, 2021"
-                                    }
-                                }
-                                div(class: "episode-credit-container") {
-                                    div(class: "p4 _75-opacity") {
-                                        "Hosts"
-                                    }
-                                    div(class: "p4 purple") {
-                                        "Chris Eidhof,"
-                                        br()
-                                        "Florian Kugler"
-                                    }
-                                }
-                                div(class: "episode-credit-container") {
-                                    div(class: "p4 _75-opacity") {
-                                        "Transcript"
-                                    }
-                                    div(class: "p4 purple") {
-                                        "Juul Spee"
-                                    }
-                                }
-                                div(class: "episode-credit-container") {
-                                    div(class: "p4 _75-opacity") {
-                                        "Copy Editing"
-                                    }
-                                    div(class: "p4 purple") {
-                                        "Natalye Childress"
                                     }
                                 }
                             }
                         }
                     }
                 }
-            }
-        }.asOldNode
+            }.asOldNode
+        }
     }
+
 }
 

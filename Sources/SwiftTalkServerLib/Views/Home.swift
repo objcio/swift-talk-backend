@@ -46,7 +46,7 @@ extension Episode {
                     }
                 }
                 div(class: "swift-talk-latest-episode-details-container") {
-                    a(class: "latest-episode-container w-inline-block", href: Route.episode(id, .view(playPosition: nil)).path) {
+                    a(class: "latest-episode-container w-inline-block", href: Route.episode(id, .view(playPosition: nil)).absoluteString) {
                         div(class: "swift-talks-latest-episode-details") {
                             div(class: "swift-talks-latest-episode-details-header") {
                                 div(class: "nano-text medium-purple small") {
@@ -155,7 +155,7 @@ fileprivate func subscriptionStopper() -> HTML.Node {
                         }
                     }
                     div(class: "button-container") {
-                        a(class: "primary-button subscribe-button w-button", href: Route.signup(.subscribe(planName: nil)).path) {
+                        a(class: "primary-button subscribe-button w-button", href: Route.signup(.subscribe(planName: nil)).absoluteString) {
                             "Subscribe"
                         }
                     }
@@ -177,7 +177,7 @@ fileprivate func subscriptionStopper() -> HTML.Node {
                         }
                     }
                     div(class: "button-container") {
-                        a(class: "primary-button subscribe-button w-button", href: Route.signup(.subscribe(planName: nil)).path) {
+                        a(class: "primary-button subscribe-button w-button", href: Route.signup(.subscribe(planName: nil)).absoluteString) {
                             "Subscribe"
                         }
                     }
@@ -263,11 +263,13 @@ func newHome(episodes: [EpisodeWithProgress], projects: [Project], grouped: [Pro
                                         }
                                     }
                                     nav(class: "episode-dropdown-list w-dropdown-list") {
-                                        div(class: "episode-more-details-container") {
-                                            div(class: "episode-summary-container") {
-                                                div(class: "p3 dark _50-opacity") { episode.synopsis }
+                                        a(href: Route.episode(episode.id, .view(playPosition: nil)).absoluteString) {
+                                            div(class: "episode-more-details-container") {
+                                                div(class: "episode-summary-container") {
+                                                    div(class: "p3 dark _50-opacity") { episode.synopsis }
+                                                }
+                                                img(alt: "", class: "image-15", loading: "lazy", sizes: "100vw", src: episode.posterURL(width: 980, height: Int(980/(16.0/9))).absoluteString, width: "980")
                                             }
-                                            img(alt: "", class: "image-15", loading: "lazy", sizes: "100vw", src: episode.posterURL(width: 980, height: Int(980/(16.0/9))).absoluteString, width: "980")
                                         }
                                     }
                                 }

@@ -20,20 +20,20 @@ document.addEventListener("DOMContentLoaded", () => {
         projectsSection.style.display = 'none';
     });
     
-    const transcript = document.querySelector('.body.dark.episode-transcript');
-    if (transcript) {
-        const text = transcript.textContent;
-        const keywords = ['State', 'ObservedObject', 'Binding'];
-        let newText = text;
-        keywords.forEach(keyword => {
-            newText = newText.replace(new RegExp(`\\b${keyword}\\b`, 'g'), `<span class="swift-word-highlight">${keyword}</span>`);
-        });
-        newText = newText.replace(/(\d\d:\d\d)/g, (match, p1) => {
-            return `<br><br><span class="timestamp">${p1}</span>`;
-        });
-        newText = newText.replace(/^<br><br>/, '');
-        transcript.innerHTML = newText;
-    }
+//    const transcript = document.querySelector('.body.dark.episode-transcript');
+//    if (transcript) {
+//        const text = transcript.textContent;
+////        const keywords = ['State', 'ObservedObject', 'Binding'];
+//        let newText = text;
+////        keywords.forEach(keyword => {
+////            newText = newText.replace(new RegExp(`\\b${keyword}\\b`, 'g'), `<span class="swift-word-highlight">${keyword}</span>`);
+////        });
+//        newText = newText.replace(/(\d\d:\d\d)/g, (match, p1) => {
+//            return `<br><br><span class="timestamp">${p1}</span>`;
+//        });
+//        newText = newText.replace(/^<br><br>/, '');
+//        transcript.innerHTML = newText;
+//    }
         
 });
 
