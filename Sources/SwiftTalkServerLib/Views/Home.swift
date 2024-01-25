@@ -10,10 +10,12 @@ import HTML1
 import HTML
 
 extension Project {
-    fileprivate var card: HTML.Node {
+    var card: HTML.Node {
         div(class: "project-container") {
             div(class: "project-cover-container purple") {
-                div(class: "play-video-button")
+                a(href: Route.project(id).absoluteString) {
+                    div(class: "play-video-button")
+                }
                 img(alt: "", class: "project-cover-image", loading: "lazy", src: "/assets/images/apple-watch.png", width: "210")
             }
             div(class: "project-details-container") {

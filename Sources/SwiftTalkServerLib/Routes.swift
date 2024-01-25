@@ -16,6 +16,7 @@ public indirect enum Route: Equatable {
     case collections
     case episode(Id<Episode>, EpisodeR)
     case collection(Id<Collection>)
+    case project(Id<Project>)
     case sitemap
     case rssFeed
     case episodesJSON
@@ -358,6 +359,10 @@ private let generalRoutes: [Router<Route>] = [
     .c("collections", .collections),
     .c("collections") / Router.string().transform({ Route.collection(Id(rawValue: $0)) }, {
         guard case let .collection(name) = $0 else { return nil }
+        return name.rawValue
+    }),
+    .c("projects") / Router.string().transform({ Route.project(Id(rawValue: $0)) }, {
+        guard case let .project(name) = $0 else { return nil }
         return name.rawValue
     }),
     .c("assets") / Router.path().transform({ Route.staticFile(path: $0) }, {

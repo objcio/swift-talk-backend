@@ -2331,7 +2331,6 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
   height: 300px;
   grid-column-gap: 48px;
   border-radius: 24px;
-  margin-left: auto;
   margin-right: auto;
   padding-right: 48px;
   display: flex;
@@ -2355,7 +2354,7 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
 
 .episode-container {
   grid-column-gap: 32px;
-  justify-content: flex-start;
+  justify-content: space-between;
   text-decoration: none;
   display: flex;
 }
@@ -2621,19 +2620,19 @@ min-height: 36px;
   display: flex;
 }
 
-.episode-transcript 
-    a {
-        color: var(--project-color);
-    }
-    p code {
-        font-size: 90%;
-        background-color: rgba(255,255,255,0.12);
-        padding: 3px;
-        border-radius: 3px;
-    }
-    img {
-        margin: 2rem 0;
-    }
+.episode-transcript a {
+    color: var(--project-color);
+}
+
+.episode-transcript p code {
+    font-size: 90%;
+    background-color: rgba(255,255,255,0.12);
+    padding: 3px;
+    border-radius: 3px;
+}
+
+.episode-transcript img {
+    margin: 2rem 0;
 }
 
 .project-color {

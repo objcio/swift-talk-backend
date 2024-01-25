@@ -80,7 +80,17 @@ extension Route {
                     .write(html: coll.show(episodes: $0))
                 }
             }
-            
+
+        case .project(let name):
+            guard let prj = Project.all.first(where: { $0.id == name }) else {
+                return .write(html: errorView("No such project"), status: .notFound)
+            }
+            return .withSession { session in
+                return prj.allEpisodes.scoped(for: session?.user.data).withProgress(for: session?.user.id) {
+                    .write(html: prj.show(episodes: $0))
+                }
+            }
+
         case .sitemap:
             return .write(Route.siteMap)
             

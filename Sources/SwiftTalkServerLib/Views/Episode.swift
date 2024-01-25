@@ -594,7 +594,7 @@ extension Episode {
                                 a(class: "share-button w-button", href: "#")
                             }
                         }
-                        a(class: "project-title-button small w-button project-color", href: "/swift-talks-project") {
+                        a(class: "project-title-button small w-button project-color", href: Route.project(p.id).absoluteString) {
                             "project:"
                             span(class: "text-span-17") { p.title }
                             span(class: "text-span-3") { "→" }
@@ -629,7 +629,7 @@ extension Episode {
                             }
                         }
                     }
-                    a(class: "project-title-button small mobile w-button project-color", href: "/swift-talks-project") {
+                    a(class: "project-title-button small mobile w-button project-color", href: Route.project(p.id).absoluteString) {
                         "project:"
                         span(class: "text-span-17") { p.title }
                         span(class: "text-span-3") { "→" }
@@ -745,7 +745,7 @@ extension Episode {
                                 div(class: "episode-transcript-content") {
                                     h4(class: "h5 dark") { synopsis }
                                     div(class: "transcript-container") {
-                                        div(class: "body dark episode-transcript", style: "--project-color: \(p.color);") {
+                                        div(class: "body dark episode-transcript") {
                                             Swim.Node.raw(highlightedTranscript ?? "No transcript yet.")
                                         }
                                     }
