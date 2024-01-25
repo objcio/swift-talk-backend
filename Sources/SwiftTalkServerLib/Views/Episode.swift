@@ -571,21 +571,20 @@ extension Episode {
     fileprivate func newEpisodeDetail(downloadStatus: DownloadStatus, playPosition: Int?, otherEpisodes: [EpisodeWithProgress]) -> HTML1.Node<STRequestEnvironment> {
         .withInput { env in
             let p = theProject!
-            let pColor = "color: \(p.color) !important;"
             let pEps = p.allEpisodes.scoped(for: env.session?.user.data)
             let idx = pEps.firstIndex(of: self)!
             let next = idx < pEps.endIndex-1 ? pEps[idx+1] : nil
             let prev = idx > pEps.startIndex ? pEps[idx-1] : nil
             let canAccess = canWatch(session: env.session)
             
-            return div(class: "episode-detail-content-container") {
+            return div(class: "episode-detail-content-container", style: "--project-color: \(p.color);") {
                 div(class: "episode-video-section") {
                     div(class: "save-share-buttons-container mobile") {
                         a(class: "save-button mobile w-button", href: "#")
                         a(class: "share-button mobile w-button", href: "#")
                     }
                     div(class: "episode-details-header") {
-                        div(class: "nano-text small purple episode-count-date", style: pColor) {
+                        div(class: "nano-text small purple episode-count-date project-color") {
                             "Episode 335 · Dec 16 2022"
                         }
                         div(class: "episode-name-export-share-buttons-container") {
@@ -595,7 +594,7 @@ extension Episode {
                                 a(class: "share-button w-button", href: "#")
                             }
                         }
-                        a(class: "project-title-button small w-button", href: "/swift-talks-project", style: pColor) {
+                        a(class: "project-title-button small w-button project-color", href: "/swift-talks-project") {
                             "project:"
                             span(class: "text-span-17") { p.title }
                             span(class: "text-span-3") { "→" }
@@ -630,7 +629,7 @@ extension Episode {
                             }
                         }
                     }
-                    a(class: "project-title-button small mobile w-button", href: "/swift-talks-project", style: pColor) {
+                    a(class: "project-title-button small mobile w-button project-color", href: "/swift-talks-project") {
                         "project:"
                         span(class: "text-span-17") { p.title }
                         span(class: "text-span-3") { "→" }
@@ -648,7 +647,7 @@ extension Episode {
                                     items.map { entry in
                                         a(class: "episode-chapter-link w-inline-block", href: "?t=\(Int(entry.0))", customAttributes: ["data-time": "\(entry.0)"]) {
                                             div(class: "chapter-name") { entry.title }
-                                            div(class: "chapter-timestamp", style: pColor) { entry.0.timeString }
+                                            div(class: "chapter-timestamp project-color") { entry.0.timeString }
                                         }
                                     }
                                 }
@@ -731,7 +730,7 @@ extension Episode {
                                             div(class: "p4 _75-opacity") { key }
                                             div(class: "p4 purple") {
                                                 if let url {
-                                                    a(href: url.absoluteString, style: pColor) { value }
+                                                    a(class: "project-color", href: url.absoluteString) { value }
                                                 } else {
                                                     value
                                                 }
@@ -746,8 +745,7 @@ extension Episode {
                                 div(class: "episode-transcript-content") {
                                     h4(class: "h5 dark") { synopsis }
                                     div(class: "transcript-container") {
-                                        div(class: "body dark episode-transcript") {
-                                            let _ = print(highlightedTranscript)
+                                        div(class: "body dark episode-transcript", style: "--project-color: \(p.color);") {
                                             Swim.Node.raw(highlightedTranscript ?? "No transcript yet.")
                                         }
                                     }

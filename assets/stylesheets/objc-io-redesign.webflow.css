@@ -77,13 +77,12 @@
 }
 
 pre {
-    padding: 3rem;
+    padding: 1rem;
     border-radius: 1rem;
-    background: rgba(4, 18, 27, 0.03);
-    margin: 3rem -1.5rem;
-    color: rgba(4, 18, 27, 0.75);
+    background: rgba(255,255,255,0.1);
+    margin: 3rem 0;
     font-family: Akkurat-Mono;
-    font-size: 1rem;
+    font-size: 90%;
     font-style: normal;
     font-weight: 400;
     line-height: 1.625rem;
@@ -2620,6 +2619,25 @@ min-height: 36px;
   margin-left: 16px;
   margin-right: 16px;
   display: flex;
+}
+
+.episode-transcript 
+    a {
+        color: var(--project-color);
+    }
+    p code {
+        font-size: 90%;
+        background-color: rgba(255,255,255,0.12);
+        padding: 3px;
+        border-radius: 3px;
+    }
+    img {
+        margin: 2rem 0;
+    }
+}
+
+.project-color {
+    color: var(--project-color) !important;
 }
 
 .episode-detail-html-embed {
