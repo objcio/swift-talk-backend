@@ -30,16 +30,17 @@ extension Project {
                     div(class: "episodes-container") {
                         episodes.enumerated().map { (idx, ep) in
                             let episode = ep.episode
-                            return div(class: "episode-container") {
-                                div(class: "episode-details") {
-                                    h4(class: "h4 dark") { "\(idx+1). \(episode.title)" }
-                                    div(class: "nano-text small purple project-color") {
-                                        "episode \(episode.number) · \(DateFormatter.withYear.string(from: episode.releaseAt))"
+                            return a(href: Route.episode(episode.id, .view(playPosition: ep.progress)).absoluteString) {
+                                div(class: "episode-container") {
+                                    div(class: "episode-details") {
+                                        h4(class: "h4 dark") { "\(idx+1). \(episode.title)" }
+                                        div(class: "nano-text small purple project-color") {
+                                            "episode \(episode.number) · \(DateFormatter.withYear.string(from: episode.releaseAt))"
+                                        }
+                                        div(class: "body dark") { episode.synopsis }
                                     }
-                                    div(class: "body dark") { episode.synopsis }
-                                }
-                                a(href: Route.episode(episode.id, .view(playPosition: ep.progress)).absoluteString) {
                                     div(class: "episode-video-preview-container") {
+                                        img(alt: "", class: "", loading: "lazy", sizes: "100vw", src: episode.posterURL(width: 980, height: Int(980/(16.0/9))).absoluteString, width: "980")
                                         div(class: "play-video-button center")
                                     }
                                 }
@@ -55,63 +56,6 @@ extension Project {
                     }
                     div(class: "more-projects-container") {
                         Project.all.scoped(for: env.session?.user.data).prefix(3).map { $0.card }
-//                        div(class: "project-container") {
-//                            div(class: "project-cover-container yellow-orange") {
-//                                div(class: "play-video-button")
-//                                img(alt: "", class: "project-cover-image-bottom-align", loading: "lazy", src: "/assets/images/photo-picker-grey-border.png", width: "215")
-//                            }
-//                            div(class: "project-details-container") {
-//                                div(class: "project-details-header") {
-//                                    h4(class: "h4 dark") {
-//                                        "Building a photo grid"
-//                                    }
-//                                    div(class: "body dark") {
-//                                        "We re-implement parts of SwiftUI's state system to better understand how SwiftUI manages state and which views get executed when."
-//                                    }
-//                                }
-//                                div(class: "nano-text small yellow-orange") {
-//                                    "8 Episodes · 2h 49min · 12 december 2022"
-//                                }
-//                            }
-//                        }
-//                        div(class: "project-container") {
-//                            div(class: "project-cover-container orange") {
-//                                div(class: "play-video-button")
-//                                img(alt: "", class: "project-cover-image", loading: "lazy", src: "/assets/images/watch-screen.png", width: "210")
-//                            }
-//                            div(class: "project-details-container") {
-//                                div(class: "project-details-header") {
-//                                    h4(class: "h4 dark") {
-//                                        "Building a photo grid"
-//                                    }
-//                                    div(class: "body dark") {
-//                                        "We re-implement parts of SwiftUI's state system to better understand how SwiftUI manages state and which views get executed when."
-//                                    }
-//                                }
-//                                div(class: "nano-text small orange") {
-//                                    "8 Episodes · 2h 49min · 12 december 2022"
-//                                }
-//                            }
-//                        }
-//                        div(class: "project-container") {
-//                            div(class: "project-cover-container pink") {
-//                                div(class: "play-video-button")
-//                                img(alt: "", class: "project-cover-image-bottom-align", loading: "lazy", src: "/assets/images/photo-picker-black-border.png", width: "214.5")
-//                            }
-//                            div(class: "project-details-container") {
-//                                div(class: "project-details-header") {
-//                                    h4(class: "h4 dark") {
-//                                        "Landscape view photo grid"
-//                                    }
-//                                    div(class: "body dark") {
-//                                        "We re-implement parts of SwiftUI's state system to better understand how SwiftUI manages state and which views get executed when."
-//                                    }
-//                                }
-//                                div(class: "nano-text small pink") {
-//                                    "8 Episodes · 2h 49min · 12 december 2022"
-//                                }
-//                            }
-//                        }
                     }
                 }
             }.asOldNode

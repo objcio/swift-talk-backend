@@ -60,6 +60,7 @@ extension Route.EpisodeR {
             return .withSession { sess in
                 guard let s = sess else { return .write("", status: .ok) }
                 return .jsonPost(do: { (p: PlayProgress) in
+                    print("progress: \(p.progress)")
                     // TODO find a built-in way to verify the CSRF
                     guard s.user.data.csrfToken == CSRFToken(stringValue: p.csrf) else {
                         throw ServerError(privateMessage: "Invalid CSRF")

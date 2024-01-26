@@ -1,3 +1,7 @@
+a {
+    text-decoration: none;
+}
+
 :root {
   --teal: 0, 96, 100;
   --teal-secondary: 14, 154, 154;
@@ -2362,7 +2366,7 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
 .episode-details {
   grid-row-gap: 4px;
   flex-direction: column;
-  flex: 0 auto;
+  flex: 1;
   align-self: auto;
   margin-top: 8px;
   display: flex;
@@ -2377,7 +2381,7 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
   background-size: cover;
   background-attachment: scroll;
   border-radius: 8px;
-  flex: none;
+  flex: 1;
   justify-content: center;
   align-items: center;
   display: flex;

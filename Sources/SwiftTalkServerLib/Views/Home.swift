@@ -33,25 +33,27 @@ extension Project {
 }
 
 extension Episode {
-    fileprivate var homeCard: HTML.Node {
+    fileprivate func homeCard(playPosition: Int?) -> HTML.Node {
         div(class: "swift-talk-latest-episode-section") {
             div(class: "swift-talk-latest-episode-header") {
                 h2(class: "h2 dark") {
                     "Latest episode"
                 }
             }
-            div(class: "swift-talk-latest-episode-container") {
+            div(class: "swift-talk-latest-episode-container", style: (theProject?.color).map { "--project-color: \($0);" }) {
                 div(class: "latest-episode-container") {
-                    div(class: "swift-talks-latest-episode") {
-                        img(alt: "", class: "latest-episode-preview-image", loading: "eager", sizes: "(max-width: 479px) 93vw, (max-width: 767px) 87vw, (max-width: 991px) 90vw, 980px", src: posterURL(width: 1260, height: 630).absoluteString, width: "300")
-                        div(class: "play-video-button center")
+                    a(href: Route.episode(id, .view(playPosition: playPosition)).absoluteString) {
+                        div(class: "swift-talks-latest-episode") {
+                            img(alt: "", class: "latest-episode-preview-image", loading: "eager", sizes: "(max-width: 479px) 93vw, (max-width: 767px) 87vw, (max-width: 991px) 90vw, 980px", src: posterURL(width: 1260, height: 630).absoluteString, width: "300")
+                            div(class: "play-video-button center")
+                        }
                     }
                 }
                 div(class: "swift-talk-latest-episode-details-container") {
                     a(class: "latest-episode-container w-inline-block", href: Route.episode(id, .view(playPosition: nil)).absoluteString) {
                         div(class: "swift-talks-latest-episode-details") {
                             div(class: "swift-talks-latest-episode-details-header") {
-                                div(class: "nano-text medium-purple small") {
+                                div(class: "nano-text medium-purple small project-color") {
                                     "Episode \(number) · \(releaseAt.pretty)"
                                 }
                                 h4(class: "h4 dark") {
@@ -63,11 +65,13 @@ extension Episode {
                             }
                         }
                     }
-                    a(class: "swift-talks-latest-episode-project-container w-inline-block", href: "/swift-talks-project") {
-                        div(class: "nano-text medium-purple small") {
-                            "todo: link to project"
-                            span(class: "text-span-2") {
-                                "→"
+                    if let p = theProject {
+                        a(class: "swift-talks-latest-episode-project-container w-inline-block", href: Route.project(p.id).absoluteString) {
+                            div(class: "nano-text medium-purple small project-color") {
+                                "project: \(p.title)"
+                                span(class: "text-span-2") {
+                                    "→"
+                                }
                             }
                         }
                     }
@@ -206,7 +210,7 @@ func newHome(episodes: [EpisodeWithProgress], projects: [Project], grouped: [Pro
         div(class: "swift-talk-content-container") {
             header(env: env)
             if let latest = episodes.first {
-                latest.episode.homeCard
+                latest.episode.homeCard(playPosition: latest.progress)
             }
             tabs(env: env)
             div(class: "swift-talk-projects-section") {
@@ -224,7 +228,7 @@ func newHome(episodes: [EpisodeWithProgress], projects: [Project], grouped: [Pro
                         switch p {
                         case let .multiple(eps):
                             let project = eps[0].theProject!
-                            a(class: "project-title-button w-button", href: "/swift-talks-project", style: "color: \(project.color)", customAttributes: ["onmouseover": "this.style.color=pSBC(0.35, this.style.color);", "onmouseout": "this.style.color=\"\(project.color)\";"]) {
+                            a(class: "project-title-button w-button", href: Route.project(project.id).absoluteString, style: "color: \(project.color)", customAttributes: ["onmouseover": "this.style.color=pSBC(0.35, this.style.color);", "onmouseout": "this.style.color=\"\(project.color)\";"]) {
                                 "project: \(project.title)"
                                 span(class: "text-span-3") {
                                     "→"

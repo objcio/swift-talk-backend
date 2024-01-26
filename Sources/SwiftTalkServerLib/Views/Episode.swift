@@ -200,306 +200,68 @@ extension Episode {
     }
     
     func show(playPosition: Int?, downloadStatus: DownloadStatus, otherEpisodes: [EpisodeWithProgress]) -> Node {
-        return .withSession { self.show_(session: $0, playPosition: playPosition, downloadStatus: downloadStatus, otherEpisodes: otherEpisodes) }
-    }
-    
-    private func show_(session: Session?, playPosition: Int?, downloadStatus: DownloadStatus, otherEpisodes: [EpisodeWithProgress]) -> Node {
-        let canWatch = !subscriptionOnly || session.premiumAccess
-        let content = newEpisodeDetail(downloadStatus: downloadStatus, playPosition: playPosition, otherEpisodes: otherEpisodes)
-        
-        let data = StructuredData(title: title, description: synopsis, url: Route.episode(id, .view(playPosition: nil)).url, image: posterURL(width: 600, height: 338), type: .video(duration: Int(mediaDuration), releaseDate: releaseAt))
-        return LayoutConfig(pageTitle: title.constructTitle, contents: [content], footerContent: [], structuredData: data).layout
-        
-//        let scroller = Node.aside(class: "bgcolor-pale-gray pt++", [
-//            .header(class: "container-h flex items-center justify-between", [
-//                .div([
-//                    .h3(class: "inline-block bold color-black", ["Recent Episodes"]),
-//                    .link(to: .episodes, class: "inline-block ms-1 ml- color-blue no-decoration hover-underline", ["See All"])
-//                ]),
-//            ]),
-//            .div(class: "flex scroller p-edges pt pb++", [
-//                .div(class: "scroller__offset flex-none")
-//            ] + otherEpisodes.map { e in
-//                .div(class: "flex-110 pr+ min-width-5", [e.episode.render(.init(synopsis: false, watched: e.watched, canWatch: e.episode.canWatch(session: session)))])
-//            })
-//        ])
-//        
-//        func smallBlueH3(_ text: Node) -> Node {
-//            return .h3(class: "color-blue mb", [.span(class: "smallcaps", [text])])
-//        }
-//        
-//        let linkAttrs: [String:String] = ["target": "_blank", "rel": "external"]
-//
-//        // nil link displays a "not allowed" span
-//        func smallH4(_ text: Node, link: LinkTarget?) -> Node {
-//            return .h4(class: "mb---", [
-//                link.map { l in
-//                    .link(to: l, class: "bold color-black hover-underline no-decoration", attributes: linkAttrs, [text])
-//                } ?? .span(class: "bold color-gray-40 cursor-not-allowed", [text])
-//            ])
-//        }
-//        
-//        let episodeResource: [[Node]] = self.resources.map { res in
-//            [
-//                .div(class: "flex-none mr-", [
-//                    .a(class: "block bgcolor-orange radius-5 hover-bgcolor-blue", href: res.url.absoluteString, attributes: linkAttrs, [
-//                        .inlineSvg(class: "block icon-40", path: "icon-resource-code.svg")
-//                    ])
-//                ]),
-//                .div(class: "ms-1 lh-125", [
-//                    smallH4(.text(res.title), link: res.url),
-//                    .p(class: "color-gray-50", [.text(res.subtitle)])
-//                ])
-//            ]
-//        }
-//        let downloadImage = Node.inlineSvg(class: "block icon-40", path: "icon-resource-download.svg")
-//        let download: [[Node]] = [
-//            [
-//                .div(class: "flex-none mr-", [
-//                    downloadStatus.allowed
-//                        ? .link(to: Route.episode(id, .download), class: "block bgcolor-orange radius-5 hover-bgcolor-blue", [downloadImage])
-//                        : .span(class: "block bgcolor-orange radius-5 cursor-not-allowed", [downloadImage])
-//                ]),
-//                .div(class: "ms-1 lh-125", [
-//                    smallH4("Episode Video", link: downloadStatus.allowed ? Route.episode(id, .download) : nil),
-//                    .p(class: "color-gray-50", [.text(downloadStatus.text)])
-//                ])
-//            ]
-//        ]
-//        let resourceItems: [[Node]] = episodeResource + download
-//        let resources: [Node] = canWatch ? [
-//            .section(class: "pb++", [
-//                smallBlueH3("Resources"),
-//                .ul(class: "stack", resourceItems.map { .li(class: "flex", $0)})
-//            ])
-//        ] : []
-//        
-//        let blogpostItems: [Node] = relatedBlogposts.map { post in
-//            Node.li(class: "flex items-baseline justify-between ms-1 line-125", [
-//                .div(class: "", [
-//                    .h4([
-//                        .link(to: post.fullURL, class: "color-black bold no-decoration hover-underline", [
-//                            .text(post.title)
-//                            ])
-//                        ]),
-//                    .p(class: "pv- color-gray-45 ms-1", [
-//                        .text(DateFormatter.fullPretty.string(from: post.date)),
-//                    ]),
-//                    .p(class: "color-gray-50", [
-//                        .text(post.synopsis ?? "")
-//                    ])
-//                ])
-//        	])
-//        }
-//        let blogposts: [Node] = !relatedBlogposts.isEmpty ? [
-//            .section(class: "pb++", [
-//                smallBlueH3("Related Blogposts"),
-//                .ul(class: "stack",  blogpostItems)
-//                ])
-//            ] : []
-//        let inCollection: [Node] = primaryCollection.map { coll in
-//            [
-//                .section(class: "pb++", [
-//                    smallBlueH3("In Collection")
-//                ] +
-//                coll.render(.init(episodes: true))
-//                + [
-//                    .p(class: "ms-1 mt text-right", [
-//                        .link(to: .collections, class: "no-decoration color-blue hover-cascade", [
-//                            .span(class: "hover-cascade__border-bottom", ["See All Collections"]),
-//                            .span(class: "bold", [.raw("&rarr;")])
-//                        ])
-//                    ])
-//                ])
-//            ]
-//        } ?? []
-//        let detailItems: [(String,String, URL?)] = [
-//            ("Released", DateFormatter.fullPretty.string(from: releaseAt), nil)
-//        ] + theCollaborators.sorted(by: { $0.role < $1.role }).map { coll in
-//            (coll.role.name, coll.name, .some(coll.url))
-//        }
-//        let details: [Node] = canWatch ? [
-//            .div(class: "pb++", [
-//                smallBlueH3("Episode Details"),
-//                .ul(class: "ms-1 stack", detailItems.map { key, value, url in
-//                    .li([
-//                        .dl(class: "flex justify-between", [
-//                            .dt(class: "color-gray-60", [.text(key)]),
-//                            .dd(class: "color-gray-15 text-right", [url.map { u in
-//                                .link(to: u, class: "color-gray-15 hover-underline no-decoration", [.text(value)])
-//                            } ?? .text(value)])
-//                        ])
-//                    ])
-//                })
-//            ])
-//        ] : []
-//        let sidebar = Node.aside(class: "p-col max-width-7 center stack l+|width-1/3 xl+|width-3/10 l+|flex-auto", resources + blogposts + inCollection + details)
-//        let epTitle: [Node] = [
-//            .p(class: "color-orange ms1", [
-//                .link(to: .home, class: "color-inherit no-decoration bold hover-border-bottom", ["Swift Talk"]),
-//                "# \(number.padded)"
-//            ]),
-//            .h2(class: "ms5 color-white bold mt-- lh-110", [.text(fullTitle + (released ? "" : " (unreleased)"))]),
-//        ]
-//        let guests: [Node] = guestHosts.isEmpty ? [] : [
-//            .p(class: "color-white opacity-70 mt-", [
-//                "with special \("guest".pluralize(guestHosts.count))"
-//            ] + guestHosts.map { gh in
-//                .link(to: gh.url, class: "color-inherit bold no-decoration hover-border-bottom", [
-//                    .text(gh.name)
-//                ])
-//            })
-//        ]
-//        let header = Node.header(class: "mb++ pb", epTitle + guests)
-//        let headerAndPlayer = Node.div(class: "bgcolor-night-blue pattern-shade-darker", [
-//            .div(class: "container l+|pb0 l+|n-mb++", [
-//                header,
-//                .div(class: "l+|flex", [
-//                    .div(class: "flex-110 order-2", [
-//                        player(canWatch: canWatch, playPosition: playPosition)
-//                    ]),
-//                    .div(class: "min-width-5 relative order-1 mt++ l+|mt0 l+|mr++ l+|mb++", [
-//                        toc(canWatch: canWatch)
-//                    ])
-//                ])
-//            ])
-//        ])
-//        
-//        let episodeUpdates: [Node]
-//        if let ups = updates, ups.count > 0 {
-//            episodeUpdates = [
-//                .div(class: "text-wrapper mv+", [
-//                    .aside(class: "js-expandable border border-1 border-color-subtle-blue bgcolor-pale-blue pa radius-5", [
-//                        .header(class: "flex justify-between items-baseline mb-", [
-//                            .h3(class: "smallcaps color-blue-darker mb-", ["Updates"])
-//                        ]),
-//                        .ul(class: "stack", ups.map { u in
-//                            .li(class: "ms-1 media", [
-//                                .div(class: "media__image grafs color-blue-darker mr-", ["•"]),
-//                                .div(class: "media__body links grafs inline-code", [
-//                                    .markdown(u.text)
-//                                ])
-//                            ])
-//                        }),
-//                    ])
-//                ])
-//            ]
-//        } else {
-//            episodeUpdates = []
-//        }
-//
-//        let transcriptAvailable: [Node] = [
-//            session.premiumAccess || session?.isTeamManager == true ? .raw("") : subscriptionPitch,
-//            .div(class: "l+|flex l-|stack+++ m-cols", [
-//                .div(class: "p-col l+|flex-auto l+|width-2/3 xl+|width-7/10 flex flex-column", [
-//                    .div(class: "text-wrapper", [
-//                        .div(class: "lh-140 color-blue-darkest ms1 bold mb+", [
-//                            .markdown(synopsis),
-//                        ])
-//                    ]),
-//                ] + episodeUpdates + [
-//                    .div(class: "flex-auto relative min-height-5", [
-//                        .div(class: "js-transcript js-expandable z-0", attributes: ["data-expandable-collapsed": "absolute position-stretch position-nw overflow-hidden", "id": "transcript"], [
-//                            .div(class: "c-text c-text--fit-code z-0 js-has-codeblocks", [
-//                                .raw(highlightedTranscript ?? "No transcript yet.")
-//                            ])
-//                        ])
-//                    ])
-//                ]),
-//                sidebar
-//            ])
-//        ]
-//        
-//        func noTranscript(text: String, buttonTitle: String, target: Route) -> [Node] {
-//            return [
-//                .div(class: "bgcolor-pale-blue border border-1 border-color-subtle-blue radius-5 ph pv++ flex flex-column justify-center items-center text-center min-height-6", [
-//                    .inlineSvg(path: "icon-blocked.svg"),
-//                    .div(class: "mv", [
-//                        .h3(class: "ms1 bold color-blue-darkest", ["This episode is exclusive to Subscribers"]),
-//                        .p(class: "mt- lh-135 color-blue-darkest opacity-60 max-width-8", [
-//                            .text(text)
-//                        ])
-//                    ]),
-//                    .link(to: target, class: "button button--themed", [.text(buttonTitle)])
-//                ])
-//            ]
-//        }
-//        
-//        let noTranscriptAccess = session?.isTeamManager == true
-//            ? noTranscript(text: "Team manager accounts don't have access to Swift Talk content by default. To enable content access on this account, please add yourself as a team member.", buttonTitle: "Manage Team Members", target: .account(.teamMembers))
-//            : noTranscript(text: "Become a subscriber to watch future and all \(Episode.subscriberOnly) current subscriber-only episodes, plus enjoy access to episode video downloads and \(teamDiscount)% discount for your team members.", buttonTitle: "Become a subscriber", target: .signup(.subscribe(planName: nil)))
-//
-//        var scripts: [Node] = [
-//            .script(src: "https://player.vimeo.com/api/player.js"),
-//            .script(code: """
-//                function playerLoaded() { }
-//                window.addEventListener('DOMContentLoaded', function () {
-//                    window.player = new Vimeo.Player(document.querySelector('iframe'));
-//                    playerLoaded();
-//
-//                    var items = document.querySelector('.js-transcript').querySelectorAll("a[href^='#']");
-//                    items.forEach(function (item) {
-//                        if (/^\\d+$/.test(item.hash.slice(1)) && /^\\d{1,2}(:\\d{2}){1,2}$/.test(item.innerHTML)) {
-//                            var time = parseInt(item.hash.slice(1));
-//                            item.dataset.time = time;
-//                            item.setAttribute('href', '?t='+time);
-//                            item.classList.add('js-episode-seek', 'js-transcript-cue');
-//                        }
-//                    });
-//
-//                    // Catch clicks on timestamps and forward to player
-//                    document.querySelectorAll('.js-episode .js-episode-seek').forEach(function(el) {
-//                        el.addEventListener('click', function (event) {
-//                            var time = event.target.dataset.time;
-//                            if (time !== undefined) {
-//                                player.setCurrentTime(time);
-//                                player.play();
-//                                event.preventDefault();
-//                            }
-//                        })
-//                    });
-//
-//                });
-//                """
-//            )
-//        ]
-//        if let token = session?.user.data.csrfToken {
-//            scripts.append(
-//                .script(code: """
-//                    function playerLoaded() { // override
-//                        var playedUntil = 0
-//                    
-//                        function postProgress(time) {
-//                            var httpRequest = new XMLHttpRequest();
-//                            httpRequest.open('POST', "\(Route.episode(id, .playProgress).absoluteString)");
-//                            httpRequest.send(JSON.stringify({
-//                                "csrf": "\(token.stringValue ?? "")",
-//                                "progress": Math.floor(time)
-//                            }));                    
-//
-//                        }
-//                    
-//                        player.on('timeupdate', function(data) {
-//                            if (data.seconds > playedUntil + 10) {
-//                                playedUntil = data.seconds
-//                                postProgress(playedUntil);
-//                            }
-//                        });
-//                    };
-//                    """
-//                )
-//            )
-//        }
-//        
-//        let main = Node.div(class: "js-episode", [
-//            headerAndPlayer,
-//            .div(class: "bgcolor-white l+|pt++", [
-//                .div(class: "container", canWatch ? transcriptAvailable : noTranscriptAccess)
-//            ])
-//        ])
-//        
-//        let data = StructuredData(title: title, description: synopsis, url: Route.episode(id, .view(playPosition: nil)).url, image: posterURL(width: 600, height: 338), type: .video(duration: Int(mediaDuration), releaseDate: releaseAt))
-//        return LayoutConfig(pageTitle: title.constructTitle, contents: [main, scroller] + (session.premiumAccess ? [] : [subscribeBanner()]), footerContent: scripts, structuredData: data).layout
+        return .withInput { env in
+            
+            let content = newEpisodeDetail(downloadStatus: downloadStatus, playPosition: playPosition, otherEpisodes: otherEpisodes)
+            let data = StructuredData(title: title, description: synopsis, url: Route.episode(id, .view(playPosition: nil)).url, image: posterURL(width: 600, height: 338), type: .video(duration: Int(mediaDuration), releaseDate: releaseAt))
+            
+            let scripts: [Node] = [
+                .script(src: "https://player.vimeo.com/api/player.js"),
+                .script(code: """
+                    function playerLoaded() {
+                        var playedUntil = 0
+                    
+                        function postProgress(time) {
+                            var httpRequest = new XMLHttpRequest();
+                            httpRequest.open('POST', "\(Route.episode(id, .playProgress).absoluteString)");
+                            httpRequest.send(JSON.stringify({
+                                "csrf": "\(env.csrf.string)",
+                                "progress": Math.floor(time)
+                            }));
+                    
+                        }
+                    
+                        player.on('timeupdate', function(data) {
+                            if (data.seconds > playedUntil + 10) {
+                                playedUntil = data.seconds
+                                postProgress(playedUntil);
+                            }
+                        });
+                    };
+                    
+                    window.addEventListener('DOMContentLoaded', function () {
+                        window.player = new Vimeo.Player(document.querySelector('iframe'));
+                        playerLoaded();
+                    
+                        var items = document.querySelector('.episode-transcript').querySelectorAll("a[href^='#']");
+                        items.forEach(function (item) {
+                            if (/^\\d+$/.test(item.hash.slice(1)) && /^\\d{1,2}(:\\d{2}){1,2}$/.test(item.innerHTML)) {
+                                var time = parseInt(item.hash.slice(1));
+                                item.dataset.time = time;
+                                item.setAttribute('href', '?t='+time);
+                                item.classList.add('js-episode-seek', 'js-transcript-cue');
+                            }
+                        });
+                    
+                        // Catch clicks on timestamps and forward to player
+                        document.querySelectorAll('.js-episode-seek').forEach(function(el) {
+                            el.addEventListener('click', function (event) {
+                                var time = event.target.dataset.time;
+                                if (time !== undefined) {
+                                    player.setCurrentTime(time);
+                                    player.play();
+                                    event.preventDefault();
+                                }
+                            })
+                        });
+                    
+                    });
+                    """
+                       )
+            ]
+            
+            return LayoutConfig(pageTitle: title.constructTitle, contents: [content], footerContent: scripts, structuredData: data).layout
+        }
     }
 }
 
@@ -645,7 +407,7 @@ extension Episode {
                                 div(class: "chapters-container") {
                                     let items = [(6, title: "Introduction")] + tableOfContents
                                     items.map { entry in
-                                        a(class: "episode-chapter-link w-inline-block", href: "?t=\(Int(entry.0))", customAttributes: ["data-time": "\(entry.0)"]) {
+                                        a(class: "episode-chapter-link w-inline-block js-episode-seek", href: "?t=\(Int(entry.0))", customAttributes: ["data-time": "\(Int(entry.0))"]) {
                                             div(class: "chapter-name") { entry.title }
                                             div(class: "chapter-timestamp project-color") { entry.0.timeString }
                                         }
@@ -728,7 +490,7 @@ extension Episode {
                                     detailItems.map { key, value, url in
                                         div(class: "episode-credit-container") {
                                             div(class: "p4 _75-opacity") { key }
-                                            div(class: "p4 purple") {
+                                            div(class: "p4 purple project-color") {
                                                 if let url {
                                                     a(class: "project-color", href: url.absoluteString) { value }
                                                 } else {
