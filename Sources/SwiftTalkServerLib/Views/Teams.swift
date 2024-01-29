@@ -20,7 +20,7 @@ fileprivate func template(content: [Node], buttons: [Node]) -> Node {
                 .div(class: "mt++", buttons)
             ])
         ])
-    ]).layout
+    ], projectColor: nil).layout
 }
 
 fileprivate func button(route: Route, title: String, highlighted: Bool = false) -> Node {

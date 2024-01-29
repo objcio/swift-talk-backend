@@ -1,3 +1,7 @@
+body {
+    -webkit-font-smoothing: antialiased;
+}
+
 a {
     text-decoration: none;
 }
@@ -10,6 +14,7 @@ a {
   --navy: 46, 59, 146;
   --red: 237, 29, 46;
   --cyan: 10, 134, 183;
+  --project-color: #0091D9;
 }
 
 .teal {
@@ -81,11 +86,10 @@ a {
 }
 
 pre {
-    padding: 1rem;
+    padding: 2rem;
     border-radius: 1rem;
     background: rgba(255,255,255,0.1);
-    margin: 3rem 0;
-    font-family: Akkurat-Mono;
+    margin: 3rem -1rem;
     font-size: 90%;
     font-style: normal;
     font-weight: 400;
@@ -95,6 +99,7 @@ pre {
 
 pre code {
     white-space: pre-wrap;
+    font-family: "Akkurat Mono";
 }
 
 /*
@@ -119,9 +124,7 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
 .highlight .hljs-template_comment,
 .highlight .hljs-javadoc,
 .highlight .hljs-comment * {
-  /* 1 'green' */
-  color: #49992f;
-  /*rgb(0,106,0)*/
+  color: #8869E0;
 }
 .hljs .pyg-k,
 .hljs .pyg-kc,
@@ -143,7 +146,7 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
 .highlight .hljs-literal,
 .highlight .hljs-nginx .hljs-title {
   /* 2 'purple' */
-  color: #aa0d91;
+  color: #C671E3;
 }
 .hljs .hljs-method,
 .hljs .hljs-list .hljs-title,
@@ -194,8 +197,7 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
 .highlight .pyg-s1,
 .highlight .pyg-ss,
 .highlight .hljs-string {
-  /* 3 'red' */
-  color: #ef4134;
+  color: #FFA940;
 }
 .hljs .hljs-tag .hljs-value,
 .hljs .hljs-cdata,
@@ -256,7 +258,7 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
 .highlight .hljs-clojure .hljs-title,
 .highlight .hljs-clojure .hljs-built_in {
   /* 4 'blue' */
-  color: #0000aa;
+  color: #FFA940;
   /*rgb(28,0,207)*/
 }
 .hljs .pyg-bp,
@@ -290,10 +292,7 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
 .highlight .hljs-params,
 .highlight .hljs-clojure .hljs-attribute,
 .highlight .swift .hljs-type {
-  /* 5 'dark purple' */
-  color: #c56021;
-  /*rgb(92,38,153)*/
-  color: #5C2699;
+    color: #7175DF;
 }
 .hljs .hljs-variable, .highlight .hljs-variable {
   /* 6 'teal' */
@@ -438,10 +437,8 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
 
 .nav-link {
   color: #061a28;
-  margin-left: 20px;
-  margin-right: 20px;
-  padding-left: 0;
-  padding-right: 0;
+  margin: 20px;
+  padding: 2px 0;
   font-family: Akkurat, sans-serif;
   font-size: 16px;
   line-height: 24px;
@@ -457,10 +454,11 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
   color: #fff;
 }
 
-.nav-link.dark.swift-talk.underline-animation.w--current {
+.nav-link.dark.swift-talk.underline-animation {
   margin-left: 0;
   margin-right: 0;
   text-decoration: none;
+  border-bottom: 1.5px solid var(--project-color);
 }
 
 .nav-link.dark.books.underline-animation, .nav-link.dark.workshops.underline-animation {
@@ -2372,20 +2370,41 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
   display: flex;
 }
 
+.episode-summary-container {
+    flex: 1;
+}
+
 .episode-video-preview-container {
   min-height: 200px;
   min-width: 300px;
-  background-image: url('../images/temp-video-frame.png');
-  background-position: 50%;
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-attachment: scroll;
   border-radius: 8px;
   flex: 1;
   justify-content: center;
   align-items: center;
   display: flex;
   overflow: hidden;
+  position: relative;
+}
+
+.episode-video-preview-duration {
+    padding: 6px 12px;
+    border-radius: 4px;
+    background: rgba(249, 247, 250, 0.15);
+    box-shadow: 0px 3px 16px 0px rgba(0, 0, 0, 0.12);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #FFF;
+    text-align: center;
+    font-family: "Akkurat Mono";
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 16px; /* 133.333% */
+    letter-spacing: 0.48px;
+    text-transform: uppercase;
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
 }
 
 .more-projects-header {
@@ -2572,7 +2591,7 @@ min-height: 36px;
 }
 
 .resource-image-container {
-  width: 40px;
+  min-width: 40px;
   height: 40px;
   background-color: rgba(255, 255, 255, .12);
   border-radius: 8px;
@@ -2637,6 +2656,15 @@ min-height: 36px;
 
 .episode-transcript img {
     margin: 2rem 0;
+}
+
+.episode-transcript h2 {
+    color: #fff;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 116.667%;
+    margin-top: 80px;
 }
 
 .project-color {
@@ -7136,11 +7164,6 @@ min-height: 36px;
     min-height: 170px;
     min-width: 200px;
     -webkit-text-fill-color: inherit;
-    background-image: url('../images/temp-video-frame.png');
-    background-position: 50%;
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-clip: border-box;
     flex: 1;
     align-items: center;
   }

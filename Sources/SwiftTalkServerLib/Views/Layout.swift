@@ -36,14 +36,16 @@ struct LayoutConfig {
     var footerContent: [Node]
     var structuredData: StructuredData?
     var includeRecurlyJS: Bool = false
+    var projectColor: String?
     
-    init(pageTitle: String = basicPageTitle, contents: [Node], description: String? = nil, footerContent: [Node] = [], structuredData: StructuredData? = nil, includeRecurlyJS: Bool = false) {
+    init(pageTitle: String = basicPageTitle, contents: [Node], description: String? = nil, footerContent: [Node] = [], structuredData: StructuredData? = nil, includeRecurlyJS: Bool = false, projectColor: String? = nil) {
         self.pageTitle = pageTitle
         self.contents = contents
         self.metaDescription = description
         self.footerContent = footerContent
         self.structuredData = structuredData
         self.includeRecurlyJS = includeRecurlyJS
+        self.projectColor = projectColor
     }
 }
 
@@ -179,7 +181,7 @@ extension LayoutConfig {
                             a(class: "nav-link dark workshops underline-animation w-nav-link", href: "https://www.objc.io/workshops") {
                                 "Workshops"
                             }
-                            a(class: "nav-link dark swift-talk underline-animation w-nav-link w--current", href: "https://talk.objc.io", customAttributes: ["aria-current": "page"]) {
+                            a(class: "nav-link dark swift-talk underline-animation w-nav-link w--current", href: Route.home.absoluteString) {
                                 "Swift Talk"
                             }
                             a(class: "nav-link dark books underline-animation w-nav-link", href: "https://www.objc.io/books") {
@@ -222,7 +224,11 @@ extension LayoutConfig {
         // these are appends because of compile time
         bodyChildren.append(footer)
         bodyChildren.append(contentsOf: footerContent)
-        let body = Node.body(attributes: ["class": "body-dark"], bodyChildren)
+        var bodyAttrs: [String : String] = ["class": "body-dark"]
+        if let c = projectColor {
+            bodyAttrs["style"] = "--project-color: \(c);"
+        }
+        let body = Node.body(attributes: bodyAttrs, bodyChildren)
         return .html(attributes: ["lang": "en"], [head, body])
     }
     

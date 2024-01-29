@@ -10,7 +10,6 @@ import HTML1
 import WebServer
 import HTML
 
-
 func index(_ episodes: [EpisodeWithProgress]) -> Node {
     return LayoutConfig(pageTitle: "All Episodes".constructTitle, contents: [
         pageHeader(.link(header: "All Episodes", backlink: .home, label: "Swift Talk")),
@@ -28,10 +27,18 @@ func index(_ episodes: [EpisodeWithProgress]) -> Node {
                 ])
             })
         ])
-    ]).layout
+    ], projectColor: nil).layout
 }
 
 extension Episode {
+    var previewCard: HTML.Node {
+        div(class: "episode-video-preview-container") {
+            img(alt: "", class: "", loading: "lazy", sizes: "100vw", src: posterURL(width: 980, height: Int(980/(16.0/9))).absoluteString, width: "980")
+            div(class: "play-video-button center")
+            div(class: "episode-video-preview-duration") { "\(mediaDuration.timeString)" }
+        }
+    }
+    
     struct ViewOptions {
         var featured: Bool = false
         var largeIcon: Bool = false
@@ -260,7 +267,7 @@ extension Episode {
                        )
             ]
             
-            return LayoutConfig(pageTitle: title.constructTitle, contents: [content], footerContent: scripts, structuredData: data).layout
+            return LayoutConfig(pageTitle: title.constructTitle, contents: [content], footerContent: scripts, structuredData: data, projectColor: theProject?.color).layout
         }
     }
 }
@@ -339,7 +346,7 @@ extension Episode {
             let prev = idx > pEps.startIndex ? pEps[idx-1] : nil
             let canAccess = canWatch(session: env.session)
             
-            return div(class: "episode-detail-content-container", style: "--project-color: \(p.color);") {
+            return div(class: "episode-detail-content-container") {
                 div(class: "episode-video-section") {
                     div(class: "save-share-buttons-container mobile") {
                         a(class: "save-button mobile w-button", href: "#")

@@ -39,10 +39,7 @@ extension Project {
                                         }
                                         div(class: "body dark") { episode.synopsis }
                                     }
-                                    div(class: "episode-video-preview-container") {
-                                        img(alt: "", class: "", loading: "lazy", sizes: "100vw", src: episode.posterURL(width: 980, height: Int(980/(16.0/9))).absoluteString, width: "980")
-                                        div(class: "play-video-button center")
-                                    }
+                                    episode.previewCard
                                 }
                             }
                         }
@@ -60,7 +57,7 @@ extension Project {
                 }
             }.asOldNode
             
-            return LayoutConfig(pageTitle: self.title.constructTitle, contents: [content], structuredData: structuredData).layout
+            return LayoutConfig(pageTitle: self.title.constructTitle, contents: [content], structuredData: structuredData, projectColor: color).layout
         }
     }
 }

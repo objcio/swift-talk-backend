@@ -222,6 +222,9 @@ func newHome(episodes: [EpisodeWithProgress], projects: [Project], grouped: [Pro
                 scoped.suffix(from: 4).map { $0.card }
             }
             div(class: "swift-talk-episodes-section") {
+                let progress = Dictionary(uniqueKeysWithValues: episodes.compactMap { pair in
+                    pair.progress.map { ((pair.episode.number, $0)) }
+                })
                 let scoped = grouped.scoped(for: env.session?.user.data)
                 scoped.map { p in
                     div(class: "episodes-project-container") {
@@ -243,7 +246,7 @@ func newHome(episodes: [EpisodeWithProgress], projects: [Project], grouped: [Pro
                                     div(class: "episode-dropdown-toggle w-dropdown-toggle") {
                                         div(class: "episode-dropdown-container") {
                                             div(class: "episode-left-container") {
-                                                a(class: "episode-play-button w-button", href: "/episode-detail")
+                                                a(class: "episode-play-button w-button", href: Route.episode(episode.id, .view(playPosition: progress[episode.number])).absoluteString)
                                                 div(class: "p3 dark") { episode.title }
                                             }
                                             div(class: "episode-right-container") {
@@ -274,7 +277,7 @@ func newHome(episodes: [EpisodeWithProgress], projects: [Project], grouped: [Pro
                                                 div(class: "episode-summary-container") {
                                                     div(class: "p3 dark _50-opacity") { episode.synopsis }
                                                 }
-                                                img(alt: "", class: "image-15", loading: "lazy", sizes: "100vw", src: episode.posterURL(width: 980, height: Int(980/(16.0/9))).absoluteString, width: "980")
+                                                episode.previewCard
                                             }
                                         }
                                     }
@@ -287,5 +290,5 @@ func newHome(episodes: [EpisodeWithProgress], projects: [Project], grouped: [Pro
         }.asOldNode
     }
             
-    return LayoutConfig(contents: [content], description: "A weekly video series on Swift programming by Chris Eidhof and Florian Kugler. objc.io publishes books, videos, and articles on advanced techniques for iOS and macOS development.").layout
+    return LayoutConfig(contents: [content], description: "A weekly video series on Swift programming by Chris Eidhof and Florian Kugler. objc.io publishes books, videos, and articles on advanced techniques for iOS and macOS development.", projectColor: nil).layout
 }

@@ -47,6 +47,6 @@ func errorView(_ message: String) -> Node {
         .div(class: "container", [
             .text(message)
         ])
-    ]).layoutForCheckout
+    ], projectColor: nil).layoutForCheckout
 }
 
