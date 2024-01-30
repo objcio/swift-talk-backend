@@ -146,40 +146,44 @@ func newHome(episodes: [EpisodeWithProgress], projects: [Project], grouped: [Pro
             if let latest = episodes.first {
                 latest.episode.homeCard(playPosition: latest.progress)
             }
-            tabs(env: env)
-            div(class: "swift-talk-projects-section") {
-                let scoped = projects.scoped(for: env.session?.user.data)
-                scoped.prefix(4).map { $0.card }
-                if env.session?.premiumAccess != true {
-                    div(class: "subscriptions-container") {
-                        div(class: "subscriptions-header") {
-                            h2(class: "h2 dark center") {
-                                "Support Swift Talk with a subscription"
-                            }
-                            div(class: "p2 center dark") {
-                                "Access the entire archive of Swift Talks, download videos for offline viewing, and help keep us producing new episodes."
-                            }
-                        }
-                        div(class: "subscription-choices-container") {
-                            monthly.box(monthly: nil, coupon: nil, team: false, session: nil)
-                            yearly.box(monthly: monthly, coupon: nil, team: false, session: nil)
-                        }
-                        teamSubscriptionBanner()
-                    }
+            div(class: "swift-talk-latest-episode-header") {
+                h2(class: "h2 dark") {
+                    "Previous episodes"
                 }
-                scoped.suffix(from: 4).map { $0.card }
             }
+//            div(class: "swift-talk-projects-section") {
+//                let scoped = projects.scoped(for: env.session?.user.data)
+//                scoped.prefix(4).map { $0.card }
+//                if env.session?.premiumAccess != true {
+//                    div(class: "subscriptions-container") {
+//                        div(class: "subscriptions-header") {
+//                            h2(class: "h2 dark center") {
+//                                "Support Swift Talk with a subscription"
+//                            }
+//                            div(class: "p2 center dark") {
+//                                "Access the entire archive of Swift Talks, download videos for offline viewing, and help keep us producing new episodes."
+//                            }
+//                        }
+//                        div(class: "subscription-choices-container") {
+//                            monthly.box(monthly: nil, coupon: nil, team: false, session: nil)
+//                            yearly.box(monthly: monthly, coupon: nil, team: false, session: nil)
+//                        }
+//                        teamSubscriptionBanner()
+//                    }
+//                }
+//                scoped.suffix(from: 4).map { $0.card }
+//            }
             div(class: "swift-talk-episodes-section") {
                 let progress = Dictionary(uniqueKeysWithValues: episodes.compactMap { pair in
                     pair.progress.map { ((pair.episode.number, $0)) }
                 })
                 let scoped = grouped.scoped(for: env.session?.user.data)
                 scoped.map { p in
-                    div(class: "episodes-project-container") {
+                    div(class: "episodes-project-container", style: (p.episodes.first?.theProject?.color).map { "--project-color: \($0);" }) {
                         switch p {
                         case let .multiple(eps):
                             let project = eps[0].theProject!
-                            a(class: "project-title-button w-button", href: Route.project(project.id).absoluteString, style: "color: \(project.color)", customAttributes: ["onmouseover": "this.style.color=pSBC(0.35, this.style.color);", "onmouseout": "this.style.color=\"\(project.color)\";"]) {
+                            a(class: "project-title-button w-button", href: Route.project(project.id).absoluteString, customAttributes: ["onmouseover": "this.style.color=pSBC(0.35, this.style.color);", "onmouseout": "this.style.color=\"\(project.color)\";"]) {
                                 "project: \(project.title)"
                                 span(class: "text-span-3") {
                                     "→"
@@ -198,8 +202,8 @@ func newHome(episodes: [EpisodeWithProgress], projects: [Project], grouped: [Pro
                                                 div(class: "p3 dark") { episode.title }
                                             }
                                             div(class: "episode-right-container") {
-                                                div(class: "nano-text small medium-purple", style: (episode.theProject?.color).map { "color: \($0)" }) {
-                                                    "Episode \(episode.number) · \(episode.releaseAt.pretty)"
+                                                div(class: "nano-text small medium-purple project-color") {
+                                                    "#\(episode.number) · \(DateFormatter.withYear.string(from: episode.releaseAt))"
                                                 }
                                                 img(alt: "", class: "dropdown-chevron", loading: "lazy", src: "/assets/images/chevron-down.png", width: "24")
                                             }

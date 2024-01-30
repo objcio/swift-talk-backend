@@ -1,40 +1,24 @@
 document.addEventListener("DOMContentLoaded", () => {
-    var projectsBtn = document.querySelector('.swift-talk-filter-button.projects');
-    var episodesBtn = document.querySelector('.swift-talk-filter-button.episodes');
-    var projectsSection = document.querySelector('.swift-talk-projects-section');
-    var episodesSection = document.querySelector('.swift-talk-episodes-section');
-    
-    projectsBtn?.addEventListener('click', function(){
-        projectsBtn.style.opacity = '1.0';
-        episodesBtn.style.opacity = '0.5';
-        
-        projectsSection.style.display = 'flex';
-        episodesSection.style.display = 'none';
-    });
-    
-    episodesBtn?.addEventListener('click', function(){
-        projectsBtn.style.opacity = '0.5';
-        episodesBtn.style.opacity = '1.0';
-        
-        episodesSection.style.display = 'block';
-        projectsSection.style.display = 'none';
-    });
-    
-//    const transcript = document.querySelector('.body.dark.episode-transcript');
-//    if (transcript) {
-//        const text = transcript.textContent;
-////        const keywords = ['State', 'ObservedObject', 'Binding'];
-//        let newText = text;
-////        keywords.forEach(keyword => {
-////            newText = newText.replace(new RegExp(`\\b${keyword}\\b`, 'g'), `<span class="swift-word-highlight">${keyword}</span>`);
-////        });
-//        newText = newText.replace(/(\d\d:\d\d)/g, (match, p1) => {
-//            return `<br><br><span class="timestamp">${p1}</span>`;
-//        });
-//        newText = newText.replace(/^<br><br>/, '');
-//        transcript.innerHTML = newText;
-//    }
-        
+//    var projectsBtn = document.querySelector('.swift-talk-filter-button.projects');
+//    var episodesBtn = document.querySelector('.swift-talk-filter-button.episodes');
+//    var projectsSection = document.querySelector('.swift-talk-projects-section');
+//    var episodesSection = document.querySelector('.swift-talk-episodes-section');
+//    
+//    projectsBtn?.addEventListener('click', function(){
+//        projectsBtn.style.opacity = '1.0';
+//        episodesBtn.style.opacity = '0.5';
+//        
+//        projectsSection.style.display = 'flex';
+//        episodesSection.style.display = 'none';
+//    });
+//    
+//    episodesBtn?.addEventListener('click', function(){
+//        projectsBtn.style.opacity = '0.5';
+//        episodesBtn.style.opacity = '1.0';
+//        
+//        episodesSection.style.display = 'block';
+//        projectsSection.style.display = 'none';
+//    });
 });
 
 var Webflow = Webflow || [];

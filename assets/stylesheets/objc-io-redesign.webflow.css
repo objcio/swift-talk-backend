@@ -1877,7 +1877,6 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
   grid-row-gap: 100px;
   flex-direction: column;
   margin: 80px auto;
-  display: flex;
 }
 
 .swift-talk-latest-episode-section {
@@ -1941,6 +1940,7 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
 .swift-talk-latest-episode-header {
   padding-left: 8px;
   padding-right: 8px;
+  padding-top: 75px;
 }
 
 .filter-search-section {
@@ -2176,8 +2176,7 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
 }
 
 .swift-talk-episodes-section {
-  margin-top: -76px;
-  display: none;
+/*  display: none;*/
 }
 
 .text-span-3 {
@@ -2185,14 +2184,16 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
 }
 
 .project-title-button {
-  height: 48px;
   grid-column-gap: 8px;
-  color: #8869e0;
+  color: var(--project-color);
   letter-spacing: .04em;
   text-transform: uppercase;
   background-color: rgba(0, 0, 0, 0);
   align-items: center;
-  padding: 0 8px;
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-top: 32px;
+  padding-bottom: 8px;
   font-family: Akkurat Mono, sans-serif;
   font-size: 12px;
   line-height: 16px;
@@ -2207,8 +2208,6 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
 }
 
 .episode-dropdown {
-  border-top: .5px solid rgba(255, 255, 255, .12);
-  border-bottom: .5px solid rgba(255, 255, 255, .12);
   flex-direction: row;
   justify-content: flex-start;
   align-items: stretch;
@@ -2219,7 +2218,7 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
   flex: 1;
   justify-content: space-between;
   align-self: auto;
-  padding: 16px 8px;
+  padding: 8px;
   display: block;
 }
 
@@ -2285,11 +2284,6 @@ XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
   border-radius: 8px;
   padding-top: 0;
   aspect-ratio: 16/9;
-}
-
-.project-episodes-container {
-  border-top: .5px solid rgba(255, 255, 255, .12);
-  border-bottom: .5px solid rgba(255, 255, 255, .12);
 }
 
 .footer-dark-html-embed {
@@ -9960,13 +9954,14 @@ min-height: 36px;
 }
 
 .project-title-button {
-  color: #8869E0;
+  color: var(--project-color);
   transition: color 200ms ease-out;
 }
 
 .project-title-button:hover {
-  color: #CCBEF4;
+  color: color-mix(in srgb,var(--project-color), #fff 30%);
 }
+
 
 .episode-dropdown-toggle {
   background-color: rgba(255, 255, 255, 0);

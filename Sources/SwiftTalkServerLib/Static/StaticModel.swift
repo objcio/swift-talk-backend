@@ -102,7 +102,11 @@ extension Episode {
             if episodes[0].project == nil {
                 result.append(.single(episodes[0]))
             } else {
-                result.append(.multiple(episodes))
+                if let idx = result.firstIndex(where: { $0.episodes[0].project == episodes[0].project }) {
+                    result[idx] = .multiple(result[idx].episodes + episodes)
+                } else {
+                    result.append(.multiple(episodes))
+                }
             }
             episodes = []
         }
