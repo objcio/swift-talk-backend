@@ -9,6 +9,7 @@ import Foundation
 import Base
 import HTML1
 import WebServer
+import HTML
 
 
 let subscriptionBenefits: [(icon: String, name: String, description: String)] = [
@@ -75,12 +76,11 @@ fileprivate extension Plan {
     }
 }
 
-fileprivate func continueLink(to route: Route, title: String, extraClasses: Class? = nil) -> Node {
-    let linkClasses: Class = "c-button c-button--big c-button--blue c-button--wide"
-    return .link(to: route, class: linkClasses + (extraClasses ?? ""), [.text(title)])
+fileprivate func continueLink(to route: Route, title: String, extraClasses: Class? = nil) -> HTML.Node {
+    return a(class: "primary-button wide-text w-button", href: route.absoluteString) { title }
 }
 
-fileprivate func continueLink(session: Session?, coupon: Coupon?, team: Bool) -> Node {
+fileprivate func continueLink(session: Session?, coupon: Coupon?, team: Bool) -> HTML.Node {
     if session.premiumAccess {
         if let d = session?.user.data, d.canceled {
             return continueLink(to: .account(.billing), title: "Reactivate Subscription", extraClasses: "c-button--ghost")
@@ -95,97 +95,247 @@ fileprivate func continueLink(session: Session?, coupon: Coupon?, team: Bool) ->
 }
 
 func renderSubscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node {
-    return .withSession { session in
-        let contents: [Node] = [
-            pageHeader(.other(header: "Subscribe to Swift Talk", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),
-            .div(class: "container pt0", [
-                .div(class: "bgcolor-white pa- radius-8 max-width-7 box-sizing-content center stack-", [
-                    coupon.map { c in
-                        .div(class: "bgcolor-orange-dark text-center color-white pa- lh-125 radius-3", [
-                            .span(class: "smallcaps inline-block", ["Special Deal"]),
-                            .p(class: "ms-1", [.text(c.description)])
-                        ])
-                    } ?? .none,
-                    .div(class: "pattern-gradient pattern-gradient--swifttalk pv++ ph+ radius-5", [
-                        .div(class: "flex items-center justify-around text-center color-white", [
-                            monthly.priceBox(coupon: coupon),
-                            yearly.priceBox(coupon: coupon),
-                        ])
-                    ]),
-                    .div([
-                        continueLink(session: session, coupon: coupon, team: false)
-                    ])
-                ]),
-                benefits(subscriptionBenefits),
-                .ul(class: "text-center max-width-7 center pt++ pb++", [
-                    .div(class: "color-orange", [
-                        .inlineSvg(class: "svg-fill-current", path: "icon-benefit-team.svg")
-                    ]),
-                    .div(class: "mb+", [
-                        .link(to: .signup(.subscribeTeam), class: "no-decoration", [.h3(class: "bold color-blue ms3 mt-- mb-", ["Team Subscriptions"])]),
-                        .p(class: "color-gray-50 lh-125", [
-                            "Our team subscription includes a 30% discount and comes with a central account that lets you manage billing and access for your entire team.",
-                            .link(to: .signup(.subscribeTeam), class: "no-decoration color-blue", ["Learn more..."])
-                        ])
-                    ])
-                ]),
-                .div(class: "ms-1 color-gray-65 lh-110 text-center pt+", [
-                    smallPrint([
-                        "All prices shown excluding VAT (only applies to EU customers).",
-                    ])
-                ])
-            ]),
-        ]
-        return LayoutConfig(pageTitle: "Subscribe", contents: contents).layout
+    return .withInput { env in
+        let session = env.session
+        let content = div(class: "purchase-subscription-container") {
+            div(class: "purchase-subscription-header") {
+                h2(class: "h2 center dark") {
+                    "Support Swift Talks with a subscription"
+                }
+                div(class: "p2 center dark") {
+                    "Get access to our entire archive of Swift Talks. Download videos for offline viewing."
+                }
+            }
+            div(class: "purchase-subscriptions-details") {
+                div(class: "purchase-subscriptions-container") {
+                    let monthlyPrice = monthly.discountedPrice(basePrice: \.unit_amount_in_cents, coupon: coupon)
+                    let yearlyPrice = yearly.discountedPrice(basePrice: \.unit_amount_in_cents, coupon: coupon)
+                    let specialDeal = div {
+                        if let c = coupon {
+                            div(class: "caption-text-capitalised") {
+                                "special deal"
+                            }
+                            if !c.description.isEmpty {
+                                div(class: "caption-text-capitalised") {
+                                    br()
+                                    c.description
+                                }
+                            }
+                        }
+                    }
+                    div(class: "subscription-container purchase") {
+                        div(class: "purchase-subscription-content") {
+                            div(class: "purchase-subscription-price-container") {
+                                specialDeal
+                                h1(class: "h1 center dark") { monthlyPrice.plainText }
+                                div(class: "caption-text-capitalised") { "Per month" }
+                            }
+                            div(class: "button-container subscribe") {
+                                continueLink(session: session, coupon: coupon, team: false)
+                            }
+                        }
+                    }
+                    div(class: "subscription-container purchase") {
+                        div(class: "purchase-subscription-content") {
+                            div(class: "purchase-subscription-price-container") {
+                                specialDeal
+                                h1(class: "h1 center dark") { yearlyPrice.plainText }
+                                div(class: "caption-text-capitalised") { "Per year" }
+                            }
+                            div(class: "button-container subscribe") {
+                                continueLink(session: session, coupon: coupon, team: false)
+                            }
+                        }
+                        div(class: "subscription-savings-absolute-container") {
+                            div(class: "caption-text small") {
+                                let diff = Amount(usdCents: monthlyPrice.usdCents * 12 - yearlyPrice.usdCents)
+                                "Save \(diff.plainText)"
+                            }
+                        }
+                    }
+                    a(class: "primary-button mobile-subscribe w-button", href: "#") {
+                        "Subscribe"
+                    }
+                }
+                div(class: "subscription-features-container") {
+                    div(class: "subscription-feature") {
+                        div(class: "subscription-feature-content") {
+                            div(class: "subscription-feature-image-container") {
+                                img(alt: "", class: "image-26", loading: "lazy", src: "/assets/images/padlock.png", width: "19")
+                            }
+                            div(class: "subscription-feature-details") {
+                                h5(class: "h5 dark center") {
+                                    "Watch all episodes"
+                                }
+                                div(class: "body small _75-white center") {
+                                    "A new episode every week"
+                                }
+                            }
+                        }
+                    }
+                    div(class: "subscription-feature") {
+                        div(class: "subscription-feature-content") {
+                            div(class: "subscription-feature-image-container") {
+                                img(alt: "", class: "image-24", loading: "lazy", src: "/assets/images/arrow-down-swift-talks.png", width: "19")
+                            }
+                            div(class: "subscription-feature-details") {
+                                h5(class: "h5 dark center") {
+                                    "Download episodes"
+                                }
+                                div(class: "body small _75-white center") {
+                                    "Take Swift Talk with you when you're offline"
+                                }
+                            }
+                        }
+                    }
+                    div(class: "subscription-feature") {
+                        div(class: "subscription-feature-content") {
+                            div(class: "subscription-feature-image-container") {
+                                img(alt: "", class: "image-25", loading: "lazy", src: "/assets/images/heart.png", width: "19")
+                            }
+                            div(class: "subscription-feature-details") {
+                                h5(class: "h5 dark center") {
+                                    "Support us"
+                                }
+                                div(class: "body small _75-white center") {
+                                    "With your help we can keep producing new episodes"
+                                }
+                            }
+                        }
+                    }
+                }
+                div(class: "purchase-team-subscription-container") {
+                    div(class: "purchase-team-subscription-content") {
+                        h1(class: "h4 dark center") {
+                            "Team subscription"
+                        }
+                        div(class: "body large center _75-opacity") {
+                            "Our team subscription includes a 30% discount and comes with a central account that lets you manage billing and access for your entire team."
+                        }
+                    }
+                    a(class: "purchase-team-subscription-button w-button", href: Route.signup(.subscribeTeam).absoluteString) {
+                        "Learn more about team subscriptions"
+                    }
+                }
+            }
+        }.asOldNode
+        return LayoutConfig(pageTitle: "Subscribe", contents: [content]).layout
     }
 }
 
 func renderSubscribeTeam(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node {
-    return .withSession { session in
-        let contents: [Node] = [
-            pageHeader(.other(header: "Swift Talk Team Subscription", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),
-            .div(class: "container pt0", [
-                .div(class: "bgcolor-white pa- radius-8 max-width-7 box-sizing-content center stack-", [
-                    coupon.map { c in
-                        .div(class: "bgcolor-orange-dark text-center color-white pa- lh-125 radius-3", [
-                            .span(class: "smallcaps inline-block", ["Special Deal"]),
-                            .p(class: "ms-1", [.text(c.description)])
-                        ])
-                    } ?? .none,
-                    .div(class: "pattern-gradient pattern-gradient--swifttalk pv++ ph+ radius-5", [
-                        .div(class: "flex items-center justify-around text-center color-white", [
-                            monthly.priceBox(coupon: coupon, team: true),
-                            yearly.priceBox(coupon: coupon, team: true),
-                        ])
-                    ]),
-                    .div([
-                        continueLink(session: session, coupon: coupon, team: true)
-                    ])
-                ]),
-                benefits([
-                    ("icon-benefit-unlock.svg", "Watch All Episodes", "A new episode every week"),
-                    ("icon-benefit-manager.svg", "Team Manager Account", "A central account to manage billing and team members"),
-                    ("icon-benefit-download.svg", "Download Episodes", "Take Swift Talk with you when you're offline"),
-                ]),
-                .ul(class: "text-center max-width-7 center pv+", [
-                    .div(class: "mb+", [
-                        .h3(class: "bold color-blue ms1 mt-- mb-", ["Enterprise Subscriptions"]),
-                        .p(class: "color-gray-50 lh-125", [
-                            "Please ",
-                            .link(to: URL(string: "mailto:\(email)")!, class: "no-decoration color-blue", ["get in touch"]),
-                            " for teams with more than 30 members."
-                            ])
-                        ])
-                    ]),
-                .div(class: "ms-1 color-gray-65 lh-110 text-center center pt+ max-width-8", [
-                    smallPrint([
-                        .span([.raw("<sup>*</sup>"), "Prices apply from the 2nd team member. The first team member is included in the subscription base price, \(monthly.discountedPrice(coupon: coupon).plainText)/month or \(yearly.discountedPrice(coupon: coupon).plainText)/year"]),
-                        "All prices shown excluding VAT (only applies to EU customers).",
-                    ])
-                ])
-            ]),
-        ]
-        return LayoutConfig(pageTitle: "Subscribe", contents: contents).layout
+    return .withInput { env in
+        let session = env.session
+        let content = div(class: "purchase-subscription-container") {
+            div(class: "purchase-subscription-header") {
+                h2(class: "h2 center dark") {
+                    "Swift Talk Subscriptions for Teams"
+                }
+                div(class: "p2 center dark") {
+                    "Provide access to the entire archive of Swift Talk for your team, centrally managed and billed."
+                }
+            }
+            div(class: "purchase-subscriptions-details") {
+                div(class: "purchase-subscriptions-container") {
+                    let monthlyPrice = monthly.discountedPrice(basePrice: \.teamMemberPrice, coupon: coupon)
+                    let yearlyPrice = yearly.discountedPrice(basePrice: \.teamMemberPrice, coupon: coupon)
+                    let specialDeal = div {
+                        if let c = coupon {
+                            div(class: "caption-text-capitalised") {
+                                "special deal"
+                            }
+                            if !c.description.isEmpty {
+                                div(class: "caption-text-capitalised") {
+                                    br()
+                                    c.description
+                                }
+                            }
+                        }
+                    }
+                    div(class: "subscription-container purchase") {
+                        div(class: "purchase-subscription-content") {
+                            div(class: "purchase-subscription-price-container") {
+                                specialDeal
+                                h1(class: "h1 center dark") { monthlyPrice.plainText }
+                                div(class: "caption-text-capitalised") { "Per month/person" }
+                            }
+                            div(class: "button-container subscribe") {
+                                continueLink(session: session, coupon: coupon, team: true)
+                            }
+                        }
+                    }
+                    div(class: "subscription-container purchase") {
+                        div(class: "purchase-subscription-content") {
+                            div(class: "purchase-subscription-price-container") {
+                                specialDeal
+                                h1(class: "h1 center dark") { yearlyPrice.plainText }
+                                div(class: "caption-text-capitalised") { "Per year/person" }
+                            }
+                            div(class: "button-container subscribe") {
+                                continueLink(session: session, coupon: coupon, team: true)
+                            }
+                        }
+                        div(class: "subscription-savings-absolute-container") {
+                            div(class: "caption-text small") {
+                                let diff = Amount(usdCents: monthlyPrice.usdCents * 12 - yearlyPrice.usdCents)
+                                "Save \(diff.plainText)"
+                            }
+                        }
+                    }
+                    a(class: "primary-button mobile-subscribe w-button", href: "#") {
+                        "Subscribe"
+                    }
+                }
+                div(class: "subscription-features-container") {
+                    div(class: "subscription-feature") {
+                        div(class: "subscription-feature-content") {
+                            div(class: "subscription-feature-image-container") {
+                                img(alt: "", class: "image-26", loading: "lazy", src: "/assets/images/padlock.png", width: "19")
+                            }
+                            div(class: "subscription-feature-details") {
+                                h5(class: "h5 dark center") {
+                                    "Watch all episodes"
+                                }
+                                div(class: "body small _75-white center") {
+                                    "A new episode every week"
+                                }
+                            }
+                        }
+                    }
+                    div(class: "subscription-feature") {
+                        div(class: "subscription-feature-content") {
+                            div(class: "subscription-feature-image-container") {
+                                img(alt: "", class: "image-25", loading: "lazy", src: "/assets/images/heart.png", width: "19")
+                            }
+                            div(class: "subscription-feature-details") {
+                                h5(class: "h5 dark center") {
+                                    "Team manager account"
+                                }
+                                div(class: "body small _75-white center") {
+                                    "A central account to manage billing and team members"
+                                }
+                            }
+                        }
+                    }
+                    div(class: "subscription-feature") {
+                        div(class: "subscription-feature-content") {
+                            div(class: "subscription-feature-image-container") {
+                                img(alt: "", class: "image-24", loading: "lazy", src: "/assets/images/arrow-down-swift-talks.png", width: "19")
+                            }
+                            div(class: "subscription-feature-details") {
+                                h5(class: "h5 dark center") {
+                                    "Download episodes"
+                                }
+                                div(class: "body small _75-white center") {
+                                    "Take Swift Talk with you when you're offline"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }.asOldNode
+        return LayoutConfig(pageTitle: "Subscribe Team", contents: [content]).layout
     }
 }
 
