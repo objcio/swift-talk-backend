@@ -72,11 +72,11 @@ extension Plan {
     static func find(code: String) -> Plan? {
         return all.first { $0.plan_code == code }
     }
-    static var monthly: Plan? {
+    static var monthly: Plan! {
         return all.first { $0.isMonthly && $0.isStandardPlan }
     }
     
-    static var yearly: Plan? {
+    static var yearly: Plan! {
         return all.first { $0.isYearly && $0.isStandardPlan }
     }
 

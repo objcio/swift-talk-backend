@@ -94,9 +94,66 @@ fileprivate func continueLink(session: Session?, coupon: Coupon?, team: Bool) ->
     }
 }
 
+extension Plan {
+    func box(monthly: Plan?, coupon: Coupon?, team: Bool, session: Session?) -> HTML.Node {
+        let keyPath: KeyPath<Plan, Amount> = team ? \.teamMemberPrice : \.unit_amount_in_cents
+        let price = discountedPrice(basePrice: keyPath, coupon: coupon)
+        let specialDeal = div {
+            if let c = coupon {
+                div(class: "caption-text-capitalised") {
+                    "special deal"
+                }
+                if !c.description.isEmpty {
+                    div(class: "caption-text-capitalised") {
+                        br()
+                        c.description
+                    }
+                }
+            }
+        }
+        return div(class: "subscription-container purchase") {
+            div(class: "purchase-subscription-content") {
+                div(class: "purchase-subscription-price-container") {
+                    specialDeal
+                    h1(class: "h1 center dark") { price.plainText }
+                    div(class: "caption-text-capitalised") { "Per \(isMonthly ? "month" : "year")\(team ? "/person" : "")" }
+                }
+                div(class: "button-container subscribe") {
+                    continueLink(session: session, coupon: coupon, team: team)
+                }
+            }
+            if let m = monthly {
+                div(class: "subscription-savings-absolute-container") {
+                    div(class: "caption-text small") {
+                        let monthlyPrice = m.discountedPrice(basePrice: keyPath, coupon: coupon)
+                        let diff = Amount(usdCents: monthlyPrice.usdCents * 12 - price.usdCents)
+                        "Save \(diff.plainText)"
+                    }
+                }
+            }
+        }
+
+    }
+}
+
+func teamSubscriptionBanner() -> HTML.Node {
+    div(class: "purchase-team-subscription-container") {
+        div(class: "purchase-team-subscription-content") {
+            h1(class: "h4 dark center") {
+                "Team subscription"
+            }
+            div(class: "body large center _75-opacity") {
+                "Our team subscription includes a 30% discount and comes with a central account that lets you manage billing and access for your entire team."
+            }
+        }
+        a(class: "purchase-team-subscription-button w-button", href: Route.signup(.subscribeTeam).absoluteString) {
+            "Learn more about team subscriptions"
+        }
+    }
+}
+
 func renderSubscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node {
     return .withInput { env in
-        let session = env.session
         let content = div(class: "purchase-subscription-container") {
             div(class: "purchase-subscription-header") {
                 h2(class: "h2 center dark") {
@@ -108,51 +165,8 @@ func renderSubscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node
             }
             div(class: "purchase-subscriptions-details") {
                 div(class: "purchase-subscriptions-container") {
-                    let monthlyPrice = monthly.discountedPrice(basePrice: \.unit_amount_in_cents, coupon: coupon)
-                    let yearlyPrice = yearly.discountedPrice(basePrice: \.unit_amount_in_cents, coupon: coupon)
-                    let specialDeal = div {
-                        if let c = coupon {
-                            div(class: "caption-text-capitalised") {
-                                "special deal"
-                            }
-                            if !c.description.isEmpty {
-                                div(class: "caption-text-capitalised") {
-                                    br()
-                                    c.description
-                                }
-                            }
-                        }
-                    }
-                    div(class: "subscription-container purchase") {
-                        div(class: "purchase-subscription-content") {
-                            div(class: "purchase-subscription-price-container") {
-                                specialDeal
-                                h1(class: "h1 center dark") { monthlyPrice.plainText }
-                                div(class: "caption-text-capitalised") { "Per month" }
-                            }
-                            div(class: "button-container subscribe") {
-                                continueLink(session: session, coupon: coupon, team: false)
-                            }
-                        }
-                    }
-                    div(class: "subscription-container purchase") {
-                        div(class: "purchase-subscription-content") {
-                            div(class: "purchase-subscription-price-container") {
-                                specialDeal
-                                h1(class: "h1 center dark") { yearlyPrice.plainText }
-                                div(class: "caption-text-capitalised") { "Per year" }
-                            }
-                            div(class: "button-container subscribe") {
-                                continueLink(session: session, coupon: coupon, team: false)
-                            }
-                        }
-                        div(class: "subscription-savings-absolute-container") {
-                            div(class: "caption-text small") {
-                                let diff = Amount(usdCents: monthlyPrice.usdCents * 12 - yearlyPrice.usdCents)
-                                "Save \(diff.plainText)"
-                            }
-                        }
-                    }
+                    monthly.box(monthly: nil, coupon: coupon, team: false, session: env.session)
+                    yearly.box(monthly: monthly, coupon: coupon, team: false, session: env.session)
                     a(class: "primary-button mobile-subscribe w-button", href: "#") {
                         "Subscribe"
                     }
@@ -204,28 +218,16 @@ func renderSubscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node
                         }
                     }
                 }
-                div(class: "purchase-team-subscription-container") {
-                    div(class: "purchase-team-subscription-content") {
-                        h1(class: "h4 dark center") {
-                            "Team subscription"
-                        }
-                        div(class: "body large center _75-opacity") {
-                            "Our team subscription includes a 30% discount and comes with a central account that lets you manage billing and access for your entire team."
-                        }
-                    }
-                    a(class: "purchase-team-subscription-button w-button", href: Route.signup(.subscribeTeam).absoluteString) {
-                        "Learn more about team subscriptions"
-                    }
-                }
+                teamSubscriptionBanner()
             }
         }.asOldNode
         return LayoutConfig(pageTitle: "Subscribe", contents: [content]).layout
     }
 }
 
+
 func renderSubscribeTeam(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node {
     return .withInput { env in
-        let session = env.session
         let content = div(class: "purchase-subscription-container") {
             div(class: "purchase-subscription-header") {
                 h2(class: "h2 center dark") {
@@ -237,51 +239,8 @@ func renderSubscribeTeam(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> 
             }
             div(class: "purchase-subscriptions-details") {
                 div(class: "purchase-subscriptions-container") {
-                    let monthlyPrice = monthly.discountedPrice(basePrice: \.teamMemberPrice, coupon: coupon)
-                    let yearlyPrice = yearly.discountedPrice(basePrice: \.teamMemberPrice, coupon: coupon)
-                    let specialDeal = div {
-                        if let c = coupon {
-                            div(class: "caption-text-capitalised") {
-                                "special deal"
-                            }
-                            if !c.description.isEmpty {
-                                div(class: "caption-text-capitalised") {
-                                    br()
-                                    c.description
-                                }
-                            }
-                        }
-                    }
-                    div(class: "subscription-container purchase") {
-                        div(class: "purchase-subscription-content") {
-                            div(class: "purchase-subscription-price-container") {
-                                specialDeal
-                                h1(class: "h1 center dark") { monthlyPrice.plainText }
-                                div(class: "caption-text-capitalised") { "Per month/person" }
-                            }
-                            div(class: "button-container subscribe") {
-                                continueLink(session: session, coupon: coupon, team: true)
-                            }
-                        }
-                    }
-                    div(class: "subscription-container purchase") {
-                        div(class: "purchase-subscription-content") {
-                            div(class: "purchase-subscription-price-container") {
-                                specialDeal
-                                h1(class: "h1 center dark") { yearlyPrice.plainText }
-                                div(class: "caption-text-capitalised") { "Per year/person" }
-                            }
-                            div(class: "button-container subscribe") {
-                                continueLink(session: session, coupon: coupon, team: true)
-                            }
-                        }
-                        div(class: "subscription-savings-absolute-container") {
-                            div(class: "caption-text small") {
-                                let diff = Amount(usdCents: monthlyPrice.usdCents * 12 - yearlyPrice.usdCents)
-                                "Save \(diff.plainText)"
-                            }
-                        }
-                    }
+                    monthly.box(monthly: nil, coupon: coupon, team: true, session: env.session)
+                    yearly.box(monthly: monthly, coupon: coupon, team: true, session: env.session)
                     a(class: "primary-button mobile-subscribe w-button", href: "#") {
                         "Subscribe"
                     }

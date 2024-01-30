@@ -12,6 +12,9 @@ public func run() throws {
 
     let currentDir = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
     let resourcePaths = [currentDir.appendingPathComponent(assetsPath), currentDir.appendingPathComponent("node_modules")]
+    guard let _ = Plan.monthly, let _ = Plan.yearly else {
+        throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])")
+    }
 
     let server = Server(resourcePaths: resourcePaths) { request in
         guard let route = Route(request) else { return nil }

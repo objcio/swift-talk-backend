@@ -54,9 +54,12 @@ extension Route {
 
         case .home:
             return .withSession { session in
+                guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
+                    throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])")
+                }
                 let scopedEps = Episode.all.scoped(for: session?.user.data)
                 return scopedEps.withProgress(for: session?.user.id) { 
-                    .write(html: newHome(episodes: $0, projects: Project.all, grouped: Episode.allGroupedByProject))
+                    .write(html: newHome(episodes: $0, projects: Project.all, grouped: Episode.allGroupedByProject, monthly: monthly, yearly: yearly))
                 }
             }
             

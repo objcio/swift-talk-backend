@@ -398,11 +398,6 @@ extension Episode {
                             }
                         }
                     }
-                    a(class: "project-title-button small mobile w-button project-color", href: Route.project(p.id).absoluteString) {
-                        "project:"
-                        span(class: "text-span-17") { p.title }
-                        span(class: "text-span-3") { "→" }
-                    }
                 }
                 div(class: "episode-content-section") {
                     div(class: "episode-content-details") {
@@ -517,6 +512,21 @@ extension Episode {
                                         div(class: "body dark episode-transcript") {
                                             Swim.Node.raw(highlightedTranscript ?? "No transcript yet.")
                                         }
+                                    }
+                                }
+                            } else {
+                                div(class: "subscriptions-container", style: "padding-top: 0;") {
+                                    div(class: "subscriptions-header") {
+                                        h2(class: "h2 dark center") {
+                                            "Support Swift Talk with a subscription"
+                                        }
+                                        div(class: "p2 center dark") {
+                                            "Unlock this episode and the entire Swift Talk archive with a subscription"
+                                        }
+                                    }
+                                    div(class: "subscription-choices-container") {
+                                        Plan.monthly.box(monthly: nil, coupon: nil, team: false, session: nil)
+                                        Plan.yearly.box(monthly: Plan.monthly, coupon: nil, team: false, session: nil)
                                     }
                                 }
                             }

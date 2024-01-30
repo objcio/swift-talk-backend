@@ -139,73 +139,7 @@ fileprivate func tabs(env: STRequestEnvironment) -> HTML.Node {
     }
 }
 
-fileprivate func subscriptionStopper() -> HTML.Node {
-    div(class: "subscriptions-container") {
-        div(class: "subscriptions-header") {
-            h2(class: "h2 dark center") {
-                "Support Swift Talk with a subscription"
-            }
-            div(class: "p2 center dark") {
-                "Access the entire archive of Swift Talks, download videos for offline viewing, and help keep us producing new episodes."
-            }
-        }
-        div(class: "subscription-choices-container") {
-            div(class: "subscription-container") {
-                div(class: "subscription-content") {
-                    div(class: "subscription-price-container") {
-                        h1(class: "h1 center dark") {
-                            "€15"
-                        }
-                        div(class: "caption-text-capitalised") {
-                            "Per month"
-                        }
-                    }
-                    div(class: "button-container") {
-                        a(class: "primary-button subscribe-button w-button", href: Route.signup(.subscribe(planName: nil)).absoluteString) {
-                            "Subscribe"
-                        }
-                    }
-                }
-            }
-            div(class: "subscription-container") {
-                div(class: "subscription-savings-absolute-container") {
-                    div(class: "caption-text small") {
-                        "Save €30"
-                    }
-                }
-                div(class: "subscription-content") {
-                    div(class: "subscription-price-container") {
-                        h1(class: "h1 center dark") {
-                            "€150"
-                        }
-                        div(class: "caption-text-capitalised") {
-                            "Per year"
-                        }
-                    }
-                    div(class: "button-container") {
-                        a(class: "primary-button subscribe-button w-button", href: Route.signup(.subscribe(planName: nil)).absoluteString) {
-                            "Subscribe"
-                        }
-                    }
-                }
-            }
-        }
-        div(class: "subscription-container team") {
-            div(class: "subscription-content team") {
-                div(class: "team-subscription-container") {
-                    h2(class: "h2 center dark") {
-                        "Team subscription"
-                    }
-                    div(class: "body center large _75-white") {
-                        "Our team subscription includes a 30% discount and comes with a central account that lets you manage billing and access for your entire team. TODO BUTTON"
-                    }
-                }
-            }
-        }
-    }
-}
-
-func newHome(episodes: [EpisodeWithProgress], projects: [Project], grouped: [ProjectView]) -> HTML1.Node<STRequestEnvironment> {
+func newHome(episodes: [EpisodeWithProgress], projects: [Project], grouped: [ProjectView], monthly: Plan, yearly: Plan) -> HTML1.Node<STRequestEnvironment> {
     let content: HTML1.Node<STRequestEnvironment> = HTML1.Node.withInput { env in
         div(class: "swift-talk-content-container") {
             header(env: env)
@@ -217,7 +151,21 @@ func newHome(episodes: [EpisodeWithProgress], projects: [Project], grouped: [Pro
                 let scoped = projects.scoped(for: env.session?.user.data)
                 scoped.prefix(4).map { $0.card }
                 if env.session?.premiumAccess != true {
-                    subscriptionStopper()
+                    div(class: "subscriptions-container") {
+                        div(class: "subscriptions-header") {
+                            h2(class: "h2 dark center") {
+                                "Support Swift Talk with a subscription"
+                            }
+                            div(class: "p2 center dark") {
+                                "Access the entire archive of Swift Talks, download videos for offline viewing, and help keep us producing new episodes."
+                            }
+                        }
+                        div(class: "subscription-choices-container") {
+                            monthly.box(monthly: nil, coupon: nil, team: false, session: nil)
+                            yearly.box(monthly: monthly, coupon: nil, team: false, session: nil)
+                        }
+                        teamSubscriptionBanner()
+                    }
                 }
                 scoped.suffix(from: 4).map { $0.card }
             }
