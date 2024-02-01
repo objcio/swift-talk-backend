@@ -1,4 +1,5 @@
 body {
+    font-family: "Akkurat";
     -webkit-font-smoothing: antialiased;
 }
 
@@ -5466,7 +5467,7 @@ min-height: 36px;
 .checkout-details {
   grid-row-gap: 48px;
   flex-direction: column;
-  flex: 1;
+  flex: 0.5;
   display: flex;
 }
 
@@ -10001,4 +10002,66 @@ min-height: 36px;
 
 .episode-dropdown-toggle.w--open .dropdown-chevron {
   transform: rotate(180deg);
+}
+
+.text-input {
+    height: auto;
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0);
+    border: 1px #000;
+    border-bottom: 1px solid rgba(255, 255, 255, .5);
+    margin-bottom: 0;
+    padding-top: 4px;
+    padding-left: 2px;
+    padding-right: 2px;
+    font-family: Akkurat, sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    width: 100%
+}
+
+.error .text-input {
+    border-bottom: 1px solid #f40000;
+}
+
+.input-label {
+    text-transform: uppercase;
+    font-family: Akkurat Mono, sans-serif;
+    color: #fff;
+    margin-bottom: 0;
+    padding-left: 2px;
+    padding-right: 2px;
+    line-height: 18px;
+}
+
+.error .input-label {
+    color: #f40000;
+}
+
+.submit-button {
+    display: inline-block;
+    padding: 9px 15px;
+    border: 0;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-appearance: button;
+    border-radius: 0;
+    color: #fff;
+    text-align: center;
+    background-color: #0091d9;
+    border-radius: 12px;
+    padding: 14px 48px;
+    font-family: Akkurat, sans-serif;
+    font-size: 16px;
+    line-height: 20px;
+}
+
+.stack\+ {
+    display: flex;
+    flex-direction: column;
+    row-gap: 32px;
+}
+
+.form-errors {
+    color: #f40000;
 }

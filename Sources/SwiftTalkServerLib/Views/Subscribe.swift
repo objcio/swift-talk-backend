@@ -52,16 +52,55 @@ func profile(submitTitle: String, action: Route) -> Form<ProfileFormData, STRequ
 }
 
 func registerForm(couponCode: String?, planCode: String?, team: Bool) -> Form<ProfileFormData, STRequestEnvironment> {
-    return profile(submitTitle: "Create Account", action: .account(.register(couponCode: couponCode, planCode: planCode, team: team))).wrap { node in
-        LayoutConfig(contents: [
-            .header([
-                .div(class: "container-h pb+ pt-", [
-                    .h1(class: "ms4 color-blue bold", ["Create Your Account"])
-                ]),
-            ]),
-            .div(class: "container", [node])
-        ]).layoutForCheckout
-    }
+    return Form(parse: { dict in
+        guard let e = dict["email"], let n = dict["name"] else { return nil }
+        return ProfileFormData(email: e, name: n)
+    }, render: { data, errors in
+        .withInput { env in
+            LayoutConfig(contents: [
+                div(class: "checkout-container") {
+                    div(class: "checkout-header") {
+                        h2(class: "h2 dark") {
+                            "Create your account"
+                        }
+                    }
+                    div(class: "checkout-details-container") {
+                        div(class: "checkout-form-block w-form") {
+                            form(action: Route.account(.register(couponCode: couponCode, planCode: planCode, team: team)).absoluteString, class: "checkout-form", method: "post") {
+                                div(class: "checkout-details") {
+                                    div(class: "billing-details-container") {
+                                        div(class: "billing-details") {
+                                            if !errors.isEmpty {
+                                                p(class: "form-errors") {
+                                                    errors.map { field, message in
+                                                        Swim.Node.raw("\(message)<br/>")
+                                                    }
+                                                }
+                                            }
+                                            div(class: "address-container \(errors.contains { $0.field == "name" } ? "error" : "")") {
+                                                label(class: "input-label", for: "name") {
+                                                    "Full name*"
+                                                }
+                                                input(class: "text-input", id: "name", maxlength: "256", name: "name", placeholder: "Your name", type: "text", value: data.name)
+                                            }
+                                            div(class: "address-container \(errors.contains { $0.field == "email" } ? "error" : "")") {
+                                                label(class: "input-label", for: "email") {
+                                                    "Email adress*"
+                                                }
+                                                input(class: "text-input", id: "email", maxlength: "256", name: "email", placeholder: "Your email", type: "text", value: data.email, customAttributes: ["data-name": "Street Address Cont"])
+                                            }
+                                        }
+                                    }
+                                    input(id: "csrf", name: "csrf", type: "hidden", value: env.csrf.string)
+                                    input(class: "primary-button w-button", type: "submit", value: "Create account", customAttributes: ["data-wait": ""])
+                                }
+                            }
+                        }
+                    }
+                }.asOldNode
+            ]).layout
+        }
+    })
 }
 
 fileprivate extension Plan {

@@ -79,7 +79,16 @@ public struct Project: Codable, Hashable {
     var id: Id<Project>
     var title: String
     var description: String
-    var color: String = "#BF8EDC"
+//    var color: String = "#BF8EDC"
+}
+
+extension Project {
+    static let colors = ["#FA6E60","#FD6C69","#FE6A73","#FF6A7C","#FF6A86","#FD6B90","#FB6D9A","#F76FA4","#F273AD","#EC77B6","#E57BBF","#DD7FC7","#D484CF","#CA89D6","#BF8EDC","#B293E1","#A598E6","#969CE9","#86A1EC","#74A5ED","#61A9ED","#49ADED","#58FF8B","#6DF97C","#7EF46E","#8DEE60","#9BE854","#A7E248","#B2DC3D","#BCD633","#C5CF2B","#CEC824","#D6C120","#DDBA1E","#E4B320","#E9AB23","#EEA428","#F39D2E","#F69534","#F98E3A","#FA8741","#FB8047","#FB7A4E","#FA7455"]
+    
+    var color: String {
+        let idx = (Int(Episode.all.last { $0.project == id }?.releaseAt.timeIntervalSinceReferenceDate ?? 0)) % Self.colors.count
+        return Self.colors[idx]
+    }
 }
 
 public enum ProjectView {

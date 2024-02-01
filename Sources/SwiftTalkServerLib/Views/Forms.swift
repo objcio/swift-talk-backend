@@ -105,13 +105,13 @@ extension FormView {
                 .form(class: `class`, action: action.path, attributes: ["id": id], [
                     .withCSRF { csrf in .input(name: "csrf", id: "csrf", type: "hidden", attributes: ["value": csrf.string], []) },
                     .div(class: "stack+", fields.map(renderField) + [
-                            .div([
-                                .input(class: "c-button c-button--blue", name: "commit", type: "submit", attributes: ["value": submitTitle, "data-disable-with": submitTitle], []),
-                                submitNote.map { .p(class: "ms-1 color-gray-40 mt", [.raw($0)]) } ?? .none
-                            ])
+                        .div([
+                            .input(class: "submit-button c-button c-button--blue", name: "commit", type: "submit", attributes: ["value": submitTitle, "data-disable-with": submitTitle], []),
+                            submitNote.map { .p(class: "ms-1 color-gray-40 mt", [.raw($0)]) } ?? .none
                         ])
                     ])
                 ])
+            ])
         ]
     }
 }
