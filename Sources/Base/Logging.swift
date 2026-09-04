@@ -19,17 +19,14 @@ extension Foundation.FileHandle : TextOutputStream {
 public func log(file: StaticString = #file, line: UInt = #line, _ e: Error) {
     print("ERROR \(file):\(line) ", to: &standardError)
     dump(e, to: &standardError)
-    standardError.synchronizeFile()
 }
 
 public func log(file: StaticString = #file, line: UInt = #line, error: String) {
     print("ERROR \(file):\(line): \(error)", to: &standardError)
-    standardError.synchronizeFile()
 }
 
 public func log(file: StaticString = #file, line: UInt = #line, info: String) {
     print("INFO \(file):\(line): \(info)")
-    FileHandle.standardOutput.synchronizeFile()
 }
 
 @discardableResult
@@ -41,5 +38,4 @@ public func tryOrLog<A>(file: StaticString = #file, line: UInt = #line, _ messag
         return nil
     }
 }
-
 
