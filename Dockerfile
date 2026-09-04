@@ -1,8 +1,19 @@
 FROM --platform=linux/amd64 swift:5.5.1
 
-RUN apt-get update
-RUN apt-get install -y --fix-missing libssl-dev
-RUN apt-get install -y postgresql libpq-dev cmake
+RUN set -eux; \
+    for attempt in 1 2 3 4 5; do \
+        apt-get -o Acquire::Retries=5 update && \
+        apt-get -o Acquire::Retries=5 install -y \
+            libssl-dev \
+            postgresql \
+            libpq-dev \
+            cmake && \
+        break; \
+        if [ "$attempt" -eq 5 ]; then exit 1; fi; \
+        rm -rf /var/lib/apt/lists/*; \
+        sleep 5; \
+    done; \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
