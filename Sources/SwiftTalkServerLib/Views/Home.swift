@@ -15,7 +15,11 @@ func renderHome(episodes: [EpisodeWithProgress]) -> Node {
         .div(class: "container", [
             .h1(class: "color-white bold ms4", ["Swift Talk"]),
             .p(class: "mt--", [
-                .span(class: "label smallcaps color-blue-darkest bgcolor-orange", ["Archive Mode"])
+                .link(
+                    to: URL(string: "https://www.objc.io/blog/2026/09/04/the-end-of-swift-talk")!,
+                    class: "label smallcaps color-blue-darkest bgcolor-orange no-decoration",
+                    ["Archive Mode"]
+                )
             ]),
             .p(class: "ms2 color-darken-50 lh-110 mw7 mt-", ["A video series on Swift programming."])
         ])

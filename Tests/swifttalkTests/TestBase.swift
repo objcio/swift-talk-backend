@@ -69,8 +69,9 @@ final class TestBase: XCTestCase {
         )
         let html = renderHome(episodes: []).htmlDocument(input: requestEnvironment)
 
-        XCTAssertTrue(html.contains("label smallcaps color-blue-darkest bgcolor-orange"))
+        XCTAssertTrue(html.contains("label smallcaps color-blue-darkest bgcolor-orange no-decoration"))
         XCTAssertTrue(html.contains("Archive Mode"))
+        XCTAssertTrue(html.contains("https://www.objc.io/blog/2026/09/04/the-end-of-swift-talk"))
         XCTAssertTrue(html.contains("A video series on Swift programming."))
         XCTAssertFalse(html.contains("weekly video series"))
     }
