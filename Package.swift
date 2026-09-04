@@ -29,7 +29,6 @@ let package = Package(
         .package(url: "https://github.com/objcio/md5", .exact("0.1.0")),
         .package(url: "https://github.com/jpsim/SourceKitten", .exact("0.29.0")), // todo 0.29 introduces a breaking change.
         .package(url: "https://github.com/ianpartridge/swift-backtrace.git", from: "1.0.2"),
-        .package(url: "https://github.com/chriseidhof/backend-experiments", .branch("main")),
     ],
     targets: [
         .target(
@@ -103,7 +102,6 @@ let package = Package(
         .target(
             name: "SwiftTalkServerLib",
             dependencies: [
-//                "EndpointBuilder",
                 "Incremental",
                 .product(name: "TinyNetworking", package: "tiny-networking"),
                 "Networking",
