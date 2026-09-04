@@ -6,6 +6,9 @@
 //
 
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 import Promise
 import Base
 import XCTest
@@ -206,4 +209,3 @@ extension URLRequest {
         return url == other.url && httpMethod == other.httpMethod && allHTTPHeaderFields == other.allHTTPHeaderFields && httpBody == other.httpBody
     }
 }
-
