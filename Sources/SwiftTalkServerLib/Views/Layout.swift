@@ -244,7 +244,7 @@ func flash(message: String, type: FlashType) -> Node {
 
 func userHeader(_ session: Session?) -> Node {
     let subscribeButton = Node.li(class: "flex items-center ml+", [
-        .link(to: .signup(.subscribe(planName: nil)), class: "button button--tight button--themed fz-nav", ["Subscribe"])
+        .link(to: .signup(.subscribe(planName: nil)), class: "fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration", ["Subscribe"])
     ])
     
     func link(to route: Route, text: String) -> Node {

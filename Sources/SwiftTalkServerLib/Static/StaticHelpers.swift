@@ -27,20 +27,20 @@ extension Collection: StaticLoadable {
     static var jsonName: String { return "collections.json" }
 }
 
-func loadStaticData<A: Codable>(name: String) -> [A] {
+func loadStaticData<A: Codable>(name: String, decoder: JSONDecoder = Github.staticDataDecoder) -> [A] {
     return tryOrLog { try postgres.withConnection { connection in
         guard
             let row = try connection.execute(Row<FileData>.staticData(jsonName: name)),
-            let result = try? Github.staticDataDecoder.decode([A].self, from: row.data.value.data(using: .utf8)!)
+            let result = try? decoder.decode([A].self, from: row.data.value.data(using: .utf8)!)
             else { return [] }
         return result
     }} ?? []
 }
 
-func cacheStaticData<A: Codable>(_ data: A, name: String) {
+func cacheStaticData<A: Codable>(_ data: A, name: String, encoder: JSONEncoder = Github.staticDataEncoder) {
     tryOrLog { try postgres.withConnection { connection in
         guard
-            let encoded = try? Github.staticDataEncoder.encode(data),
+            let encoded = try? encoder.encode(data),
             let json = String(data: encoded, encoding: .utf8)
             else { log(error: "Unable to encode static data \(name)"); return }
         let fd = FileData(repository: github.staticDataRepo, path: name, value: json, sha: nil)
@@ -109,4 +109,3 @@ func refreshTranscripts(knownShas: [String], onCompletion: @escaping () -> ()) {
         }}
     })
 }
-

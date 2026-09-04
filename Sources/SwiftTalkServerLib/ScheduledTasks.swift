@@ -198,7 +198,7 @@ Hi!
 
 We noticed that you signed up for Swift Talk a while ago, but never finished your registration. We'd love for you to become a subscriber.
 
-Use the following link to get a 20% discount: https://talk.objc.io/promo/swift-talk-discount (you'll get 20% off of the first three months, or if you choose a yearly plan, 20% off of your first year).
+Use the following link to get a 20% discount: https://talk.objc.io/promo/swift-talk-discount (you'll get 20% off of the first three months).
 
 If you have any questions, let us know.
 

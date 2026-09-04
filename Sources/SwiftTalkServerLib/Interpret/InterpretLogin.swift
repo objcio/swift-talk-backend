@@ -16,6 +16,29 @@ extension Route.Login {
         switch self {
         
         case .login(let cont):
+            if env.localDevelopment {
+                let destination = cont?.path ?? "/"
+                func createSession(userId: UUID) -> I {
+                    return .query(SessionData(userId: userId).insert) { sessionId in
+                        .redirect(path: destination, headers: ["Set-Cookie": "sessionid=\"\(sessionId.uuidString)\"; HttpOnly; Path=/"])
+                    }
+                }
+
+                return .query(Row<UserData>.select(githubLogin: "local-preview")) { user in
+                    if let user = user {
+                        return createSession(userId: user.id)
+                    }
+                    let previewUser = UserData(
+                        email: "local-preview@localhost.invalid",
+                        githubLogin: "local-preview",
+                        avatarURL: "",
+                        name: "Local Preview",
+                        confirmedNameAndEmail: true
+                    )
+                    return .query(previewUser.insert, createSession)
+                }
+            }
+
             var path = "https://github.com/login/oauth/authorize?scope=user:email&client_id=\(github.clientId)"
             if let c = cont {
                 let encoded = env.baseURL.absoluteString + Route.login(.githubCallback(code: nil, origin: c.path)).path

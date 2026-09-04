@@ -10,8 +10,16 @@ import HTML
 
 
 func renderHome(episodes: [EpisodeWithProgress]) -> Node {
-    let metaDescription = "A weekly video series on Swift programming by Chris Eidhof and Florian Kugler. objc.io publishes books, videos, and articles on advanced techniques for iOS and macOS development."
-    let header = pageHeader(HeaderContent.other(header: "Swift Talk", blurb: "A weekly video series on Swift programming.", extraClasses: "ms4"))
+    let metaDescription = "A video series on Swift programming by Chris Eidhof and Florian Kugler. objc.io publishes books, videos, and articles on advanced techniques for iOS and macOS development."
+    let header = Node.header(class: "bgcolor-blue pattern-shade", [
+        .div(class: "container", [
+            .h1(class: "color-white bold ms4", ["Swift Talk"]),
+            .p(class: "mt--", [
+                .span(class: "label smallcaps color-blue-darkest bgcolor-orange", ["Archive Mode"])
+            ]),
+            .p(class: "ms2 color-darken-50 lh-110 mw7 mt-", ["A video series on Swift programming."])
+        ])
+    ])
     var recentNodes: [Node] = [
         .header(class: "mb+", [
             .h2(class: "inline-block bold color-black", ["Recent Episodes"]),
@@ -53,4 +61,3 @@ func renderHome(episodes: [EpisodeWithProgress]) -> Node {
     ])
     return LayoutConfig(contents: [header, recentEpisodes, collections], description: metaDescription).layout
 }
-
