@@ -83,13 +83,12 @@ To build the stylesheets:
 
 ### Deployment
 
-We deploy to a heroku-based docker app (needs postgres as well).
-
-If you get a "basic auth" error: `heroku container:login`
+We deploy to a Heroku-based Docker app (needs Postgres as well). Heroku builds the
+image remotely using `heroku.yml`, which ensures it is built for the supported
+x86_64 runtime architecture.
 
 ```sh
-heroku container:push web
-heroku container:release web
+git push heroku master
 ```
 
 ### Running in Docker
