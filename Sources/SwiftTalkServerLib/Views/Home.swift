@@ -9,7 +9,7 @@ import Foundation
 import HTML
 
 
-func renderHome(episodes: [EpisodeWithProgress]) -> Node {
+func renderHome(episodes: [EpisodeWithProgress], collections: [Collection] = Collection.all) -> Node {
     let metaDescription = "A video series on Swift programming by Chris Eidhof and Florian Kugler. objc.io publishes books, videos, and articles on advanced techniques for iOS and macOS development."
     let header = Node.header(class: "bgcolor-blue pattern-shade", [
         .div(class: "container", [
@@ -59,7 +59,7 @@ func renderHome(episodes: [EpisodeWithProgress]) -> Node {
                 "Browse all Swift Talk episodes by topic."
             ])
             ]),
-        .ul(class: "cols s+|cols--2n l+|cols--3n", Collection.all.map { coll in
+        .ul(class: "cols s+|cols--2n l+|cols--3n", collections.map { coll in
             .li(class: "col width-full s+|width-1/2 l+|width-1/3 mb++", coll.render())
         })
     ])
