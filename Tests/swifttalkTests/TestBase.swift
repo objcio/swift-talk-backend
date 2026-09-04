@@ -67,7 +67,7 @@ final class TestBase: XCTestCase {
             connection: noConnection,
             resourcePaths: resourcePaths
         )
-        let html = renderHome(episodes: []).htmlDocument(input: requestEnvironment)
+        let html = renderHome(episodes: [], collections: []).htmlDocument(input: requestEnvironment)
 
         XCTAssertTrue(html.contains("label smallcaps color-blue-darkest bgcolor-orange no-decoration"))
         XCTAssertTrue(html.contains("Archive Mode"))
