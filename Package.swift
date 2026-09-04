@@ -24,7 +24,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio.git", .exact("2.40.0")),
         .package(url: "https://github.com/chriseidhof/commonmark-swift", .branch("embed-c")),
         .package(url: "https://github.com/objcio/LibPQ", .branch("master")),
-        .package(url: "https://github.com/objcio/tiny-networking", from: "0.2.0"),
+        .package(url: "https://github.com/objcio/tiny-networking", .exact("0.4.1")),
         .package(url: "https://github.com/objcio/swift-talk-shared", from: "0.2.0"),
         .package(url: "https://github.com/objcio/md5", .exact("0.1.0")),
         .package(url: "https://github.com/jpsim/SourceKitten", .exact("0.29.0")), // todo 0.29 introduces a breaking change.
