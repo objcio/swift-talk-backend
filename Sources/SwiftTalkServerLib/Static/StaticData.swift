@@ -77,12 +77,16 @@ fileprivate let transcriptsSource: Static<[Transcript]> = Static(async: { cb in
 
 fileprivate let plansSource: Static<[Plan]> = Static(async: { cb in
     let jsonName = "plans.json"
-    let initial: [Plan] = loadStaticData(name: jsonName)
+    let initial: [Plan] = loadStaticData(name: jsonName, decoder: JSONDecoder())
     cb(initial, false)
     globals.urlSession.load(recurly.plans) { value in
-        cb(try? value.get(), true)
-        guard let v = try? value.get() else { log(error: "Could not load plans from Recurly \(value)"); return }
-        cacheStaticData(v, name: jsonName)
+        guard let plans = try? value.get() else {
+            log(error: "Could not load plans from Recurly \(value)")
+            cb(initial, true)
+            return
+        }
+        cb(plans, true)
+        cacheStaticData(plans, name: jsonName, encoder: JSONEncoder())
     }
 })
 
@@ -276,4 +280,3 @@ extension Transcript {
         return transcripts.value.first { $0.number == number }
     }
 }
-

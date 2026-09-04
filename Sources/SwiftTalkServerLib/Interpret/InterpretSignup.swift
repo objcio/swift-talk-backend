@@ -22,17 +22,17 @@ extension Route.Signup {
                     return I.redirect(to: .subscription(.new(couponCode: nil, planCode: p, team: false)))
                 }
             } else {
-                guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
-                    throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])")
+                guard let monthly = Plan.monthly else {
+                    throw ServerError(privateMessage: "Can't find monthly plan: \([Plan.all])")
                 }
-                return .write(html: renderSubscribe(monthly: monthly, yearly: yearly))
+                return .write(html: renderSubscribe(monthly: monthly))
             }
         
         case .subscribeTeam:
-            guard let monthly = Plan.monthly, let yearly = Plan.yearly else {
-                throw ServerError(privateMessage: "Can't find monthly or yearly plan: \([Plan.all])")
+            guard let monthly = Plan.monthly else {
+                throw ServerError(privateMessage: "Can't find monthly plan: \([Plan.all])")
             }
-            return .write(html: renderSubscribeTeam(monthly: monthly, yearly: yearly))
+            return .write(html: renderSubscribeTeam(monthly: monthly))
         
         case .teamMember(let token):
             return .query(Row<UserData>.select(teamToken: token)) { row in
@@ -59,10 +59,10 @@ extension Route.Signup {
                 guard coupon.state == "redeemable" else {
                     throw ServerError(privateMessage: "not redeemable: \(str)", publicMessage: "This coupon is not redeemable anymore.", status: HTTPResponseStatus.forbidden)
                 }
-                guard let m = Plan.monthly, let y = Plan.yearly else {
+                guard let monthly = Plan.monthly else {
                     throw ServerError(privateMessage: "Plans not loaded", publicMessage: "A small hiccup. Please try again in a little while.")
                 }
-                return .write(html: renderSubscribe(monthly: m, yearly: y, coupon: coupon))
+                return .write(html: renderSubscribe(monthly: monthly, coupon: coupon))
             })
         }
     }

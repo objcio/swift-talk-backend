@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Promise
 import Base
 import Database
 import Networking
@@ -138,36 +137,13 @@ extension Task {
                 onCompletion((s.subscription_add_ons?.first?.quantity ?? 0) == max(memberCount, 0)) // todo the `max` is necessary because memberCount might be -1
             })
         
-        case .releaseEpisode(let number):
-            if mailchimp.apiKey == "test" { onCompletion(true); return } // don't release episodes in test environments
-            guard let ep = Episode.all.first(where: { $0.number == number }) else { onCompletion(true); return }
-            let sendCampaign: Promise<Bool> = globals.urlSession.load(mailchimp.createCampaign(for: ep)).flatMap { campaignId in
-                guard let id = campaignId else { return Promise { $0(false) } }
-                return globals.urlSession.load(mailchimp.addContent(for: ep, toCampaign: id)).flatMap { _ in
-                    if env.production {
-                        return globals.urlSession.load(mailchimp.sendCampaign(campaignId: id)).map { $0 != nil }
-                    } else {
-                        return globals.urlSession.load(mailchimp.testCampaign(campaignId: id)).map { $0 != nil }
-                    }
-                }
-            }
-
+        case .releaseEpisode:
+            // Legacy task: episodes are no longer released through a GitHub repository or email campaign.
             onCompletion(true)
 
-            globals.urlSession.load(github.changeVisibility(private: false, of: ep.id.rawValue)).flatMap { _ in
-                globals.urlSession.load(mailchimp.existsCampaign(for: ep))
-            }.flatMap { campaignExists in
-                return campaignExists == false ? sendCampaign : Promise { $0(false) }
-            }.run { success in
-                if !success {
-                    log(error: "Something went wrong while releasing episode \(number).")
-                }
-            }
-        
-        case .unfinishedSubscriptionReminder(let userId):
-            guard let user = try c.get().execute(Row<UserData>.select(userId)), !user.data.subscriber else { onCompletion(true); return }
-            let ep = sendgrid.send(to: user.data.email, name: user.data.name, subject: "Your Swift Talk Registration", text: unfinishedSubscriptionReminderText)
-            globals.urlSession.load(ep) { onCompletion($0 != nil)}
+        case .unfinishedSubscriptionReminder:
+            // Legacy task: discard reminders that were queued before the archive-mode change.
+            onCompletion(true)
         }
     }
 }
@@ -192,16 +168,3 @@ extension Row where Element == TaskData {
         }
     }
 }
-
-fileprivate let unfinishedSubscriptionReminderText = """
-Hi!
-
-We noticed that you signed up for Swift Talk a while ago, but never finished your registration. We'd love for you to become a subscriber.
-
-Use the following link to get a 20% discount: https://talk.objc.io/promo/swift-talk-discount (you'll get 20% off of the first three months, or if you choose a yearly plan, 20% off of your first year).
-
-If you have any questions, let us know.
-
-Best from Berlin,
-Florian and Chris
-"""

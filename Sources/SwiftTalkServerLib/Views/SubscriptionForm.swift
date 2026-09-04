@@ -208,11 +208,14 @@ struct SubscriptionFormData: Encodable {
         self.belowButtonText = "Your card will be billed on \(startDate)."
     }
     
-    init(plans: [Plan], selectedPlan: Plan, coupon: SwiftTalkServerLib.Coupon? = nil, error: RecurlyError? = nil) {
+    init(plans: [Plan], selectedPlan: Plan, team: Bool, coupon: SwiftTalkServerLib.Coupon? = nil, error: RecurlyError? = nil) {
         self.plans = plans.map { .init($0) }
         self.plan = selectedPlan.plan_code
         self.errorMessages = error.map { [$0.transaction_error.customer_message] } ?? [];
         self.coupon = JSONOptional(coupon.map { .init($0) })
+        if team {
+            self.belowButtonText = "You can add team members after subscribing."
+        }
     }
 }
 

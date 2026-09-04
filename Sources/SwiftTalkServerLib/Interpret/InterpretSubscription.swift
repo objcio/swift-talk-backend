@@ -25,10 +25,10 @@ extension Route.Subscription {
             if let p = planCode, let plan = Plan.find(code: p), plan.isEnterprisePlan {
                 return try I.write(html: newSub(coupon: nil, team: team, plans: [plan], error: error))
             }
-            guard let m = Plan.monthly, let y = Plan.yearly else {
-                throw ServerError(privateMessage: "No monthly or yearly plan: \(Plan.all)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
+            guard let monthly = Plan.monthly else {
+                throw ServerError(privateMessage: "No monthly plan: \(Plan.all)", publicMessage: "Something went wrong, we're on it. Please check back at a later time.")
             }
-            let plans = [m,y]
+            let plans = [monthly]
             if let c = couponCode {
                 return .onSuccess(promise: recurly.coupon(code: c).promise, do: { coupon in
                     return try .write(html: newSub(coupon: coupon, team: team, plans: plans, error: error))
@@ -84,12 +84,10 @@ extension Route.Subscription {
                 let resp = registerForm(couponCode: couponCode, planCode: planCode, team: team).render(.init(user.data), [])
                 return .write(html: resp)
             } else {
-                return .query(Task.unfinishedSubscriptionReminder(userId: user.id).schedule(weeks: 1)) {
-                    var u = user
-                    u.data.role = team ? .teamManager : .user
-                    return .query(u.update()) {
-                        try newSubscription(couponCode: couponCode, planCode: planCode, team: team)
-                    }
+                var u = user
+                u.data.role = team ? .teamManager : .user
+                return .query(u.update()) {
+                    try newSubscription(couponCode: couponCode, planCode: planCode, team: team)
                 }
             }
         

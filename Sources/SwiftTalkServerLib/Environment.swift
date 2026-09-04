@@ -61,6 +61,10 @@ struct Env {
     var baseURL: URL { return URL(string: env["BASE_URL"]!)! }
 
     var production: Bool { return env["PRODUCTION"].map(Int.init) == 1 }
+    var localDevelopment: Bool {
+        guard !production, let host = baseURL.host?.lowercased() else { return false }
+        return host == "localhost" || host == "127.0.0.1" || host == "::1"
+    }
     var port: Int? { return env["PORT"].flatMap(Int.init) }
     
     var databaseURL: String? { return env["DATABASE_URL"] }

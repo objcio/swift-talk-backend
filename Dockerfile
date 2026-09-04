@@ -1,10 +1,4 @@
-FROM swift:5.0.1
-
-RUN echo ""
-
-# workaround to make this work with the swift 5 image: 
-# https://forums.swift.org/t/lldb-install-precludes-installing-python-in-image/24040
-# RUN  mv /usr/lib/python2.7/site-packages /usr/lib/python2.7/dist-packages; ln -s dist-packages /usr/lib/python2.7/site-packages
+FROM --platform=linux/amd64 swift:5.5.1
 
 RUN apt-get update
 RUN apt-get install -y --fix-missing libssl-dev
@@ -14,7 +8,7 @@ WORKDIR /app
 
 COPY assets ./assets
 COPY Package.swift LinuxMain.swift ./
-RUN swift package update
+# RUN swift package update
 
 COPY Sources ./Sources
 COPY Tests ./Tests

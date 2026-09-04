@@ -46,6 +46,36 @@ final class TaskTests: XCTestCase {
         urlSession.assertDone()
     }
 
+    func testUnfinishedSubscriptionReminderIsDiscarded() throws {
+        let urlSession = TestURLSession([])
+        setupGlobals(session: urlSession)
+        let connection = TestConnection([])
+        var completed = false
+
+        try Task.unfinishedSubscriptionReminder(userId: UUID()).interpret(connection.lazy) {
+            completed = $0
+        }
+
+        XCTAssertTrue(completed)
+        connection.assertDone()
+        urlSession.assertDone()
+    }
+
+    func testEpisodeReleaseIsDiscarded() throws {
+        let urlSession = TestURLSession([])
+        setupGlobals(session: urlSession)
+        let connection = TestConnection([])
+        var completed = false
+
+        try Task.releaseEpisode(number: 999).interpret(connection.lazy) {
+            completed = $0
+        }
+
+        XCTAssertTrue(completed)
+        connection.assertDone()
+        urlSession.assertDone()
+    }
+
 //    func testSyncTeamMembersBillsMinusOneTeamMembersForTeamManager() throws {
 //        let user = subscribedTeamManager.user
 //        let urlSession = teamMembersURLSession(user: user, numberOfTeamMembers: 1)

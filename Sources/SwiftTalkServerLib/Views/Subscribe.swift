@@ -12,10 +12,17 @@ import WebServer
 
 
 let subscriptionBenefits: [(icon: String, name: String, description: String)] = [
-    ("icon-benefit-unlock.svg", "Watch All Episodes", "A new episode every week"),
+    ("icon-benefit-unlock.svg", "Watch All Episodes", "Access to the full archive"),
     ("icon-benefit-download.svg", "Download Episodes", "Take Swift Talk with you when you're offline"),
-    ("icon-benefit-support.svg", "Support Us", "With your help we can keep producing new episodes"),
+    ("icon-benefit-support.svg", "Support Us", "Help us keep the full archive available"),
 ]
+
+let recordingEndedBanner = Node.div(class: "bgcolor-invalid text-center color-white pa- lh-125 radius-3", [
+    .p(class: "bold", [
+        .span(class: "block", ["We're not recording new episodes anymore."]),
+        .span(class: "block", ["Subscribe to get access to the full archive."])
+    ])
+])
 
 
 func benefits(_ items: [(icon: String, name: String, description: String)]) -> Node {
@@ -90,11 +97,12 @@ fileprivate func continueLink(session: Session?, coupon: Coupon?, team: Bool) ->
     } else if session?.user != nil {
         return continueLink(to: .subscription(.new(couponCode: coupon?.coupon_code, planCode: nil, team: team)), title: "Proceed to payment")
     } else {
-        return continueLink(to: .login(.login(continue: Route.subscription(.new(couponCode: coupon?.coupon_code, planCode: nil, team: team)))), title: "Sign in with Github")
+        let title = env.localDevelopment ? "Sign in locally" : "Sign in with Github"
+        return continueLink(to: .login(.login(continue: Route.subscription(.new(couponCode: coupon?.coupon_code, planCode: nil, team: team)))), title: title)
     }
 }
 
-func renderSubscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node {
+func renderSubscribe(monthly: Plan, coupon: Coupon? = nil) -> Node {
     return .withSession { session in
         let contents: [Node] = [
             pageHeader(.other(header: "Subscribe to Swift Talk", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),
@@ -109,12 +117,12 @@ func renderSubscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node
                     .div(class: "pattern-gradient pattern-gradient--swifttalk pv++ ph+ radius-5", [
                         .div(class: "flex items-center justify-around text-center color-white", [
                             monthly.priceBox(coupon: coupon),
-                            yearly.priceBox(coupon: coupon),
                         ])
                     ]),
                     .div([
                         continueLink(session: session, coupon: coupon, team: false)
-                    ])
+                    ]),
+                    recordingEndedBanner
                 ]),
                 benefits(subscriptionBenefits),
                 .ul(class: "text-center max-width-7 center pt++ pb++", [
@@ -140,7 +148,7 @@ func renderSubscribe(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node
     }
 }
 
-func renderSubscribeTeam(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> Node {
+func renderSubscribeTeam(monthly: Plan, coupon: Coupon? = nil) -> Node {
     return .withSession { session in
         let contents: [Node] = [
             pageHeader(.other(header: "Swift Talk Team Subscription", blurb: nil, extraClasses: "ms5 pv---"), extraClasses: "text-center pb+++ n-mb+++"),
@@ -155,15 +163,15 @@ func renderSubscribeTeam(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> 
                     .div(class: "pattern-gradient pattern-gradient--swifttalk pv++ ph+ radius-5", [
                         .div(class: "flex items-center justify-around text-center color-white", [
                             monthly.priceBox(coupon: coupon, team: true),
-                            yearly.priceBox(coupon: coupon, team: true),
                         ])
                     ]),
                     .div([
                         continueLink(session: session, coupon: coupon, team: true)
-                    ])
+                    ]),
+                    recordingEndedBanner
                 ]),
                 benefits([
-                    ("icon-benefit-unlock.svg", "Watch All Episodes", "A new episode every week"),
+                    ("icon-benefit-unlock.svg", "Watch All Episodes", "Access to the full archive"),
                     ("icon-benefit-manager.svg", "Team Manager Account", "A central account to manage billing and team members"),
                     ("icon-benefit-download.svg", "Download Episodes", "Take Swift Talk with you when you're offline"),
                 ]),
@@ -179,7 +187,7 @@ func renderSubscribeTeam(monthly: Plan, yearly: Plan, coupon: Coupon? = nil) -> 
                     ]),
                 .div(class: "ms-1 color-gray-65 lh-110 text-center center pt+ max-width-8", [
                     smallPrint([
-                        .span([.raw("<sup>*</sup>"), "Prices apply from the 2nd team member. The first team member is included in the subscription base price, \(monthly.discountedPrice(coupon: coupon).plainText)/month or \(yearly.discountedPrice(coupon: coupon).plainText)/year"]),
+                        .span([.raw("<sup>*</sup>"), "Prices apply from the 2nd team member. The first team member is included in the subscription base price, \(monthly.discountedPrice(coupon: coupon).plainText)/month"]),
                         "All prices shown excluding VAT (only applies to EU customers).",
                     ])
                 ])
@@ -194,7 +202,7 @@ fileprivate func smallPrint(_ lines: [Node]) -> Node {
 }
 
 func newSub(coupon: Coupon?, team: Bool, plans: [Plan], error: RecurlyError? = nil) throws -> Node {
-    let data = SubscriptionFormData(plans: plans, selectedPlan: plans[0], coupon: coupon, error: error)
+    let data = SubscriptionFormData(plans: plans, selectedPlan: plans[0], team: team, coupon: coupon, error: error)
     return LayoutConfig(contents: [
         .header([
             .div(class: "container-h pb+ pt+", [
@@ -204,4 +212,3 @@ func newSub(coupon: Coupon?, team: Bool, plans: [Plan], error: RecurlyError? = n
         subscriptionForm(data, action: .subscription(.create(couponCode: coupon?.coupon_code, team: team)))
     ], includeRecurlyJS: true).layoutForCheckout
 }
-
