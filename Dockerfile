@@ -2,8 +2,8 @@ FROM --platform=linux/amd64 swift:5.5.1
 
 RUN set -eux; \
     for attempt in 1 2 3 4 5; do \
-        apt-get -o Acquire::Retries=5 update && \
-        apt-get -o Acquire::Retries=5 install -y \
+        apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 update && \
+        apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 install -y \
             libssl-dev \
             postgresql \
             libpq-dev \
