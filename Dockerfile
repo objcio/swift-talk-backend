@@ -7,7 +7,7 @@ RUN apt-get install -y postgresql libpq-dev cmake
 WORKDIR /app
 
 COPY assets ./assets
-COPY Package.swift LinuxMain.swift ./
+COPY Package.swift Package.resolved LinuxMain.swift ./
 # RUN swift package update
 
 COPY Sources ./Sources
