@@ -311,7 +311,7 @@ fileprivate final class RecurlyXMLDecoder: Decoder {
     }
     
     func unkeyedContainer() throws -> UnkeyedDecodingContainer {
-        return UDC(nodes: node.childNodes.filter { $0.kind != .invalid }, codingPath: [], currentIndex: 0)
+        return UDC(nodes: node.childNodes.compactMap { $0 as? XMLElement }, codingPath: [], currentIndex: 0)
     }
     
     func singleValueContainer() throws -> SingleValueDecodingContainer {
