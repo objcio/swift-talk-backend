@@ -84,12 +84,10 @@ extension Route.Subscription {
                 let resp = registerForm(couponCode: couponCode, planCode: planCode, team: team).render(.init(user.data), [])
                 return .write(html: resp)
             } else {
-                return .query(Task.unfinishedSubscriptionReminder(userId: user.id).schedule(weeks: 1)) {
-                    var u = user
-                    u.data.role = team ? .teamManager : .user
-                    return .query(u.update()) {
-                        try newSubscription(couponCode: couponCode, planCode: planCode, team: team)
-                    }
+                var u = user
+                u.data.role = team ? .teamManager : .user
+                return .query(u.update()) {
+                    try newSubscription(couponCode: couponCode, planCode: planCode, team: team)
                 }
             }
         

@@ -164,10 +164,9 @@ extension Task {
                 }
             }
         
-        case .unfinishedSubscriptionReminder(let userId):
-            guard let user = try c.get().execute(Row<UserData>.select(userId)), !user.data.subscriber else { onCompletion(true); return }
-            let ep = sendgrid.send(to: user.data.email, name: user.data.name, subject: "Your Swift Talk Registration", text: unfinishedSubscriptionReminderText)
-            globals.urlSession.load(ep) { onCompletion($0 != nil)}
+        case .unfinishedSubscriptionReminder:
+            // Legacy task: discard reminders that were queued before the archive-mode change.
+            onCompletion(true)
         }
     }
 }
@@ -192,16 +191,3 @@ extension Row where Element == TaskData {
         }
     }
 }
-
-fileprivate let unfinishedSubscriptionReminderText = """
-Hi!
-
-We noticed that you signed up for Swift Talk a while ago, but never finished your registration. We'd love for you to become a subscriber.
-
-Use the following link to get a 20% discount: https://talk.objc.io/promo/swift-talk-discount (you'll get 20% off of the first three months).
-
-If you have any questions, let us know.
-
-Best from Berlin,
-Florian and Chris
-"""

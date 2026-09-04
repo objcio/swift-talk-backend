@@ -154,7 +154,6 @@ final class FlowTests: XCTestCase {
                 try $0.withSession(confirmedSess) {
                     try $0.followRequests {
                         try $0.followRedirect(to: .subscription(.new(couponCode: nil, planCode: nil, team: false)), expectedQueries: [
-                            QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1)),
                             QueryAndResult(query: confirmedSess.user.update(), response: ()),
                         ]) { _ in XCTAssert(true) }
                     }
@@ -184,7 +183,6 @@ final class FlowTests: XCTestCase {
                 try $0.withSession(confirmedSess) {
                     try $0.followRequests {
                         try $0.followRedirect(to: .subscription(.new(couponCode: nil, planCode: nil, team: true)), expectedQueries: [
-                            QueryAndResult(Task.unfinishedSubscriptionReminder(userId: confirmedSess.user.id).schedule(weeks: 1)),
                             QueryAndResult(confirmedSess.user.update())
                         ]) { _ in XCTAssert(true) }
                     }
