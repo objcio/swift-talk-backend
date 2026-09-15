@@ -1,0 +1,32 @@
+/* The visual design lives in the original assets/stylesheets/application.css.
+   These additions cover static-site controls and responsive/accessibility fixes. */
+[hidden] { display: none !important; }
+.skip-link { position: fixed; left: 1em; top: -100px; z-index: 10; background: white; padding: 1em; color: #0092db; }
+.skip-link:focus { top: 1em; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible,
+.c-text a:focus-visible { outline: 3px solid #FFA940; outline-offset: 4px; }
+.static-poster-image { display: block; width: 100%; height: 100%; object-fit: cover; }
+.static-poster-placeholder { display: grid; place-items: center; height: 100%; background: #002b40; color: white; }
+.static-collection-placeholder { display: grid; place-items: center; min-height: 8em; color: #0092db; font-family: AkkuratMono, monospace; font-size: 2em; }
+.static-video { display: block; width: 100%; height: 100%; border: 0; }
+.static-player-column, .static-transcript-column, .static-sidebar, .episode-card { min-width: 0; }
+#video, #transcript { scroll-margin-top: 1em; }
+.transcript { overflow-wrap: anywhere; }
+.transcript a[href^="?t="] { line-height: 1; display: inline-block; font-size: .69444em; font-weight: bold; margin-right: calc(100% - 3em); }
+.static-search { display: flex; align-items: end; gap: 1em; font-size: .83333em; }
+.static-search > div { min-width: 0; }
+.static-search-field { flex: 1; }
+.static-search input, .static-search select { display: block; width: 100%; min-height: 2.8em; padding: .6em .8em; border: 1px solid #ccc; border-radius: 3px; background: white; color: #404040; }
+.static-search select { max-width: 22em; }
+.static-search button { min-height: 2.8em; cursor: pointer; }
+/* Flex wrapping keeps filtered cards in the old grid without nth-child float gaps. */
+.static-episode-list { display: flex; flex-wrap: wrap; }
+@media (max-width: 699px) {
+  .static-search { flex-wrap: wrap; }
+  .static-search-field { flex-basis: 100%; }
+  .static-search > div:nth-child(2) { flex: 1; }
+  .static-search select { max-width: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *:before, *:after { transition: none !important; scroll-behavior: auto !important; }
+}
