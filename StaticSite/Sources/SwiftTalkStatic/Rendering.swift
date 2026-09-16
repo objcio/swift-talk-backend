@@ -22,21 +22,28 @@ extension Renderer {
 
     var episodesPage: String {
         let items = content.episodes.map { episode in
-            let search = ([String(episode.number), content.fullTitle(episode), episode.synopsis] + content.collections(for: episode).map(\.title)).joined(separator: " ")
-            return "<li class=\"col mb++ width-full s+|width-1/2 m+|width-1/3 xl+|width-1/4\" data-episode data-search=\"\(search.escaped)\" data-collections=\"\(episode.collections.joined(separator: " ").escaped)\">\(card(episode))</li>"
+            return "<li class=\"col mb++ width-full s+|width-1/2 m+|width-1/3 xl+|width-1/4\" data-episode>\(card(episode))</li>"
         }.joined()
-        let options = content.collections.map { "<option value=\"\($0.id.escaped)\">\($0.title.escaped)</option>" }.joined()
         return page(title: "All Episodes", path: "/episodes", description: "Browse every Swift Talk video and transcript, freely available.", body: """
         \(pageHeader("All Episodes"))
-        <section class="container pb0" aria-label="Episode archive">
-          <h2 class="bold lh-100 mb+ result-count" aria-live="polite" aria-atomic="true">\(content.episodes.count) Episodes</h2>
-          <form class="search-form static-search mb++" role="search" hidden>
-            <div class="static-search-field"><label class="block smallcaps color-gray-40 mb--" for="search">Search episodes</label><input id="search" type="search" name="q" placeholder="SwiftUI, networking, episode number…" autocomplete="off"></div>
-            <div><label class="block smallcaps color-gray-40 mb--" for="collection">Collection</label><select id="collection" name="collection"><option value="">All collections</option>\(options)</select></div>
-            <button class="reset-button color-blue" type="reset">Clear</button>
+        <section class="container pb0 static-archive" aria-label="Episode archive">
+          <form id="archive-search" class="search-form static-search" role="search" hidden>
+            <div class="static-search-field">
+              <label class="visuallyhidden" for="search">Search episodes</label>
+              <svg class="static-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>
+              <input id="search" type="search" name="q" placeholder="Search episodes &amp; transcripts" autocomplete="off" aria-describedby="search-help">
+            </div>
           </form>
-          <p class="no-results color-gray-40 lh-135 mb++" hidden>No episodes found. Try another search or collection.</p>
+          <p id="search-help" class="visuallyhidden">Search titles, transcripts, and code. Use quotes for an exact phrase.</p>
+          <div class="static-search-toolbar">
+            <h2 class="result-count" aria-live="polite" aria-atomic="true">\(content.episodes.count) episodes</h2>
+            <span class="search-order">Newest first</span>
+          </div>
+          <p class="search-status color-gray-40 lh-135 mb+" role="status" hidden></p>
+          <ol class="static-search-results" aria-label="Search results" hidden></ol>
+          <div class="static-search-pagination"><button class="search-more" type="button" hidden>Show more results <span aria-hidden="true">↓</span></button></div>
           <ul class="cols static-episode-list">\(items)</ul>
+          <script type="module" src="/assets/search.js"></script>
         </section>
         """)
     }
@@ -68,13 +75,25 @@ extension Renderer {
 
     func episodePage(_ episode: Episode, transcript: Transcript) -> String {
         let title = content.fullTitle(episode)
+        let fields = ["number": String(episode.number), "synopsis": episode.synopsis,
+                      "collection": content.collections(for: episode).map(\.title).joined(separator: " · "),
+                      "date": formattedDate(episode.releaseAt, format: "MMM d, yyyy"),
+                      "duration": "\(Int((episode.mediaDuration / 60).rounded())) min"]
+        let searchMetadata = fields.sorted { $0.key < $1.key }.map {
+            "<meta data-pagefind-meta=\"\($0.key)[content]\" content=\"\($0.value.escaped)\">"
+        }.joined() + episode.collections.map {
+            "<meta data-pagefind-filter=\"collection[content]\" content=\"\($0.escaped)\">"
+        }.joined() + (episode.posterURL(width: 590, height: 270).map {
+            "<meta data-pagefind-meta=\"image[content]\" content=\"\($0.escaped)\">"
+        } ?? "")
         let chapters = transcript.chapters.map {
             "<li class=\"border-bottom border-1 border-color-lighten-10\"><a class=\"flex color-inherit pv items-baseline no-decoration hover-cascade\" data-time=\"\($0.seconds)\" href=\"?t=\($0.seconds)#video\"><span class=\"hover-cascade__underline\">\($0.title.escaped)</span><span class=\"ml-auto color-orange pl-\">\(timestamp($0.seconds))</span></a></li>"
         }.joined()
         let resources = episode.resources.map {
             "<li class=\"flex\"><div class=\"flex-none mr-\"><a class=\"block bgcolor-orange radius-5 hover-bgcolor-blue\" href=\"\($0.url.escaped)\" aria-label=\"\($0.title.escaped)\">\(svg("icon-resource-code.svg", classes: "block icon-40"))</a></div><div class=\"ms-1 lh-125\"><h3 class=\"mb---\"><a class=\"bold color-black hover-underline no-decoration\" href=\"\($0.url.escaped)\">\($0.title.escaped)</a></h3><p class=\"color-gray-50\">\($0.subtitle.escaped)</p></div></li>"
         }.joined()
-        let collection = content.collections(for: episode).first.map { "<section class=\"pb++\"><h2 class=\"color-blue mb smallcaps\">In Collection</h2>\(collectionCard($0, showEpisodes: true))<p class=\"ms-1 mt text-right\"><a class=\"no-decoration color-blue hover-underline\" href=\"/collections\">See All Collections →</a></p></section>" } ?? ""
+        let sidebarCollection = episode.collections.contains("swiftui") ? nil : content.collections(for: episode).first
+        let collection = sidebarCollection.map { "<section class=\"pb++\"><h2 class=\"color-blue mb smallcaps\">In Collection</h2>\(collectionCard($0, showEpisodes: true))<p class=\"ms-1 mt text-right\"><a class=\"no-decoration color-blue hover-underline\" href=\"/collections\">See All Collections →</a></p></section>" } ?? ""
         let collaborators = episode.collaborators.compactMap { id in content.collaborators.first { $0.id == id } }.map {
             "<li><dl class=\"flex justify-between\"><dt class=\"color-gray-60\">\($0.roleName.escaped)</dt><dd class=\"color-gray-15 text-right\"><a class=\"color-gray-15 hover-underline no-decoration\" href=\"\($0.url.escaped)\">\($0.name.escaped)</a></dd></dl></li>"
         }.joined()
@@ -85,7 +104,7 @@ extension Renderer {
         return page(title: title, path: episode.path, description: episode.synopsis, body: """
         <div class="js-episode">
           <div class="bgcolor-night-blue pattern-shade-darker"><div class="container l+|pb0 l+|n-mb++">
-            <header class="mb++ pb"><p class="color-orange ms1"><a class="color-inherit no-decoration bold hover-underline" href="/">Swift Talk</a> # \(String(format: "%02d", episode.number))</p><h1 class="ms5 color-white bold mt-- lh-110">\(title.escaped)</h1></header>
+            <header class="mb++ pb"><p class="color-orange ms1"><a class="color-inherit no-decoration bold hover-underline" href="/">Swift Talk</a> # \(String(format: "%02d", episode.number))</p><h1 data-pagefind-body data-pagefind-meta="title" class="ms5 color-white bold mt-- lh-110">\(title.escaped)</h1></header>
             <div class="l+|flex static-watch"><div class="flex-110 order-2 static-player-column"><div id="video" class="ratio ratio--16/9"><div class="ratio__container"><iframe id="vimeo-player" class="static-video" src="\(episode.embedURL.escaped)" title="\(title.escaped) — full episode" width="1280" height="720" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen></iframe></div></div></div>
               <aside class="min-width-5 relative order-1 mt++ l+|mt0 l+|mr++ l+|mb++" aria-label="Video chapters"><div class="l+|absolute l+|position-stretch stretch width-full flex flex-column">
                 <h2 class="color-blue border-top border-2 pt mb+ flex-none flex items-baseline"><span class="smallcaps">In this episode</span><span class="ml-auto ms-1 bold">\(timestamp(Int(episode.mediaDuration)))</span></h2>
@@ -96,9 +115,9 @@ extension Renderer {
           <div class="bgcolor-white l+|pt++"><div class="container">
             <p id="player-status" class="color-gray-40 lh-135 mb+" role="status" hidden></p>
             <div class="l+|flex l-|stack+++ m-cols">
-              <article class="p-col l+|flex-auto l+|width-2/3 xl+|width-7/10 static-transcript-column"><div class="text-wrapper"><div class="lh-140 color-blue-darkest ms1 bold mb+">\(markdown(episode.synopsis))</div></div>\(updates)
+              <article data-pagefind-body class="p-col l+|flex-auto l+|width-2/3 xl+|width-7/10 static-transcript-column"><div class="text-wrapper"><div data-pagefind-weight="2" class="lh-140 color-blue-darkest ms1 bold mb+">\(markdown(episode.synopsis))</div></div>\(updates)
                 <section id="transcript" aria-label="Transcript"><div class="js-transcript"><div class="transcript c-text c-text--fit-code">\(transcript.html)</div></div></section>
-                <p class="mt+ ms-1"><a class="color-blue no-decoration hover-underline" href="/transcripts/episode\(episode.number).md" download>Download Transcript as Markdown ↓</a></p>
+                <p data-pagefind-ignore class="mt+ ms-1"><a class="color-blue no-decoration hover-underline" href="/transcripts/episode\(episode.number).md" download>Download Transcript as Markdown ↓</a></p>
               </article>
               <aside class="p-col max-width-7 center stack l+|width-1/3 xl+|width-3/10 l+|flex-auto static-sidebar">
                 \(resources.isEmpty ? "" : "<section class=\"pb++\"><h2 class=\"color-blue mb smallcaps\">Resources</h2><ul class=\"stack\">\(resources)</ul></section>")
@@ -109,6 +128,6 @@ extension Renderer {
           </div></div>
         </div>
         <aside class="bgcolor-pale-gray pt++"><header class="container-h flex items-center justify-between"><div><h2 class="inline-block bold color-black">Recent Episodes</h2><a class="inline-block ms-1 ml- color-blue no-decoration hover-underline" href="/episodes">See All</a></div></header><div class="flex scroller p-edges pt pb++"><div class="scroller__offset flex-none"></div>\(recent)</div></aside>
-        """, image: episode.posterURL, player: true)
+        """, image: episode.posterURL, player: true, searchMetadata: searchMetadata)
     }
 }

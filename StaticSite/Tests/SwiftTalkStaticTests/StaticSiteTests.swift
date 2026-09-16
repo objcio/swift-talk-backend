@@ -43,7 +43,7 @@ final class StaticSiteTests: XCTestCase {
         XCTAssertTrue(page.contains("<span class=\"hljs-keyword\">let</span>"))
         XCTAssertTrue(page.contains("&lt;"))
         XCTAssertTrue(page.contains("Swift: A &amp; B: Swift&#39;s Types"))
-        XCTAssertTrue(page.contains("?t=65#transcript"))
+        XCTAssertTrue(page.contains("?t=65#t-65"))
         for path in ["/account", "/subscribe", "/login", "/subscription", "/playProgress"] {
             XCTAssertFalse(page.contains(path))
         }
@@ -120,7 +120,7 @@ final class StaticSiteTests: XCTestCase {
         """)
         XCTAssertEqual(transcript.chapters.map(\.seconds), [6, 3723])
         XCTAssertEqual(transcript.chapters.map(\.title), ["Introduction", "A View & Layout"])
-        XCTAssertTrue(transcript.html.contains("?t=3723#transcript"))
+        XCTAssertTrue(transcript.html.contains("?t=3723#t-3723"))
         XCTAssertTrue(transcript.html.contains("class=\"swift language-swift\""))
         XCTAssertFalse(transcript.html.contains("?t=83"))
         XCTAssertTrue(transcript.html.contains("<img src=\"https://example.com/diagram.png\""))
@@ -181,5 +181,32 @@ final class StaticSiteTests: XCTestCase {
             config.baseURL = URL(string: value)!
             XCTAssertThrowsError(try buildSite(config))
         }
+    }
+
+    func testSearchIndexingFailurePreservesPreviousSite() throws {
+        try buildSite(config)
+        let original = try read("index.html")
+        // Nonzero exit and success without an index must both fail the build.
+        for executable in ["/usr/bin/false", "/usr/bin/true"] {
+            config.pagefind = URL(fileURLWithPath: executable)
+            XCTAssertThrowsError(try buildSite(config))
+            XCTAssertEqual(try read("index.html"), original)
+        }
+    }
+
+    func testSearchIndexesOnlyEpisodeContentAndKeepsDuplicateCuesUnique() throws {
+        let transcript = try Transcript("00:06 First passage.\n\n00:06 Another passage.\n\n```swift\nlet text = \"00:06\"\n```\n")
+        XCTAssertTrue(transcript.html.contains("id=\"t-6\""))
+        XCTAssertTrue(transcript.html.contains("id=\"t-6-2\""))
+        XCTAssertTrue(transcript.html.contains("?t=6#t-6-2"))
+        XCTAssertFalse(transcript.html.contains("t-6-3"))
+        try buildSite(config)
+        let page = try read("episodes/S01E1-a-b-swift-s-types/index.html")
+        XCTAssertTrue(page.contains("<article data-pagefind-body"))
+        XCTAssertTrue(page.contains("data-pagefind-meta=\"title\""))
+        XCTAssertTrue(page.contains("data-pagefind-filter=\"collection[content]\" content=\"swift\""))
+        XCTAssertFalse(try read("index.html").contains("data-pagefind-body"))
+        XCTAssertFalse(try read("collections/swift/index.html").contains("data-pagefind-body"))
+        XCTAssertFalse(try read("episodes/S01E1/index.html").contains("data-pagefind-body"))
     }
 }

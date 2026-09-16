@@ -1,49 +1,4 @@
 (() => {
-  const form = document.querySelector('.search-form');
-  if (form) {
-    const search = form.querySelector('[name=q]');
-    const collection = form.querySelector('[name=collection]');
-    const normalize = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-    const episodes = [...document.querySelectorAll('[data-episode]')].map(element => ({
-      element,
-      search: normalize(element.dataset.search),
-      collections: element.dataset.collections.split(' '),
-    }));
-    function filter(updateURL = true) {
-      const words = normalize(search.value).trim().split(/\s+/).filter(Boolean);
-      let count = 0;
-      for (const episode of episodes) {
-        const matches = words.every(word => episode.search.includes(word)) &&
-          (!collection.value || episode.collections.includes(collection.value));
-        episode.element.hidden = !matches;
-        if (matches) count++;
-      }
-      document.querySelector('.result-count').textContent = `${count} ${count === 1 ? 'episode' : 'episodes'}`;
-      document.querySelector('.no-results').hidden = count !== 0;
-      if (updateURL) {
-        const url = new URL(location.href);
-        for (const [key, value] of [['q', search.value], ['collection', collection.value]]) {
-          if (value) url.searchParams.set(key, value);
-          else url.searchParams.delete(key);
-        }
-        history.replaceState(null, '', url);
-      }
-    }
-    function restore() {
-      const params = new URLSearchParams(location.search);
-      search.value = params.get('q') || '';
-      collection.value = params.get('collection') || '';
-      filter(false);
-    }
-    form.hidden = false;
-    form.addEventListener('submit', event => { event.preventDefault(); filter(); });
-    form.addEventListener('input', () => filter());
-    form.addEventListener('change', () => filter());
-    form.addEventListener('reset', () => { search.value = ''; collection.value = ''; filter(); });
-    window.addEventListener('popstate', restore);
-    restore();
-  }
-
   const iframe = document.querySelector('#vimeo-player');
   if (!iframe) return;
   const status = document.querySelector('#player-status');

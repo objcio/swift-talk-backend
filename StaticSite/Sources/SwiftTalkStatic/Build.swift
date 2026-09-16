@@ -9,8 +9,9 @@ public struct BuildConfiguration {
     public var output: URL
     public var baseURL: URL
     public var asOf: Date
+    public var pagefind: URL?
 
-    public init(data: URL, transcripts: URL, assets: URL, siteAssets: URL, output: URL, baseURL: URL, asOf: Date = Date()) {
+    public init(data: URL, transcripts: URL, assets: URL, siteAssets: URL, output: URL, baseURL: URL, asOf: Date = Date(), pagefind: URL? = nil) {
         self.data = data
         self.transcripts = transcripts
         self.assets = assets
@@ -18,6 +19,7 @@ public struct BuildConfiguration {
         self.output = output
         self.baseURL = baseURL
         self.asOf = asOf
+        self.pagefind = pagefind
     }
 }
 
@@ -51,6 +53,9 @@ public struct BuildSummary {
         }
     }
     let content = try Content(data: config.data, transcripts: config.transcripts, asOf: config.asOf)
+    if let executable = config.pagefind, !fm.isExecutableFile(atPath: executable.path) {
+        throw BuildError("Pagefind is missing at \(executable.path). Run npm ci --prefix StaticSite, or supply --pagefind PATH.")
+    }
     let renderer = Renderer(content: content, baseURL: config.baseURL, assets: config.assets)
     let parent = output.deletingLastPathComponent()
     try fm.createDirectory(at: parent, withIntermediateDirectories: true)
@@ -133,8 +138,19 @@ public struct BuildSummary {
         try copy(config.assets.appendingPathComponent("images/\(name)"), "assets/images/\(name)")
     }
     try copy(config.assets.appendingPathComponent("favicon.ico"), "favicon.ico")
-    for name in ["static-site.css", "static-site.js"] {
+    for name in ["static-site.css", "static-site.js", "search.js", "search-results.js"] {
         try copy(config.siteAssets.appendingPathComponent(name), "assets/\(name)")
+    }
+    if let executable = config.pagefind {
+        let process = Process()
+        process.executableURL = executable
+        process.arguments = ["--site", staging.path, "--output-subdir", "pagefind"]
+        try process.run()
+        process.waitUntilExit()
+        guard process.terminationReason == .exit, process.terminationStatus == 0,
+              fm.fileExists(atPath: staging.appendingPathComponent("pagefind/pagefind.js").path) else {
+            throw BuildError("Pagefind indexing failed. The previous site has been preserved.")
+        }
     }
     // Complete and validate the build before touching the previous output.
     if fm.fileExists(atPath: output.path) {

@@ -17,6 +17,7 @@ Options:
   --site-assets PATH   Static CSS and JavaScript (default: StaticSite/Assets)
   --base-url URL       Public site origin (default: https://talk.objc.io)
   --as-of ISO8601      Release cutoff in UTC (default: now)
+  --pagefind PATH      Pagefind executable (default: StaticSite/node_modules/.bin/pagefind)
   --help               Print this help
 """
 
@@ -25,7 +26,7 @@ do {
     if arguments.contains("--help") {
         print(usage)
     } else {
-        let allowed = ["--data", "--transcripts", "--output", "--assets", "--site-assets", "--base-url", "--as-of"]
+        let allowed = ["--data", "--transcripts", "--output", "--assets", "--site-assets", "--base-url", "--as-of", "--pagefind"]
         var options: [String: String] = [:]
         var index = 0
         while index < arguments.count {
@@ -54,7 +55,8 @@ do {
             data: URL(fileURLWithPath: data), transcripts: URL(fileURLWithPath: transcripts),
             assets: URL(fileURLWithPath: options["--assets"] ?? "assets"),
             siteAssets: URL(fileURLWithPath: options["--site-assets"] ?? "StaticSite/Assets"),
-            output: URL(fileURLWithPath: options["--output"] ?? "_site"), baseURL: base, asOf: asOf
+            output: URL(fileURLWithPath: options["--output"] ?? "_site"), baseURL: base, asOf: asOf,
+            pagefind: URL(fileURLWithPath: options["--pagefind"] ?? "StaticSite/node_modules/.bin/pagefind")
         ))
         print("Built \(result.episodes) public episodes and transcripts, \(result.collections) collections → \(result.output.path)")
     }

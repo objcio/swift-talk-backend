@@ -1,0 +1,11 @@
+{
+  "name": "swift-talk-static-search",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test Tests/search-results.test.js"
+  },
+  "devDependencies": {
+    "pagefind": "1.5.2"
+  }
+}

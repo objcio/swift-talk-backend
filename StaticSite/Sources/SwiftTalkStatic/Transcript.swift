@@ -14,6 +14,7 @@ struct Transcript {
         let blocks = CommonMark.Node(markdown: markdown).elements
         var chapters: [Chapter] = []
         var pendingTitle: String?
+        var cueCounts: [Int: Int] = [:]
         let transformed = blocks.deepApply { (block: Block) -> [Block] in
             switch block {
             case let .heading(text, _):
@@ -34,8 +35,13 @@ struct Transcript {
                     chapters.append(Chapter(title: "Introduction", seconds: time.seconds))
                 }
                 // Only transform leading paragraph timestamps, never Swift code or existing links.
-                let link = Inline.link(children: [.text(text: time.label)], title: "Play at \(time.label)", url: "?t=\(time.seconds)#transcript")
-                return [.paragraph(text: [link, .text(text: time.remainder)] + text.dropFirst())]
+                cueCounts[time.seconds, default: 0] += 1
+                let count = cueCounts[time.seconds]!
+                let anchor = "t-\(time.seconds)" + (count == 1 ? "" : "-\(count)")
+                let link = Inline.html(text: "<a data-pagefind-ignore href=\"?t=\(time.seconds)#\(anchor)\" title=\"Play at \(time.label)\">\(time.label)</a>")
+                let paragraph = CommonMark.Node(blocks: [.paragraph(text: [link, .text(text: time.remainder)] + text.dropFirst())]).html(options: [.unsafe])
+                // The anchor belongs to the indexed passage, not its ignored timestamp label.
+                return [.html(text: paragraph.replacingOccurrences(of: "<p>", with: "<p id=\"\(anchor)\">", options: .anchored))]
             default:
                 return [block]
             }

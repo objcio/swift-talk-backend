@@ -16,7 +16,7 @@ struct Renderer {
         return source.replacingOccurrences(of: "<svg ", with: "<svg aria-hidden=\"true\" class=\"\(classes)\" ")
     }
 
-    func page(title: String, path: String, description: String, body: String, image: String? = nil, player: Bool = false, theme: String = "default") -> String {
+    func page(title: String, path: String, description: String, body: String, image: String? = nil, player: Bool = false, theme: String = "default", searchMetadata: String = "") -> String {
         let nav = [("/", "Swift Talk"), ("https://www.objc.io/books", "Books"), ("https://www.objc.io/issues", "Issues"), ("https://www.objc.io/workshops/swiftui", "SwiftUI Workshop")].map { url, label in
             "<li class=\"flex mr+\"><a href=\"\(url)\" class=\"flex items-center fz-nav color-gray-30 color-theme-nav hover-color-theme-highlight no-decoration\"><span>\(label)</span></a></li>"
         }.joined()
@@ -26,6 +26,7 @@ struct Renderer {
           <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
           <title>\(title.escaped) - Swift Talk - objc.io</title>
           <meta name="description" content="\(description.escaped)">
+          \(searchMetadata)
           <link rel="canonical" href="\(absolute(path).escaped)">
           <meta property="og:title" content="\(title.escaped)"><meta property="og:description" content="\(description.escaped)">
           <meta property="og:type" content="\(player ? "video.episode" : "website")"><meta property="og:url" content="\(absolute(path).escaped)">
