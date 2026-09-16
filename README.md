@@ -2,6 +2,12 @@
 
 This is the source code of the Swift Talk backend: [https://talk.objc.io](https://talk.objc.io)
 
+## Public static site
+
+The public archive is being built in [`StaticSite/`](StaticSite/README.md), a standalone Swift package that generates episode pages, complete transcripts, collections, and RSS from the existing content repositories. It requires no database or backend credentials. See its README for build, preview, and verification commands.
+
+## Original backend
+
 While we abstracted non-app-specific parts away into frameworks, this is not a web framework. Here's a minimal description of the structure:
 
 ## SwiftTalkServerLib
